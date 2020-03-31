@@ -1,10 +1,13 @@
 use crossbeam_channel::Receiver;
 use lsp_server::{Connection, Message, Notification, Request, RequestId};
-use lsp_types::notification::{DidCloseTextDocument, DidOpenTextDocument, PublishDiagnostics};
+use lsp_types::notification::{
+    DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, PublishDiagnostics,
+};
 use lsp_types::{
     Diagnostic, DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    InitializeResult, TextDocumentIdentifier, TextDocumentItem, TextDocumentSyncCapability,
-    TextDocumentSyncKind, Url, VersionedTextDocumentIdentifier,
+    InitializeResult, Position, Range, TextDocumentContentChangeEvent, TextDocumentIdentifier,
+    TextDocumentItem, TextDocumentSyncCapability, TextDocumentSyncKind, Url,
+    VersionedTextDocumentIdentifier,
 };
 
 use move_language_server::main_loop::{main_loop, notification_cast, notification_new};
@@ -148,7 +151,7 @@ fn test_server_publishes_diagnostic_after_receiving_didopen() {
         document_url.clone(),
         "move".to_string(),
         1,
-        "mytext".to_string(),
+        "main() {}".to_string(),
     );
     let didopen_params = DidOpenTextDocumentParams { text_document };
     let didopen_notif = notification_new::<DidOpenTextDocument>(didopen_params);
@@ -158,8 +161,14 @@ fn test_server_publishes_diagnostic_after_receiving_didopen() {
     main_loop(&server_conn).unwrap();
 
     let diagnostics_message = client_conn.receiver.try_recv().unwrap();
-    assert_diagnostics(diagnostics_message, document_url, vec![]);
-
+    assert_diagnostics(
+        diagnostics_message,
+        document_url,
+        vec![Diagnostic::new_simple(
+            Range::new(Position::new(0, 0), Position::new(0, 4)),
+            "Invalid address directive. Expected 'address' got 'main'".to_string(),
+        )],
+    );
     assert_receiver_has_only_shutdown_response(client_conn.receiver);
 }
 
@@ -170,24 +179,31 @@ fn test_send_diagnostics_after_didchange() {
 
     let document_url = Url::parse("file:///foo/bar").unwrap();
     let text_document = VersionedTextDocumentIdentifier::new(document_url.clone(), 1);
-    let didchange_notif = Notification::new(
-        "textDocument/didChange".to_string(),
-        DidChangeTextDocumentParams {
-            text_document,
-            content_changes: vec![],
-        },
-    );
+    let didchange_not = notification_new::<DidChangeTextDocument>(DidChangeTextDocumentParams {
+        text_document,
+        content_changes: vec![TextDocumentContentChangeEvent {
+            text: "main() {}".to_string(),
+            range: None,
+            range_length: None,
+        }],
+    });
     client_conn
         .sender
-        .send(Message::Notification(didchange_notif))
+        .send(Message::Notification(didchange_not))
         .unwrap();
 
     send_shutdown_requests(&client_conn);
     main_loop(&server_conn).unwrap();
 
     let diagnostics_message = client_conn.receiver.try_recv().unwrap();
-    assert_diagnostics(diagnostics_message, document_url, vec![]);
-
+    assert_diagnostics(
+        diagnostics_message,
+        document_url,
+        vec![Diagnostic::new_simple(
+            Range::new(Position::new(0, 0), Position::new(0, 4)),
+            "Invalid address directive. Expected 'address' got 'main'".to_string(),
+        )],
+    );
     assert_receiver_has_only_shutdown_response(client_conn.receiver);
 }
 

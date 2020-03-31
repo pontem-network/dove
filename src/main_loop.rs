@@ -1,12 +1,11 @@
 use anyhow::Result;
 use crossbeam_channel::Sender;
 use lsp_server::{Connection, Message, Notification};
-use lsp_types::notification::{
-    DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, PublishDiagnostics,
-};
-use lsp_types::PublishDiagnosticsParams;
+use lsp_types::notification::{DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+
+use crate::handlers;
 
 pub fn main_loop(connection: &Connection) -> Result<()> {
     log::info!("starting example main loop");
@@ -42,24 +41,20 @@ fn loop_turn(connection: &Connection, message: Message) -> Result<()> {
 fn on_notification(msg_sender: &Sender<Message>, notif: Notification) -> Result<()> {
     let notif = match notification_cast::<DidOpenTextDocument>(notif) {
         Ok(params) => {
-            let uri = params.text_document.uri;
-            let params = PublishDiagnosticsParams::new(uri, vec![], None);
-            let diag_notif = notification_new::<PublishDiagnostics>(params);
-
-            log::info!("Sending {:?}", &diag_notif);
-            msg_sender.send(diag_notif.into()).unwrap();
+            let source_text = params.text_document.text;
+            let not = handlers::on_document_change(params.text_document.uri, &source_text);
+            log::info!("Sending {:?}", &not);
+            msg_sender.send(not.into()).unwrap();
             return Ok(());
         }
         Err(notif) => notif,
     };
     let notif = match notification_cast::<DidChangeTextDocument>(notif) {
         Ok(params) => {
-            let uri = params.text_document.uri;
-            let params = PublishDiagnosticsParams::new(uri, vec![], None);
-            let diag_notif = notification_new::<PublishDiagnostics>(params);
-
-            log::info!("Sending {:?}", &diag_notif);
-            msg_sender.send(diag_notif.into()).unwrap();
+            let source_text = params.content_changes.get(0).unwrap().clone().text;
+            let not = handlers::on_document_change(params.text_document.uri, &source_text);
+            log::info!("Sending {:?}", &not);
+            msg_sender.send(not.into()).unwrap();
             return Ok(());
         }
         Err(notif) => notif,
@@ -73,7 +68,7 @@ fn on_notification(msg_sender: &Sender<Message>, notif: Notification) -> Result<
     if notif.method.starts_with("$/") {
         return Ok(());
     }
-    log::error!("unhandled notification: {:?}", notif);
+    // log::error!("unhandled notification: {:?}", notif);
     Ok(())
 }
 

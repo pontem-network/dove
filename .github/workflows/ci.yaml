@@ -17,7 +17,6 @@ jobs:
 
     env:
       RUSTFLAGS: -D warnings
-      CC: deny_c
       CARGO_INCREMENTAL: 0
       RUSTUP_MAX_RETRIES: 10
       CARGO_NET_RETRY: 10
