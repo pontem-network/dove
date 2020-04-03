@@ -5,6 +5,8 @@ use move_lang::parser::ast::FileDefinition;
 use move_lang::parser::syntax::parse_file_string;
 use move_lang::strip_comments_and_verify;
 
+use crate::compiler::CompilerCheckResult;
+
 pub fn count_line_col(source: &str, pos: usize) -> (u64, u64) {
     let chars_before_pos = &source[..pos];
 
@@ -49,10 +51,7 @@ fn parse_file(fname: &'static str, source: &str) -> Result<FileDefinition, Error
     Ok(parsed)
 }
 
-pub fn parse_and_extract_diagnostics(
-    fname: &'static str,
-    source: &str,
-) -> Result<FileDefinition, Vec<Diagnostic>> {
+pub fn parse_source_file(fname: &'static str, source: &str) -> CompilerCheckResult<FileDefinition> {
     parse_file(fname, source).map_err(|error| {
         let diags = convert_error_into_diags(error, source);
         // first one, for now

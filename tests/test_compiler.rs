@@ -1,14 +1,14 @@
 use lsp_types::{Position, Range};
 use move_lang::parser::ast::FileDefinition;
 
-use move_language_server::compiler::parser::parse_and_extract_diagnostics;
+use move_language_server::compiler::parser::parse_source_file;
 
 const FNAME: &str = "main.move";
 
 #[test]
 fn test_fail_on_non_ascii_character() {
     let source = r"fun main() { return; }ффф";
-    let errors = parse_and_extract_diagnostics(FNAME, source).unwrap_err();
+    let errors = parse_source_file(FNAME, source).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -23,14 +23,14 @@ fn test_successful_parsing() {
     let source = r"
         fun main() { return; }
     ";
-    let compiled = parse_and_extract_diagnostics(FNAME, source).unwrap();
+    let compiled = parse_source_file(FNAME, source).unwrap();
     assert!(matches!(compiled, FileDefinition::Main(_)));
 }
 
 #[test]
 fn test_function_parse_error() {
     let source = "module M { struc S { f: u64 } }";
-    let errors = parse_and_extract_diagnostics(FNAME, source).unwrap_err();
+    let errors = parse_source_file(FNAME, source).unwrap_err();
     assert_eq!(errors.len(), 1);
     let error = errors.get(0).unwrap();
     assert_eq!(
@@ -43,7 +43,7 @@ fn test_function_parse_error() {
 #[test]
 fn test_main_function_parse_error() {
     let source = "main() {}";
-    let errors = parse_and_extract_diagnostics(FNAME, source).unwrap_err();
+    let errors = parse_source_file(FNAME, source).unwrap_err();
     assert_eq!(errors.len(), 1);
     let error = errors.get(0).unwrap();
     assert_eq!(
@@ -65,7 +65,7 @@ module M {
     }
 }
 ";
-    let errors = parse_and_extract_diagnostics(FNAME, source).unwrap_err();
+    let errors = parse_source_file(FNAME, source).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
