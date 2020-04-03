@@ -157,3 +157,34 @@ fn test_typechecking_invalid_local_borrowing() {
     );
     assert_eq!(diagnostic.message, "Invalid borrow");
 }
+
+#[test]
+fn test_check_unreachable_code_in_loop() {
+    let source_text = r"module M {
+    fun t() {
+        let x = 0;
+        let t = 1;
+
+        if (x >= 0) {
+            loop {
+                let my_local = 0;
+                if (my_local >= 0) { break; };
+            };
+            x = 1
+        };
+        t;
+        x;
+    }
+}
+    ";
+
+    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    assert_eq!(errors.len(), 1);
+
+    let diagnostic = errors.get(0).unwrap();
+    assert_eq!(
+        diagnostic.range,
+        Range::new(Position::new(8, 42), Position::new(8, 43))
+    );
+    assert_eq!(diagnostic.message, "Unreachable code. This statement (and any following statements) will not be executed. In some cases, this will result in unused resource values.");
+}
