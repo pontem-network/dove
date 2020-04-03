@@ -107,7 +107,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "mirai-annotations",
 ]
@@ -127,7 +127,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "codespan",
@@ -143,7 +143,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -301,7 +301,7 @@ checksum = "11c0346158a19b3627234e15596f5e465c360fcdb97d817bcb255e0510f5a788"
 [[package]]
 name = "datatest-stable"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "regex",
  "structopt",
@@ -472,7 +472,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -490,7 +490,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "codespan",
@@ -545,7 +545,7 @@ checksum = "dea0c0405123bba743ee3f91f49b1c7cfb684eef0da0a50110f758ccf24cdff0"
 [[package]]
 name = "libra-canonical-serialization"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "serde",
  "thiserror",
@@ -554,7 +554,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "bytes",
@@ -579,7 +579,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto-derive"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -589,7 +589,7 @@ dependencies = [
 [[package]]
 name = "libra-nibble"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "serde",
 ]
@@ -597,7 +597,7 @@ dependencies = [
 [[package]]
 name = "libra-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "bytes",
@@ -682,7 +682,7 @@ checksum = "f12a5b7d83c8fbf058cf1b33d26373763b2d6a0632b6bfecd4b4fa6a0507fea5"
 [[package]]
 name = "move-core-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "libra-canonical-serialization",
@@ -693,7 +693,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "codespan",
@@ -707,7 +707,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "borrow-graph",
  "bytecode-source-map",
@@ -746,7 +746,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "bit-vec",
  "libra-canonical-serialization",
@@ -793,7 +793,7 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1532,7 +1532,7 @@ checksum = "078775d0255232fb988e6fccf26ddc9d1ac274299aaedcedce21c6f72cc533ce"
 [[package]]
 name = "vm"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#978934ee00adbb75fb5a6b4f93ff62c3e24b5693"
+source = "git+https://github.com/dfinance/libra.git?branch=public-parsing-move#9e88980f35b1bf9d1698eb816bd36cd57f09b9ee"
 dependencies = [
  "anyhow",
  "byteorder",
