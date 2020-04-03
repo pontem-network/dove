@@ -105,6 +105,7 @@ fn test_expansion_checks_public_main_redundancy() {
 
     let errors = check_with_compiler(FNAME, source_text).unwrap_err();
     assert_eq!(errors.len(), 1);
+
     let diagnostic = errors.get(0).unwrap();
     assert_eq!(
         diagnostic.range,
@@ -114,4 +115,45 @@ fn test_expansion_checks_public_main_redundancy() {
         diagnostic.message,
         "Extraneous 'public' modifier. This top-level function is assumed to be public"
     );
+}
+
+#[test]
+fn test_naming_checks_generics_with_type_parameters() {
+    let source_text = r"module M {
+    struct S<T> { f: T<u64> }
+}
+    ";
+
+    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    assert_eq!(errors.len(), 1);
+
+    let diagnostic = errors.get(0).unwrap();
+    assert_eq!(
+        diagnostic.range,
+        Range::new(Position::new(1, 21), Position::new(1, 27))
+    );
+    assert_eq!(
+        diagnostic.message,
+        "Generic type parameters cannot take type arguments"
+    );
+}
+
+#[test]
+fn test_typechecking_invalid_local_borrowing() {
+    let source_text = r"module M {
+    fun t0(r: &u64) {
+        &r;
+    }
+}
+    ";
+
+    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    assert_eq!(errors.len(), 1);
+
+    let diagnostic = errors.get(0).unwrap();
+    assert_eq!(
+        diagnostic.range,
+        Range::new(Position::new(2, 8), Position::new(2, 10))
+    );
+    assert_eq!(diagnostic.message, "Invalid borrow");
 }
