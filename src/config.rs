@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::path::PathBuf;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -16,12 +17,14 @@ impl Default for MoveDialect {
 #[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ServerConfig {
     pub dialect: MoveDialect,
+    pub stdlib_path: PathBuf,
 }
 
 impl Default for ServerConfig {
     fn default() -> Self {
         ServerConfig {
             dialect: MoveDialect::default(),
+            stdlib_path: PathBuf::default(),
         }
     }
 }

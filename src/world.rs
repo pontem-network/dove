@@ -1,21 +1,51 @@
+use std::fs;
+use std::path::PathBuf;
+
+use move_lang::errors::FilesSourceText;
+
+use crate::compiler::utils::get_stdlib_files;
 use crate::config::MoveDialect;
 
 #[derive(Debug)]
 pub struct Config {
     pub dialect: MoveDialect,
+    pub stdlib_path: PathBuf,
 }
 
 #[derive(Debug)]
 pub struct WorldState {
     pub config: Config,
+    pub stdlib_files: FilesSourceText,
 }
 
 impl WorldState {
     pub fn new(config: Config) -> Self {
-        WorldState { config }
+        WorldState {
+            config,
+            stdlib_files: FilesSourceText::new(),
+        }
+    }
+
+    pub fn new_with_stdlib_loaded(config: Config) -> Self {
+        let mut state = Self::new(config);
+        state.reload_stdlib();
+        state
+    }
+
+    fn reload_stdlib(&mut self) {
+        let stdlib_path = match fs::canonicalize(&self.config.stdlib_path) {
+            Ok(path) => path,
+            Err(_) => {
+                log::error!("Cannot resolve path {:?}", &self.config.stdlib_path);
+                return;
+            }
+        };
+        log::info!("Loading standard library from {:?}", &stdlib_path);
+        self.stdlib_files = get_stdlib_files(&stdlib_path);
     }
 
     pub fn update_configuration(&mut self, config: Config) {
         self.config = config;
+        self.reload_stdlib();
     }
 }

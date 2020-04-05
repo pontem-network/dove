@@ -246,7 +246,8 @@ fn test_initialize_server_configuration() {
         serde_json::json!({ "capabilities": serde_json::to_value(ClientCapabilities::default()).unwrap() }),
     )
     .unwrap();
-    initialize_params.initialization_options = Some(serde_json::json!({"dialect": "dfinance"}));
+    initialize_params.initialization_options =
+        Some(serde_json::json!({"dialect": "dfinance", "stdlib_path": "./tests/stdlib"}));
 
     let initialize_req = request_new::<Initialize>(RequestId::from(1), initialize_params);
     client_conn.sender.send(initialize_req.into()).unwrap();
@@ -272,7 +273,8 @@ fn test_update_server_configuration_from_the_client() {
     let mut world_state = WorldState::new(get_config(&ServerConfig::default()));
 
     let content = serde_json::json!({
-        "dialect": "dfinance"
+        "dialect": "dfinance",
+        "stdlib_path": "./tests/stdlib"
     });
     let client_config_response = Response::new_ok(config_req_id, vec![content]);
 

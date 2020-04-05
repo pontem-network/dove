@@ -10,12 +10,9 @@ use lsp_types::{ConfigurationItem, ConfigurationParams, MessageType, ShowMessage
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::compiler::utils::STDLIB_DIR;
 use crate::config::ServerConfig;
 use crate::handlers;
 use crate::world::{Config, WorldState};
-use std::path::Path;
-use std::time::Instant;
 
 pub fn get_config(server_config: &ServerConfig) -> Config {
     Config {
@@ -27,9 +24,9 @@ pub fn get_config(server_config: &ServerConfig) -> Config {
 pub fn main_loop(server_config: ServerConfig, connection: &Connection) -> Result<()> {
     log::info!("starting example main loop");
 
+    let config = get_config(&server_config);
     let mut loop_state = LoopState::default();
-    let mut world_state = WorldState::new(get_config(&server_config));
-    world_state.load_stdlib(Path::new(STDLIB_DIR));
+    let mut world_state = WorldState::new_with_stdlib_loaded(config);
 
     for message in &connection.receiver {
         log::debug!("got message: {:?}", message);

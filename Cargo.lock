@@ -741,6 +741,7 @@ dependencies = [
  "serde",
  "serde_json",
  "threadpool",
+ "walkdir",
 ]
 
 [[package]]
