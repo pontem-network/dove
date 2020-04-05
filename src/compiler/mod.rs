@@ -19,6 +19,7 @@ pub fn check_with_compiler(
     stdlib_files: &FilesSourceText,
 ) -> CompilerCheckResult<()> {
     let parsed_file = parser::parse_source_file(fname, source_text)?;
+    // TODO: skip this step by making ModuleDefinition Clone'able, and move it to after expansion
     let stdlib_definition: Vec<FileDefinition> = stdlib_files
         .iter()
         .map(|(fname, text)| parse_file_string(fname, text).unwrap())
@@ -29,7 +30,8 @@ pub fn check_with_compiler(
     };
     let sender_opt = Some(Address::parse_str("0x8572f83cee01047effd6e7d0b5c19743").unwrap());
 
-    check::check_parsed_program(parsed_program, sender_opt).map_err(|libra_errors| {
+    let check_res = check::check_parsed_program(parsed_program, sender_opt);
+    check_res.map_err(|libra_errors| {
         let libra_error = libra_errors.get(0).unwrap().clone();
         let diagnostics = convert_error_into_diags(libra_error, source_text);
         // get first one
