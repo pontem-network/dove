@@ -10,13 +10,17 @@ use lsp_types::{ConfigurationItem, ConfigurationParams, MessageType, ShowMessage
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+use crate::compiler::utils::STDLIB_DIR;
 use crate::config::ServerConfig;
 use crate::handlers;
 use crate::world::{Config, WorldState};
+use std::path::Path;
+use std::time::Instant;
 
 pub fn get_config(server_config: &ServerConfig) -> Config {
     Config {
         dialect: server_config.dialect.clone(),
+        stdlib_path: server_config.stdlib_path.clone(),
     }
 }
 
@@ -25,6 +29,7 @@ pub fn main_loop(server_config: ServerConfig, connection: &Connection) -> Result
 
     let mut loop_state = LoopState::default();
     let mut world_state = WorldState::new(get_config(&server_config));
+    world_state.load_stdlib(Path::new(STDLIB_DIR));
 
     for message in &connection.receiver {
         log::debug!("got message: {:?}", message);
@@ -70,7 +75,7 @@ pub fn loop_turn(
         }
         Message::Notification(not) => {
             log::info!("Got notification: {:?}", not);
-            on_notification(&connection.sender, loop_state, not)?;
+            on_notification(&connection.sender, world_state, loop_state, not)?;
         }
         Message::Response(resp) => {
             log::info!("Got response: {:?}", resp);
@@ -105,13 +110,15 @@ pub fn loop_turn(
 
 fn on_notification(
     msg_sender: &Sender<Message>,
+    world_state: &WorldState,
     loop_state: &mut LoopState,
     not: Notification,
 ) -> Result<()> {
     let notif = match notification_cast::<DidOpenTextDocument>(not) {
         Ok(params) => {
             let source_text = params.text_document.text;
-            let not = handlers::on_document_change(params.text_document.uri, &source_text);
+            let not =
+                handlers::on_document_change(world_state, params.text_document.uri, &source_text);
             log::info!("Sending {:?}", &not);
             msg_sender.send(not.into()).unwrap();
             return Ok(());
@@ -121,7 +128,8 @@ fn on_notification(
     let notif = match notification_cast::<DidChangeTextDocument>(notif) {
         Ok(params) => {
             let source_text = params.content_changes.get(0).unwrap().clone().text;
-            let not = handlers::on_document_change(params.text_document.uri, &source_text);
+            let not =
+                handlers::on_document_change(world_state, params.text_document.uri, &source_text);
             log::info!("Sending {:?}", &not);
             msg_sender.send(not.into())?;
 
