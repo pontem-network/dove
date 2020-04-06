@@ -1,11 +1,9 @@
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use lsp_types::{Diagnostic, Position, Range};
 use move_ir_types::location::Loc;
-use move_lang::errors::Error;
-
+use move_lang::errors::{Error, FilesSourceText};
 use move_lang::strip_comments_and_verify;
 use move_lang::test_utils::MOVE_EXTENSION;
 
@@ -78,15 +76,15 @@ fn get_stdlib_filenames(stdlib_path: &Path) -> Vec<String> {
         .collect()
 }
 
-pub fn get_stdlib_files(stdlib_path: &Path) -> HashMap<&'static str, String> {
+pub fn get_stdlib_files(stdlib_path: &Path) -> FilesSourceText {
     let stdlib_fnames = get_stdlib_filenames(stdlib_path)
         .iter()
         .map(|s| leak_str(s))
         .collect::<Vec<&'static str>>();
 
-    let mut lib_files = HashMap::with_capacity(stdlib_fnames.len());
+    let mut lib_files = FilesSourceText::with_capacity(stdlib_fnames.len());
     for mod_fname in stdlib_fnames {
-        let mod_text = fs::read_to_string(mod_fname).unwrap();
+        let mod_text = fs::read_to_string(mod_fname).unwrap().replace("\r\n", "\n");
         let stripped_mod_text = strip_comments_and_verify(mod_fname, &mod_text).unwrap();
         lib_files.insert(mod_fname, stripped_mod_text);
     }
