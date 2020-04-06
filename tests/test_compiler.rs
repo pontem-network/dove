@@ -4,7 +4,9 @@ use move_lang::parser::ast::FileDefinition;
 use move_language_server::compiler::check_with_compiler;
 use move_language_server::compiler::parser::parse_source_file;
 use move_language_server::config::Config;
-use move_language_server::test_utils::{load_stdlib_files, STDLIB_DIR};
+use move_language_server::test_utils::{
+    load_stdlib_files, COVID_TRACKER_MODULE, MODULES_PATH, STDLIB_DIR,
+};
 use move_language_server::world::WorldState;
 
 const FNAME: &str = "main.move";
@@ -215,9 +217,8 @@ fun main() {
     CovidTracker::how_many(5);
 }
     ";
-    let modules_path = "./tests/modules";
     let config = Config {
-        module_folders: vec![STDLIB_DIR.into(), modules_path.into()],
+        module_folders: vec![STDLIB_DIR.into(), MODULES_PATH.into()],
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
@@ -231,7 +232,6 @@ fun main() {
 
 #[test]
 fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
-    let modules_path = "./tests/modules";
     let module_source_text = r"
 module CovidTracker {
     use 0x0::Vector;
@@ -257,12 +257,12 @@ module CovidTracker {
 }
     ";
     let config = Config {
-        module_folders: vec![STDLIB_DIR.into(), modules_path.into()],
+        module_folders: vec![STDLIB_DIR.into(), MODULES_PATH.into()],
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
     check_with_compiler(
-        "./tests/modules/covid/covid_tracker.move",
+        COVID_TRACKER_MODULE,
         module_source_text,
         &world_state.available_module_files,
     )
