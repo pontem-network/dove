@@ -9,7 +9,7 @@ use crate::config::MoveDialect;
 #[derive(Debug)]
 pub struct Config {
     pub dialect: MoveDialect,
-    pub stdlib_path: PathBuf,
+    pub stdlib_path: Option<PathBuf>,
 }
 
 #[derive(Debug)]
@@ -33,15 +33,20 @@ impl WorldState {
     }
 
     fn reload_stdlib(&mut self) {
-        let stdlib_path = match fs::canonicalize(&self.config.stdlib_path) {
+        if self.config.stdlib_path.is_none() {
+            self.stdlib_files = FilesSourceText::new();
+            return;
+        }
+        let stdlib_path = self.config.stdlib_path.as_ref().unwrap();
+        let canon_stdlib_path = match fs::canonicalize(stdlib_path) {
             Ok(path) => path,
             Err(_) => {
-                log::error!("Cannot resolve path {:?}", &self.config.stdlib_path);
+                log::error!("Cannot resolve path {:?}", stdlib_path);
                 return;
             }
         };
         log::info!("Loading standard library from {:?}", &stdlib_path);
-        self.stdlib_files = get_stdlib_files(&stdlib_path);
+        self.stdlib_files = get_stdlib_files(&canon_stdlib_path);
     }
 
     pub fn update_configuration(&mut self, config: Config) {

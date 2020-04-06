@@ -17,14 +17,14 @@ impl Default for MoveDialect {
 #[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ServerConfig {
     pub dialect: MoveDialect,
-    pub stdlib_path: PathBuf,
+    pub stdlib_path: Option<PathBuf>,
 }
 
 impl Default for ServerConfig {
     fn default() -> Self {
         ServerConfig {
             dialect: MoveDialect::default(),
-            stdlib_path: PathBuf::default(),
+            stdlib_path: None,
         }
     }
 }

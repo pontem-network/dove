@@ -274,8 +274,7 @@ fn test_update_server_configuration_from_the_client() {
     let mut world_state = WorldState::new(get_config(&ServerConfig::default()));
 
     let content = serde_json::json!({
-        "dialect": "dfinance",
-        "stdlib_path": STDLIB_DIR
+        "dialect": "dfinance"
     });
     let client_config_response = Response::new_ok(config_req_id, vec![content]);
 
