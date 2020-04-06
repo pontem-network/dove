@@ -249,7 +249,7 @@ fn test_initialize_server_configuration() {
     )
     .unwrap();
     initialize_params.initialization_options =
-        Some(serde_json::json!({"dialect": "dfinance", "stdlib_path": STDLIB_DIR}));
+        Some(serde_json::json!({"dialect": "dfinance", "module_folders": [STDLIB_DIR]}));
 
     let initialize_req = request_new::<Initialize>(RequestId::from(1), initialize_params);
     client_conn.sender.send(initialize_req.into()).unwrap();

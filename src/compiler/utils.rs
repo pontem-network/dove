@@ -63,8 +63,8 @@ fn iterate_directory(path: &Path) -> impl Iterator<Item = PathBuf> {
         .map(|entry| entry.path().to_path_buf())
 }
 
-fn get_module_filenames(stdlib_path: &Path) -> Vec<String> {
-    let dirfiles = iterate_directory(stdlib_path);
+fn get_module_filenames(folder: &Path) -> Vec<String> {
+    let dirfiles = iterate_directory(folder);
     dirfiles
         .flat_map(|path| {
             if path.extension()?.to_str()? == MOVE_EXTENSION {
