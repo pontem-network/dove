@@ -12,6 +12,7 @@ pub fn check_parsed_program(
     sender_opt: Option<Address>,
 ) -> Result<(), Errors> {
     // expansion step
+    // TODO: pretty sure stdlib could be excluded from expansion on every change (cached)
     let (e_program, errors) = libra_expansion::translate::program(prog, sender_opt);
     if !errors.is_empty() {
         return Err(errors);

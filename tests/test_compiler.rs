@@ -4,12 +4,14 @@ use move_lang::parser::ast::FileDefinition;
 use move_language_server::compiler::check_with_compiler;
 use move_language_server::compiler::parser::parse_source_file;
 
+use move_language_server::test_utils::load_stdlib_files;
+
 const FNAME: &str = "main.move";
 
 #[test]
 fn test_fail_on_non_ascii_character() {
-    let source = r"fun main() { return; }ффф";
-    let errors = check_with_compiler(FNAME, source).unwrap_err();
+    let source_text = r"fun main() { return; }ффф";
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -30,8 +32,8 @@ fn test_successful_parsing() {
 
 #[test]
 fn test_function_parse_error() {
-    let source = "module M { struc S { f: u64 } }";
-    let errors = check_with_compiler(FNAME, source).unwrap_err();
+    let source_text = "module M { struc S { f: u64 } }";
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
     let error = errors.get(0).unwrap();
     assert_eq!(
@@ -43,8 +45,8 @@ fn test_function_parse_error() {
 
 #[test]
 fn test_main_function_parse_error() {
-    let source = "main() {}";
-    let errors = check_with_compiler(FNAME, source).unwrap_err();
+    let source_text = "main() {}";
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
     let error = errors.get(0).unwrap();
     assert_eq!(
@@ -59,14 +61,14 @@ fn test_main_function_parse_error() {
 
 #[test]
 fn test_multiline_function_parse_error() {
-    let source = r"
+    let source_text = r"
 module M {
     struc S {
         f: u64
     }
 }
 ";
-    let errors = check_with_compiler(FNAME, source).unwrap_err();
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -86,7 +88,7 @@ fn test_expansion_checks_duplicates() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
     let diagnostic = errors.get(0).unwrap();
     assert_eq!(
@@ -103,7 +105,7 @@ fn test_expansion_checks_duplicates() {
 fn test_expansion_checks_public_main_redundancy() {
     let source_text = r"public fun main() {}";
 
-    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -124,7 +126,7 @@ fn test_naming_checks_generics_with_type_parameters() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -147,7 +149,7 @@ fn test_typechecking_invalid_local_borrowing() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -178,7 +180,7 @@ fn test_check_unreachable_code_in_loop() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text).unwrap_err();
+    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -187,4 +189,18 @@ fn test_check_unreachable_code_in_loop() {
         Range::new(Position::new(8, 42), Position::new(8, 43))
     );
     assert_eq!(diagnostic.message, "Unreachable code. This statement (and any following statements) will not be executed. In some cases, this will result in unused resource values.");
+}
+
+#[test]
+fn test_stdlib_modules_are_available_if_loaded() {
+    let source_text = r"
+module MyModule {
+    use 0x0::Transaction;
+
+    public fun how_main(country: u8) {
+        let _ = Transaction::sender();
+    }
+}
+    ";
+    check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap();
 }

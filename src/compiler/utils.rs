@@ -1,6 +1,11 @@
+use std::fs;
+use std::path::{Path, PathBuf};
+
 use lsp_types::{Diagnostic, Position, Range};
 use move_ir_types::location::Loc;
-use move_lang::errors::Error;
+use move_lang::errors::{Error, FilesSourceText};
+use move_lang::strip_comments_and_verify;
+use move_lang::test_utils::MOVE_EXTENSION;
 
 fn count_line_col(source: &str, pos: usize) -> (u64, u64) {
     let chars_before_pos = &source[..pos];
@@ -38,4 +43,50 @@ pub fn convert_error_into_diags(error: Error, source: &str) -> Vec<Diagnostic> {
             Diagnostic::new_simple(range, message)
         })
         .collect()
+}
+
+pub fn leak_str(s: &str) -> &'static str {
+    Box::leak(Box::new(s.to_owned()))
+}
+
+fn iterate_directory(path: &Path) -> impl Iterator<Item = PathBuf> {
+    walkdir::WalkDir::new(path)
+        .into_iter()
+        .map(::std::result::Result::unwrap)
+        .filter(|entry| {
+            entry.file_type().is_file()
+                && entry
+                    .file_name()
+                    .to_str()
+                    .map_or(false, |s| !s.starts_with('.')) // Skip hidden files
+        })
+        .map(|entry| entry.path().to_path_buf())
+}
+
+fn get_stdlib_filenames(stdlib_path: &Path) -> Vec<String> {
+    let dirfiles = iterate_directory(stdlib_path);
+    dirfiles
+        .flat_map(|path| {
+            if path.extension()?.to_str()? == MOVE_EXTENSION {
+                path.into_os_string().into_string().ok()
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+pub fn get_stdlib_files(stdlib_path: &Path) -> FilesSourceText {
+    let stdlib_fnames = get_stdlib_filenames(stdlib_path)
+        .iter()
+        .map(|s| leak_str(s))
+        .collect::<Vec<&'static str>>();
+
+    let mut lib_files = FilesSourceText::with_capacity(stdlib_fnames.len());
+    for mod_fname in stdlib_fnames {
+        let mod_text = fs::read_to_string(mod_fname).unwrap().replace("\r\n", "\n");
+        let stripped_mod_text = strip_comments_and_verify(mod_fname, &mod_text).unwrap();
+        lib_files.insert(mod_fname, stripped_mod_text);
+    }
+    lib_files
 }
