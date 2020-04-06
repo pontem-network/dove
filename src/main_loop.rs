@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use crossbeam_channel::Sender;
 use lsp_server::{Connection, Message, Notification, Request, RequestId, Response};
@@ -10,24 +12,17 @@ use lsp_types::{ConfigurationItem, ConfigurationParams, MessageType, ShowMessage
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::config::ServerConfig;
+use crate::config::Config;
 use crate::handlers;
-use crate::world::{Config, WorldState};
+use crate::world::WorldState;
 
-pub fn get_config(server_config: &ServerConfig) -> Config {
-    Config {
-        dialect: server_config.dialect.clone(),
-        stdlib_path: server_config.stdlib_path.clone(),
-    }
-}
-
-pub fn main_loop(server_config: ServerConfig, connection: &Connection) -> Result<()> {
+pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> Result<()> {
     log::info!("starting example main loop");
 
-    let config = get_config(&server_config);
     let mut loop_state = LoopState::default();
-    let mut world_state = WorldState::new_with_stdlib_loaded(config);
+    let mut world_state = WorldState::with_modules_loaded(ws_root, config);
 
+    log::info!("server initialized, serving requests");
     for message in &connection.receiver {
         log::debug!("got message: {:?}", message);
         if let Message::Request(req) = &message {
@@ -76,24 +71,18 @@ pub fn loop_turn(
         }
         Message::Response(resp) => {
             log::info!("Got response: {:?}", resp);
+
             if Some(&resp.id) == loop_state.configuration_request_id.as_ref() {
                 loop_state.configuration_request_id = None;
                 log::info!("config update response: '{:?}", resp);
-
                 let Response { error, result, .. } = resp;
-                let parsed_config_val = result.map(serde_json::from_value::<Vec<ServerConfig>>);
 
-                match (error, parsed_config_val) {
+                match (error, result) {
                     (Some(err), _) => log::error!("failed to fetch the server settings: {:?}", err),
-                    (None, Some(Ok(new_config))) => {
-                        let new_server_config = new_config
-                            .first()
-                            .expect("the client is expected to always send a non-empty config data")
-                            .to_owned();
-                        world_state.update_configuration(get_config(&new_server_config));
-                    }
-                    (None, Some(Err(e))) => {
-                        log::error!("failed to parse client config response: {}", e)
+                    (None, Some(configs)) => {
+                        if let Some(new_config) = configs.get(0) {
+                            world_state.config.update(new_config);
+                        }
                     }
                     (None, None) => {
                         log::error!("received empty server settings response from the client")

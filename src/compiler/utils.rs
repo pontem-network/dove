@@ -63,7 +63,7 @@ fn iterate_directory(path: &Path) -> impl Iterator<Item = PathBuf> {
         .map(|entry| entry.path().to_path_buf())
 }
 
-fn get_stdlib_filenames(stdlib_path: &Path) -> Vec<String> {
+fn get_module_filenames(stdlib_path: &Path) -> Vec<String> {
     let dirfiles = iterate_directory(stdlib_path);
     dirfiles
         .flat_map(|path| {
@@ -76,14 +76,14 @@ fn get_stdlib_filenames(stdlib_path: &Path) -> Vec<String> {
         .collect()
 }
 
-pub fn get_stdlib_files(stdlib_path: &Path) -> FilesSourceText {
-    let stdlib_fnames = get_stdlib_filenames(stdlib_path)
+pub fn get_module_files(modules_folder: &Path) -> FilesSourceText {
+    let module_filenames = get_module_filenames(modules_folder)
         .iter()
         .map(|s| leak_str(s))
         .collect::<Vec<&'static str>>();
 
-    let mut lib_files = FilesSourceText::with_capacity(stdlib_fnames.len());
-    for mod_fname in stdlib_fnames {
+    let mut lib_files = FilesSourceText::with_capacity(module_filenames.len());
+    for mod_fname in module_filenames {
         let mod_text = fs::read_to_string(mod_fname).unwrap().replace("\r\n", "\n");
         let stripped_mod_text = strip_comments_and_verify(mod_fname, &mod_text).unwrap();
         lib_files.insert(mod_fname, stripped_mod_text);

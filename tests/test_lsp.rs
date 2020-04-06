@@ -12,9 +12,9 @@ use lsp_types::{
     TextDocumentSyncCapability, TextDocumentSyncKind, Url, VersionedTextDocumentIdentifier,
 };
 
-use move_language_server::config::{MoveDialect, ServerConfig};
+use move_language_server::config::{Config, MoveDialect};
 use move_language_server::main_loop::{
-    get_config, loop_turn, main_loop, notification_cast, notification_new, request_new, LoopState,
+    loop_turn, main_loop, notification_cast, notification_new, request_new, LoopState,
 };
 use move_language_server::server::{from_json, initialize_server, parse_initialize_params};
 use move_language_server::test_utils::STDLIB_DIR;
@@ -71,8 +71,9 @@ fn assert_receiver_has_only_shutdown_response(client_receiver: Receiver<Message>
 }
 
 fn run_main_loop(connection: &Connection) -> Result<()> {
-    let server_config = ServerConfig::default();
-    main_loop(server_config, connection)
+    let config = Config::default();
+    let ws_root = std::env::current_dir().unwrap();
+    main_loop(ws_root, config, connection)
 }
 
 #[test]
@@ -260,8 +261,8 @@ fn test_initialize_server_configuration() {
     client_conn.sender.send(initialized_not).unwrap();
 
     let init_params = initialize_server(&server_conn).unwrap();
-    let server_config = parse_initialize_params(init_params, &server_conn).unwrap();
-    assert_eq!(server_config.dialect, MoveDialect::DFinance);
+    let (_, config) = parse_initialize_params(init_params).unwrap();
+    assert_eq!(config.dialect, MoveDialect::DFinance);
 }
 
 #[test]
@@ -271,7 +272,7 @@ fn test_update_server_configuration_from_the_client() {
 
     let config_req_id = RequestId::from(1);
     let mut loop_state = LoopState::with_config_request_id(&config_req_id);
-    let mut world_state = WorldState::new(get_config(&ServerConfig::default()));
+    let mut world_state = WorldState::new(std::env::current_dir().unwrap(), Config::default());
 
     let content = serde_json::json!({
         "dialect": "dfinance"

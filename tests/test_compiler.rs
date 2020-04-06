@@ -208,16 +208,14 @@ module MyModule {
 #[test]
 fn test_compile_check_script_with_additional_dependencies() {
     // hardcoded sender address
-    let script_source_text = r"
+    let _script_source_text = r"
 use 0x8572f83cee01047effd6e7d0b5c19743::CovidTracker;
 fun main() {
     CovidTracker::how_many(5);
 }
     ";
-    let modules_path = "./tests/modules";
+    let _modules_path = "./tests/modules";
 }
 
 #[test]
-fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
-
-}
+fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {}
