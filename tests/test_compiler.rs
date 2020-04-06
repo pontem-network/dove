@@ -1,18 +1,12 @@
 use lsp_types::{Position, Range};
 use move_lang::parser::ast::FileDefinition;
 
-use move_lang::errors::FilesSourceText;
 use move_language_server::compiler::check_with_compiler;
 use move_language_server::compiler::parser::parse_source_file;
-use move_language_server::compiler::utils::get_stdlib_files;
-use std::path::Path;
+
+use move_language_server::test_utils::load_stdlib_files;
 
 const FNAME: &str = "main.move";
-const STDLIB_DIR: &str = "./tests/stdlib";
-
-fn load_stdlib_files() -> FilesSourceText {
-    get_stdlib_files(Path::new(STDLIB_DIR))
-}
 
 #[test]
 fn test_fail_on_non_ascii_character() {
