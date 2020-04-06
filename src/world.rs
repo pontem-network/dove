@@ -34,6 +34,7 @@ impl WorldState {
 
     fn reload_stdlib(&mut self) {
         if self.config.stdlib_path.is_none() {
+            log::warn!("'stdlib_path' is not specified, standary library won't be loaded");
             self.stdlib_files = FilesSourceText::new();
             return;
         }
