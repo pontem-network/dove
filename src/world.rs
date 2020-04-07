@@ -6,7 +6,7 @@ use move_lang::errors::FilesSourceText;
 use crate::compiler::utils::get_module_files;
 use crate::config::Config;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct WorldState {
     pub ws_root: PathBuf,
     pub config: Config,

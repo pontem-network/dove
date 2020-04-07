@@ -11,6 +11,7 @@ use lsp_types::{
     TextDocumentContentChangeEvent, TextDocumentIdentifier, TextDocumentItem,
     TextDocumentSyncCapability, TextDocumentSyncKind, Url, VersionedTextDocumentIdentifier,
 };
+use move_lang::shared::Address;
 
 use move_language_server::config::{Config, MoveDialect};
 use move_language_server::main_loop::{
@@ -248,8 +249,10 @@ fn test_initialize_server_configuration() {
         serde_json::json!({ "capabilities": serde_json::to_value(ClientCapabilities::default()).unwrap() }),
     )
     .unwrap();
-    initialize_params.initialization_options =
-        Some(serde_json::json!({"dialect": "dfinance", "module_folders": [get_stdlib_path()]}));
+    let address = "0x11111111111111111111111111111111";
+    initialize_params.initialization_options = Some(
+        serde_json::json!({"dialect": "dfinance", "module_folders": [get_stdlib_path()], "sender_address": address}),
+    );
 
     let initialize_req = request_new::<Initialize>(RequestId::from(1), initialize_params);
     client_conn.sender.send(initialize_req.into()).unwrap();
@@ -263,6 +266,7 @@ fn test_initialize_server_configuration() {
     let init_params = initialize_server(&server_conn).unwrap();
     let (_, config) = parse_initialize_params(init_params).unwrap();
     assert_eq!(config.dialect, MoveDialect::DFinance);
+    assert_eq!(config.sender_address, Address::parse_str(address).unwrap());
 }
 
 #[test]
@@ -274,8 +278,10 @@ fn test_update_server_configuration_from_the_client() {
     let mut loop_state = LoopState::with_config_request_id(&config_req_id);
     let mut world_state = WorldState::new(std::env::current_dir().unwrap(), Config::default());
 
+    let address = "0x11111111111111111111111111111111";
     let content = serde_json::json!({
-        "dialect": "dfinance"
+        "dialect": "dfinance",
+        "sender_address": "0x11111111111111111111111111111111"
     });
     let client_config_response = Response::new_ok(config_req_id, vec![content]);
 
@@ -288,4 +294,8 @@ fn test_update_server_configuration_from_the_client() {
     .unwrap();
 
     assert_eq!(world_state.config.dialect, MoveDialect::DFinance);
+    assert_eq!(
+        world_state.config.sender_address,
+        Address::parse_str(address).unwrap()
+    );
 }
