@@ -18,7 +18,7 @@ use move_language_server::main_loop::{
     loop_turn, main_loop, notification_cast, notification_new, request_new, LoopState,
 };
 use move_language_server::server::{from_json, initialize_server, parse_initialize_params};
-use move_language_server::test_utils::get_stdlib_path;
+use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
 use move_language_server::world::WorldState;
 
 fn setup_test_logging() {
@@ -251,7 +251,7 @@ fn test_initialize_server_configuration() {
     .unwrap();
     let address = "0x11111111111111111111111111111111";
     initialize_params.initialization_options = Some(
-        serde_json::json!({"dialect": "dfinance", "module_folders": [get_stdlib_path()], "sender_address": address}),
+        serde_json::json!({"dialect": "dfinance", "modules_folders": [get_stdlib_path()], "sender_address": address}),
     );
 
     let initialize_req = request_new::<Initialize>(RequestId::from(1), initialize_params);
@@ -266,6 +266,7 @@ fn test_initialize_server_configuration() {
     let init_params = initialize_server(&server_conn).unwrap();
     let (_, config) = parse_initialize_params(init_params).unwrap();
     assert_eq!(config.dialect, MoveDialect::DFinance);
+    assert_eq!(config.module_folders, vec![get_stdlib_path()]);
     assert_eq!(config.sender_address, Address::parse_str(address).unwrap());
 }
 
@@ -281,7 +282,8 @@ fn test_update_server_configuration_from_the_client() {
     let address = "0x11111111111111111111111111111111";
     let content = serde_json::json!({
         "dialect": "dfinance",
-        "sender_address": "0x11111111111111111111111111111111"
+        "sender_address": "0x11111111111111111111111111111111",
+        "modules_folders": vec![get_modules_path()]
     });
     let client_config_response = Response::new_ok(config_req_id, vec![content]);
 
@@ -294,6 +296,7 @@ fn test_update_server_configuration_from_the_client() {
     .unwrap();
 
     assert_eq!(world_state.config.dialect, MoveDialect::DFinance);
+    assert_eq!(world_state.config.module_folders, vec![get_modules_path()]);
     assert_eq!(
         world_state.config.sender_address,
         Address::parse_str(address).unwrap()

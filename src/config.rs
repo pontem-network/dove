@@ -32,7 +32,7 @@ impl Config {
         log::info!("Config::update({:#})", value);
 
         set(value, "/dialect", &mut self.dialect);
-        set(value, "/modules", &mut self.module_folders);
+        set(value, "/modules_folders", &mut self.module_folders);
         self.sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x0");
