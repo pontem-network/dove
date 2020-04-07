@@ -3,55 +3,49 @@ use std::path::PathBuf;
 
 use move_lang::errors::FilesSourceText;
 
-use crate::compiler::utils::get_stdlib_files;
-use crate::config::MoveDialect;
-
-#[derive(Debug)]
-pub struct Config {
-    pub dialect: MoveDialect,
-    pub stdlib_path: Option<PathBuf>,
-}
+use crate::compiler::utils::get_module_files;
+use crate::config::Config;
 
 #[derive(Debug)]
 pub struct WorldState {
+    pub ws_root: PathBuf,
     pub config: Config,
-    pub stdlib_files: FilesSourceText,
+    pub available_module_files: FilesSourceText,
 }
 
 impl WorldState {
-    pub fn new(config: Config) -> Self {
+    pub fn new(ws_root: PathBuf, config: Config) -> Self {
         WorldState {
+            ws_root,
             config,
-            stdlib_files: FilesSourceText::new(),
+            available_module_files: FilesSourceText::new(),
         }
     }
 
-    pub fn new_with_stdlib_loaded(config: Config) -> Self {
-        let mut state = Self::new(config);
-        state.reload_stdlib();
+    pub fn with_modules_loaded(ws_root: PathBuf, config: Config) -> Self {
+        let mut state = Self::new(ws_root, config);
+        state.reload_available_module_files();
         state
     }
 
-    fn reload_stdlib(&mut self) {
-        if self.config.stdlib_path.is_none() {
-            log::warn!("'stdlib_path' is not specified, standary library won't be loaded");
-            self.stdlib_files = FilesSourceText::new();
-            return;
+    fn reload_available_module_files(&mut self) {
+        let mut module_files = FilesSourceText::new();
+        for module_folder in &self.config.module_folders {
+            let module_folder = match fs::canonicalize(module_folder) {
+                Ok(path) => path,
+                Err(_) => {
+                    log::error!("Cannot resolve path {:?}", module_folder);
+                    return;
+                }
+            };
+            log::info!("Loading standard library from {:?}", &module_folder);
+            module_files.extend(get_module_files(&module_folder));
         }
-        let stdlib_path = self.config.stdlib_path.as_ref().unwrap();
-        let canon_stdlib_path = match fs::canonicalize(stdlib_path) {
-            Ok(path) => path,
-            Err(_) => {
-                log::error!("Cannot resolve path {:?}", stdlib_path);
-                return;
-            }
-        };
-        log::info!("Loading standard library from {:?}", &stdlib_path);
-        self.stdlib_files = get_stdlib_files(&canon_stdlib_path);
+        self.available_module_files = module_files;
     }
 
     pub fn update_configuration(&mut self, config: Config) {
         self.config = config;
-        self.reload_stdlib();
+        self.reload_available_module_files();
     }
 }

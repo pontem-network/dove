@@ -3,8 +3,10 @@ use move_lang::parser::ast::FileDefinition;
 
 use move_language_server::compiler::check_with_compiler;
 use move_language_server::compiler::parser::parse_source_file;
-
-use move_language_server::test_utils::load_stdlib_files;
+use move_language_server::compiler::utils::leak_str;
+use move_language_server::config::Config;
+use move_language_server::test_utils::{get_modules_path, get_stdlib_path, load_stdlib_files};
+use move_language_server::world::WorldState;
 
 const FNAME: &str = "main.move";
 
@@ -203,4 +205,71 @@ module MyModule {
 }
     ";
     check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap();
+}
+
+#[test]
+fn test_compile_check_script_with_additional_dependencies() {
+    // hardcoded sender address
+    let script_source_text = r"
+use 0x8572f83cee01047effd6e7d0b5c19743::CovidTracker;
+fun main() {
+    CovidTracker::how_many(5);
+}
+    ";
+    let config = Config {
+        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        ..Config::default()
+    };
+    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    check_with_compiler(
+        FNAME,
+        script_source_text,
+        &world_state.available_module_files,
+    )
+    .unwrap();
+}
+
+#[test]
+fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
+    let module_source_text = r"
+module CovidTracker {
+    use 0x0::Vector;
+    use 0x0::Transaction;
+	struct NewsReport {
+		news_source_id: u64,
+		infected_count: u64,
+	}
+	resource struct CovidSituation {
+		country_id: u8,
+		reports: vector<NewsReport>
+	}
+	public fun how_many(country: u8): u64 acquires CovidSituation {
+        let case = borrow_global<CovidSituation>(Transaction::sender());
+        let len  = Vector::length(&case.reports);
+        let sum  = 0u64;
+        let i    = 0;
+        while (i < len) {
+            sum = sum + Vector::borrow(&case.reports, i).infected_count;
+        };
+        sum
+	}
+}
+    ";
+    let config = Config {
+        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        ..Config::default()
+    };
+    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let covid_tracker_module = leak_str(
+        get_modules_path()
+            .join("covid_tracker.move")
+            .to_str()
+            .unwrap(),
+    );
+    check_with_compiler(
+        covid_tracker_module,
+        module_source_text,
+        &world_state.available_module_files,
+    )
+    .unwrap();
 }

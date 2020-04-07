@@ -1,5 +1,6 @@
-use serde::Deserialize;
 use std::path::PathBuf;
+
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -8,23 +9,40 @@ pub enum MoveDialect {
     DFinance,
 }
 
-impl Default for MoveDialect {
+#[derive(Debug)]
+pub struct Config {
+    pub dialect: MoveDialect,
+    pub module_folders: Vec<PathBuf>,
+}
+
+impl Default for Config {
     fn default() -> Self {
-        MoveDialect::Libra
+        Config {
+            dialect: MoveDialect::Libra,
+            module_folders: vec![],
+        }
     }
 }
 
-#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ServerConfig {
-    pub dialect: MoveDialect,
-    pub stdlib_path: Option<PathBuf>,
-}
+impl Config {
+    pub fn update(&mut self, value: &serde_json::Value) {
+        log::info!("Config::update({:#})", value);
 
-impl Default for ServerConfig {
-    fn default() -> Self {
-        ServerConfig {
-            dialect: MoveDialect::default(),
-            stdlib_path: None,
+        set(value, "/dialect", &mut self.dialect);
+        set(value, "/modules", &mut self.module_folders);
+
+        log::info!("Config::update() = {:#?}", self);
+
+        fn get<'a, T: Deserialize<'a>>(value: &'a serde_json::Value, pointer: &str) -> Option<T> {
+            value
+                .pointer(pointer)
+                .and_then(|it| T::deserialize(it).ok())
+        }
+
+        fn set<'a, T: Deserialize<'a>>(value: &'a serde_json::Value, pointer: &str, slot: &mut T) {
+            if let Some(new_value) = get(value, pointer) {
+                *slot = new_value
+            }
         }
     }
 }
