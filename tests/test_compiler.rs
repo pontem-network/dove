@@ -3,6 +3,7 @@ use move_lang::parser::ast::FileDefinition;
 
 use move_language_server::compiler::check_with_compiler;
 use move_language_server::compiler::parser::parse_source_file;
+use move_language_server::compiler::utils::leak_str;
 use move_language_server::config::Config;
 use move_language_server::test_utils::{get_modules_path, get_stdlib_path, load_stdlib_files};
 use move_language_server::world::WorldState;
@@ -259,13 +260,12 @@ module CovidTracker {
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    let covid_tracker_module = Box::leak(Box::new(
+    let covid_tracker_module = leak_str(
         get_modules_path()
             .join("covid_tracker.move")
             .to_str()
-            .unwrap()
-            .to_string(),
-    ));
+            .unwrap(),
+    );
     check_with_compiler(
         covid_tracker_module,
         module_source_text,
