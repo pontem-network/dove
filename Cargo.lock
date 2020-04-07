@@ -733,6 +733,7 @@ dependencies = [
  "anyhow",
  "crossbeam-channel",
  "env_logger",
+ "libra-types",
  "log",
  "lsp-server",
  "lsp-types",

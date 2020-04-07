@@ -302,3 +302,27 @@ fn test_update_server_configuration_from_the_client() {
         Address::parse_str(address).unwrap()
     );
 }
+
+#[test]
+fn test_set_to_default_in_case_of_invalid_address() {
+    setup_test_logging();
+    let (server_conn, _) = Connection::memory();
+
+    let config_req_id = RequestId::from(1);
+    let mut loop_state = LoopState::with_config_request_id(&config_req_id);
+    let mut world_state = WorldState::new(std::env::current_dir().unwrap(), Config::default());
+
+    let address = "wallet1jk4ld0uu6wdrj9t8u3gghm9jt583hxx7xp7he8";
+    let content = serde_json::json!({ "sender_address": address });
+    let client_config_response = Response::new_ok(config_req_id, vec![content]);
+
+    loop_turn(
+        &server_conn,
+        &mut world_state,
+        &mut loop_state,
+        client_config_response.into(),
+    )
+    .unwrap();
+
+    assert_eq!(world_state.config.sender_address, Address::default());
+}

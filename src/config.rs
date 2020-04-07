@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use libra_types::account_address::AccountAddress;
 use move_lang::shared::Address;
 use serde::Deserialize;
 
@@ -38,8 +39,8 @@ impl Config {
                 log::info!("Using default account address 0x0");
                 Address::default()
             }
-            Some(address) => match Address::parse_str(address) {
-                Ok(acc_address) => acc_address,
+            Some(address) => match AccountAddress::from_hex_literal(address) {
+                Ok(_) => Address::parse_str(address).unwrap(),
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);
                     log::info!("Using default account address 0x0");
