@@ -1,14 +1,14 @@
 use std::fs;
+use std::path::PathBuf;
 
 use lsp_types::Diagnostic;
-use move_lang::errors::FilesSourceText;
+
 use move_lang::parser as libra_parser;
 use move_lang::parser::ast::FileDefinition;
 use move_lang::parser::syntax::parse_file_string;
-use move_lang::shared::Address;
 
 use crate::compiler::utils::convert_error_into_diags;
-use std::path::PathBuf;
+use crate::world::WorldState;
 
 pub mod check;
 pub mod parser;
@@ -19,7 +19,7 @@ pub type CompilerCheckResult<P> = Result<P, Vec<Diagnostic>>;
 pub fn check_with_compiler(
     current_file: &'static str,
     source_text: &str,
-    module_files: &FilesSourceText,
+    world_state: &WorldState,
 ) -> CompilerCheckResult<()> {
     let parsed_file = parser::parse_source_file(current_file, source_text)?;
 
@@ -31,7 +31,8 @@ pub fn check_with_compiler(
             PathBuf::new()
         }
     };
-    let module_definitions: Vec<FileDefinition> = module_files
+    let module_definitions: Vec<FileDefinition> = world_state
+        .available_module_files
         .iter()
         .filter(|(fname, _)| **fname != current_file.to_str().unwrap())
         .map(|(fname, text)| parse_file_string(fname, text).unwrap())
@@ -40,7 +41,7 @@ pub fn check_with_compiler(
         source_definitions: vec![parsed_file],
         lib_definitions: module_definitions,
     };
-    let sender_opt = Some(Address::parse_str("0x8572f83cee01047effd6e7d0b5c19743").unwrap());
+    let sender_opt = Some(world_state.config.sender_address);
 
     let check_res = check::check_parsed_program(parsed_program, sender_opt);
     check_res.map_err(|libra_errors| {

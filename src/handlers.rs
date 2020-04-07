@@ -13,11 +13,7 @@ pub(crate) fn on_document_change(
 ) -> Notification {
     let fname = Box::leak(Box::new(document_uri.to_string()));
 
-    let diagnostics = match compiler::check_with_compiler(
-        fname,
-        new_source_text,
-        &world_state.available_module_files,
-    ) {
+    let diagnostics = match compiler::check_with_compiler(fname, new_source_text, world_state) {
         Ok(_) => vec![],
         Err(diagnostics) => diagnostics,
     };

@@ -1,11 +1,12 @@
 use lsp_types::{Position, Range};
 use move_lang::parser::ast::FileDefinition;
+use move_lang::shared::Address;
 
 use move_language_server::compiler::check_with_compiler;
 use move_language_server::compiler::parser::parse_source_file;
 use move_language_server::compiler::utils::leak_str;
 use move_language_server::config::Config;
-use move_language_server::test_utils::{get_modules_path, get_stdlib_path, load_stdlib_files};
+use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
 use move_language_server::world::WorldState;
 
 const FNAME: &str = "main.move";
@@ -13,7 +14,8 @@ const FNAME: &str = "main.move";
 #[test]
 fn test_fail_on_non_ascii_character() {
     let source_text = r"fun main() { return; }ффф";
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -35,7 +37,8 @@ fn test_successful_parsing() {
 #[test]
 fn test_function_parse_error() {
     let source_text = "module M { struc S { f: u64 } }";
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
     let error = errors.get(0).unwrap();
     assert_eq!(
@@ -48,7 +51,8 @@ fn test_function_parse_error() {
 #[test]
 fn test_main_function_parse_error() {
     let source_text = "main() {}";
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
     let error = errors.get(0).unwrap();
     assert_eq!(
@@ -70,7 +74,8 @@ module M {
     }
 }
 ";
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -90,7 +95,8 @@ fn test_expansion_checks_duplicates() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
     let diagnostic = errors.get(0).unwrap();
     assert_eq!(
@@ -107,7 +113,8 @@ fn test_expansion_checks_duplicates() {
 fn test_expansion_checks_public_main_redundancy() {
     let source_text = r"public fun main() {}";
 
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -128,7 +135,8 @@ fn test_naming_checks_generics_with_type_parameters() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -151,7 +159,8 @@ fn test_typechecking_invalid_local_borrowing() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -182,7 +191,8 @@ fn test_check_unreachable_code_in_loop() {
 }
     ";
 
-    let errors = check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap_err();
+    let world_state = WorldState::default();
+    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -204,7 +214,12 @@ module MyModule {
     }
 }
     ";
-    check_with_compiler(FNAME, source_text, &load_stdlib_files()).unwrap();
+    let config = Config {
+        module_folders: vec![get_stdlib_path()],
+        ..Config::default()
+    };
+    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    check_with_compiler(FNAME, source_text, &world_state).unwrap();
 }
 
 #[test]
@@ -217,16 +232,12 @@ fun main() {
 }
     ";
     let config = Config {
+        sender_address: Address::parse_str("0x8572f83cee01047effd6e7d0b5c19743").unwrap(),
         module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    check_with_compiler(
-        FNAME,
-        script_source_text,
-        &world_state.available_module_files,
-    )
-    .unwrap();
+    check_with_compiler(FNAME, script_source_text, &world_state).unwrap();
 }
 
 #[test]
@@ -266,10 +277,24 @@ module CovidTracker {
             .to_str()
             .unwrap(),
     );
-    check_with_compiler(
-        covid_tracker_module,
-        module_source_text,
-        &world_state.available_module_files,
-    )
-    .unwrap();
+    check_with_compiler(covid_tracker_module, module_source_text, &world_state).unwrap();
+}
+
+#[test]
+fn test_compile_with_sender_address_specified() {
+    // hardcoded sender address
+    let sender_address = "0x11111111111111111111111111111111";
+    let script_source_text = r"
+use 0x11111111111111111111111111111111::CovidTracker;
+fun main() {
+    CovidTracker::how_many(5);
+}
+    ";
+    let config = Config {
+        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        sender_address: Address::parse_str(sender_address).unwrap(),
+        ..Config::default()
+    };
+    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    check_with_compiler(FNAME, script_source_text, &world_state).unwrap();
 }
