@@ -4,9 +4,7 @@ use move_lang::parser::ast::FileDefinition;
 use move_language_server::compiler::check_with_compiler;
 use move_language_server::compiler::parser::parse_source_file;
 use move_language_server::config::Config;
-use move_language_server::test_utils::{
-    load_stdlib_files, COVID_TRACKER_MODULE, MODULES_PATH, STDLIB_DIR,
-};
+use move_language_server::test_utils::{get_modules_path, get_stdlib_path, load_stdlib_files};
 use move_language_server::world::WorldState;
 
 const FNAME: &str = "main.move";
@@ -218,7 +216,7 @@ fun main() {
 }
     ";
     let config = Config {
-        module_folders: vec![STDLIB_DIR.into(), MODULES_PATH.into()],
+        module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
@@ -257,12 +255,19 @@ module CovidTracker {
 }
     ";
     let config = Config {
-        module_folders: vec![STDLIB_DIR.into(), MODULES_PATH.into()],
+        module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let covid_tracker_module = Box::leak(Box::new(
+        get_modules_path()
+            .join("covid_tracker.move")
+            .to_str()
+            .unwrap()
+            .to_string(),
+    ));
     check_with_compiler(
-        COVID_TRACKER_MODULE,
+        covid_tracker_module,
         module_source_text,
         &world_state.available_module_files,
     )

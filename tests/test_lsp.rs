@@ -17,7 +17,7 @@ use move_language_server::main_loop::{
     loop_turn, main_loop, notification_cast, notification_new, request_new, LoopState,
 };
 use move_language_server::server::{from_json, initialize_server, parse_initialize_params};
-use move_language_server::test_utils::STDLIB_DIR;
+use move_language_server::test_utils::get_stdlib_path;
 use move_language_server::world::WorldState;
 
 fn setup_test_logging() {
@@ -249,7 +249,7 @@ fn test_initialize_server_configuration() {
     )
     .unwrap();
     initialize_params.initialization_options =
-        Some(serde_json::json!({"dialect": "dfinance", "module_folders": [STDLIB_DIR]}));
+        Some(serde_json::json!({"dialect": "dfinance", "module_folders": [get_stdlib_path()]}));
 
     let initialize_req = request_new::<Initialize>(RequestId::from(1), initialize_params);
     client_conn.sender.send(initialize_req.into()).unwrap();

@@ -1,24 +1,21 @@
-use std::path::Path;
+use std::path::PathBuf;
 
 use move_lang::errors::FilesSourceText;
 
 use crate::compiler::utils::get_module_files;
 
-#[cfg(not(target_os = "windows"))]
-pub const STDLIB_DIR: &str = r"./tests/stdlib";
-#[cfg(target_os = "windows")]
-pub const STDLIB_DIR: &str = r".\tests\stdlib";
+fn get_tests_dir() -> PathBuf {
+    PathBuf::from(".").join("tests")
+}
 
-#[cfg(not(target_os = "windows"))]
-pub const MODULES_PATH: &str = r"./tests/modules";
-#[cfg(target_os = "windows")]
-pub const MODULES_PATH: &str = r".\tests\modules";
+pub fn get_stdlib_path() -> PathBuf {
+    get_tests_dir().join("stdlib")
+}
 
-#[cfg(not(target_os = "windows"))]
-pub const COVID_TRACKER_MODULE: &str = r"./tests/modules/covid/covid_tracker.move";
-#[cfg(target_os = "windows")]
-pub const STDLIB_DIR: &str = r".\tests\modules\covid\covid_tracker.move";
+pub fn get_modules_path() -> PathBuf {
+    get_tests_dir().join("modules")
+}
 
 pub fn load_stdlib_files() -> FilesSourceText {
-    get_module_files(Path::new(STDLIB_DIR))
+    get_module_files(get_stdlib_path().as_path())
 }
