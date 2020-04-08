@@ -1,8 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use move_lang::errors::FilesSourceText;
-
+use crate::analysis::{Analysis, AnalysisChange};
 use crate::compiler::utils::get_module_files;
 use crate::config::Config;
 
@@ -10,7 +9,7 @@ use crate::config::Config;
 pub struct WorldState {
     pub ws_root: PathBuf,
     pub config: Config,
-    pub available_module_files: FilesSourceText,
+    pub analysis: Analysis,
 }
 
 impl WorldState {
@@ -18,7 +17,7 @@ impl WorldState {
         WorldState {
             ws_root,
             config,
-            available_module_files: FilesSourceText::new(),
+            analysis: Analysis::default(),
         }
     }
 
@@ -29,7 +28,7 @@ impl WorldState {
     }
 
     fn reload_available_module_files(&mut self) {
-        let mut module_files = FilesSourceText::new();
+        let mut change = AnalysisChange::new();
         for module_folder in &self.config.module_folders {
             let module_folder = match fs::canonicalize(module_folder) {
                 Ok(path) => path,
@@ -39,9 +38,11 @@ impl WorldState {
                 }
             };
             log::info!("Loading standard library from {:?}", &module_folder);
-            module_files.extend(get_module_files(&module_folder));
+            for (fname, new_text) in get_module_files(&module_folder) {
+                change.change_file(fname, new_text);
+            }
         }
-        self.available_module_files = module_files;
+        self.analysis.apply_change(change);
     }
 
     pub fn update_configuration(&mut self, config: Config) {

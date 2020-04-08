@@ -30,6 +30,11 @@ fn setup_test_logging() {
         .unwrap_or_default();
 }
 
+fn setup_test_connections() -> (Connection, Connection) {
+    setup_test_logging();
+    Connection::memory()
+}
+
 fn send_shutdown_requests(client_connection: &Connection) {
     let shutdown_req = Message::Request(Request::new(
         3.into(),
@@ -79,8 +84,7 @@ fn run_main_loop(connection: &Connection) -> Result<()> {
 
 #[test]
 fn test_server_returns_successful_response_on_initialization() {
-    setup_test_logging();
-    let (server_conn, client_conn) = Connection::memory();
+    let (server_conn, client_conn) = setup_test_connections();
 
     let initialize_req = Message::Request(Request::new(
         1.into(),
@@ -110,8 +114,7 @@ fn test_server_returns_successful_response_on_initialization() {
 
 #[test]
 fn test_shutdown_handler_returns_response_to_the_client() {
-    setup_test_logging();
-    let (server_conn, client_conn) = Connection::memory();
+    let (server_conn, client_conn) = setup_test_connections();
 
     send_shutdown_requests(&client_conn);
     run_main_loop(&server_conn).unwrap();
@@ -121,8 +124,7 @@ fn test_shutdown_handler_returns_response_to_the_client() {
 
 #[test]
 fn test_announce_text_document_sync_capabilities() {
-    setup_test_logging();
-    let (server_conn, client_conn) = Connection::memory();
+    let (server_conn, client_conn) = setup_test_connections();
 
     let initialize_req = Message::Request(Request::new(
         1.into(),
@@ -157,8 +159,7 @@ fn test_announce_text_document_sync_capabilities() {
 
 #[test]
 fn test_server_publishes_diagnostic_after_receiving_didopen() {
-    setup_test_logging();
-    let (server_conn, client_conn) = Connection::memory();
+    let (server_conn, client_conn) = setup_test_connections();
 
     let document_url = Url::parse("file:///foo/bar").unwrap();
     let text_document = TextDocumentItem::new(
@@ -188,8 +189,7 @@ fn test_server_publishes_diagnostic_after_receiving_didopen() {
 
 #[test]
 fn test_send_diagnostics_after_didchange() {
-    setup_test_logging();
-    let (server_conn, client_conn) = Connection::memory();
+    let (server_conn, client_conn) = setup_test_connections();
 
     let document_url = Url::parse("file:///foo/bar").unwrap();
     let text_document = VersionedTextDocumentIdentifier::new(document_url.clone(), 1);
@@ -223,8 +223,7 @@ fn test_send_diagnostics_after_didchange() {
 
 #[test]
 fn test_send_nothing_after_didclose() {
-    setup_test_logging();
-    let (server_conn, client_conn) = Connection::memory();
+    let (server_conn, client_conn) = setup_test_connections();
 
     let document_url = Url::parse("file:///foo/bar").unwrap();
     let didclose_params = DidCloseTextDocumentParams {
@@ -241,8 +240,7 @@ fn test_send_nothing_after_didclose() {
 
 #[test]
 fn test_initialize_server_configuration() {
-    setup_test_logging();
-    let (server_conn, client_conn) = Connection::memory();
+    let (server_conn, client_conn) = setup_test_connections();
 
     let mut initialize_params = from_json::<InitializeParams>(
         "InitializeParams",
@@ -272,8 +270,7 @@ fn test_initialize_server_configuration() {
 
 #[test]
 fn test_update_server_configuration_from_the_client() {
-    setup_test_logging();
-    let (server_conn, _) = Connection::memory();
+    let (server_conn, _) = setup_test_connections();
 
     let config_req_id = RequestId::from(1);
     let mut loop_state = LoopState::with_config_request_id(&config_req_id);
@@ -305,15 +302,14 @@ fn test_update_server_configuration_from_the_client() {
 
 #[test]
 fn test_set_to_default_in_case_of_invalid_address() {
-    setup_test_logging();
-    let (server_conn, _) = Connection::memory();
+    let (server_conn, _) = setup_test_connections();
 
     let config_req_id = RequestId::from(1);
     let mut loop_state = LoopState::with_config_request_id(&config_req_id);
     let mut world_state = WorldState::new(std::env::current_dir().unwrap(), Config::default());
 
-    let address = "wallet1jk4ld0uu6wdrj9t8u3gghm9jt583hxx7xp7he8";
-    let content = serde_json::json!({ "sender_address": address });
+    let content =
+        serde_json::json!({ "sender_address": "wallet1jk4ld0uu6wdrj9t8u3gghm9jt583hxx7xp7he8" });
     let client_config_response = Response::new_ok(config_req_id, vec![content]);
 
     loop_turn(
@@ -325,4 +321,47 @@ fn test_set_to_default_in_case_of_invalid_address() {
     .unwrap();
 
     assert_eq!(world_state.config.sender_address, Address::default());
+}
+
+#[test]
+fn test_world_state_gets_updated_on_module_change() {
+    let (server_conn, _client_conn) = setup_test_connections();
+
+    let mut config = Config::default();
+    config.module_folders = vec![get_modules_path()];
+
+    let mut loop_state = LoopState::default();
+    let mut world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let document_url = Url::from_file_path(
+        get_modules_path()
+            .join("covid_tracker.move")
+            .canonicalize()
+            .unwrap(),
+    )
+    .unwrap();
+    let didchange_notification =
+        notification_new::<DidChangeTextDocument>(DidChangeTextDocumentParams {
+            text_document: VersionedTextDocumentIdentifier::new(document_url.clone(), 1),
+            content_changes: vec![TextDocumentContentChangeEvent {
+                range: None,
+                range_length: None,
+                text: "module CovidTracker {}".to_string(),
+            }],
+        });
+    loop_turn(
+        &server_conn,
+        &mut world_state,
+        &mut loop_state,
+        didchange_notification.into(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        world_state
+            .analysis
+            .available_module_files()
+            .get(document_url.path())
+            .unwrap(),
+        "module CovidTracker {}"
+    );
 }

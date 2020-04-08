@@ -96,7 +96,7 @@ pub fn loop_turn(
 
 fn on_notification(
     msg_sender: &Sender<Message>,
-    world_state: &WorldState,
+    world_state: &mut WorldState,
     loop_state: &mut LoopState,
     not: Notification,
 ) -> Result<()> {

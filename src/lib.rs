@@ -1,3 +1,4 @@
+pub mod analysis;
 pub mod compiler;
 pub mod config;
 pub mod handlers;
