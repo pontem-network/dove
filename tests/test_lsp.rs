@@ -331,7 +331,7 @@ fn test_world_state_gets_updated_on_module_change() {
     config.module_folders = vec![get_modules_path()];
 
     let mut loop_state = LoopState::default();
-    let mut world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let mut world_state = WorldState::new(std::env::current_dir().unwrap(), config);
     let document_url = Url::from_file_path(
         get_modules_path()
             .join("covid_tracker.move")

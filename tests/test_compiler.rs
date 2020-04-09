@@ -219,7 +219,7 @@ module MyModule {
         module_folders: vec![get_stdlib_path()],
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let world_state = WorldState::new(std::env::current_dir().unwrap(), config);
     check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap();
 }
 
@@ -237,7 +237,7 @@ fun main() {
         module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let world_state = WorldState::new(std::env::current_dir().unwrap(), config);
     check_with_compiler(existing_file_abspath(), script_source_text, &world_state).unwrap();
 }
 
@@ -271,7 +271,7 @@ module CovidTracker {
         module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let world_state = WorldState::new(std::env::current_dir().unwrap(), config);
     let covid_tracker_module = leak_str(
         get_modules_path()
             .join("covid_tracker.move")
@@ -296,7 +296,7 @@ fun main() {
         sender_address: Address::parse_str(sender_address).unwrap(),
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let world_state = WorldState::new(std::env::current_dir().unwrap(), config);
     check_with_compiler(existing_file_abspath(), script_source_text, &world_state).unwrap();
 }
 
@@ -312,7 +312,7 @@ fun main() {
     ";
     let mut config = Config::default();
     config.module_folders = vec![get_stdlib_path(), get_modules_path()];
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+    let world_state = WorldState::new(std::env::current_dir().unwrap(), config);
 
     let errors =
         check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
