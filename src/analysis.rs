@@ -1,5 +1,7 @@
 use move_lang::errors::FilesSourceText;
 
+use crate::compiler::utils::get_canonical_fname;
+
 #[derive(Default, Debug)]
 pub struct AnalysisChange {
     files_changed: Vec<(&'static str, String)>,
@@ -11,7 +13,8 @@ impl AnalysisChange {
     }
 
     pub fn change_file(&mut self, fname: &'static str, new_text: String) {
-        self.files_changed.push((fname, new_text))
+        self.files_changed
+            .push((&get_canonical_fname(fname), new_text))
     }
 }
 

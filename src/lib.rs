@@ -7,3 +7,4 @@ pub mod server;
 pub mod world;
 
 pub mod test_utils;
+pub mod utils;

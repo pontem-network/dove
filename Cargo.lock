@@ -233,6 +233,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "codespan-lsp"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c3027b615be80190f3460ba89624f199ba050d709fed2736e250fd35d933ec5"
+dependencies = [
+ "codespan",
+ "codespan-reporting",
+ "lsp-types",
+ "url",
+]
+
+[[package]]
 name = "codespan-reporting"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -643,9 +655,9 @@ dependencies = [
 
 [[package]]
 name = "lsp-types"
-version = "0.73.0"
+version = "0.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93d0cf64ea141b43d9e055f6b9df13f0bce32b103d84237509ce0a571ab9b159"
+checksum = "6743fb3902ab3dfa6ce030daeac6ff492e20bb0fee840739d16f6bfb0efaf91c"
 dependencies = [
  "base64",
  "bitflags",
@@ -731,6 +743,8 @@ name = "move-language-server"
 version = "0.3.0"
 dependencies = [
  "anyhow",
+ "codespan",
+ "codespan-lsp",
  "crossbeam-channel",
  "env_logger",
  "libra-types",

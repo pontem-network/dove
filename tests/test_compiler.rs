@@ -9,20 +9,32 @@ use move_language_server::config::Config;
 use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
 use move_language_server::world::WorldState;
 
-const FNAME: &str = "main.move";
+// just need some valid fname
+fn existing_file_abspath() -> &'static str {
+    let abspath = std::env::current_dir()
+        .unwrap()
+        .join("tests")
+        .join("test_compiler.rs")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    leak_str(&abspath)
+}
+
+fn range(start: (u64, u64), end: (u64, u64)) -> Range {
+    Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
+}
 
 #[test]
 fn test_fail_on_non_ascii_character() {
     let source_text = r"fun main() { return; }ффф";
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
-    assert_eq!(
-        error.range,
-        Range::new(Position::new(0, 22), Position::new(0, 22))
-    );
+    assert_eq!(error.range, range((0, 22), (0, 22)));
 }
 
 #[test]
@@ -30,7 +42,7 @@ fn test_successful_parsing() {
     let source = r"
         fun main() { return; }
     ";
-    let compiled = parse_source_file(FNAME, source).unwrap();
+    let compiled = parse_source_file(existing_file_abspath(), source).unwrap();
     assert!(matches!(compiled, FileDefinition::Main(_)));
 }
 
@@ -38,31 +50,28 @@ fn test_successful_parsing() {
 fn test_function_parse_error() {
     let source_text = "module M { struc S { f: u64 } }";
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
+
     let error = errors.get(0).unwrap();
-    assert_eq!(
-        error.range,
-        Range::new(Position::new(0, 11), Position::new(0, 16))
-    );
     assert_eq!(error.message, "Unexpected 'struc'");
+    assert_eq!(error.range, range((0, 11), (0, 16)));
 }
 
 #[test]
 fn test_main_function_parse_error() {
     let source_text = "main() {}";
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
     let error = errors.get(0).unwrap();
-    assert_eq!(
-        error.range,
-        Range::new(Position::new(0, 0), Position::new(0, 4))
-    );
     assert_eq!(
         error.message,
         "Invalid address directive. Expected 'address' got 'main'"
     );
+    assert_eq!(error.range, range((0, 0), (0, 4)));
 }
 
 #[test]
@@ -75,14 +84,12 @@ module M {
 }
 ";
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
-    assert_eq!(
-        error.range,
-        Range::new(Position::new(2, 4), Position::new(2, 9))
-    );
+    assert_eq!(error.range, range((2, 4), (2, 9)));
 }
 
 #[test]
@@ -94,19 +101,17 @@ fn test_expansion_checks_duplicates() {
     }
 }
     ";
-
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
+
     let diagnostic = errors.get(0).unwrap();
-    assert_eq!(
-        diagnostic.range,
-        Range::new(Position::new(3, 8), Position::new(3, 9))
-    );
     assert_eq!(
         diagnostic.message,
         "Duplicate definition for field \'f\' in struct \'S\'"
     );
+    assert_eq!(diagnostic.range, range((3, 8), (3, 9)));
 }
 
 #[test]
@@ -114,18 +119,16 @@ fn test_expansion_checks_public_main_redundancy() {
     let source_text = r"public fun main() {}";
 
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
     assert_eq!(
-        diagnostic.range,
-        Range::new(Position::new(0, 0), Position::new(0, 6))
-    );
-    assert_eq!(
         diagnostic.message,
         "Extraneous 'public' modifier. This top-level function is assumed to be public"
     );
+    assert_eq!(diagnostic.range, range((0, 0), (0, 6)));
 }
 
 #[test]
@@ -136,18 +139,16 @@ fn test_naming_checks_generics_with_type_parameters() {
     ";
 
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
     assert_eq!(
-        diagnostic.range,
-        Range::new(Position::new(1, 21), Position::new(1, 27))
-    );
-    assert_eq!(
         diagnostic.message,
         "Generic type parameters cannot take type arguments"
     );
+    assert_eq!(diagnostic.range, range((1, 21), (1, 27)));
 }
 
 #[test]
@@ -160,15 +161,13 @@ fn test_typechecking_invalid_local_borrowing() {
     ";
 
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
-    assert_eq!(
-        diagnostic.range,
-        Range::new(Position::new(2, 8), Position::new(2, 10))
-    );
     assert_eq!(diagnostic.message, "Invalid borrow");
+    assert_eq!(diagnostic.range, range((2, 8), (2, 10)));
 }
 
 #[test]
@@ -192,15 +191,17 @@ fn test_check_unreachable_code_in_loop() {
     ";
 
     let world_state = WorldState::default();
-    let errors = check_with_compiler(FNAME, source_text, &world_state).unwrap_err();
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
     assert_eq!(
-        diagnostic.range,
-        Range::new(Position::new(8, 42), Position::new(8, 43))
+        diagnostic.message,
+        "Unreachable code. This statement (and any following statements) will not be executed. \
+        In some cases, this will result in unused resource values."
     );
-    assert_eq!(diagnostic.message, "Unreachable code. This statement (and any following statements) will not be executed. In some cases, this will result in unused resource values.");
+    assert_eq!(diagnostic.range, range((8, 42), (8, 43)));
 }
 
 #[test]
@@ -219,7 +220,7 @@ module MyModule {
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    check_with_compiler(FNAME, source_text, &world_state).unwrap();
+    check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap();
 }
 
 #[test]
@@ -237,7 +238,7 @@ fun main() {
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    check_with_compiler(FNAME, script_source_text, &world_state).unwrap();
+    check_with_compiler(existing_file_abspath(), script_source_text, &world_state).unwrap();
 }
 
 #[test]
@@ -296,5 +297,27 @@ fun main() {
         ..Config::default()
     };
     let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    check_with_compiler(FNAME, script_source_text, &world_state).unwrap();
+    check_with_compiler(existing_file_abspath(), script_source_text, &world_state).unwrap();
+}
+
+#[test]
+fn test_compiler_out_of_bounds_multimessage_diagnostic() {
+    let source_text = r"
+use 0x0::CovidTracker;
+
+fun main() {
+    let how_many: u8;
+    how_many = CovidTracker::how_many(10);
+}
+    ";
+    let mut config = Config::default();
+    config.module_folders = vec![get_stdlib_path(), get_modules_path()];
+    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
+
+    let errors =
+        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    assert_eq!(errors.len(), 1);
+
+    let error = errors.get(0).unwrap().to_owned();
+    assert_eq!(error.related_information.unwrap().len(), 2);
 }

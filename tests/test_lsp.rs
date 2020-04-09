@@ -161,7 +161,7 @@ fn test_announce_text_document_sync_capabilities() {
 fn test_server_publishes_diagnostic_after_receiving_didopen() {
     let (server_conn, client_conn) = setup_test_connections();
 
-    let document_url = Url::parse("file:///foo/bar").unwrap();
+    let document_url = Url::from_file_path(std::env::current_dir().unwrap()).unwrap();
     let text_document = TextDocumentItem::new(
         document_url.clone(),
         "move".to_string(),
@@ -191,7 +191,7 @@ fn test_server_publishes_diagnostic_after_receiving_didopen() {
 fn test_send_diagnostics_after_didchange() {
     let (server_conn, client_conn) = setup_test_connections();
 
-    let document_url = Url::parse("file:///foo/bar").unwrap();
+    let document_url = Url::from_file_path(std::env::current_dir().unwrap()).unwrap();
     let text_document = VersionedTextDocumentIdentifier::new(document_url.clone(), 1);
     let didchange_not = notification_new::<DidChangeTextDocument>(DidChangeTextDocumentParams {
         text_document,
@@ -225,7 +225,7 @@ fn test_send_diagnostics_after_didchange() {
 fn test_send_nothing_after_didclose() {
     let (server_conn, client_conn) = setup_test_connections();
 
-    let document_url = Url::parse("file:///foo/bar").unwrap();
+    let document_url = Url::from_file_path(std::env::current_dir().unwrap()).unwrap();
     let didclose_params = DidCloseTextDocumentParams {
         text_document: TextDocumentIdentifier::new(document_url),
     };

@@ -1,12 +1,12 @@
 use std::fs;
-use std::path::PathBuf;
 
 use lsp_types::Diagnostic;
 use move_lang::parser as libra_parser;
 use move_lang::parser::ast::FileDefinition;
 use move_lang::parser::syntax::parse_file_string;
 
-use crate::compiler::utils::convert_error_into_diags;
+use crate::compiler::utils::leak_str;
+use crate::utils::diagnostics::libra_error_into_diagnostic;
 use crate::world::WorldState;
 
 pub mod check;
@@ -23,22 +23,23 @@ pub fn check_with_compiler(
     let parsed_file = parser::parse_source_file(current_file, source_text)?;
 
     // TODO: skip this step by making ModuleDefinition Clone'able, and move it to after expansion
-    let current_fname = match fs::canonicalize(current_file) {
+    let canonical_fname = match fs::canonicalize(current_file) {
         Ok(file) => file,
         Err(_) => {
             log::error!("Not a valid filesystem path {:?}", current_file);
-            PathBuf::new()
+            return Err(vec![]);
         }
     }
     .into_os_string()
     .into_string()
     .unwrap();
+    let canonical_fname = leak_str(&canonical_fname);
 
     let module_definitions: Vec<FileDefinition> = world_state
         .analysis
         .available_module_files()
         .iter()
-        .filter(|(fname, _)| **fname != current_fname)
+        .filter(|(fname, _)| **fname != canonical_fname)
         .map(|(fname, text)| parse_file_string(fname, text).unwrap())
         .collect();
     let parsed_program = libra_parser::ast::Program {
@@ -49,9 +50,11 @@ pub fn check_with_compiler(
 
     let check_res = check::check_parsed_program(parsed_program, sender_opt);
     check_res.map_err(|libra_errors| {
-        let libra_error = libra_errors.get(0).unwrap().clone();
-        let diagnostics = convert_error_into_diags(libra_error, source_text);
-        // get first one
-        vec![diagnostics.get(0).unwrap().clone()]
+        let mut all_files = world_state.analysis.available_module_files().clone();
+        all_files.insert(canonical_fname, source_text.to_string());
+        libra_errors
+            .into_iter()
+            .map(|error| libra_error_into_diagnostic(&all_files, error))
+            .collect()
     })
 }
