@@ -29,7 +29,7 @@ fn analysis_change_from_config(config: &Config) -> AnalysisChange {
 pub struct WorldState {
     pub ws_root: PathBuf,
     pub config: Config,
-    pub analysis: Analysis,
+    analysis: Analysis,
 }
 
 impl WorldState {
@@ -50,5 +50,13 @@ impl WorldState {
         new_analysis.apply_change(change);
         self.analysis = new_analysis;
         self.config = config;
+    }
+
+    pub fn analysis(&self) -> Analysis {
+        self.analysis.clone()
+    }
+
+    pub fn apply_change(&mut self, change: AnalysisChange) {
+        self.analysis.apply_change(change)
     }
 }

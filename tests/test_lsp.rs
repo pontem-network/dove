@@ -358,7 +358,7 @@ fn test_world_state_gets_updated_on_module_change() {
 
     assert_eq!(
         world_state
-            .analysis
+            .analysis()
             .available_module_files()
             .get(document_url.path())
             .unwrap(),
