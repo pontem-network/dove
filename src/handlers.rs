@@ -3,7 +3,7 @@ use lsp_types::notification::PublishDiagnostics;
 use lsp_types::{PublishDiagnosticsParams, Url};
 
 use crate::analysis::AnalysisChange;
-use crate::compiler;
+
 use crate::compiler::utils::leak_str;
 use crate::main_loop::notification_new;
 use crate::world::WorldState;
@@ -13,16 +13,14 @@ pub(crate) fn on_document_change(
     document_uri: Url,
     new_source_text: &str,
 ) -> Notification {
-    let fname = leak_str(document_uri.path());
+    let document_fname = leak_str(document_uri.path());
 
     let mut change = AnalysisChange::new();
-    change.change_file(fname, new_source_text.to_owned());
-    world_state.analysis.apply_change(change);
+    change.change_file(document_fname, new_source_text.to_owned());
+    world_state.apply_change(change);
 
-    let diagnostics = match compiler::check_with_compiler(fname, new_source_text, world_state) {
-        Ok(_) => vec![],
-        Err(diagnostics) => diagnostics,
-    };
+    let analysis = world_state.analysis();
+    let diagnostics = analysis.check_with_libra_compiler(document_fname, new_source_text);
     notification_new::<PublishDiagnostics>(PublishDiagnosticsParams::new(
         document_uri,
         diagnostics,

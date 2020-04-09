@@ -1,9 +1,7 @@
-use lsp_types::{Position, Range};
-use move_lang::parser::ast::FileDefinition;
+use lsp_types::{Diagnostic, Position, Range};
+
 use move_lang::shared::Address;
 
-use move_language_server::compiler::check_with_compiler;
-use move_language_server::compiler::parser::parse_source_file;
 use move_language_server::compiler::utils::leak_str;
 use move_language_server::config::Config;
 use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
@@ -25,12 +23,28 @@ fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
 }
 
+fn diagnostics(text: &str) -> Vec<Diagnostic> {
+    diagnostics_with_config(text, Config::default())
+}
+
+fn diagnostics_with_config(text: &str, config: Config) -> Vec<Diagnostic> {
+    diagnostics_with_config_and_filename(text, config, existing_file_abspath())
+}
+
+fn diagnostics_with_config_and_filename(
+    text: &str,
+    config: Config,
+    fname: &'static str,
+) -> Vec<Diagnostic> {
+    let world_state = WorldState::new(std::env::current_dir().unwrap(), config);
+    let analysis = world_state.analysis();
+    analysis.check_with_libra_compiler(fname, text)
+}
+
 #[test]
 fn test_fail_on_non_ascii_character() {
     let source_text = r"fun main() { return; }ффф";
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -38,20 +52,18 @@ fn test_fail_on_non_ascii_character() {
 }
 
 #[test]
-fn test_successful_parsing() {
+fn test_successful_compilation() {
     let source = r"
-        fun main() { return; }
+        fun main() {}
     ";
-    let compiled = parse_source_file(existing_file_abspath(), source).unwrap();
-    assert!(matches!(compiled, FileDefinition::Main(_)));
+    let errors = diagnostics(source);
+    assert!(errors.is_empty());
 }
 
 #[test]
 fn test_function_parse_error() {
     let source_text = "module M { struc S { f: u64 } }";
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -62,10 +74,9 @@ fn test_function_parse_error() {
 #[test]
 fn test_main_function_parse_error() {
     let source_text = "main() {}";
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
+
     let error = errors.get(0).unwrap();
     assert_eq!(
         error.message,
@@ -83,9 +94,7 @@ module M {
     }
 }
 ";
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap();
@@ -101,9 +110,7 @@ fn test_expansion_checks_duplicates() {
     }
 }
     ";
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -118,9 +125,7 @@ fn test_expansion_checks_duplicates() {
 fn test_expansion_checks_public_main_redundancy() {
     let source_text = r"public fun main() {}";
 
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -138,9 +143,7 @@ fn test_naming_checks_generics_with_type_parameters() {
 }
     ";
 
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -160,9 +163,7 @@ fn test_typechecking_invalid_local_borrowing() {
 }
     ";
 
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -190,9 +191,7 @@ fn test_check_unreachable_code_in_loop() {
 }
     ";
 
-    let world_state = WorldState::default();
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let errors = diagnostics(source_text);
     assert_eq!(errors.len(), 1);
 
     let diagnostic = errors.get(0).unwrap();
@@ -219,8 +218,8 @@ module MyModule {
         module_folders: vec![get_stdlib_path()],
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap();
+    let errors = diagnostics_with_config(source_text, config);
+    assert!(errors.is_empty());
 }
 
 #[test]
@@ -237,8 +236,8 @@ fun main() {
         module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    check_with_compiler(existing_file_abspath(), script_source_text, &world_state).unwrap();
+    let errors = diagnostics_with_config(script_source_text, config);
+    assert!(errors.is_empty());
 }
 
 #[test]
@@ -271,14 +270,15 @@ module CovidTracker {
         module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
     let covid_tracker_module = leak_str(
         get_modules_path()
             .join("covid_tracker.move")
             .to_str()
             .unwrap(),
     );
-    check_with_compiler(covid_tracker_module, module_source_text, &world_state).unwrap();
+    let errors =
+        diagnostics_with_config_and_filename(module_source_text, config, covid_tracker_module);
+    assert!(errors.is_empty());
 }
 
 #[test]
@@ -296,8 +296,8 @@ fun main() {
         sender_address: Address::parse_str(sender_address).unwrap(),
         ..Config::default()
     };
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-    check_with_compiler(existing_file_abspath(), script_source_text, &world_state).unwrap();
+    let errors = diagnostics_with_config(script_source_text, config);
+    assert!(errors.is_empty());
 }
 
 #[test]
@@ -310,12 +310,11 @@ fun main() {
     how_many = CovidTracker::how_many(10);
 }
     ";
-    let mut config = Config::default();
-    config.module_folders = vec![get_stdlib_path(), get_modules_path()];
-    let world_state = WorldState::with_modules_loaded(std::env::current_dir().unwrap(), config);
-
-    let errors =
-        check_with_compiler(existing_file_abspath(), source_text, &world_state).unwrap_err();
+    let config = Config {
+        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        ..Config::default()
+    };
+    let errors = diagnostics_with_config(source_text, config);
     assert_eq!(errors.len(), 1);
 
     let error = errors.get(0).unwrap().to_owned();

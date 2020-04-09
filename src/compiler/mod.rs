@@ -5,9 +5,9 @@ use move_lang::parser as libra_parser;
 use move_lang::parser::ast::FileDefinition;
 use move_lang::parser::syntax::parse_file_string;
 
+use crate::analysis::Analysis;
 use crate::compiler::utils::leak_str;
 use crate::utils::diagnostics::libra_error_into_diagnostic;
-use crate::world::WorldState;
 
 pub mod check;
 pub mod parser;
@@ -18,7 +18,7 @@ pub type CompilerCheckResult<P> = Result<P, Vec<Diagnostic>>;
 pub fn check_with_compiler(
     current_file: &'static str,
     source_text: &str,
-    world_state: &WorldState,
+    analysis: &Analysis,
 ) -> CompilerCheckResult<()> {
     let parsed_file = parser::parse_source_file(current_file, source_text)?;
 
@@ -35,8 +35,7 @@ pub fn check_with_compiler(
     .unwrap();
     let canonical_fname = leak_str(&canonical_fname);
 
-    let module_definitions: Vec<FileDefinition> = world_state
-        .analysis
+    let module_definitions: Vec<FileDefinition> = analysis
         .available_module_files()
         .iter()
         .filter(|(fname, _)| **fname != canonical_fname)
@@ -46,11 +45,11 @@ pub fn check_with_compiler(
         source_definitions: vec![parsed_file],
         lib_definitions: module_definitions,
     };
-    let sender_opt = Some(world_state.config.sender_address);
+    let sender_opt = Some(analysis.sender_address());
 
     let check_res = check::check_parsed_program(parsed_program, sender_opt);
     check_res.map_err(|libra_errors| {
-        let mut all_files = world_state.analysis.available_module_files().clone();
+        let mut all_files = analysis.available_module_files().clone();
         all_files.insert(canonical_fname, source_text.to_string());
         libra_errors
             .into_iter()

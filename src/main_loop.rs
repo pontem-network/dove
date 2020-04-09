@@ -20,7 +20,7 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
     log::info!("starting example main loop");
 
     let mut loop_state = LoopState::default();
-    let mut world_state = WorldState::with_modules_loaded(ws_root, config);
+    let mut world_state = WorldState::new(ws_root, config);
 
     log::info!("server initialized, serving requests");
     for message in &connection.receiver {
