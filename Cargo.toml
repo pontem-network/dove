@@ -19,9 +19,9 @@ serde_json = "1.0.48"
 threadpool = "1.7.1"
 crossbeam-channel = "0.4.2"
 walkdir = "2.3.1"
-# version is the same as in move-ir-types for compatibility
-codespan = "0.8.0"
-codespan-lsp = "0.8.0"
+codespan = "0.9.2"
+codespan-reporting = "0.9.2"
+ra_vfs = "0.5.3"
 
 move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "public-parsing-move" }
 move-lang = { git = "https://github.com/dfinance/libra.git", branch = "public-parsing-move" }

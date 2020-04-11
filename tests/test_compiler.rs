@@ -1,14 +1,15 @@
 use lsp_types::{Diagnostic, Position, Range};
-
 use move_lang::shared::Address;
 
-use move_language_server::compiler::utils::leak_str;
 use move_language_server::config::Config;
+use move_language_server::ide::db::{AnalysisChange, FilePath};
+
 use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
+use move_language_server::utils::io::{get_module_files, leaked_fpath};
 use move_language_server::world::WorldState;
 
 // just need some valid fname
-fn existing_file_abspath() -> &'static str {
+fn existing_file_abspath() -> FilePath {
     let abspath = std::env::current_dir()
         .unwrap()
         .join("tests")
@@ -16,7 +17,7 @@ fn existing_file_abspath() -> &'static str {
         .into_os_string()
         .into_string()
         .unwrap();
-    leak_str(&abspath)
+    leaked_fpath(&abspath)
 }
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -34,11 +35,24 @@ fn diagnostics_with_config(text: &str, config: Config) -> Vec<Diagnostic> {
 fn diagnostics_with_config_and_filename(
     text: &str,
     config: Config,
-    fname: &'static str,
+    fpath: FilePath,
 ) -> Vec<Diagnostic> {
-    let world_state = WorldState::new(std::env::current_dir().unwrap(), config);
-    let analysis = world_state.analysis();
-    analysis.check_with_libra_compiler(fname, text)
+    let ws_root = std::env::current_dir().unwrap();
+    let world_state = WorldState::new(ws_root, config);
+    let mut analysis_host = world_state.analysis_host;
+
+    let mut change = AnalysisChange::new();
+    for folder in world_state.config.module_folders {
+        for (fpath, text) in get_module_files(&folder) {
+            change.add_file(fpath, text);
+        }
+    }
+    change.update_file(fpath, text.to_string());
+    analysis_host.apply_change(change);
+
+    analysis_host
+        .analysis()
+        .check_with_libra_compiler(fpath, text)
 }
 
 #[test]
@@ -270,7 +284,7 @@ module CovidTracker {
         module_folders: vec![get_stdlib_path(), get_modules_path()],
         ..Config::default()
     };
-    let covid_tracker_module = leak_str(
+    let covid_tracker_module = leaked_fpath(
         get_modules_path()
             .join("covid_tracker.move")
             .to_str()
@@ -278,6 +292,7 @@ module CovidTracker {
     );
     let errors =
         diagnostics_with_config_and_filename(module_source_text, config, covid_tracker_module);
+    dbg!(&errors);
     assert!(errors.is_empty());
 }
 

@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::bail;
 use anyhow::Result;
 use crossbeam_channel::Sender;
 use lsp_server::{Connection, Message, Notification, Request, RequestId, Response};
@@ -9,12 +10,19 @@ use lsp_types::notification::{
 };
 use lsp_types::request::WorkspaceConfiguration;
 use lsp_types::{ConfigurationItem, ConfigurationParams, MessageType, ShowMessageParams};
+use ra_vfs::VfsTask;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::config::Config;
 use crate::handlers;
 use crate::world::WorldState;
+
+#[derive(Debug)]
+pub enum Event {
+    Message(Message),
+    Vfs(VfsTask),
+}
 
 pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> Result<()> {
     log::info!("starting example main loop");
@@ -23,14 +31,23 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
     let mut world_state = WorldState::new(ws_root, config);
 
     log::info!("server initialized, serving requests");
-    for message in &connection.receiver {
-        log::debug!("got message: {:?}", message);
-        if let Message::Request(req) = &message {
-            if connection.handle_shutdown(req)? {
-                return Ok(());
+    loop {
+        let event = crossbeam_channel::select! {
+            recv(&connection.receiver) -> message => match message {
+                Ok(message) => Event::Message(message),
+                Err(_) => bail!("client exited without shutdown"),
+            },
+            recv(&world_state.fs_events_receiver) -> task => match task {
+                Ok(task) => Event::Vfs(task),
+                Err(_) => bail!("vfs died"),
+            }
+        };
+        if let Event::Message(Message::Request(req)) = &event {
+            if connection.handle_shutdown(&req)? {
+                break;
             }
         }
-        loop_turn(&connection, &mut world_state, &mut loop_state, message)?;
+        loop_turn(&connection, &mut world_state, &mut loop_state, event)?;
     }
     Ok(())
 }
@@ -59,38 +76,46 @@ pub fn loop_turn(
     connection: &Connection,
     world_state: &mut WorldState,
     loop_state: &mut LoopState,
-    message: Message,
+    event: Event,
 ) -> Result<()> {
-    match message {
-        Message::Request(req) => {
-            log::info!("Got request: {:?}", req);
-        }
-        Message::Notification(not) => {
-            log::info!("Got notification: {:?}", not);
-            on_notification(&connection.sender, world_state, loop_state, not)?;
-        }
-        Message::Response(resp) => {
-            log::info!("Got response: {:?}", resp);
+    match event {
+        Event::Vfs(vfs_task) => world_state.vfs.handle_task(vfs_task),
+        Event::Message(message) => match message {
+            Message::Request(req) => {
+                log::info!("Got request: {:?}", req);
+            }
+            Message::Notification(not) => {
+                log::info!("Got notification: {:?}", not);
+                on_notification(&connection.sender, world_state, loop_state, not)?;
+            }
+            Message::Response(resp) => {
+                log::info!("Got response: {:?}", resp);
 
-            if Some(&resp.id) == loop_state.configuration_request_id.as_ref() {
-                loop_state.configuration_request_id = None;
-                log::info!("config update response: '{:?}", resp);
-                let Response { error, result, .. } = resp;
+                if Some(&resp.id) == loop_state.configuration_request_id.as_ref() {
+                    loop_state.configuration_request_id = None;
+                    log::info!("config update response: '{:?}", resp);
+                    let Response { error, result, .. } = resp;
 
-                match (error, result) {
-                    (Some(err), _) => log::error!("failed to fetch the server settings: {:?}", err),
-                    (None, Some(configs)) => {
-                        if let Some(new_config) = configs.get(0) {
-                            world_state.config.update(new_config);
+                    match (error, result) {
+                        (Some(err), _) => {
+                            log::error!("failed to fetch the server settings: {:?}", err)
                         }
-                    }
-                    (None, None) => {
-                        log::error!("received empty server settings response from the client")
+                        (None, Some(configs)) => {
+                            if let Some(new_config) = configs.get(0) {
+                                let mut config = Config::default();
+                                config.update(new_config);
+                                *world_state = WorldState::new(world_state.ws_root.clone(), config);
+                            }
+                        }
+                        (None, None) => {
+                            log::error!("received empty server settings response from the client")
+                        }
                     }
                 }
             }
-        }
-    };
+        },
+    }
+    world_state.apply_fs_changes();
     Ok(())
 }
 
@@ -103,8 +128,11 @@ fn on_notification(
     let notif = match notification_cast::<DidOpenTextDocument>(not) {
         Ok(params) => {
             let source_text = params.text_document.text;
-            let not =
-                handlers::on_document_change(world_state, params.text_document.uri, &source_text);
+            let not = handlers::on_did_change_document(
+                world_state,
+                params.text_document.uri,
+                &source_text,
+            );
             log::info!("Sending {:?}", &not);
             msg_sender.send(not.into()).unwrap();
             return Ok(());
@@ -114,8 +142,11 @@ fn on_notification(
     let notif = match notification_cast::<DidChangeTextDocument>(notif) {
         Ok(params) => {
             let source_text = params.content_changes.get(0).unwrap().clone().text;
-            let not =
-                handlers::on_document_change(world_state, params.text_document.uri, &source_text);
+            let not = handlers::on_did_change_document(
+                world_state,
+                params.text_document.uri,
+                &source_text,
+            );
             log::info!("Sending {:?}", &not);
             msg_sender.send(not.into())?;
 

@@ -1,11 +1,11 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use move_lang::errors::FilesSourceText;
-use move_lang::strip_comments_and_verify;
 use move_lang::test_utils::MOVE_EXTENSION;
 
-pub fn leak_str(s: &str) -> &'static str {
+use crate::ide::db::FilePath;
+
+pub fn leaked_fpath(s: &str) -> FilePath {
     Box::leak(Box::new(s.to_owned()))
 }
 
@@ -36,21 +36,22 @@ fn get_module_filenames(folder: &Path) -> Vec<String> {
         .collect()
 }
 
-pub fn get_module_files(modules_folder: &Path) -> FilesSourceText {
+pub fn get_module_files(modules_folder: &Path) -> Vec<(FilePath, String)> {
     let module_filenames = get_module_filenames(modules_folder)
         .iter()
-        .map(|s| leak_str(s))
+        .map(|s| leaked_fpath(s))
         .collect::<Vec<&'static str>>();
 
-    let mut lib_files = FilesSourceText::with_capacity(module_filenames.len());
+    let mut lib_files = Vec::with_capacity(module_filenames.len());
     for mod_fname in module_filenames {
         let mod_text = fs::read_to_string(mod_fname).unwrap().replace("\r\n", "\n");
-        let stripped_mod_text = strip_comments_and_verify(mod_fname, &mod_text).unwrap();
-        lib_files.insert(mod_fname, stripped_mod_text);
+        lib_files.push((mod_fname, mod_text));
+        // let stripped_mod_text = strip_comments_and_verify(mod_fname, &mod_text).unwrap();
+        // lib_files.insert(mod_fname, stripped_mod_text);
     }
     lib_files
 }
 
 pub fn get_canonical_fname<P: AsRef<Path>>(path: P) -> &'static str {
-    leak_str(fs::canonicalize(path).unwrap().to_str().unwrap())
+    leaked_fpath(fs::canonicalize(path).unwrap().to_str().unwrap())
 }

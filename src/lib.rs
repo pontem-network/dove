@@ -1,4 +1,3 @@
-pub mod analysis;
 pub mod compiler;
 pub mod config;
 pub mod handlers;
@@ -8,3 +7,5 @@ pub mod world;
 
 pub mod test_utils;
 pub mod utils;
+
+pub mod ide;
