@@ -31,35 +31,40 @@ pub struct Analysis {
 }
 
 impl Analysis {
+    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, Vec<Diagnostic>> {
+        parse_file(fpath, text).map_err(|err| vec![self.db.libra_error_into_diagnostic(err)])
+    }
+
     pub fn check_with_libra_compiler(&self, fpath: FilePath, text: &str) -> Vec<Diagnostic> {
-        let main_file = match self.parse(fpath, text) {
-            Ok(file) => file,
-            Err(diags) => {
-                return diags;
-            }
-        };
-
-        // TODO: build dependency graph and only load required deps
-        let dependencies: Vec<FileDefinition> = self
-            .db
-            .project_files_mapping
-            .iter()
-            .filter(|(file_fpath, _)| **file_fpath != fpath)
-            .map(|(fpath, text)| self.parse(fpath, &text).unwrap())
-            .collect();
-
-        let errors =
-            check::check_parsed_program(main_file, dependencies, Some(self.db.sender_address));
-        match errors {
-            Err(errors) => errors
-                .into_iter()
-                .map(|error| self.db.libra_error_into_diagnostic(error))
-                .collect(),
+        match self.check_with_libra_compiler_inner(fpath, text) {
             Ok(_) => vec![],
+            Err(ds) => ds,
         }
     }
 
-    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, Vec<Diagnostic>> {
-        parse_file(fpath, text).map_err(|err| vec![self.db.libra_error_into_diagnostic(err)])
+    fn check_with_libra_compiler_inner(
+        &self,
+        fpath: FilePath,
+        text: &str,
+    ) -> Result<(), Vec<Diagnostic>> {
+        let main_file = self.parse(fpath, text)?;
+
+        let mut dependencies = vec![];
+        for (existing_mod_fpath, existing_mod_text) in self.db.project_files_mapping.iter() {
+            if existing_mod_fpath != &fpath {
+                let parsed = self.parse(existing_mod_fpath, existing_mod_text)?;
+                if matches!(parsed, FileDefinition::Modules(_)) {
+                    dependencies.push(parsed);
+                }
+            }
+        }
+        let check_res =
+            check::check_parsed_program(main_file, dependencies, Some(self.db.sender_address));
+        check_res.map_err(|errors| {
+            errors
+                .into_iter()
+                .map(|err| self.db.libra_error_into_diagnostic(err))
+                .collect()
+        })
     }
 }
