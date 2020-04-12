@@ -1,8 +1,10 @@
+use std::fmt;
 use std::path::PathBuf;
 
 use anyhow::bail;
 use anyhow::Result;
 use crossbeam_channel::Sender;
+
 use lsp_server::{Connection, Message, Notification, Request, RequestId, Response};
 use lsp_types::notification::{
     DidChangeConfiguration, DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument,
@@ -18,10 +20,30 @@ use crate::config::Config;
 use crate::handlers;
 use crate::world::WorldState;
 
-#[derive(Debug)]
 pub enum Event {
     Message(Message),
     Vfs(VfsTask),
+}
+
+impl fmt::Debug for Event {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Event::Message(Message::Notification(not)) = self {
+            if notification_is::<DidOpenTextDocument>(not)
+                || notification_is::<DidChangeTextDocument>(not)
+            {
+                let document_uri = not.params.pointer("/textDocument/uri").unwrap().to_string();
+                return f
+                    .debug_struct("Notification")
+                    .field("method", &not.method)
+                    .field("file", &document_uri)
+                    .finish();
+            }
+        }
+        match self {
+            Event::Message(it) => fmt::Debug::fmt(it, f),
+            Event::Vfs(it) => fmt::Debug::fmt(it, f),
+        }
+    }
 }
 
 pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> Result<()> {
@@ -78,19 +100,18 @@ pub fn loop_turn(
     loop_state: &mut LoopState,
     event: Event,
 ) -> Result<()> {
+    if matches!(event, Event::Message(_)) {
+        log::info!("Received => {:#?}", &event);
+    }
     match event {
         Event::Vfs(vfs_task) => world_state.vfs.handle_task(vfs_task),
         Event::Message(message) => match message {
-            Message::Request(req) => {
-                log::info!("Got request: {:?}", req);
-            }
+            Message::Request(_) => {}
             Message::Notification(not) => {
-                log::info!("Got notification: {:?}", not);
                 on_notification(&connection.sender, world_state, loop_state, not)?;
             }
             Message::Response(resp) => {
-                log::info!("Got response: {:?}", resp);
-
+                // log::info!("Got response: {:#?}", resp);
                 if Some(&resp.id) == loop_state.configuration_request_id.as_ref() {
                     loop_state.configuration_request_id = None;
                     log::info!("config update response: '{:?}", resp);
@@ -204,6 +225,10 @@ where
     N::Params: Serialize,
 {
     Notification::new(N::METHOD.to_string(), params)
+}
+
+fn notification_is<N: lsp_types::notification::Notification>(notification: &Notification) -> bool {
+    notification.method == N::METHOD
 }
 
 pub fn request_new<R>(id: RequestId, params: R::Params) -> Request

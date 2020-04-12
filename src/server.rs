@@ -51,7 +51,6 @@ pub fn run_server() -> Result<()> {
     let init_params = initialize_server(&connection)?;
     let (ws_root, config) = parse_initialize_params(init_params)?;
     log::info!("Initialization is finished");
-    log::info!("Server configuration is {:?}", &config);
 
     main_loop::main_loop(ws_root, config, &connection)?;
     io_threads.join()?;
