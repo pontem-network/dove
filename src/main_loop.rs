@@ -14,6 +14,7 @@ use lsp_types::{
     ConfigurationItem, ConfigurationParams, MessageType, PublishDiagnosticsParams,
     ShowMessageParams, Url,
 };
+
 use ra_vfs::VfsTask;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -21,7 +22,7 @@ use threadpool::ThreadPool;
 
 use crate::config::Config;
 use crate::ide::analysis::Analysis;
-use crate::ide::db::{FilePath, LocDiagnostic};
+use crate::ide::db::{FileDiagnostic, FilePath};
 use crate::subscriptions::OpenedFiles;
 use crate::utils::io::leaked_fpath;
 use crate::world::WorldState;
@@ -29,7 +30,7 @@ use crate::world::WorldState;
 #[derive(Debug)]
 pub enum Task {
     Respond(Response),
-    Diagnostic(Vec<LocDiagnostic>),
+    Diagnostic(Vec<FileDiagnostic>),
 }
 
 pub enum Event {
@@ -166,7 +167,7 @@ pub fn loop_turn(
     }
     let fs_state_changed = world_state.load_fs_changes();
     if fs_state_changed {
-        // run compiler check for diagnostics
+        log::info!("fs_state_changed = true, reextract diagnostics");
         update_file_notifications_on_threadpool(
             pool,
             world_state.analysis_host.analysis(),
@@ -183,7 +184,11 @@ fn on_task(task: Task, msg_sender: &Sender<Message>) {
         Task::Diagnostic(loc_ds) => {
             for loc_d in loc_ds {
                 let uri = Url::from_file_path(loc_d.fpath).unwrap();
-                let params = PublishDiagnosticsParams::new(uri, vec![loc_d.diagnostic], None);
+                let mut diagnostics = vec![];
+                if loc_d.diagnostic.is_some() {
+                    diagnostics.push(loc_d.diagnostic.unwrap());
+                }
+                let params = PublishDiagnosticsParams::new(uri, diagnostics, None);
                 let not = notification_new::<PublishDiagnostics>(params);
                 msg_sender.send(not.into()).unwrap();
             }
@@ -195,12 +200,15 @@ fn update_file_notifications_on_threadpool(
     pool: &ThreadPool,
     analysis: Analysis,
     task_sender: Sender<Task>,
-    opened_files: Vec<FilePath>,
+    files: Vec<FilePath>,
 ) {
     pool.execute(move || {
-        for fpath in opened_files {
+        for fpath in files {
             let text = analysis.db().all_tracked_files.get(fpath).unwrap();
-            let diagnostics = analysis.check_with_libra_compiler(fpath, text);
+            let mut diagnostics = analysis.check_with_libra_compiler(fpath, text);
+            if diagnostics.is_empty() {
+                diagnostics = vec![FileDiagnostic::new_empty(fpath)];
+            }
             task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
         }
     })
@@ -245,6 +253,9 @@ fn on_notification(
                 .ok_or_else(|| anyhow::anyhow!("empty changes".to_string()))?
                 .text;
             world_state.vfs.change_file_overlay(fpath.as_path(), text);
+            loop_state
+                .opened_files
+                .add(leaked_fpath(fpath.to_str().unwrap()));
             return Ok(());
         }
         Err(not) => not,

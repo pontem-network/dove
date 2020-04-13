@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use crate::ide::db::FilePath;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct OpenedFiles {
     files: HashSet<FilePath>,
 }

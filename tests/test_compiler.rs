@@ -4,7 +4,7 @@ use move_lang::shared::Address;
 
 use move_language_server::config::{Config, MoveDialect};
 use move_language_server::ide::analysis::Analysis;
-use move_language_server::ide::db::{AnalysisChange, FilePath, LocDiagnostic, RootDatabase};
+use move_language_server::ide::db::{AnalysisChange, FileDiagnostic, FilePath, RootDatabase};
 use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
 use move_language_server::utils::io::{get_module_files, leaked_fpath};
 use move_language_server::world::WorldState;
@@ -27,10 +27,13 @@ fn range(start: (u64, u64), end: (u64, u64)) -> Range {
 
 fn diagnostics(text: &str) -> Vec<Diagnostic> {
     let loc_ds = diagnostics_with_config(text, Config::default());
-    loc_ds.iter().map(|d| d.diagnostic.clone()).collect()
+    loc_ds
+        .iter()
+        .map(|d| d.diagnostic.clone().unwrap())
+        .collect()
 }
 
-fn diagnostics_with_config(text: &str, config: Config) -> Vec<LocDiagnostic> {
+fn diagnostics_with_config(text: &str, config: Config) -> Vec<FileDiagnostic> {
     diagnostics_with_config_and_filename(text, config, existing_file_abspath())
 }
 
@@ -38,7 +41,7 @@ fn diagnostics_with_config_and_filename(
     text: &str,
     config: Config,
     fpath: FilePath,
-) -> Vec<LocDiagnostic> {
+) -> Vec<FileDiagnostic> {
     let ws_root = std::env::current_dir().unwrap();
     let world_state = WorldState::new(ws_root, config);
     let mut analysis_host = world_state.analysis_host;
@@ -333,8 +336,8 @@ fun main() {
     let errors = diagnostics_with_config(source_text, config);
     assert_eq!(errors.len(), 1);
 
-    let error = errors.get(0).unwrap().diagnostic.clone();
-    assert_eq!(error.related_information.unwrap().len(), 2);
+    let error = errors.get(0).unwrap().diagnostic.as_ref().unwrap();
+    assert_eq!(error.related_information.as_ref().unwrap().len(), 2);
 }
 
 #[test]
@@ -372,7 +375,7 @@ fn test_syntax_error_in_dependency() {
     let error = errors.get(0).unwrap();
     assert_eq!(error.fpath, dep_module_fpath);
     assert_eq!(
-        error.diagnostic.message,
+        error.diagnostic.as_ref().unwrap().message,
         "Invalid address directive. Expected \'address\' got \'modules\'"
     );
 }

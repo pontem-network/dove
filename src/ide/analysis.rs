@@ -1,7 +1,7 @@
 use move_lang::parser::ast::FileDefinition;
 
 use crate::compiler::{check, parse_file};
-use crate::ide::db::{AnalysisChange, FilePath, LocDiagnostic, RootDatabase};
+use crate::ide::db::{AnalysisChange, FileDiagnostic, FilePath, RootDatabase};
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {
@@ -36,11 +36,11 @@ impl Analysis {
         &self.db
     }
 
-    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, LocDiagnostic> {
+    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, FileDiagnostic> {
         parse_file(fpath, text).map_err(|err| self.db.libra_error_into_diagnostic(err))
     }
 
-    pub fn check_with_libra_compiler(&self, fpath: FilePath, text: &str) -> Vec<LocDiagnostic> {
+    pub fn check_with_libra_compiler(&self, fpath: FilePath, text: &str) -> Vec<FileDiagnostic> {
         match self.check_with_libra_compiler_inner(fpath, text) {
             Ok(_) => vec![],
             Err(ds) => ds,
@@ -51,7 +51,7 @@ impl Analysis {
         &self,
         fpath: FilePath,
         text: &str,
-    ) -> Result<(), Vec<LocDiagnostic>> {
+    ) -> Result<(), Vec<FileDiagnostic>> {
         let main_file = self.parse(fpath, text).map_err(|d| vec![d])?;
 
         let mut dependencies = vec![];

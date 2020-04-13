@@ -9,14 +9,24 @@ use crate::utils::location::File;
 pub type FilePath = &'static str;
 
 #[derive(Debug)]
-pub struct LocDiagnostic {
+pub struct FileDiagnostic {
     pub fpath: FilePath,
-    pub diagnostic: Diagnostic,
+    pub diagnostic: Option<Diagnostic>,
 }
 
-impl LocDiagnostic {
-    pub fn new(fpath: FilePath, diagnostic: Diagnostic) -> LocDiagnostic {
-        LocDiagnostic { fpath, diagnostic }
+impl FileDiagnostic {
+    pub fn new(fpath: FilePath, diagnostic: Diagnostic) -> FileDiagnostic {
+        FileDiagnostic {
+            fpath,
+            diagnostic: Some(diagnostic),
+        }
+    }
+
+    pub fn new_empty(fpath: FilePath) -> FileDiagnostic {
+        FileDiagnostic {
+            fpath,
+            diagnostic: None,
+        }
     }
 }
 
@@ -64,7 +74,7 @@ impl RootDatabase {
         }
     }
 
-    pub fn libra_error_into_diagnostic(&self, error: Error) -> LocDiagnostic {
+    pub fn libra_error_into_diagnostic(&self, error: Error) -> FileDiagnostic {
         assert!(!error.is_empty(), "Libra's Error is an empty Vec");
         let (primary_loc, primary_message) = error.get(0).unwrap().to_owned();
         let mut diagnostic = {
@@ -88,7 +98,7 @@ impl RootDatabase {
             }
             diagnostic.related_information = Some(related_info)
         }
-        LocDiagnostic::new(primary_loc.file(), diagnostic)
+        FileDiagnostic::new(primary_loc.file(), diagnostic)
     }
 
     fn loc_to_range(&self, loc: Loc) -> Range {
