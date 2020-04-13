@@ -1,8 +1,7 @@
-use lsp_types::Diagnostic;
 use move_lang::parser::ast::FileDefinition;
 
 use crate::compiler::{check, parse_file};
-use crate::ide::db::{AnalysisChange, FilePath, RootDatabase};
+use crate::ide::db::{AnalysisChange, FilePath, LocDiagnostic, RootDatabase};
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {
@@ -10,14 +9,12 @@ pub struct AnalysisHost {
 }
 
 impl AnalysisHost {
-    pub fn analysis(&self) -> Analysis {
-        Analysis {
-            db: self.db.clone(),
-        }
-    }
-
     pub fn db(&self) -> &RootDatabase {
         &self.db
+    }
+
+    pub fn analysis(&self) -> Analysis {
+        Analysis::new(self.db.clone())
     }
 
     pub fn apply_change(&mut self, change: AnalysisChange) {
@@ -31,15 +28,19 @@ pub struct Analysis {
 }
 
 impl Analysis {
+    pub fn new(db: RootDatabase) -> Analysis {
+        Analysis { db }
+    }
+
     pub fn db(&self) -> &RootDatabase {
         &self.db
     }
 
-    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, Vec<Diagnostic>> {
-        parse_file(fpath, text).map_err(|err| vec![self.db.libra_error_into_diagnostic(err)])
+    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, LocDiagnostic> {
+        parse_file(fpath, text).map_err(|err| self.db.libra_error_into_diagnostic(err))
     }
 
-    pub fn check_with_libra_compiler(&self, fpath: FilePath, text: &str) -> Vec<Diagnostic> {
+    pub fn check_with_libra_compiler(&self, fpath: FilePath, text: &str) -> Vec<LocDiagnostic> {
         match self.check_with_libra_compiler_inner(fpath, text) {
             Ok(_) => vec![],
             Err(ds) => ds,
@@ -50,13 +51,15 @@ impl Analysis {
         &self,
         fpath: FilePath,
         text: &str,
-    ) -> Result<(), Vec<Diagnostic>> {
-        let main_file = self.parse(fpath, text)?;
+    ) -> Result<(), Vec<LocDiagnostic>> {
+        let main_file = self.parse(fpath, text).map_err(|d| vec![d])?;
 
         let mut dependencies = vec![];
         for (existing_mod_fpath, existing_mod_text) in self.db.module_files().iter() {
             if existing_mod_fpath != &fpath {
-                let parsed = self.parse(existing_mod_fpath, existing_mod_text)?;
+                let parsed = self
+                    .parse(existing_mod_fpath, existing_mod_text)
+                    .map_err(|d| vec![d])?;
                 if matches!(parsed, FileDefinition::Modules(_)) {
                     dependencies.push(parsed);
                 }

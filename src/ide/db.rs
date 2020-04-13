@@ -8,6 +8,18 @@ use crate::utils::location::File;
 
 pub type FilePath = &'static str;
 
+#[derive(Debug)]
+pub struct LocDiagnostic {
+    pub fpath: FilePath,
+    pub diagnostic: Diagnostic,
+}
+
+impl LocDiagnostic {
+    pub fn new(fpath: FilePath, diagnostic: Diagnostic) -> LocDiagnostic {
+        LocDiagnostic { fpath, diagnostic }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct RootDatabase {
     pub config: Config,
@@ -52,7 +64,7 @@ impl RootDatabase {
         }
     }
 
-    pub fn libra_error_into_diagnostic(&self, error: Error) -> Diagnostic {
+    pub fn libra_error_into_diagnostic(&self, error: Error) -> LocDiagnostic {
         assert!(!error.is_empty(), "Libra's Error is an empty Vec");
         let (primary_loc, primary_message) = error.get(0).unwrap().to_owned();
         let mut diagnostic = {
@@ -76,7 +88,7 @@ impl RootDatabase {
             }
             diagnostic.related_information = Some(related_info)
         }
-        diagnostic
+        LocDiagnostic::new(primary_loc.file(), diagnostic)
     }
 
     fn loc_to_range(&self, loc: Loc) -> Range {

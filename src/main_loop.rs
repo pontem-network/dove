@@ -11,7 +11,7 @@ use lsp_types::notification::{
 };
 use lsp_types::request::WorkspaceConfiguration;
 use lsp_types::{
-    ConfigurationItem, ConfigurationParams, Diagnostic, MessageType, PublishDiagnosticsParams,
+    ConfigurationItem, ConfigurationParams, MessageType, PublishDiagnosticsParams,
     ShowMessageParams, Url,
 };
 use ra_vfs::VfsTask;
@@ -20,9 +20,8 @@ use serde::Serialize;
 use threadpool::ThreadPool;
 
 use crate::config::Config;
-
 use crate::ide::analysis::Analysis;
-use crate::ide::db::FilePath;
+use crate::ide::db::{FilePath, LocDiagnostic};
 use crate::subscriptions::OpenedFiles;
 use crate::utils::io::leaked_fpath;
 use crate::world::WorldState;
@@ -30,7 +29,7 @@ use crate::world::WorldState;
 #[derive(Debug)]
 pub enum Task {
     Respond(Response),
-    Diagnostic(FilePath, Vec<Diagnostic>),
+    Diagnostic(Vec<LocDiagnostic>),
 }
 
 pub enum Event {
@@ -181,11 +180,13 @@ pub fn loop_turn(
 fn on_task(task: Task, msg_sender: &Sender<Message>) {
     match task {
         Task::Respond(_) => {}
-        Task::Diagnostic(fpath, ds) => {
-            let uri = Url::from_file_path(fpath).unwrap();
-            let params = PublishDiagnosticsParams::new(uri, ds, None);
-            let not = notification_new::<PublishDiagnostics>(params);
-            msg_sender.send(not.into()).unwrap();
+        Task::Diagnostic(loc_ds) => {
+            for loc_d in loc_ds {
+                let uri = Url::from_file_path(loc_d.fpath).unwrap();
+                let params = PublishDiagnosticsParams::new(uri, vec![loc_d.diagnostic], None);
+                let not = notification_new::<PublishDiagnostics>(params);
+                msg_sender.send(not.into()).unwrap();
+            }
         }
     }
 }
@@ -200,9 +201,7 @@ fn update_file_notifications_on_threadpool(
         for fpath in opened_files {
             let text = analysis.db().all_tracked_files.get(fpath).unwrap();
             let diagnostics = analysis.check_with_libra_compiler(fpath, text);
-            task_sender
-                .send(Task::Diagnostic(fpath, diagnostics))
-                .unwrap();
+            task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
         }
     })
 }

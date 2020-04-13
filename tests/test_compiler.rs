@@ -1,9 +1,10 @@
 use lsp_types::{Diagnostic, Position, Range};
+use move_lang::errors::FilesSourceText;
 use move_lang::shared::Address;
 
-use move_language_server::config::Config;
-use move_language_server::ide::db::{AnalysisChange, FilePath};
-
+use move_language_server::config::{Config, MoveDialect};
+use move_language_server::ide::analysis::Analysis;
+use move_language_server::ide::db::{AnalysisChange, FilePath, LocDiagnostic, RootDatabase};
 use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
 use move_language_server::utils::io::{get_module_files, leaked_fpath};
 use move_language_server::world::WorldState;
@@ -25,10 +26,11 @@ fn range(start: (u64, u64), end: (u64, u64)) -> Range {
 }
 
 fn diagnostics(text: &str) -> Vec<Diagnostic> {
-    diagnostics_with_config(text, Config::default())
+    let loc_ds = diagnostics_with_config(text, Config::default());
+    loc_ds.iter().map(|d| d.diagnostic.clone()).collect()
 }
 
-fn diagnostics_with_config(text: &str, config: Config) -> Vec<Diagnostic> {
+fn diagnostics_with_config(text: &str, config: Config) -> Vec<LocDiagnostic> {
     diagnostics_with_config_and_filename(text, config, existing_file_abspath())
 }
 
@@ -36,7 +38,7 @@ fn diagnostics_with_config_and_filename(
     text: &str,
     config: Config,
     fpath: FilePath,
-) -> Vec<Diagnostic> {
+) -> Vec<LocDiagnostic> {
     let ws_root = std::env::current_dir().unwrap();
     let world_state = WorldState::new(ws_root, config);
     let mut analysis_host = world_state.analysis_host;
@@ -64,7 +66,7 @@ fn test_fail_on_non_ascii_character() {
     let error = errors.get(0).unwrap();
     assert_eq!(error.range, range((0, 22), (0, 22)));
 }
-
+//
 #[test]
 fn test_successful_compilation() {
     let source = r"
@@ -331,6 +333,46 @@ fun main() {
     let errors = diagnostics_with_config(source_text, config);
     assert_eq!(errors.len(), 1);
 
-    let error = errors.get(0).unwrap().to_owned();
+    let error = errors.get(0).unwrap().diagnostic.clone();
     assert_eq!(error.related_information.unwrap().len(), 2);
+}
+
+#[test]
+fn test_syntax_error_in_dependency() {
+    let config = Config {
+        dialect: MoveDialect::Libra,
+        sender_address: Address::default(),
+        module_folders: vec![get_modules_path()],
+    };
+
+    let mut files = FilesSourceText::new();
+    let dep_module_fpath =
+        leaked_fpath(get_modules_path().join("dep_module.move").to_str().unwrap());
+    let dep_module_source_text = "address 0x0: modules T { public fun how_many() {} }";
+    files.insert(dep_module_fpath, dep_module_source_text.to_string());
+
+    let main_fpath = leaked_fpath(get_modules_path().join("module.move").to_str().unwrap());
+    let source_text = r"
+    module HowMany {
+        use 0x0::T;
+        public fun how() {
+            T::how_many()
+        }
+    }
+    ";
+    files.insert(main_fpath, source_text.to_string());
+
+    let db = RootDatabase {
+        config,
+        all_tracked_files: files,
+    };
+    let analysis = Analysis::new(db);
+    let errors = analysis.check_with_libra_compiler(main_fpath, source_text);
+    assert_eq!(errors.len(), 1);
+    let error = errors.get(0).unwrap();
+    assert_eq!(error.fpath, dep_module_fpath);
+    assert_eq!(
+        error.diagnostic.message,
+        "Invalid address directive. Expected \'address\' got \'modules\'"
+    );
 }
