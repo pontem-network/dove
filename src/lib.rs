@@ -9,3 +9,4 @@ pub mod test_utils;
 pub mod utils;
 
 pub mod ide;
+pub mod subscriptions;

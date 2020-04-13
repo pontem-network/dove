@@ -8,15 +8,8 @@ use crate::ide::analysis::AnalysisHost;
 use crate::ide::db::AnalysisChange;
 use crate::utils::io::leaked_fpath;
 
-struct MoveFilesFilter {
-    module_folders: Vec<PathBuf>,
-}
-
-impl MoveFilesFilter {
-    pub fn new(module_folders: Vec<PathBuf>) -> MoveFilesFilter {
-        MoveFilesFilter { module_folders }
-    }
-}
+#[derive(Default)]
+struct MoveFilesFilter;
 
 impl Filter for MoveFilesFilter {
     fn include_dir(&self, _: &RelativePath) -> bool {
@@ -24,13 +17,7 @@ impl Filter for MoveFilesFilter {
     }
 
     fn include_file(&self, file_path: &RelativePath) -> bool {
-        let is_move_file = file_path.extension() == Some("move");
-        is_move_file && {
-            let file_path = file_path.to_path(std::env::current_dir().unwrap());
-            self.module_folders
-                .iter()
-                .any(|folder| file_path.starts_with(folder))
-        }
+        file_path.extension() == Some("move")
     }
 }
 
@@ -48,14 +35,11 @@ impl WorldState {
         let mut analysis_host = AnalysisHost::default();
 
         let mut change = AnalysisChange::new();
-        change.change_sender_address(config.sender_address);
+        change.change_config(config.clone());
         analysis_host.apply_change(change);
 
         let (fs_events_sender, fs_events_receiver) = unbounded::<VfsTask>();
-        let modules_root = RootEntry::new(
-            ws_root.clone(),
-            Box::new(MoveFilesFilter::new(config.module_folders.clone())),
-        );
+        let modules_root = RootEntry::new(ws_root.clone(), Box::new(MoveFilesFilter::default()));
         let vfs = Vfs::new(
             vec![modules_root],
             Box::new(move |task| fs_events_sender.send(task).unwrap()),
@@ -72,9 +56,13 @@ impl WorldState {
         }
     }
 
-    pub fn apply_fs_changes(&mut self) {
+    pub fn load_fs_changes(&mut self) -> bool {
+        let vfs_changes = self.vfs.commit_changes();
+        if vfs_changes.is_empty() {
+            return false;
+        }
         let mut change = AnalysisChange::new();
-        for fs_change in self.vfs.commit_changes() {
+        for fs_change in vfs_changes {
             match fs_change {
                 VfsChange::AddFile { file, text, .. } => {
                     let fpath = leaked_fpath(self.vfs.file2path(file).to_str().unwrap());
@@ -98,5 +86,6 @@ impl WorldState {
             }
         }
         self.analysis_host.apply_change(change);
+        true
     }
 }

@@ -3,41 +3,50 @@ use move_ir_types::location::Loc;
 use move_lang::errors::{Error, FilesSourceText};
 use move_lang::shared::Address;
 
+use crate::config::Config;
 use crate::utils::location::File;
 
 pub type FilePath = &'static str;
 
 #[derive(Debug, Default, Clone)]
 pub struct RootDatabase {
-    pub sender_address: Address,
-    pub project_files_mapping: FilesSourceText,
+    pub config: Config,
+    pub all_tracked_files: FilesSourceText,
 }
 
 impl RootDatabase {
-    pub fn apply_change(&mut self, change: AnalysisChange) {
-        if let Some(address) = change.address_changed {
-            self.sender_address = address;
-        }
+    pub fn module_files(&self) -> FilesSourceText {
+        self.all_tracked_files
+            .clone()
+            .into_iter()
+            .filter(|(f, _)| self.is_fpath_for_a_module(f))
+            .collect()
+    }
 
-        for root_change in change.root_changes {
+    pub fn sender_address(&self) -> Address {
+        self.config.sender_address
+    }
+
+    pub fn apply_change(&mut self, change: AnalysisChange) {
+        if let Some(config) = change.config_changed {
+            self.config = config;
+        }
+        for root_change in change.tracked_files_changed {
             match root_change {
                 RootChange::AddFile(fpath, text) => {
-                    if self.project_files_mapping.contains_key(fpath) {
-                        log::warn!("AddFile: file {:?} already present", fpath);
-                    }
-                    self.project_files_mapping.insert(fpath, text);
                     log::info!("AddFile: {:?}", fpath);
+                    self.all_tracked_files.insert(fpath, text);
                 }
                 RootChange::ChangeFile(fpath, text) => {
-                    self.project_files_mapping.insert(fpath, text);
                     log::info!("ChangeFile: {:?}", fpath);
+                    self.all_tracked_files.insert(fpath, text);
                 }
                 RootChange::RemoveFile(fpath) => {
-                    if !self.project_files_mapping.contains_key(fpath) {
+                    if !self.all_tracked_files.contains_key(fpath) {
                         log::warn!("RemoveFile: file {:?} does not exist", fpath);
                     }
-                    self.project_files_mapping.remove(fpath);
                     log::info!("RemoveFile: {:?}", fpath);
+                    self.all_tracked_files.remove(fpath);
                 }
             }
         }
@@ -71,15 +80,20 @@ impl RootDatabase {
     }
 
     fn loc_to_range(&self, loc: Loc) -> Range {
-        let text = self
-            .project_files_mapping
-            .get(loc.file())
-            .unwrap()
-            .to_owned();
+        let text = self.all_tracked_files.get(loc.file()).unwrap().to_owned();
         let file = File::new(text);
         let start_pos = file.position(loc.span().start().to_usize()).unwrap();
         let end_pos = file.position(loc.span().end().to_usize()).unwrap();
         Range::new(start_pos, end_pos)
+    }
+
+    fn is_fpath_for_a_module(&self, fpath: FilePath) -> bool {
+        for module_folder in self.config.module_folders.iter() {
+            if fpath.starts_with(module_folder.to_str().unwrap()) {
+                return true;
+            }
+        }
+        false
     }
 }
 
@@ -92,8 +106,8 @@ pub enum RootChange {
 
 #[derive(Default, Debug)]
 pub struct AnalysisChange {
-    address_changed: Option<Address>,
-    root_changes: Vec<RootChange>,
+    tracked_files_changed: Vec<RootChange>,
+    config_changed: Option<Config>,
 }
 
 impl AnalysisChange {
@@ -102,18 +116,21 @@ impl AnalysisChange {
     }
 
     pub fn add_file(&mut self, fname: FilePath, text: String) {
-        self.root_changes.push(RootChange::AddFile(fname, text));
+        self.tracked_files_changed
+            .push(RootChange::AddFile(fname, text));
     }
 
     pub fn update_file(&mut self, fname: FilePath, text: String) {
-        self.root_changes.push(RootChange::ChangeFile(fname, text));
+        self.tracked_files_changed
+            .push(RootChange::ChangeFile(fname, text));
     }
 
     pub fn remove_file(&mut self, fname: FilePath) {
-        self.root_changes.push(RootChange::RemoveFile(fname))
+        self.tracked_files_changed
+            .push(RootChange::RemoveFile(fname))
     }
 
-    pub fn change_sender_address(&mut self, new_address: Address) {
-        self.address_changed = Some(new_address);
+    pub fn change_config(&mut self, config: Config) {
+        self.config_changed = Some(config);
     }
 }

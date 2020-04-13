@@ -292,7 +292,6 @@ module CovidTracker {
     );
     let errors =
         diagnostics_with_config_and_filename(module_source_text, config, covid_tracker_module);
-    dbg!(&errors);
     assert!(errors.is_empty());
 }
 

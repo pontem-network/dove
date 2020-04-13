@@ -31,6 +31,10 @@ pub struct Analysis {
 }
 
 impl Analysis {
+    pub fn db(&self) -> &RootDatabase {
+        &self.db
+    }
+
     pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, Vec<Diagnostic>> {
         parse_file(fpath, text).map_err(|err| vec![self.db.libra_error_into_diagnostic(err)])
     }
@@ -50,7 +54,7 @@ impl Analysis {
         let main_file = self.parse(fpath, text)?;
 
         let mut dependencies = vec![];
-        for (existing_mod_fpath, existing_mod_text) in self.db.project_files_mapping.iter() {
+        for (existing_mod_fpath, existing_mod_text) in self.db.module_files().iter() {
             if existing_mod_fpath != &fpath {
                 let parsed = self.parse(existing_mod_fpath, existing_mod_text)?;
                 if matches!(parsed, FileDefinition::Modules(_)) {
@@ -59,7 +63,7 @@ impl Analysis {
             }
         }
         let check_res =
-            check::check_parsed_program(main_file, dependencies, Some(self.db.sender_address));
+            check::check_parsed_program(main_file, dependencies, Some(self.db().sender_address()));
         check_res.map_err(|errors| {
             errors
                 .into_iter()

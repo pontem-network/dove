@@ -11,7 +11,7 @@ pub enum MoveDialect {
     DFinance,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub dialect: MoveDialect,
     pub module_folders: Vec<PathBuf>,
