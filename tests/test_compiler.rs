@@ -5,8 +5,8 @@ use move_lang::shared::Address;
 use move_language_server::config::{Config, MoveDialect};
 use move_language_server::ide::analysis::Analysis;
 use move_language_server::ide::db::{AnalysisChange, FileDiagnostic, FilePath, RootDatabase};
-use move_language_server::test_utils::{get_modules_path, get_stdlib_path};
 use move_language_server::utils::io::{get_module_files, leaked_fpath};
+use move_language_server::utils::tests::{get_modules_path, get_stdlib_path};
 use move_language_server::world::WorldState;
 
 // just need some valid fname
