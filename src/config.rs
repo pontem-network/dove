@@ -14,6 +14,7 @@ pub enum MoveDialect {
 #[derive(Debug, Clone)]
 pub struct Config {
     pub dialect: MoveDialect,
+    pub stdlib_folder: Option<PathBuf>,
     pub module_folders: Vec<PathBuf>,
     pub sender_address: Address,
 }
@@ -22,6 +23,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             dialect: MoveDialect::Libra,
+            stdlib_folder: None,
             module_folders: vec![],
             sender_address: Address::default(),
         }
@@ -33,6 +35,7 @@ impl Config {
         log::info!("Config::update({:#})", value);
 
         set(value, "/dialect", &mut self.dialect);
+        set(value, "/stdlib_folder", &mut self.stdlib_folder);
         set(value, "/modules_folders", &mut self.module_folders);
         self.sender_address = match get(value, "/sender_address") {
             None => {

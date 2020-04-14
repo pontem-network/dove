@@ -16,4 +16,6 @@ For the corresponding VSCode extension, see https://marketplace.visualstudio.com
 
 `sender_address` - address of the user, used for module imports. Default is `0x0`.
 
+`stdlib_folder` - stdlib folder path. Default is `null`, no stdlib is loaded.
+
 `modules_folders` - array of folder paths for module lookup. Default is empty array.

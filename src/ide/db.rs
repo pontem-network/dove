@@ -4,6 +4,7 @@ use move_lang::errors::{Error, FilesSourceText};
 use move_lang::shared::Address;
 
 use crate::config::Config;
+
 use crate::utils::location::File;
 
 pub type FilePath = &'static str;

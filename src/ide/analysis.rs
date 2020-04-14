@@ -2,6 +2,7 @@ use move_lang::parser::ast::FileDefinition;
 
 use crate::compiler::{check, parse_file};
 use crate::ide::db::{AnalysisChange, FileDiagnostic, FilePath, RootDatabase};
+use crate::utils::io;
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {
@@ -47,6 +48,7 @@ impl Analysis {
         }
     }
 
+    #[inline]
     fn check_with_libra_compiler_inner(
         &self,
         fpath: FilePath,
@@ -54,7 +56,7 @@ impl Analysis {
     ) -> Result<(), Vec<FileDiagnostic>> {
         let main_file = self.parse(fpath, text).map_err(|d| vec![d])?;
 
-        let mut dependencies = vec![];
+        let mut dependencies = self.parsed_stdlib_files();
         for (existing_mod_fpath, existing_mod_text) in self.db.module_files().iter() {
             if existing_mod_fpath != &fpath {
                 let parsed = self
@@ -73,5 +75,19 @@ impl Analysis {
                 .map(|err| self.db.libra_error_into_diagnostic(err))
                 .collect()
         })
+    }
+
+    fn parsed_stdlib_files(&self) -> Vec<FileDefinition> {
+        match &self.db.config.stdlib_folder {
+            Some(folder) => {
+                let mut parsed_mods = vec![];
+                for (fpath, text) in io::get_module_files(folder.as_path()) {
+                    let parsed = self.parse(fpath, &text).unwrap();
+                    parsed_mods.push(parsed);
+                }
+                parsed_mods
+            }
+            None => vec![],
+        }
     }
 }

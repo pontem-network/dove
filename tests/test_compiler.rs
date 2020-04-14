@@ -234,7 +234,7 @@ module MyModule {
 }
     ";
     let config = Config {
-        module_folders: vec![get_stdlib_path()],
+        stdlib_folder: Some(get_stdlib_path()),
         ..Config::default()
     };
     let errors = diagnostics_with_config(source_text, config);
@@ -252,7 +252,8 @@ fun main() {
     ";
     let config = Config {
         sender_address: Address::parse_str("0x8572f83cee01047effd6e7d0b5c19743").unwrap(),
-        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        stdlib_folder: Some(get_stdlib_path()),
+        module_folders: vec![get_modules_path()],
         ..Config::default()
     };
     let errors = diagnostics_with_config(script_source_text, config);
@@ -286,7 +287,8 @@ module CovidTracker {
 }
     ";
     let config = Config {
-        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        stdlib_folder: Some(get_stdlib_path()),
+        module_folders: vec![get_modules_path()],
         ..Config::default()
     };
     let covid_tracker_module = leaked_fpath(
@@ -311,7 +313,8 @@ fun main() {
 }
     ";
     let config = Config {
-        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        stdlib_folder: Some(get_stdlib_path()),
+        module_folders: vec![get_modules_path()],
         sender_address: Address::parse_str(sender_address).unwrap(),
         ..Config::default()
     };
@@ -330,7 +333,8 @@ fun main() {
 }
     ";
     let config = Config {
-        module_folders: vec![get_stdlib_path(), get_modules_path()],
+        stdlib_folder: Some(get_stdlib_path()),
+        module_folders: vec![get_modules_path()],
         ..Config::default()
     };
     let errors = diagnostics_with_config(source_text, config);
@@ -346,6 +350,7 @@ fn test_syntax_error_in_dependency() {
         dialect: MoveDialect::Libra,
         sender_address: Address::default(),
         module_folders: vec![get_modules_path()],
+        stdlib_folder: None,
     };
 
     let mut files = FilesSourceText::new();
