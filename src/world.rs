@@ -4,7 +4,7 @@ use crossbeam_channel::{unbounded, Receiver};
 use ra_vfs::{Filter, RelativePath, RootEntry, Vfs, VfsChange, VfsTask, Watch};
 
 use crate::config::Config;
-use crate::ide::analysis::AnalysisHost;
+use crate::ide::analysis::{Analysis, AnalysisHost};
 use crate::ide::db::AnalysisChange;
 use crate::utils::io::leaked_fpath;
 
@@ -19,6 +19,11 @@ impl Filter for MoveFilesFilter {
     fn include_file(&self, file_path: &RelativePath) -> bool {
         file_path.extension() == Some("move")
     }
+}
+
+pub struct WorldSnapshot {
+    pub config: Config,
+    pub analysis: Analysis,
 }
 
 #[derive(Debug)]
@@ -87,5 +92,12 @@ impl WorldState {
         }
         self.analysis_host.apply_change(change);
         true
+    }
+
+    pub fn snapshot(&self) -> WorldSnapshot {
+        WorldSnapshot {
+            config: self.config.clone(),
+            analysis: self.analysis_host.analysis(),
+        }
     }
 }

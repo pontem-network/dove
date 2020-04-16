@@ -6,5 +6,8 @@ pub mod world;
 
 pub mod utils;
 
+pub mod dispatcher;
+pub mod handlers;
 pub mod ide;
+pub mod req;
 pub mod subscriptions;

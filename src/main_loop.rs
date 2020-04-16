@@ -14,18 +14,47 @@ use lsp_types::{
     ConfigurationItem, ConfigurationParams, MessageType, PublishDiagnosticsParams,
     ShowMessageParams, Url,
 };
-
 use ra_vfs::VfsTask;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use threadpool::ThreadPool;
 
 use crate::config::Config;
+use crate::dispatcher::PoolDispatcher;
+use crate::handlers;
 use crate::ide::analysis::Analysis;
 use crate::ide::db::{FileDiagnostic, FilePath};
+use crate::req;
 use crate::subscriptions::OpenedFiles;
 use crate::utils::io::leaked_fpath;
 use crate::world::WorldState;
+use std::error::Error;
+
+#[derive(Debug)]
+pub struct LspError {
+    pub code: i32,
+    pub message: String,
+}
+
+impl LspError {
+    pub const UNKNOWN_FILE: i32 = -32900;
+
+    pub fn new(code: i32, message: String) -> LspError {
+        LspError { code, message }
+    }
+}
+
+impl fmt::Display for LspError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Language Server request failed with {}. ({})",
+            self.code, self.message
+        )
+    }
+}
+
+impl Error for LspError {}
 
 #[derive(Debug)]
 pub enum Task {
@@ -136,7 +165,9 @@ pub fn loop_turn(
         Event::Task(task) => on_task(task, &connection.sender),
         Event::Vfs(vfs_task) => world_state.vfs.handle_task(vfs_task),
         Event::Msg(message) => match message {
-            Message::Request(_) => {}
+            Message::Request(req) => {
+                on_request(world_state, pool, task_sender, &connection.sender, req)?;
+            }
             Message::Notification(not) => {
                 on_notification(&connection.sender, world_state, loop_state, not)?;
             }
@@ -178,9 +209,25 @@ pub fn loop_turn(
     Ok(())
 }
 
-fn on_task(task: Task, msg_sender: &Sender<Message>) {
+fn on_request(
+    world_state: &mut WorldState,
+    pool: &ThreadPool,
+    task_sender: &Sender<Task>,
+    msg_sender: &Sender<Message>,
+    req: Request,
+) -> Result<()> {
+    let mut pool_dispatcher = PoolDispatcher::new(req, pool, world_state, msg_sender, task_sender);
+    pool_dispatcher
+        .on::<req::Completion>(handlers::handle_completion)?
+        .finish();
+    Ok(())
+}
+
+pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
     match task {
-        Task::Respond(_) => {}
+        Task::Respond(response) => {
+            msg_sender.send(response.into()).unwrap();
+        }
         Task::Diagnostic(loc_ds) => {
             for loc_d in loc_ds {
                 let uri = Url::from_file_path(loc_d.fpath).unwrap();
@@ -194,24 +241,6 @@ fn on_task(task: Task, msg_sender: &Sender<Message>) {
             }
         }
     }
-}
-
-fn update_file_notifications_on_threadpool(
-    pool: &ThreadPool,
-    analysis: Analysis,
-    task_sender: Sender<Task>,
-    files: Vec<FilePath>,
-) {
-    pool.execute(move || {
-        for fpath in files {
-            let text = analysis.db().all_tracked_files.get(fpath).unwrap();
-            let mut diagnostics = analysis.check_with_libra_compiler(fpath, text);
-            if diagnostics.is_empty() {
-                diagnostics = vec![FileDiagnostic::new_empty(fpath)];
-            }
-            task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
-        }
-    })
 }
 
 fn on_notification(
@@ -301,6 +330,24 @@ fn on_notification(
     }
     // log::error!("unhandled notification: {:?}", notif);
     Ok(())
+}
+
+fn update_file_notifications_on_threadpool(
+    pool: &ThreadPool,
+    analysis: Analysis,
+    task_sender: Sender<Task>,
+    files: Vec<FilePath>,
+) {
+    pool.execute(move || {
+        for fpath in files {
+            let text = analysis.db().all_tracked_files.get(fpath).unwrap();
+            let mut diagnostics = analysis.check_with_libra_compiler(fpath, text);
+            if diagnostics.is_empty() {
+                diagnostics = vec![FileDiagnostic::new_empty(fpath)];
+            }
+            task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
+        }
+    })
 }
 
 pub fn notification_cast<N>(notification: Notification) -> Result<N::Params, Notification>
