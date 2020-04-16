@@ -1,6 +1,9 @@
+use lsp_types::CompletionItem;
 use move_lang::parser::ast::FileDefinition;
 
 use crate::compiler::{check, parse_file};
+use crate::completion;
+
 use crate::ide::db::{AnalysisChange, FileDiagnostic, FilePath, RootDatabase};
 use crate::utils::io;
 
@@ -39,6 +42,13 @@ impl Analysis {
 
     pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, FileDiagnostic> {
         parse_file(fpath, text).map_err(|err| self.db.libra_error_into_diagnostic(err))
+    }
+
+    pub fn completions(&self) -> Vec<CompletionItem> {
+        let mut completions = vec![];
+        completions.extend(completion::get_keywords());
+        completions.extend(completion::get_builtins());
+        completions
     }
 
     pub fn check_with_libra_compiler(&self, fpath: FilePath, text: &str) -> Vec<FileDiagnostic> {

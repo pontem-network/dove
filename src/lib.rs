@@ -6,6 +6,7 @@ pub mod world;
 
 pub mod utils;
 
+pub mod completion;
 pub mod dispatcher;
 pub mod handlers;
 pub mod ide;
