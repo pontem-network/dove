@@ -372,7 +372,7 @@ fn test_syntax_error_in_dependency() {
 
     let db = RootDatabase {
         config,
-        all_tracked_files: files,
+        tracked_files: files,
     };
     let analysis = Analysis::new(db);
     let errors = analysis.check_with_libra_compiler(main_fpath, source_text);

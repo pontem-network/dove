@@ -67,10 +67,11 @@ impl Analysis {
         let main_file = self.parse(fpath, text).map_err(|d| vec![d])?;
 
         let mut dependencies = self.parsed_stdlib_files();
-        for (existing_mod_fpath, existing_mod_text) in self.db.module_files().iter() {
-            if existing_mod_fpath != &fpath {
+
+        for (existing_mod_fpath, existing_mod_text) in self.db.module_files().into_iter() {
+            if existing_mod_fpath != fpath {
                 let parsed = self
-                    .parse(existing_mod_fpath, existing_mod_text)
+                    .parse(existing_mod_fpath, &existing_mod_text)
                     .map_err(|d| vec![d])?;
                 if matches!(parsed, FileDefinition::Modules(_)) {
                     dependencies.push(parsed);

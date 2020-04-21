@@ -1,10 +1,10 @@
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use move_ir_types::location::Loc;
 use move_lang::errors::{Error, FilesSourceText};
+
 use move_lang::shared::Address;
 
 use crate::config::Config;
-
 use crate::utils::location::File;
 
 pub type FilePath = &'static str;
@@ -34,12 +34,12 @@ impl FileDiagnostic {
 #[derive(Debug, Default, Clone)]
 pub struct RootDatabase {
     pub config: Config,
-    pub all_tracked_files: FilesSourceText,
+    pub tracked_files: FilesSourceText,
 }
 
 impl RootDatabase {
     pub fn module_files(&self) -> FilesSourceText {
-        self.all_tracked_files
+        self.tracked_files
             .clone()
             .into_iter()
             .filter(|(f, _)| self.is_fpath_for_a_module(f))
@@ -58,18 +58,18 @@ impl RootDatabase {
             match root_change {
                 RootChange::AddFile(fpath, text) => {
                     log::info!("AddFile: {:?}", fpath);
-                    self.all_tracked_files.insert(fpath, text);
+                    self.tracked_files.insert(fpath, text);
                 }
                 RootChange::ChangeFile(fpath, text) => {
                     log::info!("ChangeFile: {:?}", fpath);
-                    self.all_tracked_files.insert(fpath, text);
+                    self.tracked_files.insert(fpath, text);
                 }
                 RootChange::RemoveFile(fpath) => {
-                    if !self.all_tracked_files.contains_key(fpath) {
+                    if !self.tracked_files.contains_key(fpath) {
                         log::warn!("RemoveFile: file {:?} does not exist", fpath);
                     }
                     log::info!("RemoveFile: {:?}", fpath);
-                    self.all_tracked_files.remove(fpath);
+                    self.tracked_files.remove(fpath);
                 }
             }
         }
@@ -103,7 +103,7 @@ impl RootDatabase {
     }
 
     fn loc_to_range(&self, loc: Loc) -> Range {
-        let text = self.all_tracked_files.get(loc.file()).unwrap().to_owned();
+        let text = self.tracked_files.get(loc.file()).unwrap().to_owned();
         let file = File::new(text);
         let start_pos = file.position(loc.span().start().to_usize()).unwrap();
         let end_pos = file.position(loc.span().end().to_usize()).unwrap();

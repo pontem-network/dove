@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fmt;
 use std::path::PathBuf;
 
@@ -28,7 +29,6 @@ use crate::req;
 use crate::subscriptions::OpenedFiles;
 use crate::utils::io::leaked_fpath;
 use crate::world::WorldState;
-use std::error::Error;
 
 #[derive(Debug)]
 pub struct LspError {
@@ -340,7 +340,7 @@ fn update_file_notifications_on_threadpool(
 ) {
     pool.execute(move || {
         for fpath in files {
-            let text = analysis.db().all_tracked_files.get(fpath).unwrap();
+            let text = analysis.db().tracked_files.get(fpath).unwrap();
             let mut diagnostics = analysis.check_with_libra_compiler(fpath, text);
             if diagnostics.is_empty() {
                 diagnostics = vec![FileDiagnostic::new_empty(fpath)];
