@@ -52,6 +52,10 @@ impl<'t> Tokens<'t> {
         &self.text[TextRange::new(*start, *end)]
     }
 
+    pub fn lookahead(&self) -> SyntaxKind {
+        self.tokens[self.curr.1 + 1].kind
+    }
+
     pub fn bump(&mut self) {
         if self.curr.0 == SyntaxKind::EOF {
             return;
