@@ -40,7 +40,7 @@ pub fn make_loc(file: &'static str, start: usize, end: usize) -> Loc {
     )
 }
 
-fn current_token_loc<'input>(tokens: &Lexer<'input>) -> Loc {
+fn current_token_loc(tokens: &Lexer) -> Loc {
     let start_loc = tokens.start_loc();
     make_loc(
         tokens.file_name(),
@@ -68,7 +68,7 @@ fn match_token<'input>(tokens: &mut Lexer<'input>, tok: Tok) -> Result<bool, Err
 }
 
 // Check for the specified token and return an error if it does not match.
-fn consume_token<'input>(tokens: &mut Lexer<'input>, tok: Tok) -> Result<(), Error> {
+fn consume_token(tokens: &mut Lexer, tok: Tok) -> Result<(), Error> {
     if tokens.peek() != tok {
         let expected = format!("'{}'", &tok.to_string());
         return Err(unexpected_token_error(tokens, &expected));
@@ -1381,9 +1381,7 @@ fn parse_field_annot<'input>(tokens: &mut Lexer<'input>) -> Result<(Field, Type)
 
 // Parse a use declaration:
 //      UseDecl = "use" <ModuleIdent> ("as" <ModuleName>)? ";"
-fn parse_use_decl<'input>(
-    tokens: &mut Lexer<'input>,
-) -> Result<(ModuleIdent, Option<ModuleName>), Error> {
+fn parse_use_decl(tokens: &mut Lexer) -> Result<(ModuleIdent, Option<ModuleName>), Error> {
     consume_token(tokens, Tok::Use)?;
     let ident = parse_module_ident(tokens)?;
     let alias = if tokens.peek() == Tok::As {
@@ -1394,6 +1392,36 @@ fn parse_use_decl<'input>(
     };
     consume_token(tokens, Tok::Semicolon)?;
     Ok((ident, alias))
+}
+
+// Parse a use declaration:
+//      UseDecl = "use" <ModuleIdent> ("as" <ModuleName>)? ";"
+fn parse_use_decl_fallible(
+    tokens: &mut Lexer,
+    errors: &mut Vec<Error>,
+) -> Result<Option<(ModuleIdent, Option<ModuleName>)>, Error> {
+    consume_token(tokens, Tok::Use)?;
+    // parse ident or return None
+    let ident = match parse_module_ident(tokens) {
+        Ok(ident) => Some(ident),
+        Err(err) => {
+            errors.push(err);
+            None
+        }
+    };
+    let alias = if tokens.peek() == Tok::As {
+        tokens.advance()?;
+        Some(parse_module_name(tokens)?)
+    } else {
+        None
+    };
+    consume_token(tokens, Tok::Semicolon)?;
+
+    if let Some(ident) = ident {
+        Ok(Some((ident, alias)))
+    } else {
+        Ok(None)
+    }
 }
 
 fn is_struct_definition<'input>(tokens: &mut Lexer<'input>) -> Result<bool, Error> {
@@ -1943,6 +1971,8 @@ fn parse_spec_pragma_property<'input>(tokens: &mut Lexer<'input>) -> Result<Prag
 //
 // Note that "address" is not a token.
 fn parse_file<'input>(tokens: &mut Lexer<'input>) -> Result<FileDefinition, Error> {
+    let mut errors: Vec<Error> = vec![];
+
     let f = if tokens.peek() == Tok::EOF
         || tokens.peek() == Tok::Module
         || tokens.peek() == Tok::NameValue
@@ -1975,7 +2005,11 @@ fn parse_file<'input>(tokens: &mut Lexer<'input>) -> Result<FileDefinition, Erro
     } else {
         let mut uses = vec![];
         while tokens.peek() == Tok::Use {
-            uses.push(parse_use_decl(tokens)?);
+            let decl = parse_use_decl_fallible(tokens, &mut errors)?;
+            if let Some(decl) = decl {
+                uses.push(decl);
+            }
+            // uses.push(parse_use_decl(tokens)?);
         }
         let function = parse_function_decl(tokens, /* allow_native */ false)?;
         if tokens.peek() != Tok::EOF {
