@@ -68,11 +68,11 @@ impl<'i> Parser<'i> {
     }
 
     fn expect_token(&mut self, kind: SyntaxKind) {
-        if self.tokens.current() == kind {
+        if self.tokens.current_kind() == kind {
             self.builder
                 .token(kind.into(), self.tokens.current_text().into());
             self.tokens.bump();
-            if self.tokens.current() == SyntaxKind::WHITESPACE {
+            if self.tokens.current_kind() == SyntaxKind::WHITESPACE {
                 self.builder.token(
                     SyntaxKind::WHITESPACE.into(),
                     self.tokens.current_text().into(),
@@ -112,8 +112,8 @@ impl<'i> Parser<'i> {
     // }
 
     fn parse_unary_expr(&mut self) {
-        let kind = self.tokens.current();
-        match self.tokens.current() {
+        let kind = self.tokens.current_kind();
+        match self.tokens.current_kind() {
             SyntaxKind::BANG
             | SyntaxKind::AMP
             | SyntaxKind::AMP_MUT
@@ -131,7 +131,7 @@ impl<'i> Parser<'i> {
 
     fn parse_expr(&mut self) {
         self.parse_unary_expr();
-        let _ = get_precedence(self.tokens.current());
+        let _ = get_precedence(self.tokens.current_kind());
     }
 
     fn parse(mut self) -> Parse {

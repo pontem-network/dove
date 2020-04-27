@@ -13,6 +13,10 @@ impl Token {
     pub fn new(kind: SyntaxKind, len: TextSize) -> Token {
         Token { kind, len }
     }
+
+    pub fn eof() -> Token {
+        Token::new(SyntaxKind::EOF, TextSize::default())
+    }
 }
 
 /// True if `c` is considered a whitespace according to Rust language definition.
