@@ -18,7 +18,7 @@ where
     S: AsRef<str>,
 {
     pub fn new(source: S) -> Self {
-        let line_starts = codespan_reporting::files::line_starts(source.as_ref())
+        let line_starts = codespan_reporting9::files::line_starts(source.as_ref())
             .map(|i| ByteIndex::from(i as u32))
             .collect();
 

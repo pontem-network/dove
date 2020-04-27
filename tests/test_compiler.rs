@@ -228,7 +228,7 @@ fn test_stdlib_modules_are_available_if_loaded() {
 module MyModule {
     use 0x0::Transaction;
 
-    public fun how_main(country: u8) {
+    public fun how_main(_country: u8) {
         let _ = Transaction::sender();
     }
 }
@@ -274,7 +274,7 @@ module CovidTracker {
 		country_id: u8,
 		reports: vector<NewsReport>
 	}
-	public fun how_many(country: u8): u64 acquires CovidSituation {
+	public fun how_many(_country: u8): u64 acquires CovidSituation {
         let case = borrow_global<CovidSituation>(Transaction::sender());
         let len  = Vector::length(&case.reports);
         let sum  = 0u64;

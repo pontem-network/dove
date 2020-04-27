@@ -9,7 +9,7 @@ module CovidTracker {
 		country_id: u8,
 		reports: vector<NewsReport>
 	}
-	public fun how_many(country: u8): u64 acquires CovidSituation {
+	public fun how_many(_country: u8): u64 acquires CovidSituation {
         let case = borrow_global<CovidSituation>(Transaction::sender());
         let len  = Vector::length(&case.reports);
         let sum  = 0u64;

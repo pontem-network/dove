@@ -13,4 +13,5 @@ pub mod ide;
 pub mod req;
 pub mod subscriptions;
 
+pub mod libra_parser;
 pub mod rowan_parser;
