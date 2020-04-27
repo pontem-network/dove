@@ -26,3 +26,5 @@ ra_vfs = "0.5.3"
 move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "public-parsing-move" }
 move-lang = { git = "https://github.com/dfinance/libra.git", branch = "public-parsing-move" }
 libra-types = { git = "https://github.com/dfinance/libra.git", branch = "public-parsing-move" }
+
+rowan = "0.10.0"

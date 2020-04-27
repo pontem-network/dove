@@ -12,3 +12,5 @@ pub mod handlers;
 pub mod ide;
 pub mod req;
 pub mod subscriptions;
+
+pub mod rowan_parser;
