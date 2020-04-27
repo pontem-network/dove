@@ -1,6 +1,7 @@
 use rowan::{GreenNode, GreenNodeBuilder};
 
 use crate::rowan_parser::lexer;
+use crate::rowan_parser::lexer::ParseError;
 use crate::rowan_parser::syntax_kind::SyntaxKind;
 use crate::rowan_parser::tokens::Tokens;
 use crate::rowan_parser::tree::SyntaxNode;
@@ -17,10 +18,11 @@ impl Parse {
     }
 }
 
-pub fn parse(text: &str) -> Parse {
-    let raw_tokens: Vec<_> = lexer::tokenize(text).collect();
-    let token_source = Tokens::new(text, &raw_tokens);
-    Parser::new(token_source).parse()
+pub fn parse(text: &str) -> Result<Parse, ParseError> {
+    let raw_tokens = lexer::tokenize(text)?;
+    let tokens = Tokens::new(text, &raw_tokens);
+    let parse = Parser::new(tokens).parse();
+    Ok(parse)
 }
 
 fn get_precedence(kind: SyntaxKind) -> u32 {
@@ -167,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_binary_expression() {
-        let tree = parse("move !&*1").to_syntax_node();
+        let tree = parse("move !&*1").unwrap().to_syntax_node();
         dbg!(tree);
     }
 }
