@@ -1,4 +1,19 @@
+use crate::db::FilePath;
+use crate::utils::io::leaked_fpath;
 use std::path::PathBuf;
+
+// just need some valid fname
+pub fn existing_file_abspath() -> FilePath {
+    let abspath = std::env::current_dir()
+        .unwrap()
+        .join("resources")
+        .join("modules.rs")
+        .join("covid_tracker.move")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    leaked_fpath(&abspath)
+}
 
 pub fn get_resources_dir() -> PathBuf {
     std::env::current_dir()

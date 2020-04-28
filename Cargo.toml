@@ -2,4 +2,5 @@
 members = [
     "crates/move-language-server",
     "crates/analysis",
+    "crates/move-executor",
 ]

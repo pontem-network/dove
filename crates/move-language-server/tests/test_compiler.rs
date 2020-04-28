@@ -7,21 +7,8 @@ use analysis::change::AnalysisChange;
 use analysis::config::{Config, MoveDialect};
 use analysis::db::{FileDiagnostic, FilePath, RootDatabase};
 use analysis::utils::io::{get_module_files, leaked_fpath};
-use analysis::utils::tests::{get_modules_path, get_stdlib_path};
+use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use move_language_server::world::WorldState;
-
-// just need some valid fname
-fn existing_file_abspath() -> FilePath {
-    let abspath = std::env::current_dir()
-        .unwrap()
-        .join("resources")
-        .join("modules.rs")
-        .join("covid_tracker.move")
-        .into_os_string()
-        .into_string()
-        .unwrap();
-    leaked_fpath(&abspath)
-}
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
