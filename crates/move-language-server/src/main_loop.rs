@@ -20,14 +20,15 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use threadpool::ThreadPool;
 
-use crate::config::Config;
+use analysis::analysis::Analysis;
+use analysis::config::Config;
+use analysis::db::{FileDiagnostic, FilePath};
+use analysis::utils::io::leaked_fpath;
+
 use crate::dispatcher::PoolDispatcher;
 use crate::handlers;
-use crate::ide::analysis::Analysis;
-use crate::ide::db::{FileDiagnostic, FilePath};
 use crate::req;
 use crate::subscriptions::OpenedFiles;
-use crate::utils::io::leaked_fpath;
 use crate::world::WorldState;
 
 #[derive(Debug)]

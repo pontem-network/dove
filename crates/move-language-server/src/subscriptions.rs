@@ -3,7 +3,7 @@
 
 use std::collections::HashSet;
 
-use crate::ide::db::FilePath;
+use analysis::db::FilePath;
 
 #[derive(Debug, Default, Clone)]
 pub struct OpenedFiles {

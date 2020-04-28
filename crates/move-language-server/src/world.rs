@@ -3,10 +3,10 @@ use std::path::PathBuf;
 use crossbeam_channel::{unbounded, Receiver};
 use ra_vfs::{Filter, RelativePath, RootEntry, Vfs, VfsChange, VfsTask, Watch};
 
-use crate::config::Config;
-use crate::ide::analysis::{Analysis, AnalysisHost};
-use crate::ide::db::AnalysisChange;
-use crate::utils::io::leaked_fpath;
+use analysis::analysis::{Analysis, AnalysisHost};
+use analysis::change::AnalysisChange;
+use analysis::config::Config;
+use analysis::utils::io::leaked_fpath;
 
 #[derive(Default)]
 struct MoveFilesFilter;

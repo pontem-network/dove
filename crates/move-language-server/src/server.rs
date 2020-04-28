@@ -7,7 +7,8 @@ use lsp_types::{
 };
 use serde::de::DeserializeOwned;
 
-use crate::config::Config;
+use analysis::config::Config;
+
 use crate::main_loop;
 
 pub fn get_default_server_capabilities() -> serde_json::Value {

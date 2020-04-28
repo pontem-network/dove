@@ -2,19 +2,21 @@ use lsp_types::{Diagnostic, Position, Range};
 use move_lang::errors::FilesSourceText;
 use move_lang::shared::Address;
 
-use move_language_server::config::{Config, MoveDialect};
-use move_language_server::ide::analysis::Analysis;
-use move_language_server::ide::db::{AnalysisChange, FileDiagnostic, FilePath, RootDatabase};
-use move_language_server::utils::io::{get_module_files, leaked_fpath};
-use move_language_server::utils::tests::{get_modules_path, get_stdlib_path};
+use analysis::analysis::Analysis;
+use analysis::change::AnalysisChange;
+use analysis::config::{Config, MoveDialect};
+use analysis::db::{FileDiagnostic, FilePath, RootDatabase};
+use analysis::utils::io::{get_module_files, leaked_fpath};
+use analysis::utils::tests::{get_modules_path, get_stdlib_path};
 use move_language_server::world::WorldState;
 
 // just need some valid fname
 fn existing_file_abspath() -> FilePath {
     let abspath = std::env::current_dir()
         .unwrap()
-        .join("tests")
-        .join("test_compiler.rs")
+        .join("resources")
+        .join("modules.rs")
+        .join("covid_tracker.move")
         .into_os_string()
         .into_string()
         .unwrap();

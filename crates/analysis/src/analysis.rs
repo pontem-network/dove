@@ -4,7 +4,8 @@ use move_lang::parser::ast::FileDefinition;
 use crate::compiler::{check, parse_file};
 use crate::completion;
 
-use crate::ide::db::{AnalysisChange, FileDiagnostic, FilePath, RootDatabase};
+use crate::change::AnalysisChange;
+use crate::db::{FileDiagnostic, FilePath, RootDatabase};
 use crate::utils::io;
 
 #[derive(Debug, Default)]

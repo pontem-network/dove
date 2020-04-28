@@ -1,9 +1,9 @@
 use move_lang::errors::Error;
 use move_lang::parser::ast::FileDefinition;
 
-use move_language_server::ide::db::FilePath;
-use move_language_server::libra_parser::syntax;
-use move_language_server::utils::io::leaked_fpath;
+use analysis::db::FilePath;
+use analysis::libra_parser::syntax;
+use analysis::utils::io::leaked_fpath;
 
 // just need some valid fname
 fn existing_file_abspath() -> FilePath {

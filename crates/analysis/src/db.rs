@@ -4,6 +4,7 @@ use move_lang::errors::{Error, FilesSourceText};
 
 use move_lang::shared::Address;
 
+use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
 
@@ -117,43 +118,5 @@ impl RootDatabase {
             }
         }
         false
-    }
-}
-
-#[derive(Debug)]
-pub enum RootChange {
-    AddFile(FilePath, String),
-    ChangeFile(FilePath, String),
-    RemoveFile(FilePath),
-}
-
-#[derive(Default, Debug)]
-pub struct AnalysisChange {
-    tracked_files_changed: Vec<RootChange>,
-    config_changed: Option<Config>,
-}
-
-impl AnalysisChange {
-    pub fn new() -> Self {
-        AnalysisChange::default()
-    }
-
-    pub fn add_file(&mut self, fname: FilePath, text: String) {
-        self.tracked_files_changed
-            .push(RootChange::AddFile(fname, text));
-    }
-
-    pub fn update_file(&mut self, fname: FilePath, text: String) {
-        self.tracked_files_changed
-            .push(RootChange::ChangeFile(fname, text));
-    }
-
-    pub fn remove_file(&mut self, fname: FilePath) {
-        self.tracked_files_changed
-            .push(RootChange::RemoveFile(fname))
-    }
-
-    pub fn change_config(&mut self, config: Config) {
-        self.config_changed = Some(config);
     }
 }

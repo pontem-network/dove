@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use move_lang::test_utils::MOVE_EXTENSION;
 
-use crate::ide::db::FilePath;
+use crate::db::FilePath;
 
 pub fn leaked_fpath(s: &str) -> FilePath {
     Box::leak(Box::new(s.to_owned()))

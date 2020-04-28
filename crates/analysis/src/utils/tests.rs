@@ -1,15 +1,21 @@
 use std::path::PathBuf;
 
-pub fn get_tests_dir() -> PathBuf {
-    std::env::current_dir().unwrap().join("tests")
+pub fn get_resources_dir() -> PathBuf {
+    std::env::current_dir()
+        .unwrap()
+        .parent() // crates/
+        .unwrap()
+        .parent() // project root
+        .unwrap()
+        .join("resources")
 }
 
 pub fn get_stdlib_path() -> PathBuf {
-    get_tests_dir().join("stdlib")
+    get_resources_dir().join("stdlib")
 }
 
 pub fn get_modules_path() -> PathBuf {
-    get_tests_dir().join("modules")
+    get_resources_dir().join("modules")
 }
 
 pub fn setup_test_logging() {
