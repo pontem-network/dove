@@ -1,6 +1,7 @@
 use rowan::{GreenNode, GreenNodeBuilder};
 
 use crate::rowan_parser::lexer;
+use crate::rowan_parser::lexer::ParseError;
 use crate::rowan_parser::syntax_kind::SyntaxKind;
 use crate::rowan_parser::tokens::Tokens;
 use crate::rowan_parser::tree::SyntaxNode;
@@ -17,10 +18,11 @@ impl Parse {
     }
 }
 
-pub fn parse(text: &str) -> Parse {
-    let raw_tokens: Vec<_> = lexer::tokenize(text).collect();
-    let token_source = Tokens::new(text, &raw_tokens);
-    Parser::new(token_source).parse()
+pub fn parse(text: &str) -> Result<Parse, ParseError> {
+    let raw_tokens = lexer::tokenize(text)?;
+    let tokens = Tokens::new(text, &raw_tokens);
+    let parse = Parser::new(tokens).parse();
+    Ok(parse)
 }
 
 fn get_precedence(kind: SyntaxKind) -> u32 {
@@ -66,11 +68,11 @@ impl<'i> Parser<'i> {
     }
 
     fn expect_token(&mut self, kind: SyntaxKind) {
-        if self.tokens.current() == kind {
+        if self.tokens.current_kind() == kind {
             self.builder
                 .token(kind.into(), self.tokens.current_text().into());
             self.tokens.bump();
-            if self.tokens.current() == SyntaxKind::WHITESPACE {
+            if self.tokens.current_kind() == SyntaxKind::WHITESPACE {
                 self.builder.token(
                     SyntaxKind::WHITESPACE.into(),
                     self.tokens.current_text().into(),
@@ -110,8 +112,8 @@ impl<'i> Parser<'i> {
     // }
 
     fn parse_unary_expr(&mut self) {
-        let kind = self.tokens.current();
-        match self.tokens.current() {
+        let kind = self.tokens.current_kind();
+        match self.tokens.current_kind() {
             SyntaxKind::BANG
             | SyntaxKind::AMP
             | SyntaxKind::AMP_MUT
@@ -129,7 +131,7 @@ impl<'i> Parser<'i> {
 
     fn parse_expr(&mut self) {
         self.parse_unary_expr();
-        let _ = get_precedence(self.tokens.current());
+        let _ = get_precedence(self.tokens.current_kind());
     }
 
     fn parse(mut self) -> Parse {
@@ -167,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_binary_expression() {
-        let tree = parse("move !&*1").to_syntax_node();
+        let tree = parse("move !&*1").unwrap().to_syntax_node();
         dbg!(tree);
     }
 }

@@ -36,7 +36,7 @@ impl<'t> Tokens<'t> {
         }
     }
 
-    pub fn current(&self) -> SyntaxKind {
+    pub fn current_kind(&self) -> SyntaxKind {
         self.curr.0
     }
 
@@ -44,12 +44,29 @@ impl<'t> Tokens<'t> {
         self.curr.1
     }
 
+    pub fn current_start_loc(&self) -> TextSize {
+        self.start_offsets[self.current_pos()]
+    }
+
     pub fn current_text(&self) -> &str {
-        let pos = self.curr.1;
-        let start = self.start_offsets.get(pos).unwrap();
-        let text_len = TextSize::of(self.text);
-        let end = self.start_offsets.get(pos + 1).unwrap_or(&text_len);
-        &self.text[TextRange::new(*start, *end)]
+        let text_range = TextRange::new(self.current_start_loc(), self.next_start_loc());
+        &self.text[text_range]
+    }
+
+    pub fn lookahead_token(&self) -> Token {
+        if self.current_pos() + 1 < self.tokens.len() {
+            self.tokens[self.current_pos() + 1]
+        } else {
+            Token::eof()
+        }
+    }
+
+    pub fn lookahead_kind(&self) -> SyntaxKind {
+        self.lookahead_token().kind
+    }
+
+    pub fn next_start_loc(&self) -> TextSize {
+        self.current_start_loc() + self.tokens[self.current_pos()].len
     }
 
     pub fn bump(&mut self) {

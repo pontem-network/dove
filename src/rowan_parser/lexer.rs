@@ -1,6 +1,7 @@
+use rowan::TextSize;
+
 use crate::rowan_parser::cursor::Cursor;
 use crate::rowan_parser::syntax_kind::SyntaxKind;
-use rowan::TextSize;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Token {
@@ -11,6 +12,10 @@ pub struct Token {
 impl Token {
     pub fn new(kind: SyntaxKind, len: TextSize) -> Token {
         Token { kind, len }
+    }
+
+    pub fn eof() -> Token {
+        Token::new(SyntaxKind::EOF, TextSize::default())
     }
 }
 
@@ -36,8 +41,20 @@ pub fn is_whitespace(c: char) -> bool {
     }
 }
 
+#[derive(Debug)]
+pub struct ParseError {
+    loc: (usize, usize),
+    text: String,
+}
+
+impl ParseError {
+    pub fn new(loc: (usize, usize), text: String) -> ParseError {
+        ParseError { loc, text }
+    }
+}
+
 impl Cursor<'_> {
-    fn advance(&mut self) -> (SyntaxKind, usize) {
+    fn advance(&mut self) -> Result<(SyntaxKind, usize), ParseError> {
         let first_char = self.bump().unwrap();
         let syntax_kind = match first_char {
             c if is_whitespace(c) => self.consume_whitespace(),
@@ -55,10 +72,14 @@ impl Cursor<'_> {
             }
             'x' => {
                 if self.consume_if_next("\"") {
+                    let start = self.initial_len - 2;
                     // Search the current source line for a closing quote.
                     self.consume_while(|c| c != '"');
                     if self.is_eof() {
-                        SyntaxKind::BYTESTRING_UNTERMINATED
+                        return Err(ParseError::new(
+                            (start, self.len_consumed()),
+                            "Unterminated bytestring".to_string(),
+                        ));
                     } else {
                         SyntaxKind::BYTESTRING
                     }
@@ -145,9 +166,14 @@ impl Cursor<'_> {
             '^' => SyntaxKind::Caret,
             '{' => SyntaxKind::L_CURLY,
             '}' => SyntaxKind::R_CURLY,
-            _ => unreachable!(),
+            _ => {
+                return Err(ParseError::new(
+                    (self.initial_len, self.initial_len),
+                    "Invalid character".to_string(),
+                ));
+            }
         };
-        (syntax_kind, self.len_consumed())
+        Ok((syntax_kind, self.len_consumed()))
     }
 
     fn consume_whitespace(&mut self) -> SyntaxKind {
@@ -216,22 +242,21 @@ fn get_name_token_kind(name: &str) -> SyntaxKind {
 }
 
 /// Parses the first token from the provided input string.
-fn first_token(input: &str) -> (SyntaxKind, usize) {
-    let (mut kind, len) = Cursor::new(input).advance();
+fn first_token(input: &str) -> Result<(SyntaxKind, usize), ParseError> {
+    let (mut kind, len) = Cursor::new(input).advance()?;
     if kind == SyntaxKind::IDENT {
         kind = get_name_token_kind(&input[..len]);
     }
-    (kind, len)
+    Ok((kind, len))
 }
 
 /// Creates an iterator that produces tokens from the input string.
-pub fn tokenize(mut input: &str) -> impl Iterator<Item = Token> + '_ {
-    std::iter::from_fn(move || {
-        if input.is_empty() {
-            return None;
-        }
-        let (kind, len) = first_token(input);
+pub fn tokenize(mut input: &str) -> Result<Vec<Token>, ParseError> {
+    let mut tokens = vec![];
+    while !input.is_empty() {
+        let (kind, len) = first_token(input)?;
         input = &input[len..];
-        Some(Token::new(kind, (len as u32).into()))
-    })
+        tokens.push(Token::new(kind, (len as u32).into()));
+    }
+    Ok(tokens)
 }
