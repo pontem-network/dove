@@ -4,6 +4,5 @@ pub mod compiler;
 pub mod completion;
 pub mod config;
 pub mod db;
-pub mod libra_parser;
 pub mod rowan_parser;
 pub mod utils;

@@ -1,12 +1,10 @@
 use lsp_types::CompletionItem;
 use move_lang::parser::ast::FileDefinition;
 
-use crate::compiler::{check, parse_file};
-use crate::completion;
-
 use crate::change::AnalysisChange;
 use crate::db::{FileDiagnostic, FilePath, RootDatabase};
 use crate::utils::io;
+use crate::{compiler, completion};
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {
@@ -42,7 +40,7 @@ impl Analysis {
     }
 
     pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, FileDiagnostic> {
-        parse_file(fpath, text).map_err(|err| self.db.libra_error_into_diagnostic(err))
+        compiler::parse_file(fpath, text).map_err(|err| self.db.libra_error_into_diagnostic(err))
     }
 
     pub fn completions(&self) -> Vec<CompletionItem> {
@@ -79,14 +77,18 @@ impl Analysis {
                 }
             }
         }
-        let check_res =
-            check::check_parsed_program(main_file, dependencies, Some(self.db().sender_address()));
-        check_res.map_err(|errors| {
-            errors
+        let check_res = compiler::translate_parsed_program(
+            main_file,
+            dependencies,
+            Some(self.db().sender_address()),
+        );
+        match check_res {
+            Ok(_) => Ok(()),
+            Err(errors) => Err(errors
                 .into_iter()
                 .map(|err| self.db.libra_error_into_diagnostic(err))
-                .collect()
-        })
+                .collect()),
+        }
     }
 
     fn parsed_stdlib_files(&self) -> Vec<FileDefinition> {
