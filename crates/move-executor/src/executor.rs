@@ -4,6 +4,7 @@ use language_e2e_tests::data_store::FakeDataStore;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
+use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
 use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
@@ -11,32 +12,48 @@ use move_vm_state::data_cache::BlockDataCache;
 use move_vm_state::execution_context::SystemExecutionContext;
 use move_vm_types::values::Value;
 use vm::errors::VMResult;
+use vm::file_format::CompiledScript;
 use vm::gas_schedule::zero_cost_schedule;
 use vm::transaction_metadata::TransactionMetadata;
+use vm::CompiledModule;
 
 use analysis::compiler;
 use analysis::compiler::parse_file;
 use analysis::db::FilePath;
 
-pub(crate) fn _compile_script(
+pub(crate) fn serialize_script(script: CompiledScript) -> Vec<u8> {
+    let mut serialized = vec![];
+    script.serialize(&mut serialized).unwrap();
+    serialized
+}
+
+pub(crate) fn compile_script(
     fname: FilePath,
     text: &str,
     deps: Vec<(FilePath, String)>,
     sender: Address,
-) -> Result<Vec<u8>, Errors> {
+) -> Result<(CompiledScript, Vec<CompiledModule>), Errors> {
     let parsed_file = compiler::parse_file(fname, text).map_err(|err| vec![err])?;
 
-    let mut parsed_deps = vec![];
+    let mut parsed_files = vec![parsed_file];
     for (fpath, text) in deps {
         let parsed = parse_file(fpath, &text).map_err(|e| vec![e])?;
-        parsed_deps.push(parsed);
+        parsed_files.push(parsed);
     }
     let program = move_lang::parser::ast::Program {
-        source_definitions: vec![parsed_file],
-        lib_definitions: parsed_deps,
+        source_definitions: parsed_files,
+        lib_definitions: vec![],
     };
-    let mut compiled_units = move_lang::compile_program(Ok(program), Some(sender))?;
-    Ok(compiled_units.remove(0).serialize())
+    let mut compiled_modules = vec![];
+    let mut compiled_script = None;
+    let compiled_units = move_lang::compile_program(Ok(program), Some(sender))?;
+    for unit in compiled_units {
+        match unit {
+            CompiledUnit::Module { module, .. } => compiled_modules.push(module),
+            CompiledUnit::Script { script, .. } => compiled_script = Some(script),
+        }
+    }
+    Ok((compiled_script.unwrap(), compiled_modules))
 }
 
 fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetadata {
@@ -71,7 +88,6 @@ pub(crate) fn execute_script(
 
 #[cfg(test)]
 mod tests {
-
     use move_lang::shared::Address;
 
     use analysis::utils::tests::existing_file_abspath;
@@ -124,9 +140,15 @@ module RecordsCollection {
     #[test]
     fn test_execute_empty_script() {
         let text = "fun main() {}";
-        let script =
-            _compile_script(existing_file_abspath(), text, vec![], Address::default()).unwrap();
-        let res = execute_script(AccountAddress::default(), HashMap::new(), script, vec![]);
+        let script = compile_script(existing_file_abspath(), text, vec![], Address::default())
+            .unwrap()
+            .0;
+        let res = execute_script(
+            AccountAddress::default(),
+            HashMap::new(),
+            serialize_script(script),
+            vec![],
+        );
         assert!(matches!(res, Ok(_)), "{:?}", res.unwrap_err());
     }
 
