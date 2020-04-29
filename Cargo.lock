@@ -288,7 +288,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-workspace-hack",
  "mirai-annotations",
@@ -309,24 +309,24 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
  "codespan-reporting 0.8.0",
+ "libra-canonical-serialization",
  "libra-types",
  "libra-workspace-hack",
  "move-core-types",
  "move-ir-types",
  "serde",
- "serde_json",
  "vm",
 ]
 
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -462,12 +462,13 @@ dependencies = [
 [[package]]
 name = "compiler"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
  "bytecode-verifier",
  "ir-to-bytecode",
+ "libra-canonical-serialization",
  "libra-types",
  "libra-workspace-hack",
  "move-ir-types",
@@ -592,7 +593,7 @@ checksum = "11c0346158a19b3627234e15596f5e465c360fcdb97d817bcb255e0510f5a788"
 [[package]]
 name = "datatest-stable"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-workspace-hack",
  "regex",
@@ -604,7 +605,7 @@ dependencies = [
 [[package]]
 name = "debug-interface"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "libra-logger",
@@ -1113,7 +1114,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1133,7 +1134,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -1202,7 +1203,7 @@ dependencies = [
 [[package]]
 name = "language-e2e-tests"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
@@ -1251,7 +1252,7 @@ checksum = "99e85c08494b21a9054e7fe1374a732aeadaff3980b6990b94bfd3a70f690005"
 [[package]]
 name = "libra-canonical-serialization"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-workspace-hack",
  "serde",
@@ -1261,7 +1262,7 @@ dependencies = [
 [[package]]
 name = "libra-config"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "get_if_addrs",
@@ -1285,7 +1286,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1317,7 +1318,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto-derive"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-workspace-hack",
  "proc-macro2 1.0.10",
@@ -1328,7 +1329,7 @@ dependencies = [
 [[package]]
 name = "libra-logger"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "chrono",
  "env_logger",
@@ -1342,7 +1343,7 @@ dependencies = [
 [[package]]
 name = "libra-metrics"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "futures",
@@ -1358,7 +1359,7 @@ dependencies = [
 [[package]]
 name = "libra-nibble"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-workspace-hack",
  "serde",
@@ -1367,7 +1368,7 @@ dependencies = [
 [[package]]
 name = "libra-proptest-helpers"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "crossbeam",
  "libra-workspace-hack",
@@ -1378,7 +1379,7 @@ dependencies = [
 [[package]]
 name = "libra-state-view"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "libra-types",
@@ -1388,7 +1389,7 @@ dependencies = [
 [[package]]
 name = "libra-temppath"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "hex",
  "libra-workspace-hack",
@@ -1398,7 +1399,7 @@ dependencies = [
 [[package]]
 name = "libra-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1429,7 +1430,7 @@ dependencies = [
 [[package]]
 name = "libra-vm"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "bytecode-verifier",
  "debug-interface",
@@ -1457,7 +1458,7 @@ dependencies = [
 [[package]]
 name = "libra-workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "bytes",
  "cc",
@@ -1639,7 +1640,7 @@ checksum = "a76c45e77b9af9f0a3fd33cfd462210c1c221029343ac5346306f28b86943ebd"
 [[package]]
 name = "move-core-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "libra-canonical-serialization",
@@ -1672,7 +1673,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -1687,7 +1688,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "borrow-graph",
  "bytecode-source-map",
@@ -1698,6 +1699,7 @@ dependencies = [
  "difference",
  "hex",
  "ir-to-bytecode",
+ "libra-canonical-serialization",
  "libra-types",
  "libra-workspace-hack",
  "move-ir-types",
@@ -1738,7 +1740,7 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "bytecode-verifier",
  "libra-crypto",
@@ -1755,7 +1757,7 @@ dependencies = [
 [[package]]
 name = "move-vm-state"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-canonical-serialization",
  "libra-logger",
@@ -1770,7 +1772,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "bit-vec 0.6.1",
  "byteorder",
@@ -1865,7 +1867,7 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-workspace-hack",
  "proc-macro2 1.0.10",
@@ -2651,7 +2653,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "stdlib"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
@@ -3176,7 +3178,7 @@ dependencies = [
 [[package]]
 name = "transaction-builder"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "libra-canonical-serialization",
  "libra-config",
@@ -3284,7 +3286,7 @@ checksum = "078775d0255232fb988e6fccf26ddc9d1ac274299aaedcedce21c6f72cc533ce"
 [[package]]
 name = "vm"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -3304,7 +3306,7 @@ dependencies = [
 [[package]]
 name = "vm-genesis"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=27.04.2020#194631c11babf88372d331a7f8f238a811d0fc5b"
+source = "git+https://github.com/dfinance/libra.git?branch=29.04.2020#a4b5bf5dca5daf66ba87214c0469616e6ea16e1e"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
