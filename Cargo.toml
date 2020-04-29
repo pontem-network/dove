@@ -1,33 +1,6 @@
-[package]
-name = "move-language-server"
-version = "0.4.0"
-authors = ["Maxim Kurnikov <maxim.kurnikov@gmail.com>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-log = "0.4"
-env_logger = "0.7.1"
-
-anyhow = "1.0.27"
-lsp-types = {version = "0.73.0", features = ["proposed"]}
-lsp-server = "0.3.1"
-
-serde = { version = "1.0.104", features = ["derive"] }
-serde_json = "1.0.48"
-threadpool = "1.7.1"
-crossbeam-channel = "0.4.2"
-walkdir = "2.3.1"
-codespan = "0.8.0"
-codespan-reporting = "0.8.0"
-codespan9 = { package = "codespan", version = "0.9.2" }
-codespan-reporting9 = { package = "codespan-reporting", version = "0.9.2" }
-ra_vfs = "0.5.3"
-hex = "0.4.2"
-
-move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "27.04.2020" }
-move-lang = { git = "https://github.com/dfinance/libra.git", branch = "27.04.2020" }
-libra-types = { git = "https://github.com/dfinance/libra.git", branch = "27.04.2020" }
-
-rowan = "0.10.0"
+[workspace]
+members = [
+    "crates/move-language-server",
+    "crates/analysis",
+    "crates/move-executor",
+]

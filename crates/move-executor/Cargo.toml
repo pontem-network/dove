@@ -1,0 +1,23 @@
+[package]
+name = "move-executor"
+version = "0.1.0"
+authors = ["Maksim Kurnikov <maxim.kurnikov@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+structopt = "0.3.14"
+anyhow = "1.0.28"
+
+move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+move-vm-state = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+libra-state-view = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+language-e2e-tests = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+vm = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+libra-types = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+move-lang = { git = "https://github.com/dfinance/libra.git", branch = "29.04.2020" }
+
+analysis = { path = "../analysis" }
