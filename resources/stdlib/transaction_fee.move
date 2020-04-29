@@ -3,9 +3,8 @@ address 0x0:
 module TransactionFee {
     use 0x0::LibraAccount;
     use 0x0::LibraSystem;
-    use 0x0::AddressUtil;
     use 0x0::Transaction;
-    use 0x0::Vector;
+    use 0x0::TransactionFeeAccounts;
 
     ///////////////////////////////////////////////////////////////////////////
     // Transaction Fee Distribution
@@ -31,7 +30,6 @@ module TransactionFee {
     // encapsulate the withdrawal capability to the transaction fee account so that we can withdraw
     // the fees from this account from block metadata transactions.
     fun initialize_transaction_fees() {
-        Transaction::assert(Transaction::sender() == 0xFEE, 0);
         move_to_sender<TransactionFees>(TransactionFees {
             fee_withdrawal_capability: LibraAccount::extract_sender_withdrawal_capability(),
         });
@@ -42,7 +40,8 @@ module TransactionFee {
       Transaction::assert(Transaction::sender() == 0x0, 33);
 
       let num_validators = LibraSystem::validator_set_size();
-      let amount_collected = LibraAccount::balance<Token>(0xFEE);
+      let fee_addr = TransactionFeeAccounts::transaction_fee_address<Token>();
+      let amount_collected = LibraAccount::balance<Token>(fee_addr);
 
       // If amount_collected == 0, this will also return early
       if (amount_collected < num_validators) return ();
@@ -57,6 +56,7 @@ module TransactionFee {
       distribute_transaction_fees_internal<Token>(
           amount_to_distribute_per_validator,
           num_validators,
+          fee_addr,
       );
     }
 
@@ -67,9 +67,10 @@ module TransactionFee {
     // validator.
     fun distribute_transaction_fees_internal<Token>(
         amount_to_distribute_per_validator: u64,
-        num_validators: u64
+        num_validators: u64,
+        fee_addr: address,
     ) acquires TransactionFees {
-        let distribution_resource = borrow_global<TransactionFees>(0xFEE);
+        let distribution_resource = borrow_global<TransactionFees>(fee_addr);
         let index = 0;
 
         while (index < num_validators) {
@@ -80,11 +81,9 @@ module TransactionFee {
 
             LibraAccount::pay_from_capability<Token>(
                 addr,
-                Vector::empty(),
                 &distribution_resource.fee_withdrawal_capability,
                 amount_to_distribute_per_validator,
-                // FIXME: Update this once we have bytearray literals
-                AddressUtil::address_to_bytes(0xFEE),
+                x"",
             );
            }
     }
