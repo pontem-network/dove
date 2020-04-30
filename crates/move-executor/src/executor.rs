@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use language_e2e_tests::data_store::FakeDataStore;
-use libra_types::access_path::AccessPath;
+
 use libra_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use move_lang::compiled_unit::CompiledUnit;
@@ -62,17 +60,15 @@ fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetada
     metadata
 }
 
-#[allow(dead_code)]
 pub(crate) fn execute_script(
     sender_address: AccountAddress,
-    network_state: HashMap<AccessPath, Vec<u8>>,
+    data_store: FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
 ) -> VMResult<()> {
-    let data_store = FakeDataStore::new(network_state);
     let cache = BlockDataCache::new(&data_store);
 
-    let mut exec_context = SystemExecutionContext::new(&cache, GasUnits::new(1000));
+    let mut exec_context = SystemExecutionContext::new(&cache, GasUnits::new(1_000_000));
     let zero_cost_table = zero_cost_schedule();
     let txn_metadata = get_transaction_metadata(sender_address);
     let vm = MoveVM::new();
@@ -86,76 +82,61 @@ pub(crate) fn execute_script(
     )
 }
 
+pub(crate) fn run(
+    script: (FilePath, String),
+    deps: Vec<(FilePath, String)>,
+    sender: AccountAddress,
+) -> VMResult<()> {
+    let (fname, script_text) = script;
+
+    let (compiled_script, compiled_modules) =
+        compile_script(fname, &script_text, deps, Address::new(sender.into())).unwrap();
+
+    let mut network_state = FakeDataStore::default();
+    for module in compiled_modules {
+        network_state.add_module(&module.self_id(), &module);
+    }
+    let serialized_script = serialize_script(compiled_script);
+    execute_script(sender, network_state, serialized_script, vec![])
+}
+
 #[cfg(test)]
 mod tests {
-    use move_lang::shared::Address;
+    use analysis::utils::tests::{existing_file_abspath, get_stdlib_path};
 
-    use analysis::utils::tests::existing_file_abspath;
+    use crate::load_module_files;
 
     use super::*;
 
-    fn _get_records_collection_module() -> String {
-        r"
-address 0x111111111111111111111111:
-
-module RecordsCollection {
-    use 0x0::Transaction as Tx;
-    use 0x0::Vector;
-    struct Record {
-        name:   vector<u8>,
-        author: vector<u8>,
-        year:   u64
-    }
-    resource struct T {
-        records: vector<Record>
-    }
-    fun initialize(sender: address) {
-        if (!::exists<T>(sender)) {
-            move_to_sender<T>(T { records: Vector::empty() })
-        }
-    }
-    public fun add_to_my_collection(
-        name: vector<u8>,
-        author: vector<u8>,
-        year: u64
-    ) acquires T {
-        let sender = Tx::sender();
-        initialize(sender);
-        let record = Record { name, author, year };
-        let collection = borrow_global_mut<T>(sender);
-        Vector::push_back(&mut collection.records, record)
-    }
-    public fun get_my_collection(): vector<Record> acquires T {
-        let sender = Tx::sender();
-        let collection = borrow_global<T>(sender);
-        *&collection.records
-    }
-    public fun remove_from_me(): T acquires T {
-        move_from<T>(Tx::sender())
-    }
-}"
-        .to_string()
+    #[test]
+    fn test_run_with_empty_script() {
+        let text = "fun main() {}";
+        let vm_res = run(
+            (existing_file_abspath(), text.to_string()),
+            vec![],
+            AccountAddress::default(),
+        );
+        assert!(matches!(vm_res, Ok(_)), "{:?}", vm_res.unwrap_err())
     }
 
     #[test]
-    fn test_execute_empty_script() {
-        let text = "fun main() {}";
-        let script = compile_script(existing_file_abspath(), text, vec![], Address::default())
-            .unwrap()
-            .0;
-        let res = execute_script(
-            AccountAddress::default(),
-            HashMap::new(),
-            serialize_script(script),
-            vec![],
-        );
-        assert!(matches!(res, Ok(_)), "{:?}", res.unwrap_err());
-    }
+    fn test_execute_custom_script_with_stdlib_module() {
+        let sender = AccountAddress::new([1; 24]);
+        let text = r"
+    use 0x0::Transaction;
 
-    // #[test]
-    // fn test_execute_custom_script_with_stdlib_modules() {
-    //     let sender = Address::new([1; 24]);
-    //     let text = r"
+    fun main() {
+        let _ = Transaction::sender();
+    }";
+        let deps = load_module_files(vec![get_stdlib_path()]);
+        let vm_res = run((existing_file_abspath(), text.to_string()), deps, sender);
+        assert!(matches!(vm_res, Ok(_)), "{:?}", vm_res.unwrap_err());
+    }
+    //
+    //     #[test]
+    //     fn test_execute_script_with_resource_request() {
+    //         let sender = AccountAddress::new([1; 24]);
+    //         let text = r"
     // use 0x0::Transaction;
     // use 0x0::LibraAccount;
     // use 0x0::LBR;
@@ -163,11 +144,8 @@ module RecordsCollection {
     // fun main() {
     //     LibraAccount::balance<LBR::T>(Transaction::sender());
     // }";
-    //     let stdlib_deps = io::get_module_files(get_stdlib_path().as_path());
-    //     let script = compile_script(existing_file_abspath(), text, stdlib_deps, sender).unwrap();
-    //     let mut network_state = HashMap::new();
-    //
-    //     let res = execute_script(AccountAddress::new([1; 24]), network_state, script, vec![]);
-    //     assert!(matches!(res, Ok(_)), "{:?}", res.unwrap_err());
-    // }
+    //         let deps = load_module_files(vec![get_stdlib_path()]);
+    //         let vm_res = run((existing_file_abspath(), text.to_string()), deps, sender);
+    //         assert!(matches!(vm_res, Ok(_)), "{:?}", vm_res.unwrap_err());
+    //     }
 }
