@@ -44,7 +44,6 @@ fn main() {
     let script_text = std::fs::read_to_string(fname).unwrap();
     let deps = load_module_files(options.modules.unwrap_or_else(|| vec![]));
 
-    let vm_result = executor::run((fname, script_text), deps, options.sender);
-
+    let vm_result = executor::compile_and_run((fname, script_text), deps, options.sender);
     println!("{:?}", vm_result);
 }

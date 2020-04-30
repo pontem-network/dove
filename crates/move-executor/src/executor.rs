@@ -1,8 +1,7 @@
 use language_e2e_tests::data_store::FakeDataStore;
-
 use libra_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-use move_lang::compiled_unit::CompiledUnit;
+use move_lang::compiled_unit::{verify_units, CompiledUnit};
 use move_lang::errors::Errors;
 use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
@@ -45,6 +44,11 @@ pub(crate) fn compile_script(
     let mut compiled_modules = vec![];
     let mut compiled_script = None;
     let compiled_units = move_lang::compile_program(Ok(program), Some(sender))?;
+    let (compiled_units, errors) = verify_units(compiled_units);
+    if !errors.is_empty() {
+        return Err(errors);
+    }
+
     for unit in compiled_units {
         match unit {
             CompiledUnit::Module { module, .. } => compiled_modules.push(module),
@@ -71,6 +75,7 @@ pub(crate) fn execute_script(
     let mut exec_context = SystemExecutionContext::new(&cache, GasUnits::new(1_000_000));
     let zero_cost_table = zero_cost_schedule();
     let txn_metadata = get_transaction_metadata(sender_address);
+
     let vm = MoveVM::new();
     vm.execute_script(
         script,
@@ -82,7 +87,7 @@ pub(crate) fn execute_script(
     )
 }
 
-pub(crate) fn run(
+pub(crate) fn compile_and_run(
     script: (FilePath, String),
     deps: Vec<(FilePath, String)>,
     sender: AccountAddress,
@@ -111,12 +116,12 @@ mod tests {
     #[test]
     fn test_run_with_empty_script() {
         let text = "fun main() {}";
-        let vm_res = run(
+        let vm_res = compile_and_run(
             (existing_file_abspath(), text.to_string()),
             vec![],
             AccountAddress::default(),
         );
-        assert!(matches!(vm_res, Ok(_)), "{:?}", vm_res.unwrap_err())
+        assert!(vm_res.is_ok(), "{:?}", vm_res.unwrap_err());
     }
 
     #[test]
@@ -129,23 +134,46 @@ mod tests {
         let _ = Transaction::sender();
     }";
         let deps = load_module_files(vec![get_stdlib_path()]);
-        let vm_res = run((existing_file_abspath(), text.to_string()), deps, sender);
-        assert!(matches!(vm_res, Ok(_)), "{:?}", vm_res.unwrap_err());
+        let vm_res = compile_and_run((existing_file_abspath(), text.to_string()), deps, sender);
+        assert!(vm_res.is_ok(), "{:?}", vm_res.unwrap_err());
     }
-    //
-    //     #[test]
-    //     fn test_execute_script_with_resource_request() {
-    //         let sender = AccountAddress::new([1; 24]);
-    //         let text = r"
-    // use 0x0::Transaction;
-    // use 0x0::LibraAccount;
-    // use 0x0::LBR;
-    //
-    // fun main() {
-    //     LibraAccount::balance<LBR::T>(Transaction::sender());
-    // }";
-    //         let deps = load_module_files(vec![get_stdlib_path()]);
-    //         let vm_res = run((existing_file_abspath(), text.to_string()), deps, sender);
-    //         assert!(matches!(vm_res, Ok(_)), "{:?}", vm_res.unwrap_err());
-    //     }
+
+    #[test]
+    fn test_execute_script_with_resource_request() {
+        let sender = AccountAddress::new([1; 24]);
+        let module_name = existing_file_abspath();
+        let module_text = r"
+    address 0x111111111111111111111111:
+
+    module Record {
+        resource struct T {
+            age: u8
+        }
+
+        public fun create(age: u8): T {
+            T { age }
+        }
+
+        public fun save(record: T) {
+            move_to_sender<T>(record);
+        }
+    }
+        ";
+        let script_text = r"
+    use 0x111111111111111111111111::Record;
+
+    fun main() {
+        let record = Record::create(10);
+        Record::save(record);
+    }";
+        let mut deps = load_module_files(vec![get_stdlib_path()]);
+        deps.push((module_name, module_text.to_string()));
+
+        let vm_res = compile_and_run(
+            (existing_file_abspath(), script_text.to_string()),
+            deps,
+            sender,
+        );
+        assert!(vm_res.is_ok(), "{:?}", vm_res.unwrap_err());
+    }
 }
