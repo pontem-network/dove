@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use libra_types::account_address::AccountAddress;
-
 use structopt::StructOpt;
 
 use analysis::db::FilePath;
@@ -9,6 +8,7 @@ use analysis::utils::io;
 use analysis::utils::io::leaked_fpath;
 
 mod executor;
+mod serialization;
 
 fn parse_address(s: &str) -> AccountAddress {
     AccountAddress::from_hex_literal(s).unwrap()
@@ -45,5 +45,5 @@ fn main() {
     let deps = load_module_files(options.modules.unwrap_or_else(|| vec![]));
 
     let vm_result = executor::compile_and_run((fname, script_text), deps, options.sender);
-    println!("{:?}", vm_result);
+    println!("{:?}", vm_result.unwrap());
 }

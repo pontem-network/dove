@@ -19,5 +19,7 @@ move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "30.
 vm = { git = "https://github.com/dfinance/libra.git", branch = "30.04.2020" }
 libra-types = { git = "https://github.com/dfinance/libra.git", branch = "30.04.2020" }
 move-lang = { git = "https://github.com/dfinance/libra.git", branch = "30.04.2020" }
+libra-canonical-serialization = { git = "https://github.com/dfinance/libra.git", branch = "30.04.2020" }
+libra-crypto = { git = "https://github.com/dfinance/libra.git", branch = "30.04.2020" }
 
 analysis = { path = "../analysis" }

@@ -1622,6 +1622,8 @@ dependencies = [
  "analysis",
  "anyhow",
  "language-e2e-tests",
+ "libra-canonical-serialization",
+ "libra-crypto",
  "libra-state-view",
  "libra-types",
  "move-core-types",

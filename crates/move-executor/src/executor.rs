@@ -1,13 +1,17 @@
 use language_e2e_tests::data_store::FakeDataStore;
+
 use libra_types::account_address::AccountAddress;
+
+use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
+
 use move_lang::compiled_unit::{verify_units, CompiledUnit};
 use move_lang::errors::Errors;
 use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
-use move_vm_state::data_cache::BlockDataCache;
-use move_vm_state::execution_context::SystemExecutionContext;
+use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
 use move_vm_types::values::Value;
+
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::gas_schedule::zero_cost_schedule;
@@ -17,6 +21,8 @@ use vm::CompiledModule;
 use analysis::compiler;
 use analysis::compiler::parse_file;
 use analysis::db::FilePath;
+
+use crate::serialization::{get_resource_structs, serialize_write_set, ResourceChange};
 
 pub(crate) fn serialize_script(script: CompiledScript) -> Vec<u8> {
     let mut serialized = vec![];
@@ -66,13 +72,11 @@ fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetada
 
 pub(crate) fn execute_script(
     sender_address: AccountAddress,
-    data_store: FakeDataStore,
+    data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
-) -> VMResult<()> {
-    let cache = BlockDataCache::new(&data_store);
-
-    let mut exec_context = SystemExecutionContext::new(&cache, GasUnits::new(1_000_000));
+) -> VMResult<WriteSet> {
+    let mut exec_context = SystemExecutionContext::new(data_store, GasUnits::new(1_000_000));
     let zero_cost_table = zero_cost_schedule();
     let txn_metadata = get_transaction_metadata(sender_address);
 
@@ -85,13 +89,14 @@ pub(crate) fn execute_script(
         vec![],
         args,
     )
+    .map(|_| exec_context.make_write_set().unwrap())
 }
 
 pub(crate) fn compile_and_run(
     script: (FilePath, String),
     deps: Vec<(FilePath, String)>,
     sender: AccountAddress,
-) -> VMResult<()> {
+) -> VMResult<Vec<ResourceChange>> {
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
@@ -101,17 +106,25 @@ pub(crate) fn compile_and_run(
     for module in compiled_modules {
         network_state.add_module(&module.self_id(), &module);
     }
+    let available_resource_structs = get_resource_structs(&compiled_script);
+
     let serialized_script = serialize_script(compiled_script);
-    execute_script(sender, network_state, serialized_script, vec![])
+    let write_set = execute_script(sender, &network_state, serialized_script, vec![])?;
+
+    let changes = serialize_write_set(&write_set, available_resource_structs);
+    Ok(changes)
 }
 
 #[cfg(test)]
 mod tests {
+
     use analysis::utils::tests::{existing_file_abspath, get_stdlib_path};
 
     use crate::load_module_files;
 
     use super::*;
+    use libra_types::language_storage::StructTag;
+    use move_core_types::identifier::Identifier;
 
     #[test]
     fn test_run_with_empty_script() {
@@ -121,7 +134,7 @@ mod tests {
             vec![],
             AccountAddress::default(),
         );
-        assert!(vm_res.is_ok(), "{:?}", vm_res.unwrap_err());
+        assert!(vm_res.is_ok());
     }
 
     #[test]
@@ -135,23 +148,24 @@ mod tests {
     }";
         let deps = load_module_files(vec![get_stdlib_path()]);
         let vm_res = compile_and_run((existing_file_abspath(), text.to_string()), deps, sender);
-        assert!(vm_res.is_ok(), "{:?}", vm_res.unwrap_err());
+        assert!(vm_res.is_ok());
     }
 
     #[test]
     fn test_execute_script_with_resource_request() {
-        let sender = AccountAddress::new([1; 24]);
+        let sender = AccountAddress::from_hex_literal("0x111111111111111111111111").unwrap();
         let module_name = existing_file_abspath();
         let module_text = r"
     address 0x111111111111111111111111:
 
     module Record {
         resource struct T {
-            age: u8
+            age: u8,
+            age2: u8
         }
 
         public fun create(age: u8): T {
-            T { age }
+            T { age: age + 1, age2: age + 2 }
         }
 
         public fun save(record: T) {
@@ -174,6 +188,18 @@ mod tests {
             deps,
             sender,
         );
-        assert!(vm_res.is_ok(), "{:?}", vm_res.unwrap_err());
+        let changes = vm_res.unwrap();
+
+        assert_eq!(changes.len(), 1);
+        assert_eq!(
+            changes[0].struct_tag,
+            StructTag {
+                address: sender,
+                module: Identifier::new("Record").unwrap(),
+                name: Identifier::new("T").unwrap(),
+                type_params: vec![]
+            }
+        );
+        assert_eq!(changes[0].values, vec![11, 12]);
     }
 }
