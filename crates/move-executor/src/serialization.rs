@@ -2,14 +2,14 @@ use std::collections::HashMap;
 
 use libra_crypto::hash::CryptoHash;
 use libra_types::access_path::AccessPath;
-
 use libra_types::language_storage::StructTag;
+use libra_types::vm_error::{StatusCode, VMStatus};
 use libra_types::write_set::{WriteOp, WriteSet};
 use move_core_types::identifier::Identifier;
 use vm::access::ScriptAccess;
 use vm::file_format::CompiledScript;
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ResourceChange {
     pub struct_tag: StructTag,
     pub values: Vec<u8>,
@@ -69,4 +69,24 @@ pub(crate) fn serialize_write_set(
         }
     }
     changed
+}
+
+#[derive(Debug, serde::Serialize)]
+pub(crate) struct VMStatusVerbose {
+    pub major_status: StatusCode,
+    pub major_status_description: String,
+    pub sub_status: Option<u64>,
+    pub message: Option<String>,
+}
+
+impl From<VMStatus> for VMStatusVerbose {
+    fn from(vm_status: VMStatus) -> Self {
+        let status_desc = format!("{:?}", vm_status.major_status);
+        VMStatusVerbose {
+            major_status: vm_status.major_status,
+            major_status_description: status_desc,
+            sub_status: vm_status.sub_status,
+            message: vm_status.message,
+        }
+    }
 }

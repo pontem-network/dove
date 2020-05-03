@@ -1631,6 +1631,9 @@ dependencies = [
  "move-vm-runtime",
  "move-vm-state",
  "move-vm-types",
+ "serde",
+ "serde_derive",
+ "serde_json",
  "structopt",
  "vm",
 ]

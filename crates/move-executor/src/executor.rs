@@ -146,7 +146,7 @@ mod tests {
     fun main() {
         let _ = Transaction::sender();
     }";
-        let deps = load_module_files(vec![get_stdlib_path()]);
+        let deps = load_module_files(vec![get_stdlib_path()]).unwrap();
         let vm_res = compile_and_run((existing_file_abspath(), text.to_string()), deps, sender);
         assert!(vm_res.is_ok());
     }
@@ -180,7 +180,7 @@ mod tests {
         let record = Record::create(10);
         Record::save(record);
     }";
-        let mut deps = load_module_files(vec![get_stdlib_path()]);
+        let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
         deps.push((module_name, module_text.to_string()));
 
         let vm_res = compile_and_run(

@@ -9,6 +9,9 @@ edition = "2018"
 [dependencies]
 structopt = "0.3.14"
 anyhow = "1.0.28"
+serde = "1.0.106"
+serde_derive = "1.0.106"
+serde_json = "1.0.52"
 
 move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "30.04.2020" }
 move-vm-state = { git = "https://github.com/dfinance/libra.git", branch = "30.04.2020" }
