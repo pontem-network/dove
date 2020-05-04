@@ -64,7 +64,7 @@ fn main() {
         }
     };
 
-    let vm_result = executor::compile_and_run((fname, script_text), deps, options.sender);
+    let vm_result = executor::compile_and_run((fname, script_text), deps, options.sender, None);
     let out = match vm_result {
         Ok(changes) => serde_json::to_string_pretty(&changes).unwrap(),
         Err(vm_status) => {

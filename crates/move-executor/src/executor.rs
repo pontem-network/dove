@@ -1,17 +1,12 @@
 use language_e2e_tests::data_store::FakeDataStore;
-
 use libra_types::account_address::AccountAddress;
-
 use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-
 use move_lang::compiled_unit::{verify_units, CompiledUnit};
 use move_lang::errors::Errors;
 use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
-use move_vm_types::values::Value;
-
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::gas_schedule::zero_cost_schedule;
@@ -22,7 +17,8 @@ use analysis::compiler;
 use analysis::compiler::parse_file;
 use analysis::db::FilePath;
 
-use crate::serialization::{get_resource_structs, serialize_write_set, ResourceChange};
+use crate::serialization::{get_resource_structs, serialize_write_set, ResourceChangeOp};
+use move_vm_types::values::Value;
 
 pub(crate) fn serialize_script(script: CompiledScript) -> Vec<u8> {
     let mut serialized = vec![];
@@ -96,7 +92,8 @@ pub(crate) fn compile_and_run(
     script: (FilePath, String),
     deps: Vec<(FilePath, String)>,
     sender: AccountAddress,
-) -> VMResult<Vec<ResourceChange>> {
+    _genesis: Option<serde_json::Value>,
+) -> VMResult<Vec<ResourceChangeOp>> {
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
@@ -111,7 +108,7 @@ pub(crate) fn compile_and_run(
     let serialized_script = serialize_script(compiled_script);
     let write_set = execute_script(sender, &network_state, serialized_script, vec![])?;
 
-    let changes = serialize_write_set(&write_set, available_resource_structs);
+    let changes = serialize_write_set(write_set, &available_resource_structs);
     Ok(changes)
 }
 
@@ -123,8 +120,6 @@ mod tests {
     use crate::load_module_files;
 
     use super::*;
-    use libra_types::language_storage::StructTag;
-    use move_core_types::identifier::Identifier;
 
     #[test]
     fn test_run_with_empty_script() {
@@ -133,6 +128,7 @@ mod tests {
             (existing_file_abspath(), text.to_string()),
             vec![],
             AccountAddress::default(),
+            None,
         );
         assert!(vm_res.is_ok());
     }
@@ -147,7 +143,12 @@ mod tests {
         let _ = Transaction::sender();
     }";
         let deps = load_module_files(vec![get_stdlib_path()]).unwrap();
-        let vm_res = compile_and_run((existing_file_abspath(), text.to_string()), deps, sender);
+        let vm_res = compile_and_run(
+            (existing_file_abspath(), text.to_string()),
+            deps,
+            sender,
+            None,
+        );
         assert!(vm_res.is_ok());
     }
 
@@ -187,19 +188,22 @@ mod tests {
             (existing_file_abspath(), script_text.to_string()),
             deps,
             sender,
+            None,
         );
         let changes = vm_res.unwrap();
-
         assert_eq!(changes.len(), 1);
+
         assert_eq!(
-            changes[0].struct_tag,
-            StructTag {
-                address: sender,
-                module: Identifier::new("Record").unwrap(),
-                name: Identifier::new("T").unwrap(),
-                type_params: vec![]
-            }
+            serde_json::to_value(&changes[0]).unwrap(),
+            serde_json::json!({
+                "type": "SetValue",
+                "struct_tag": {
+                    "address": sender.to_string(),
+                    "module": "Record",
+                    "name": "T",
+                    "type_params": []},
+                "values": [11, 12]
+            })
         );
-        assert_eq!(changes[0].values, vec![11, 12]);
     }
 }

@@ -10,9 +10,22 @@ use vm::access::ScriptAccess;
 use vm::file_format::CompiledScript;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ResourceChange {
-    pub struct_tag: StructTag,
-    pub values: Vec<u8>,
+#[serde(tag = "type")]
+pub enum ResourceChangeOp {
+    SetValue {
+        struct_tag: StructTag,
+        values: Vec<u8>,
+    },
+    Delete,
+}
+
+impl ResourceChangeOp {
+    pub fn new(struct_tag: StructTag, write_op: WriteOp) -> Self {
+        match write_op {
+            WriteOp::Value(values) => ResourceChangeOp::SetValue { struct_tag, values },
+            WriteOp::Deletion => ResourceChangeOp::Delete,
+        }
+    }
 }
 
 pub(crate) fn get_resource_structs(
@@ -38,11 +51,11 @@ pub(crate) fn get_resource_structs(
 }
 
 fn get_struct_tag_at(
-    ap: &AccessPath,
+    ap: AccessPath,
     resource_structs: &HashMap<Vec<u8>, StructTag>,
 ) -> Option<StructTag> {
     // resource tag
-    let path = ap.path.clone();
+    let path = ap.path;
     let struct_sha3 = &path[1..33];
     if path[0] == 1 {
         if let Some(struct_tag) = resource_structs.get(struct_sha3) {
@@ -53,19 +66,15 @@ fn get_struct_tag_at(
 }
 
 pub(crate) fn serialize_write_set(
-    write_set: &WriteSet,
-    resource_structs: HashMap<Vec<u8>, StructTag>,
-) -> Vec<ResourceChange> {
+    write_set: WriteSet,
+    resource_structs: &HashMap<Vec<u8>, StructTag>,
+) -> Vec<ResourceChangeOp> {
     let mut changed = vec![];
     for (access_path, write_op) in write_set {
-        let struct_tag = get_struct_tag_at(access_path, &resource_structs);
+        let struct_tag = get_struct_tag_at(access_path, resource_structs);
         if let Some(struct_tag) = struct_tag {
-            if let WriteOp::Value(val) = write_op {
-                changed.push(ResourceChange {
-                    struct_tag,
-                    values: val.clone(),
-                });
-            }
+            let change = ResourceChangeOp::new(struct_tag, write_op);
+            changed.push(change);
         }
     }
     changed
