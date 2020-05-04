@@ -19,7 +19,7 @@ use analysis::compiler::parse_file;
 use analysis::db::FilePath;
 
 use crate::serialization::{
-    changes_into_writeset, get_resource_structs, serialize_write_set, ResourceChangeOp,
+    changes_into_writeset, get_resource_structs, serialize_write_set, ResourceChange,
 };
 
 pub(crate) fn serialize_script(script: CompiledScript) -> Vec<u8> {
@@ -90,7 +90,7 @@ pub(crate) fn execute_script(
     .map(|_| exec_context.make_write_set().unwrap())
 }
 
-pub(crate) fn deserialize_genesis(serialized: serde_json::Value) -> Vec<ResourceChangeOp> {
+pub(crate) fn deserialize_genesis(serialized: serde_json::Value) -> Vec<ResourceChange> {
     serde_json::from_value(serialized).unwrap()
 }
 
@@ -99,7 +99,7 @@ pub(crate) fn compile_and_run(
     deps: Vec<(FilePath, String)>,
     sender: AccountAddress,
     genesis: Option<serde_json::Value>,
-) -> VMResult<Vec<ResourceChangeOp>> {
+) -> VMResult<Vec<ResourceChange>> {
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
@@ -230,13 +230,13 @@ module Record {
         assert_eq!(
             serde_json::to_value(&changes[0]).unwrap(),
             serde_json::json!({
-                "type": "SetValue",
                 "struct_tag": {
                     "address": sender.to_string(),
                     "module": "Record",
                     "name": "T",
-                    "type_params": []},
-                "values": [10, 20]
+                    "type_params": []
+                },
+                "op": {"type": "SetValue", "values": [10, 20]}
             })
         );
     }
@@ -256,14 +256,13 @@ module Record {
     }";
 
         let genesis = serde_json::json!([{
-            "type": "SetValue",
             "struct_tag": {
-                "address": sender,
+                "address": sender.to_string(),
                 "module": "Record",
                 "name": "T",
                 "type_params": []
             },
-            "values": [10, 20]
+            "op": {"type": "SetValue", "values": [10, 20]}
         }]);
         let vm_res = compile_and_run(
             (get_script_path(), script_text.to_string()),
@@ -276,13 +275,13 @@ module Record {
         assert_eq!(
             serde_json::to_value(&changes[0]).unwrap(),
             serde_json::json!({
-                "type": "SetValue",
                 "struct_tag": {
                     "address": sender.to_string(),
                     "module": "Record",
                     "name": "T",
-                    "type_params": []},
-                "values": [11, 20]
+                    "type_params": []
+                },
+                "op": {"type": "SetValue", "values": [11, 20]}
             })
         );
     }

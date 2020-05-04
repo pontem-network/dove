@@ -11,43 +11,43 @@ use vm::file_format::CompiledScript;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
-pub enum ResourceChangeOp {
-    SetValue {
-        struct_tag: StructTag,
-        values: Vec<u8>,
-    },
-    Delete {
-        struct_tag: StructTag,
-    },
+enum ResourceChangeOp {
+    SetValue { values: Vec<u8> },
+    Delete,
 }
 
-impl ResourceChangeOp {
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ResourceChange {
+    struct_tag: StructTag,
+    op: ResourceChangeOp,
+}
+
+impl ResourceChange {
     pub fn new(struct_tag: StructTag, write_op: WriteOp) -> Self {
         match write_op {
-            WriteOp::Value(values) => ResourceChangeOp::SetValue { struct_tag, values },
-            WriteOp::Deletion => ResourceChangeOp::Delete { struct_tag },
+            WriteOp::Value(values) => ResourceChange {
+                struct_tag,
+                op: ResourceChangeOp::SetValue { values },
+            },
+            WriteOp::Deletion => ResourceChange {
+                struct_tag,
+                op: ResourceChangeOp::Delete,
+            },
         }
     }
 
     pub fn into_write_op(self) -> (AccessPath, WriteOp) {
-        match self {
-            ResourceChangeOp::Delete { struct_tag } => {
-                let resource_key = ResourceKey::new(struct_tag.address, struct_tag);
-                let access_path =
-                    AccessPath::resource_access_path(&resource_key, &Accesses::empty());
-                (access_path, WriteOp::Deletion)
-            }
-            ResourceChangeOp::SetValue { struct_tag, values } => {
-                let resource_key = ResourceKey::new(struct_tag.address, struct_tag);
-                let access_path =
-                    AccessPath::resource_access_path(&resource_key, &Accesses::empty());
-                (access_path, WriteOp::Value(values))
-            }
-        }
+        let resource_key = ResourceKey::new(self.struct_tag.address, self.struct_tag);
+        let access_path = AccessPath::resource_access_path(&resource_key, &Accesses::empty());
+        let write_op = match self.op {
+            ResourceChangeOp::Delete => WriteOp::Deletion,
+            ResourceChangeOp::SetValue { values } => WriteOp::Value(values),
+        };
+        (access_path, write_op)
     }
 }
 
-pub(crate) fn changes_into_writeset(changes: Vec<ResourceChangeOp>) -> WriteSet {
+pub(crate) fn changes_into_writeset(changes: Vec<ResourceChange>) -> WriteSet {
     let mut write_set = WriteSetMut::default();
     for change in changes {
         write_set.push(change.into_write_op());
@@ -95,12 +95,12 @@ fn get_struct_tag_at(
 pub(crate) fn serialize_write_set(
     write_set: WriteSet,
     resource_structs: &HashMap<Vec<u8>, StructTag>,
-) -> Vec<ResourceChangeOp> {
+) -> Vec<ResourceChange> {
     let mut changed = vec![];
     for (access_path, write_op) in write_set {
         let struct_tag = get_struct_tag_at(access_path, resource_structs);
         if let Some(struct_tag) = struct_tag {
-            let change = ResourceChangeOp::new(struct_tag, write_op);
+            let change = ResourceChange::new(struct_tag, write_op);
             changed.push(change);
         }
     }
