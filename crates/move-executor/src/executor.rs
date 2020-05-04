@@ -170,18 +170,6 @@ module Record {
     }
 
     #[test]
-    fn test_run_with_empty_script() {
-        let text = "fun main() {}";
-        let vm_res = compile_and_run(
-            (existing_file_abspath(), text.to_string()),
-            vec![],
-            AccountAddress::default(),
-            None,
-        );
-        assert!(vm_res.is_ok());
-    }
-
-    #[test]
     fn test_execute_custom_script_with_stdlib_module() {
         let sender = AccountAddress::new([1; 24]);
         let text = r"
@@ -201,7 +189,7 @@ module Record {
     }
 
     #[test]
-    fn test_execute_script_with_resource_request() {
+    fn test_execute_script_and_record_resource_changes() {
         let sender = get_sender();
         let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
         deps.push(get_record_module_dep());
@@ -238,7 +226,7 @@ module Record {
     }
 
     #[test]
-    fn test_execute_script_with_genesis() {
+    fn test_execute_script_with_genesis_state_provided() {
         let sender = get_sender();
         let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
         deps.push(get_record_module_dep());
