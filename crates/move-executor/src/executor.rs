@@ -8,6 +8,7 @@ use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
 use move_vm_types::values::Value;
+
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::gas_schedule::zero_cost_schedule;
@@ -90,15 +91,11 @@ pub(crate) fn execute_script(
     .map(|_| exec_context.make_write_set().unwrap())
 }
 
-pub(crate) fn deserialize_genesis(serialized: serde_json::Value) -> Vec<ResourceChange> {
-    serde_json::from_value(serialized).unwrap()
-}
-
 pub(crate) fn compile_and_run(
     script: (FilePath, String),
     deps: Vec<(FilePath, String)>,
     sender: AccountAddress,
-    genesis: Option<serde_json::Value>,
+    genesis: Option<Vec<ResourceChange>>,
 ) -> VMResult<Vec<ResourceChange>> {
     let (fname, script_text) = script;
 
@@ -109,8 +106,7 @@ pub(crate) fn compile_and_run(
     for module in compiled_modules {
         network_state.add_module(&module.self_id(), &module);
     }
-    if let Some(val) = genesis {
-        let changes = deserialize_genesis(val);
+    if let Some(changes) = genesis {
         let write_set = changes_into_writeset(changes);
         network_state.add_write_set(&write_set);
     }
@@ -264,6 +260,7 @@ module Record {
             },
             "op": {"type": "SetValue", "values": [10, 20]}
         }]);
+        let genesis: Vec<ResourceChange> = serde_json::from_value(genesis).unwrap();
         let vm_res = compile_and_run(
             (get_script_path(), script_text.to_string()),
             deps,
