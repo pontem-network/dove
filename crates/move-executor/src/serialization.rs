@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use libra_crypto::hash::CryptoHash;
-use libra_types::access_path::AccessPath;
-use libra_types::language_storage::StructTag;
+use libra_types::access_path::{AccessPath, Accesses};
+use libra_types::language_storage::{ResourceKey, StructTag};
 use libra_types::vm_error::{StatusCode, VMStatus};
-use libra_types::write_set::{WriteOp, WriteSet};
+use libra_types::write_set::{WriteOp, WriteSet, WriteSetMut};
 use move_core_types::identifier::Identifier;
 use vm::access::ScriptAccess;
 use vm::file_format::CompiledScript;
@@ -16,16 +16,43 @@ pub enum ResourceChangeOp {
         struct_tag: StructTag,
         values: Vec<u8>,
     },
-    Delete,
+    Delete {
+        struct_tag: StructTag,
+    },
 }
 
 impl ResourceChangeOp {
     pub fn new(struct_tag: StructTag, write_op: WriteOp) -> Self {
         match write_op {
             WriteOp::Value(values) => ResourceChangeOp::SetValue { struct_tag, values },
-            WriteOp::Deletion => ResourceChangeOp::Delete,
+            WriteOp::Deletion => ResourceChangeOp::Delete { struct_tag },
         }
     }
+
+    pub fn into_write_op(self) -> (AccessPath, WriteOp) {
+        match self {
+            ResourceChangeOp::Delete { struct_tag } => {
+                let resource_key = ResourceKey::new(struct_tag.address, struct_tag);
+                let access_path =
+                    AccessPath::resource_access_path(&resource_key, &Accesses::empty());
+                (access_path, WriteOp::Deletion)
+            }
+            ResourceChangeOp::SetValue { struct_tag, values } => {
+                let resource_key = ResourceKey::new(struct_tag.address, struct_tag);
+                let access_path =
+                    AccessPath::resource_access_path(&resource_key, &Accesses::empty());
+                (access_path, WriteOp::Value(values))
+            }
+        }
+    }
+}
+
+pub(crate) fn changes_into_writeset(changes: Vec<ResourceChangeOp>) -> WriteSet {
+    let mut write_set = WriteSetMut::default();
+    for change in changes {
+        write_set.push(change.into_write_op());
+    }
+    write_set.freeze().unwrap()
 }
 
 pub(crate) fn get_resource_structs(
@@ -51,11 +78,11 @@ pub(crate) fn get_resource_structs(
 }
 
 fn get_struct_tag_at(
-    ap: AccessPath,
+    access_path: AccessPath,
     resource_structs: &HashMap<Vec<u8>, StructTag>,
 ) -> Option<StructTag> {
     // resource tag
-    let path = ap.path;
+    let path = access_path.path;
     let struct_sha3 = &path[1..33];
     if path[0] == 1 {
         if let Some(struct_tag) = resource_structs.get(struct_sha3) {

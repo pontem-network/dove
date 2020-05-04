@@ -7,6 +7,7 @@ use move_lang::errors::Errors;
 use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
+use move_vm_types::values::Value;
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::gas_schedule::zero_cost_schedule;
@@ -17,8 +18,9 @@ use analysis::compiler;
 use analysis::compiler::parse_file;
 use analysis::db::FilePath;
 
-use crate::serialization::{get_resource_structs, serialize_write_set, ResourceChangeOp};
-use move_vm_types::values::Value;
+use crate::serialization::{
+    changes_into_writeset, get_resource_structs, serialize_write_set, ResourceChangeOp,
+};
 
 pub(crate) fn serialize_script(script: CompiledScript) -> Vec<u8> {
     let mut serialized = vec![];
@@ -88,11 +90,15 @@ pub(crate) fn execute_script(
     .map(|_| exec_context.make_write_set().unwrap())
 }
 
+pub(crate) fn deserialize_genesis(serialized: serde_json::Value) -> Vec<ResourceChangeOp> {
+    serde_json::from_value(serialized).unwrap()
+}
+
 pub(crate) fn compile_and_run(
     script: (FilePath, String),
     deps: Vec<(FilePath, String)>,
     sender: AccountAddress,
-    _genesis: Option<serde_json::Value>,
+    genesis: Option<serde_json::Value>,
 ) -> VMResult<Vec<ResourceChangeOp>> {
     let (fname, script_text) = script;
 
@@ -102,6 +108,11 @@ pub(crate) fn compile_and_run(
     let mut network_state = FakeDataStore::default();
     for module in compiled_modules {
         network_state.add_module(&module.self_id(), &module);
+    }
+    if let Some(val) = genesis {
+        let changes = deserialize_genesis(val);
+        let write_set = changes_into_writeset(changes);
+        network_state.add_write_set(&write_set);
     }
     let available_resource_structs = get_resource_structs(&compiled_script);
 
@@ -114,12 +125,53 @@ pub(crate) fn compile_and_run(
 
 #[cfg(test)]
 mod tests {
-
-    use analysis::utils::tests::{existing_file_abspath, get_stdlib_path};
+    use analysis::utils::io::leaked_fpath;
+    use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 
     use crate::load_module_files;
 
     use super::*;
+
+    fn get_record_module_dep() -> (FilePath, String) {
+        let text = r"
+address 0x111111111111111111111111:
+
+module Record {
+    use 0x0::Transaction;
+
+    resource struct T {
+        age: u8,
+        doubled_age: u8
+    }
+
+    public fun create(age: u8): T {
+        T { age, doubled_age: age * 2 }
+    }
+
+    public fun save(record: T) {
+        move_to_sender<T>(record);
+    }
+
+    public fun with_incremented_age(): T acquires T {
+        let record: T;
+        record = move_from<T>(Transaction::sender());
+        record.age = record.age + 1;
+        record
+    }
+}
+        "
+        .to_string();
+        let fpath = leaked_fpath(get_modules_path().join("record.move").to_str().unwrap());
+        (fpath, text)
+    }
+
+    fn get_sender() -> AccountAddress {
+        AccountAddress::from_hex_literal("0x111111111111111111111111").unwrap()
+    }
+
+    fn get_script_path() -> FilePath {
+        leaked_fpath(get_modules_path().join("script.move").to_str().unwrap())
+    }
 
     #[test]
     fn test_run_with_empty_script() {
@@ -154,26 +206,10 @@ mod tests {
 
     #[test]
     fn test_execute_script_with_resource_request() {
-        let sender = AccountAddress::from_hex_literal("0x111111111111111111111111").unwrap();
-        let module_name = existing_file_abspath();
-        let module_text = r"
-    address 0x111111111111111111111111:
+        let sender = get_sender();
+        let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
+        deps.push(get_record_module_dep());
 
-    module Record {
-        resource struct T {
-            age: u8,
-            age2: u8
-        }
-
-        public fun create(age: u8): T {
-            T { age: age + 1, age2: age + 2 }
-        }
-
-        public fun save(record: T) {
-            move_to_sender<T>(record);
-        }
-    }
-        ";
         let script_text = r"
     use 0x111111111111111111111111::Record;
 
@@ -181,11 +217,9 @@ mod tests {
         let record = Record::create(10);
         Record::save(record);
     }";
-        let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
-        deps.push((module_name, module_text.to_string()));
 
         let vm_res = compile_and_run(
-            (existing_file_abspath(), script_text.to_string()),
+            (get_script_path(), script_text.to_string()),
             deps,
             sender,
             None,
@@ -202,7 +236,53 @@ mod tests {
                     "module": "Record",
                     "name": "T",
                     "type_params": []},
-                "values": [11, 12]
+                "values": [10, 20]
+            })
+        );
+    }
+
+    #[test]
+    fn test_execute_script_with_genesis() {
+        let sender = get_sender();
+        let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
+        deps.push(get_record_module_dep());
+
+        let script_text = r"
+    use 0x111111111111111111111111::Record;
+
+    fun main() {
+        let record = Record::with_incremented_age();
+        Record::save(record);
+    }";
+
+        let genesis = serde_json::json!([{
+            "type": "SetValue",
+            "struct_tag": {
+                "address": sender,
+                "module": "Record",
+                "name": "T",
+                "type_params": []
+            },
+            "values": [10, 20]
+        }]);
+        let vm_res = compile_and_run(
+            (get_script_path(), script_text.to_string()),
+            deps,
+            sender,
+            Some(genesis),
+        );
+        let changes = vm_res.unwrap();
+        assert_eq!(changes.len(), 1);
+        assert_eq!(
+            serde_json::to_value(&changes[0]).unwrap(),
+            serde_json::json!({
+                "type": "SetValue",
+                "struct_tag": {
+                    "address": sender.to_string(),
+                    "module": "Record",
+                    "name": "T",
+                    "type_params": []},
+                "values": [11, 20]
             })
         );
     }
