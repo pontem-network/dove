@@ -124,7 +124,7 @@ mod tests {
     use analysis::utils::io::leaked_fpath;
     use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 
-    use crate::load_module_files;
+    use crate::io;
 
     use super::*;
 
@@ -178,7 +178,7 @@ module Record {
     fun main() {
         let _ = Transaction::sender();
     }";
-        let deps = load_module_files(vec![get_stdlib_path()]).unwrap();
+        let deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
         let vm_res = compile_and_run(
             (existing_file_abspath(), text.to_string()),
             deps,
@@ -191,7 +191,7 @@ module Record {
     #[test]
     fn test_execute_script_and_record_resource_changes() {
         let sender = get_sender();
-        let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
+        let mut deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
         deps.push(get_record_module_dep());
 
         let script_text = r"
@@ -228,7 +228,7 @@ module Record {
     #[test]
     fn test_execute_script_with_genesis_state_provided() {
         let sender = get_sender();
-        let mut deps = load_module_files(vec![get_stdlib_path()]).unwrap();
+        let mut deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
         deps.push(get_record_module_dep());
 
         let script_text = r"
