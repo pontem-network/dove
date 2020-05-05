@@ -5,7 +5,8 @@ use move_lang::test_utils::MOVE_EXTENSION;
 
 use crate::db::FilePath;
 
-pub fn leaked_fpath(s: &str) -> FilePath {
+pub fn leaked_fpath<P: AsRef<Path>>(path: P) -> FilePath {
+    let s = path.as_ref().to_str().unwrap();
     Box::leak(Box::new(s.to_owned()))
 }
 
@@ -39,15 +40,19 @@ fn get_module_filenames(folder: &Path) -> Vec<String> {
 pub fn get_module_files(modules_folder: &Path) -> Vec<(FilePath, String)> {
     let module_filenames = get_module_filenames(modules_folder)
         .iter()
-        .map(|s| leaked_fpath(s))
-        .collect::<Vec<&'static str>>();
+        .map(leaked_fpath)
+        .collect::<Vec<_>>();
 
     let mut lib_files = Vec::with_capacity(module_filenames.len());
     for mod_fname in module_filenames {
-        let mod_text = fs::read_to_string(mod_fname).unwrap().replace("\r\n", "\n");
+        let mod_text = match fs::read_to_string(mod_fname) {
+            Ok(text) => text.replace("\r\n", "\n"),
+            Err(_) => {
+                log::warn!("Cannot read file {:?}, skipping", mod_fname);
+                continue;
+            }
+        };
         lib_files.push((mod_fname, mod_text));
-        // let stripped_mod_text = strip_comments_and_verify(mod_fname, &mod_text).unwrap();
-        // lib_files.insert(mod_fname, stripped_mod_text);
     }
     lib_files
 }
