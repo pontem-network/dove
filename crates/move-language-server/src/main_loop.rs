@@ -237,6 +237,8 @@ pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
                     diagnostics.push(loc_d.diagnostic.unwrap());
                 }
                 let params = PublishDiagnosticsParams::new(uri, diagnostics, None);
+                log::info!("Send diagnostic {:#?}", &params);
+
                 let not = notification_new::<PublishDiagnostics>(params);
                 msg_sender.send(not.into()).unwrap();
             }
@@ -340,6 +342,7 @@ fn update_file_notifications_on_threadpool(
     files: Vec<FilePath>,
 ) {
     pool.execute(move || {
+        log::info!("update_file_notifications_on_threadpool {:?}", files);
         for fpath in files {
             let text = analysis.db().tracked_files.get(fpath).unwrap();
             let mut diagnostics = analysis.check_with_libra_compiler(fpath, text);

@@ -1,18 +1,58 @@
 use std::collections::HashMap;
 
 use libra_crypto::hash::CryptoHash;
-use libra_types::access_path::AccessPath;
-use libra_types::language_storage::StructTag;
+use libra_types::access_path::{AccessPath, Accesses};
+use libra_types::language_storage::{ResourceKey, StructTag};
 use libra_types::vm_error::{StatusCode, VMStatus};
-use libra_types::write_set::{WriteOp, WriteSet};
+use libra_types::write_set::{WriteOp, WriteSet, WriteSetMut};
 use move_core_types::identifier::Identifier;
 use vm::access::ScriptAccess;
 use vm::file_format::CompiledScript;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type")]
+enum ResourceChangeOp {
+    SetValue { values: Vec<u8> },
+    Delete,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ResourceChange {
-    pub struct_tag: StructTag,
-    pub values: Vec<u8>,
+    struct_tag: StructTag,
+    op: ResourceChangeOp,
+}
+
+impl ResourceChange {
+    pub fn new(struct_tag: StructTag, write_op: WriteOp) -> Self {
+        match write_op {
+            WriteOp::Value(values) => ResourceChange {
+                struct_tag,
+                op: ResourceChangeOp::SetValue { values },
+            },
+            WriteOp::Deletion => ResourceChange {
+                struct_tag,
+                op: ResourceChangeOp::Delete,
+            },
+        }
+    }
+
+    pub fn into_write_op(self) -> (AccessPath, WriteOp) {
+        let resource_key = ResourceKey::new(self.struct_tag.address, self.struct_tag);
+        let access_path = AccessPath::resource_access_path(&resource_key, &Accesses::empty());
+        let write_op = match self.op {
+            ResourceChangeOp::Delete => WriteOp::Deletion,
+            ResourceChangeOp::SetValue { values } => WriteOp::Value(values),
+        };
+        (access_path, write_op)
+    }
+}
+
+pub(crate) fn changes_into_writeset(changes: Vec<ResourceChange>) -> WriteSet {
+    let mut write_set = WriteSetMut::default();
+    for change in changes {
+        write_set.push(change.into_write_op());
+    }
+    write_set.freeze().unwrap()
 }
 
 pub(crate) fn get_resource_structs(
@@ -38,11 +78,11 @@ pub(crate) fn get_resource_structs(
 }
 
 fn get_struct_tag_at(
-    ap: &AccessPath,
+    access_path: AccessPath,
     resource_structs: &HashMap<Vec<u8>, StructTag>,
 ) -> Option<StructTag> {
     // resource tag
-    let path = ap.path.clone();
+    let path = access_path.path;
     let struct_sha3 = &path[1..33];
     if path[0] == 1 {
         if let Some(struct_tag) = resource_structs.get(struct_sha3) {
@@ -53,19 +93,15 @@ fn get_struct_tag_at(
 }
 
 pub(crate) fn serialize_write_set(
-    write_set: &WriteSet,
-    resource_structs: HashMap<Vec<u8>, StructTag>,
+    write_set: WriteSet,
+    resource_structs: &HashMap<Vec<u8>, StructTag>,
 ) -> Vec<ResourceChange> {
     let mut changed = vec![];
     for (access_path, write_op) in write_set {
-        let struct_tag = get_struct_tag_at(access_path, &resource_structs);
+        let struct_tag = get_struct_tag_at(access_path, resource_structs);
         if let Some(struct_tag) = struct_tag {
-            if let WriteOp::Value(val) = write_op {
-                changed.push(ResourceChange {
-                    struct_tag,
-                    values: val.clone(),
-                });
-            }
+            let change = ResourceChange::new(struct_tag, write_op);
+            changed.push(change);
         }
     }
     changed
