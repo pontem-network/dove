@@ -3,8 +3,10 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use libra_types::account_address::AccountAddress;
+use move_lang::errors::{report_errors, FilesSourceText};
 use structopt::StructOpt;
 
+use analysis::db::FilePath;
 use analysis::utils::io::leaked_fpath;
 
 use crate::serialization::ResourceChange;
@@ -47,6 +49,17 @@ fn parse_genesis_json(fpath: Option<PathBuf>) -> Result<Option<Vec<ResourceChang
     Ok(genesis)
 }
 
+fn get_file_sources_mapping(
+    script: (FilePath, String),
+    deps: Vec<(FilePath, String)>,
+) -> FilesSourceText {
+    let mut mapping = FilesSourceText::with_capacity(deps.len() + 1);
+    for (fpath, text) in vec![script].into_iter().chain(deps.into_iter()) {
+        mapping.insert(fpath, text);
+    }
+    mapping
+}
+
 fn main() -> Result<()> {
     let options: Options = Options::from_args();
 
@@ -55,12 +68,20 @@ fn main() -> Result<()> {
 
     let genesis = parse_genesis_json(options.genesis)?;
 
-    let vm_result = executor::compile_and_run(
-        (leaked_fpath(options.script), script_text),
-        deps,
+    let script_fpath = leaked_fpath(options.script);
+    let exec_res = executor::compile_and_run(
+        (script_fpath, script_text.clone()),
+        &deps,
         options.sender,
         genesis,
     );
+    let vm_result = match exec_res {
+        Ok(vm_res) => vm_res,
+        Err(errors) => {
+            let files_mapping = get_file_sources_mapping((script_fpath, script_text), deps);
+            report_errors(files_mapping, errors);
+        }
+    };
     let out = match vm_result {
         Ok(changes) => serde_json::to_string_pretty(&changes).unwrap(),
         Err(vm_status) => {

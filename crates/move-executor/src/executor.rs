@@ -1,5 +1,6 @@
 use language_e2e_tests::data_store::FakeDataStore;
 use libra_types::account_address::AccountAddress;
+
 use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use move_lang::compiled_unit::{verify_units, CompiledUnit};
@@ -31,7 +32,7 @@ pub(crate) fn serialize_script(script: CompiledScript) -> Vec<u8> {
 pub(crate) fn compile_script(
     fname: FilePath,
     text: &str,
-    deps: Vec<(FilePath, String)>,
+    deps: &[(FilePath, String)],
     sender: Address,
 ) -> Result<(CompiledScript, Vec<CompiledModule>), Errors> {
     let parsed_file = compiler::parse_file(fname, text).map_err(|err| vec![err])?;
@@ -92,14 +93,15 @@ pub(crate) fn execute_script(
 
 pub(crate) fn compile_and_run(
     script: (FilePath, String),
-    deps: Vec<(FilePath, String)>,
+    deps: &[(FilePath, String)],
     sender: AccountAddress,
     genesis: Option<Vec<ResourceChange>>,
-) -> VMResult<Vec<ResourceChange>> {
+) -> Result<VMResult<Vec<ResourceChange>>, Errors> {
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
-        compile_script(fname, &script_text, deps, Address::new(sender.into())).unwrap();
+        compile_script(fname, &script_text, deps, Address::new(sender.into()))?;
+    let available_resource_structs = get_resource_structs(&compiled_script);
 
     let mut network_state = FakeDataStore::default();
     for module in compiled_modules {
@@ -109,13 +111,15 @@ pub(crate) fn compile_and_run(
         let write_set = changes_into_writeset(changes);
         network_state.add_write_set(&write_set);
     }
-    let available_resource_structs = get_resource_structs(&compiled_script);
 
     let serialized_script = serialize_script(compiled_script);
-    let write_set = execute_script(sender, &network_state, serialized_script, vec![])?;
+    let write_set = match execute_script(sender, &network_state, serialized_script, vec![]) {
+        Ok(ws) => ws,
+        Err(vm_status) => return Ok(Err(vm_status)),
+    };
 
     let changes = serialize_write_set(write_set, &available_resource_structs);
-    Ok(changes)
+    Ok(Ok(changes))
 }
 
 #[cfg(test)]
@@ -169,6 +173,21 @@ module Record {
     }
 
     #[test]
+    fn test_show_compilation_errors() {
+        let sender = AccountAddress::new([1; 24]);
+        let text = r"
+    use 0x0::Transaction;
+
+    fun main() {
+        let _ = Transaction::sender();
+    }";
+        let errors =
+            compile_and_run((get_script_path(), text.to_string()), &[], sender, None).unwrap_err();
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
+    }
+
+    #[test]
     fn test_execute_custom_script_with_stdlib_module() {
         let sender = AccountAddress::new([1; 24]);
         let text = r"
@@ -180,10 +199,11 @@ module Record {
         let deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
         let vm_res = compile_and_run(
             (existing_file_abspath(), text.to_string()),
-            deps,
+            &deps,
             sender,
             None,
-        );
+        )
+        .unwrap();
         assert!(vm_res.is_ok());
     }
 
@@ -203,10 +223,11 @@ module Record {
 
         let vm_res = compile_and_run(
             (get_script_path(), script_text.to_string()),
-            deps,
+            &deps,
             sender,
             None,
-        );
+        )
+        .unwrap();
         let changes = vm_res.unwrap();
         assert_eq!(changes.len(), 1);
 
@@ -250,10 +271,11 @@ module Record {
         let genesis: Vec<ResourceChange> = serde_json::from_value(genesis).unwrap();
         let vm_res = compile_and_run(
             (get_script_path(), script_text.to_string()),
-            deps,
+            &deps,
             sender,
             Some(genesis),
-        );
+        )
+        .unwrap();
         let changes = vm_res.unwrap();
         assert_eq!(changes.len(), 1);
         assert_eq!(
