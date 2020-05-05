@@ -63,12 +63,15 @@ pub(crate) fn get_resource_structs(
         if struct_handle.is_nominal_resource {
             let module = compiled_script.module_handle_at(struct_handle.module);
             let module_address = compiled_script.address_identifier_at(module.address);
+            let module_name =
+                Identifier::new(compiled_script.identifier_at(module.name).as_str()).unwrap();
+            let struct_name =
+                Identifier::new(compiled_script.identifier_at(struct_handle.name).as_str())
+                    .unwrap();
             let struct_tag = StructTag {
                 address: *module_address,
-                module: Identifier::new(compiled_script.identifier_at(module.name).as_str())
-                    .unwrap(),
-                name: Identifier::new(compiled_script.identifier_at(struct_handle.name).as_str())
-                    .unwrap(),
+                module: module_name,
+                name: struct_name,
                 type_params: vec![],
             };
             resource_structs.insert(struct_tag.hash().to_vec(), struct_tag);

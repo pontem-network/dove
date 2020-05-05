@@ -8,7 +8,6 @@ use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
 use move_vm_types::values::Value;
-
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::gas_schedule::zero_cost_schedule;
@@ -87,8 +86,8 @@ pub(crate) fn execute_script(
         &txn_metadata,
         vec![],
         args,
-    )
-    .map(|_| exec_context.make_write_set().unwrap())
+    )?;
+    exec_context.make_write_set()
 }
 
 pub(crate) fn compile_and_run(
@@ -157,7 +156,7 @@ module Record {
 }
         "
         .to_string();
-        let fpath = leaked_fpath(get_modules_path().join("record.move").to_str().unwrap());
+        let fpath = leaked_fpath(get_modules_path().join("record.move"));
         (fpath, text)
     }
 
@@ -166,7 +165,7 @@ module Record {
     }
 
     fn get_script_path() -> FilePath {
-        leaked_fpath(get_modules_path().join("script.move").to_str().unwrap())
+        leaked_fpath(get_modules_path().join("script.move"))
     }
 
     #[test]
