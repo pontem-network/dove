@@ -10,7 +10,7 @@ pub fn leaked_fpath<P: AsRef<Path>>(path: P) -> FilePath {
     Box::leak(Box::new(s.to_owned()))
 }
 
-fn iterate_directory(path: &Path) -> impl Iterator<Item = PathBuf> {
+fn iterate_directory<P: AsRef<Path>>(path: P) -> impl Iterator<Item = PathBuf> {
     walkdir::WalkDir::new(path)
         .into_iter()
         .map(::std::result::Result::unwrap)
@@ -24,7 +24,7 @@ fn iterate_directory(path: &Path) -> impl Iterator<Item = PathBuf> {
         .map(|entry| entry.path().to_path_buf())
 }
 
-fn get_module_filenames(folder: &Path) -> Vec<String> {
+fn iter_over_move_files<P: AsRef<Path>>(folder: P) -> Vec<String> {
     let dirfiles = iterate_directory(folder);
     dirfiles
         .flat_map(|path| {
@@ -37,9 +37,9 @@ fn get_module_filenames(folder: &Path) -> Vec<String> {
         .collect()
 }
 
-pub fn get_module_files(modules_folder: &Path) -> Vec<(FilePath, String)> {
-    let module_filenames = get_module_filenames(modules_folder)
-        .iter()
+pub fn read_move_files<P: AsRef<Path>>(modules_folder: P) -> Vec<(FilePath, String)> {
+    let module_filenames = iter_over_move_files(modules_folder)
+        .into_iter()
         .map(leaked_fpath)
         .collect::<Vec<_>>();
 
