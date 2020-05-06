@@ -65,7 +65,7 @@ impl Analysis {
     ) -> Result<(), Vec<FileDiagnostic>> {
         let main_file = self.parse(fpath, text).map_err(|d| vec![d])?;
 
-        let mut dependencies = self.parsed_stdlib_files();
+        let mut dependencies = self.parsed_stdlib_files(Some(fpath));
 
         for (existing_mod_fpath, existing_mod_text) in self.db.module_files().into_iter() {
             if existing_mod_fpath != fpath {
@@ -77,7 +77,7 @@ impl Analysis {
                 }
             }
         }
-        let check_res = compiler::translate_parsed_program(
+        let check_res = compiler::check_parsed_program(
             main_file,
             dependencies,
             Some(self.db().sender_address()),
@@ -91,11 +91,14 @@ impl Analysis {
         }
     }
 
-    fn parsed_stdlib_files(&self) -> Vec<FileDefinition> {
+    fn parsed_stdlib_files(&self, skip_fname: Option<FilePath>) -> Vec<FileDefinition> {
         match &self.db.config.stdlib_folder {
             Some(folder) => {
                 let mut parsed_mods = vec![];
                 for (fpath, text) in io::get_module_files(folder.as_path()) {
+                    if skip_fname.is_some() && skip_fname.unwrap() == fpath {
+                        continue;
+                    }
                     let parsed = self.parse(fpath, &text).unwrap();
                     parsed_mods.push(parsed);
                 }

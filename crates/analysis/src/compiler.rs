@@ -12,7 +12,7 @@ pub fn parse_file(fname: FilePath, text: &str) -> Result<FileDefinition, Error> 
     Ok(parsed)
 }
 
-pub fn translate_parsed_program(
+pub fn check_parsed_program(
     main_file: FileDefinition,
     dependencies: Vec<FileDefinition>,
     sender_opt: Option<Address>,

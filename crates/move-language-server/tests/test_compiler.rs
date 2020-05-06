@@ -377,4 +377,27 @@ fun main() {
             "Invalid address directive. Expected \'address\' got \'modules\'"
         );
     }
+
+    #[test]
+    fn test_check_one_of_the_stdlib_modules_no_duplicate_definition() {
+        let source_text = r"
+address 0x0:
+
+module Debug {
+    native public fun print<T>(x: &T);
+
+    native public fun print_stack_trace();
+}
+    ";
+        let config = Config {
+            stdlib_folder: Some(get_stdlib_path()),
+            ..Config::default()
+        };
+        let errors = diagnostics_with_config_and_filename(
+            source_text,
+            config,
+            leaked_fpath(get_stdlib_path().join("debug.move")),
+        );
+        assert_eq!(errors.len(), 0, "{:?}", errors);
+    }
 }
