@@ -6,7 +6,7 @@ use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::{Config, MoveDialect};
 use analysis::db::{FileDiagnostic, FilePath, RootDatabase};
-use analysis::utils::io::{get_module_files, leaked_fpath};
+use analysis::utils::io::{leaked_fpath, read_move_files};
 use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use move_language_server::world::WorldState;
 
@@ -37,7 +37,7 @@ fn diagnostics_with_config_and_filename(
 
     let mut change = AnalysisChange::new();
     for folder in world_state.config.module_folders {
-        for (fpath, text) in get_module_files(&folder) {
+        for (fpath, text) in read_move_files(folder) {
             change.add_file(fpath, text);
         }
     }
@@ -58,15 +58,15 @@ mod tests {
         let source_text = r"fun main() { return; }ффф";
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let error = errors.get(0).unwrap();
-        assert_eq!(error.range, range((0, 22), (0, 22)));
+        assert_eq!(errors[0].range, range((0, 22), (0, 22)));
     }
     //
     #[test]
     fn test_successful_compilation() {
         let source = r"
-        fun main() {}
+script {
+    fun main() {}
+}
     ";
         let errors = diagnostics(source);
         assert!(errors.is_empty());
@@ -78,23 +78,16 @@ mod tests {
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
 
-        let error = errors.get(0).unwrap();
-        assert_eq!(error.message, "Unexpected 'struc'");
-        assert_eq!(error.range, range((0, 11), (0, 16)));
+        assert_eq!(errors[0].message, "Unexpected 'struc'");
+        assert_eq!(errors[0].range, range((0, 11), (0, 16)));
     }
 
     #[test]
     fn test_main_function_parse_error() {
-        let source_text = "main() {}";
+        let source_text = "script { main() {} }";
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let error = errors.get(0).unwrap();
-        assert_eq!(
-            error.message,
-            "Invalid address directive. Expected 'address' got 'main'"
-        );
-        assert_eq!(error.range, range((0, 0), (0, 4)));
+        assert_eq!(errors[0].message, "Unexpected 'main'");
     }
 
     #[test]
@@ -108,14 +101,13 @@ module M {
 ";
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let error = errors.get(0).unwrap();
-        assert_eq!(error.range, range((2, 4), (2, 9)));
+        assert_eq!(errors[0].message, "Unexpected \'struc\'");
     }
 
     #[test]
     fn test_expansion_checks_duplicates() {
-        let source_text = r"module M {
+        let source_text = r"
+module M {
     struct S {
         f: u64,
         f: u64,
@@ -124,68 +116,58 @@ module M {
     ";
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let diagnostic = errors.get(0).unwrap();
         assert_eq!(
-            diagnostic.message,
+            errors[0].message,
             "Duplicate definition for field \'f\' in struct \'S\'"
         );
-        assert_eq!(diagnostic.range, range((3, 8), (3, 9)));
     }
 
     #[test]
     fn test_expansion_checks_public_main_redundancy() {
-        let source_text = r"public fun main() {}";
+        let source_text = r"script { public fun main() {} }";
 
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let diagnostic = errors.get(0).unwrap();
         assert_eq!(
-            diagnostic.message,
-            "Extraneous 'public' modifier. This top-level function is assumed to be public"
+            errors[0].message,
+            "Extraneous 'public' modifier. Script functions are always public"
         );
-        assert_eq!(diagnostic.range, range((0, 0), (0, 6)));
     }
 
     #[test]
     fn test_naming_checks_generics_with_type_parameters() {
-        let source_text = r"module M {
+        let source_text = r"
+module M {
     struct S<T> { f: T<u64> }
 }
     ";
 
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let diagnostic = errors.get(0).unwrap();
         assert_eq!(
-            diagnostic.message,
+            errors[0].message,
             "Generic type parameters cannot take type arguments"
         );
-        assert_eq!(diagnostic.range, range((1, 21), (1, 27)));
     }
 
     #[test]
     fn test_typechecking_invalid_local_borrowing() {
-        let source_text = r"module M {
+        let source_text = r"
+module M {
     fun t0(r: &u64) {
         &r;
     }
 }
     ";
-
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let diagnostic = errors.get(0).unwrap();
-        assert_eq!(diagnostic.message, "Invalid borrow");
-        assert_eq!(diagnostic.range, range((2, 8), (2, 10)));
+        assert_eq!(errors[0].message, "Invalid borrow");
     }
 
     #[test]
     fn test_check_unreachable_code_in_loop() {
-        let source_text = r"module M {
+        let source_text = r"
+module M {
     fun t() {
         let x = 0;
         let t = 1;
@@ -202,17 +184,13 @@ module M {
     }
 }
     ";
-
         let errors = diagnostics(source_text);
         assert_eq!(errors.len(), 1);
-
-        let diagnostic = errors.get(0).unwrap();
         assert_eq!(
-        diagnostic.message,
-        "Unreachable code. This statement (and any following statements) will not be executed. \
-        In some cases, this will result in unused resource values."
-    );
-        assert_eq!(diagnostic.range, range((8, 42), (8, 43)));
+            errors[0].message,
+            "Unreachable code. This statement (and any following statements) will not be executed. \
+            In some cases, this will result in unused resource values."
+        );
     }
 
     #[test]
@@ -238,9 +216,11 @@ module MyModule {
     fn test_compile_check_script_with_additional_dependencies() {
         // hardcoded sender address
         let script_source_text = r"
+script {
 use 0x8572f83cee01047effd6e7d0b5c19743::CovidTracker;
 fun main() {
     CovidTracker::how_many(5);
+}
 }
     ";
         let config = Config {
@@ -300,9 +280,12 @@ module CovidTracker {
         // hardcoded sender address
         let sender_address = "0x11111111111111111111111111111111";
         let script_source_text = r"
-use 0x11111111111111111111111111111111::CovidTracker;
-fun main() {
-    CovidTracker::how_many(5);
+script {
+    use 0x11111111111111111111111111111111::CovidTracker;
+
+    fun main() {
+        CovidTracker::how_many(5);
+    }
 }
     ";
         let config = Config {
@@ -318,11 +301,13 @@ fun main() {
     #[test]
     fn test_compiler_out_of_bounds_multimessage_diagnostic() {
         let source_text = r"
-use 0x0::CovidTracker;
+script {
+    use 0x0::CovidTracker;
 
-fun main() {
-    let how_many: u8;
-    how_many = CovidTracker::how_many(10);
+    fun main() {
+        let how_many: u8;
+        how_many = CovidTracker::how_many(10);
+    }
 }
     ";
         let config = Config {
@@ -333,7 +318,7 @@ fun main() {
         let errors = diagnostics_with_config(source_text, config);
         assert_eq!(errors.len(), 1);
 
-        let error = errors.get(0).unwrap().diagnostic.as_ref().unwrap();
+        let error = errors[0].diagnostic.as_ref().unwrap();
         assert_eq!(error.related_information.as_ref().unwrap().len(), 2);
     }
 
@@ -349,7 +334,7 @@ fun main() {
         let mut files = FilesSourceText::new();
         let dep_module_fpath =
             leaked_fpath(get_modules_path().join("dep_module.move").to_str().unwrap());
-        let dep_module_source_text = "address 0x0: modules T { public fun how_many() {} }";
+        let dep_module_source_text = "address 0x0 { modules T { public fun how_many() {} } }";
         files.insert(dep_module_fpath, dep_module_source_text.to_string());
 
         let main_fpath = leaked_fpath(get_modules_path().join("module.move").to_str().unwrap());
@@ -370,23 +355,22 @@ fun main() {
         let analysis = Analysis::new(db);
         let errors = analysis.check_with_libra_compiler(main_fpath, source_text);
         assert_eq!(errors.len(), 1);
-        let error = errors.get(0).unwrap();
-        assert_eq!(error.fpath, dep_module_fpath);
+        assert_eq!(errors[0].fpath, dep_module_fpath);
         assert_eq!(
-            error.diagnostic.as_ref().unwrap().message,
-            "Invalid address directive. Expected \'address\' got \'modules\'"
+            errors[0].diagnostic.as_ref().unwrap().message,
+            "Unexpected 'modules'"
         );
     }
 
     #[test]
     fn test_check_one_of_the_stdlib_modules_no_duplicate_definition() {
         let source_text = r"
-address 0x0:
+address 0x0 {
+    module Debug {
+        native public fun print<T>(x: &T);
 
-module Debug {
-    native public fun print<T>(x: &T);
-
-    native public fun print_stack_trace();
+        native public fun print_stack_trace();
+    }
 }
     ";
         let config = Config {
@@ -398,6 +382,6 @@ module Debug {
             config,
             leaked_fpath(get_stdlib_path().join("debug.move")),
         );
-        assert_eq!(errors.len(), 0, "{:?}", errors);
+        assert!(errors.is_empty(), "{:?}", errors);
     }
 }

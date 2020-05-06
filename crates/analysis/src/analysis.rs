@@ -1,5 +1,5 @@
 use lsp_types::CompletionItem;
-use move_lang::parser::ast::FileDefinition;
+use move_lang::parser::ast::Definition;
 
 use crate::change::AnalysisChange;
 use crate::db::{FileDiagnostic, FilePath, RootDatabase};
@@ -39,7 +39,7 @@ impl Analysis {
         &self.db
     }
 
-    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<FileDefinition, FileDiagnostic> {
+    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<Vec<Definition>, FileDiagnostic> {
         compiler::parse_file(fpath, text).map_err(|err| self.db.libra_error_into_diagnostic(err))
     }
 
@@ -60,51 +60,39 @@ impl Analysis {
     #[inline]
     fn check_with_libra_compiler_inner(
         &self,
-        fpath: FilePath,
-        text: &str,
+        current_fpath: FilePath,
+        current_text: &str,
     ) -> Result<(), Vec<FileDiagnostic>> {
-        let main_file = self.parse(fpath, text).map_err(|d| vec![d])?;
-
-        let mut dependencies = self.parsed_stdlib_files(Some(fpath));
-
-        for (existing_mod_fpath, existing_mod_text) in self.db.module_files().into_iter() {
-            if existing_mod_fpath != fpath {
-                let parsed = self
-                    .parse(existing_mod_fpath, &existing_mod_text)
-                    .map_err(|d| vec![d])?;
-                if matches!(parsed, FileDefinition::Modules(_)) {
-                    dependencies.push(parsed);
-                }
+        let current_file_defs = self
+            .parse(current_fpath, current_text)
+            .map_err(|d| vec![d])?;
+        let mut deps = vec![];
+        for (fpath, source_text) in self
+            .read_stdlib_files()
+            .into_iter()
+            .chain(self.db.module_files().into_iter())
+        {
+            if fpath != current_fpath {
+                let defs = self.parse(fpath, &source_text).map_err(|d| vec![d])?;
+                deps.extend(defs);
             }
         }
-        let check_res = compiler::check_parsed_program(
-            main_file,
-            dependencies,
-            Some(self.db().sender_address()),
-        );
-        match check_res {
-            Ok(_) => Ok(()),
-            Err(errors) => Err(errors
-                .into_iter()
-                .map(|err| self.db.libra_error_into_diagnostic(err))
-                .collect()),
-        }
+        compiler::check_parsed_program(current_file_defs, deps, self.db().sender_address()).map_err(
+            |errors| {
+                errors
+                    .into_iter()
+                    .map(|err| self.db.libra_error_into_diagnostic(err))
+                    .collect()
+            },
+        )
     }
 
-    fn parsed_stdlib_files(&self, skip_fname: Option<FilePath>) -> Vec<FileDefinition> {
-        match &self.db.config.stdlib_folder {
-            Some(folder) => {
-                let mut parsed_mods = vec![];
-                for (fpath, text) in io::get_module_files(folder.as_path()) {
-                    if skip_fname.is_some() && skip_fname.unwrap() == fpath {
-                        continue;
-                    }
-                    let parsed = self.parse(fpath, &text).unwrap();
-                    parsed_mods.push(parsed);
-                }
-                parsed_mods
-            }
-            None => vec![],
-        }
+    fn read_stdlib_files(&self) -> Vec<(FilePath, String)> {
+        self.db
+            .config
+            .stdlib_folder
+            .as_ref()
+            .map(|folder| io::read_move_files(folder.as_path()))
+            .unwrap_or_else(|| vec![])
     }
 }

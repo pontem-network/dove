@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module LibraVMConfig {
     use 0x0::LibraConfig;
@@ -72,7 +72,7 @@ module LibraVMConfig {
             min_transaction_gas_units: 600,
             large_transaction_cutoff: 600,
             instrinsic_gas_per_byte: 8,
-            maximum_number_of_gas_units: 1000000,
+            maximum_number_of_gas_units: 2000000,
             min_price_per_gas_unit: 0,
             max_price_per_gas_unit: 10000,
             max_transaction_size_in_bytes: 4096,
@@ -93,4 +93,6 @@ module LibraVMConfig {
         current_config.publishing_option = publishing_option;
         LibraConfig::set<Self::T>(Transaction::sender(), current_config )
     }
+}
+
 }

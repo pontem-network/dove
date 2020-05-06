@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module Libra {
     use 0x0::Association;
@@ -93,7 +93,7 @@ module Libra {
         burn_events: Event::EventHandle<BurnEvent>,
         // event stream for preburn requests
         preburn_events: Event::EventHandle<PreburnEvent>,
-        // event stream for cancelled prebunr requests
+        // event stream for canceled prebunr requests
         cancel_burn_events: Event::EventHandle<CancelBurnEvent>,
     }
 
@@ -145,6 +145,11 @@ module Libra {
     public fun grant_burn_capability<CoinType>(): BurnCapability<CoinType> {
         assert_assoc_and_currency<CoinType>();
         BurnCapability<CoinType> { }
+    }
+
+    public fun grant_burn_capability_for_sender<CoinType>() {
+        Transaction::assert(Transaction::sender() == 0xD1E, 0);
+        move_to_sender(grant_burn_capability<CoinType>());
     }
 
     // Return `amount` coins.
@@ -574,4 +579,6 @@ module Libra {
     fun assert_is_coin<CoinType>() {
         Transaction::assert(is_currency<CoinType>(), 1);
     }
+}
+
 }

@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 use analysis::db::FilePath;
-use analysis::utils::io::{get_module_files, leaked_fpath};
+use analysis::utils::io::{leaked_fpath, read_move_files};
 
 pub(crate) fn load_module_files(module_paths: Vec<PathBuf>) -> Result<Vec<(FilePath, String)>> {
     let mut deps = vec![];
@@ -19,7 +19,7 @@ pub(crate) fn load_module_files(module_paths: Vec<PathBuf>) -> Result<Vec<(FileP
             let text = fs::read_to_string(fpath)?;
             deps.push((fpath, text));
         } else {
-            for dep in get_module_files(module_path.as_path()) {
+            for dep in read_move_files(module_path) {
                 deps.push(dep);
             }
         }

@@ -1,7 +1,6 @@
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use move_ir_types::location::Loc;
 use move_lang::errors::{Error, FilesSourceText};
-
 use move_lang::shared::Address;
 
 use crate::change::{AnalysisChange, RootChange};
@@ -104,7 +103,11 @@ impl RootDatabase {
     }
 
     fn loc_to_range(&self, loc: Loc) -> Range {
-        let text = self.tracked_files.get(loc.file()).unwrap().to_owned();
+        let text = self
+            .tracked_files
+            .get(loc.file())
+            .unwrap_or_else(|| panic!("No entry found for key {:?}", loc.file()))
+            .clone();
         let file = File::new(text);
         let start_pos = file.position(loc.span().start().to_usize()).unwrap();
         let end_pos = file.position(loc.span().end().to_usize()).unwrap();

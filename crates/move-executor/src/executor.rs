@@ -35,15 +35,13 @@ pub(crate) fn compile_script(
     deps: &[(FilePath, String)],
     sender: Address,
 ) -> Result<(CompiledScript, Vec<CompiledModule>), Errors> {
-    let parsed_file = compiler::parse_file(fname, text).map_err(|err| vec![err])?;
-
-    let mut parsed_files = vec![parsed_file];
+    let mut parsed_defs = compiler::parse_file(fname, text).map_err(|err| vec![err])?;
     for (fpath, text) in deps {
-        let parsed = parse_file(fpath, &text).map_err(|e| vec![e])?;
-        parsed_files.push(parsed);
+        let defs = parse_file(fpath, &text).map_err(|e| vec![e])?;
+        parsed_defs.extend(defs);
     }
     let program = move_lang::parser::ast::Program {
-        source_definitions: parsed_files,
+        source_definitions: parsed_defs,
         lib_definitions: vec![],
     };
     let mut compiled_modules = vec![];
@@ -133,29 +131,29 @@ mod tests {
 
     fn get_record_module_dep() -> (FilePath, String) {
         let text = r"
-address 0x111111111111111111111111:
+address 0x111111111111111111111111 {
+    module Record {
+        use 0x0::Transaction;
 
-module Record {
-    use 0x0::Transaction;
+        resource struct T {
+            age: u8,
+            doubled_age: u8
+        }
 
-    resource struct T {
-        age: u8,
-        doubled_age: u8
-    }
+        public fun create(age: u8): T {
+            T { age, doubled_age: age * 2 }
+        }
 
-    public fun create(age: u8): T {
-        T { age, doubled_age: age * 2 }
-    }
+        public fun save(record: T) {
+            move_to_sender<T>(record);
+        }
 
-    public fun save(record: T) {
-        move_to_sender<T>(record);
-    }
-
-    public fun with_incremented_age(): T acquires T {
-        let record: T;
-        record = move_from<T>(Transaction::sender());
-        record.age = record.age + 1;
-        record
+        public fun with_incremented_age(): T acquires T {
+            let record: T;
+            record = move_from<T>(Transaction::sender());
+            record.age = record.age + 1;
+            record
+        }
     }
 }
         "
@@ -176,11 +174,13 @@ module Record {
     fn test_show_compilation_errors() {
         let sender = AccountAddress::new([1; 24]);
         let text = r"
+script {
     use 0x0::Transaction;
 
     fun main() {
         let _ = Transaction::sender();
-    }";
+    }
+}";
         let errors =
             compile_and_run((get_script_path(), text.to_string()), &[], sender, None).unwrap_err();
         assert_eq!(errors.len(), 1);
@@ -191,11 +191,13 @@ module Record {
     fn test_execute_custom_script_with_stdlib_module() {
         let sender = AccountAddress::new([1; 24]);
         let text = r"
+script {
     use 0x0::Transaction;
 
     fun main() {
         let _ = Transaction::sender();
-    }";
+    }
+}";
         let deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
         let vm_res = compile_and_run(
             (existing_file_abspath(), text.to_string()),
@@ -214,12 +216,14 @@ module Record {
         deps.push(get_record_module_dep());
 
         let script_text = r"
+script {
     use 0x111111111111111111111111::Record;
 
     fun main() {
         let record = Record::create(10);
         Record::save(record);
-    }";
+    }
+}";
 
         let vm_res = compile_and_run(
             (get_script_path(), script_text.to_string()),
@@ -252,12 +256,14 @@ module Record {
         deps.push(get_record_module_dep());
 
         let script_text = r"
+script {
     use 0x111111111111111111111111::Record;
 
     fun main() {
         let record = Record::with_incremented_age();
         Record::save(record);
-    }";
+    }
+}";
 
         let genesis = serde_json::json!([{
             "struct_tag": {
