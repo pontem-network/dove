@@ -4,7 +4,7 @@ use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::{Config, MoveDialect};
 use analysis::db::FileDiagnostic;
-use analysis::utils::io::{leaked_fpath, read_move_files};
+use analysis::utils::io::read_move_files;
 use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use dialects::FilePath;
 use move_language_server::world::WorldState;
@@ -53,7 +53,8 @@ mod tests {
     use super::*;
     use analysis::db::RootDatabase;
     use dialects::dfinance::types::AccountAddress;
-    use dialects::FilesSourceText;
+    use dialects::{leaked_fpath, FilesSourceText};
+    use std::string::ToString;
 
     #[test]
     fn test_fail_on_non_ascii_character() {

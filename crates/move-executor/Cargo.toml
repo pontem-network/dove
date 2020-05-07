@@ -13,6 +13,6 @@ serde = "1.0.106"
 serde_derive = "1.0.106"
 serde_json = "1.0.52"
 
-genesis = { path = "./genesis" }
-analysis = { path = "../analysis" }
 dialects = { path = "../dialects" }
+analysis = { path = "../analysis" }
+genesis = { path = "./genesis" }

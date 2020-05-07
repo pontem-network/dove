@@ -1,11 +1,7 @@
-use dialects::FilePath;
+use anyhow::Result;
+use dialects::{leaked_fpath, FilePath};
 use std::fs;
 use std::path::{Path, PathBuf};
-
-pub fn leaked_fpath<P: AsRef<Path>>(path: P) -> FilePath {
-    let s = path.as_ref().to_str().unwrap();
-    Box::leak(Box::new(s.to_owned()))
-}
 
 fn iterate_directory<P: AsRef<Path>>(path: P) -> impl Iterator<Item = PathBuf> {
     walkdir::WalkDir::new(path)
@@ -54,6 +50,23 @@ pub fn read_move_files<P: AsRef<Path>>(modules_folder: P) -> Vec<(FilePath, Stri
     lib_files
 }
 
-pub fn get_canonical_fname<P: AsRef<Path>>(path: P) -> &'static str {
-    leaked_fpath(fs::canonicalize(path).unwrap().to_str().unwrap())
+pub fn load_move_module_files(module_paths: Vec<PathBuf>) -> Result<Vec<(FilePath, String)>> {
+    let mut deps = vec![];
+    for module_path in module_paths {
+        anyhow::ensure!(
+            module_path.exists(),
+            "Cannot open {:?}: No such file or directory",
+            module_path
+        );
+        if module_path.is_file() {
+            let fpath = leaked_fpath(module_path);
+            let text = fs::read_to_string(fpath)?;
+            deps.push((fpath, text));
+        } else {
+            for dep in read_move_files(module_path) {
+                deps.push(dep);
+            }
+        }
+    }
+    Ok(deps)
 }

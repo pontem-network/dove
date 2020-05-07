@@ -4,14 +4,12 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use structopt::StructOpt;
 
-use analysis::utils::io::leaked_fpath;
-
+use analysis::utils::io;
 use dialects::dfinance::types::{report_errors, VMStatus};
-use dialects::{FilePath, FilesSourceText};
+use dialects::{leaked_fpath, FilePath, FilesSourceText};
 use genesis::ResourceChange;
 
 mod executor;
-mod io;
 
 #[derive(Debug, serde::Serialize)]
 pub struct ExecStatus {
@@ -72,7 +70,7 @@ fn main() -> Result<()> {
     let options: Options = Options::from_args();
 
     let script_text = fs::read_to_string(&options.script)?;
-    let deps = io::load_module_files(options.modules.unwrap_or_default())?;
+    let deps = io::load_move_module_files(options.modules.unwrap_or_default())?;
 
     let genesis = parse_genesis_json(options.genesis)?;
 

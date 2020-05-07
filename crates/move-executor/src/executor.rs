@@ -32,13 +32,12 @@ pub fn compile_and_run(
 
 #[cfg(test)]
 mod tests {
-    use analysis::utils::io::leaked_fpath;
     use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 
-    use crate::io;
-
     use super::*;
+    use analysis::utils::io;
     use dialects::dfinance::types::AccountAddress;
+    use dialects::leaked_fpath;
 
     fn get_record_module_dep() -> (FilePath, String) {
         let text = r"
@@ -109,7 +108,7 @@ script {
         let _ = Transaction::sender();
     }
 }";
-        let deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
+        let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
         let vm_res = compile_and_run(
             (existing_file_abspath(), text.to_string()),
             &deps,
@@ -123,7 +122,7 @@ script {
     #[test]
     fn test_execute_script_and_record_resource_changes() {
         let sender = get_sender();
-        let mut deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
+        let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
         deps.push(get_record_module_dep());
 
         let script_text = r"
@@ -163,7 +162,7 @@ script {
     #[test]
     fn test_execute_script_with_genesis_state_provided() {
         let sender = get_sender();
-        let mut deps = io::load_module_files(vec![get_stdlib_path()]).unwrap();
+        let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
         deps.push(get_record_module_dep());
 
         let script_text = r"
