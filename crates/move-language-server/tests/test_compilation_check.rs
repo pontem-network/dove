@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((0, 22), (0, 22)));
     }
-    //
+
     #[test]
     fn test_successful_compilation() {
         let source = r"
