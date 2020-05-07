@@ -11,7 +11,7 @@ use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use move_core_types::identifier::Identifier;
 use move_lang::compiled_unit::{verify_units, CompiledUnit};
-use move_lang::errors::Errors;
+use move_lang::errors::{check_errors, Errors};
 use move_lang::parser::ast::Definition;
 use move_lang::parser::syntax;
 use move_lang::shared::Address;
@@ -29,10 +29,6 @@ use vm::CompiledModule;
 
 pub mod types;
 
-pub fn parse_account_address(s: &str) -> Result<AccountAddress> {
-    AccountAddress::from_hex_literal(s)
-}
-
 pub fn parse_file(fname: FilePath, text: &str) -> Result<Vec<Definition>, Errors> {
     let (no_comments_source, comment_map) = strip_comments_and_verify(fname, text)?;
     let res = syntax::parse_file_string(fname, &no_comments_source, comment_map)?;
@@ -42,14 +38,14 @@ pub fn parse_file(fname: FilePath, text: &str) -> Result<Vec<Definition>, Errors
 pub fn check_parsed_program(
     current_file_defs: Vec<Definition>,
     dependencies: Vec<Definition>,
-    sender_opt: [u8; AccountAddress::LENGTH],
+    sender: [u8; AccountAddress::LENGTH],
 ) -> Result<(), Errors> {
     let ast_program = parser::ast::Program {
         source_definitions: current_file_defs,
         lib_definitions: dependencies,
     };
-    move_lang::check_program(Ok(ast_program), Some(Address::new(sender_opt)))?;
-    Ok(())
+    let sender_address = Address::new(sender);
+    move_lang::check_program(Ok(ast_program), Some(sender_address)).map(|_| ())
 }
 
 pub fn compile_script(
@@ -67,21 +63,24 @@ pub fn compile_script(
         source_definitions: parsed_defs,
         lib_definitions: vec![],
     };
-    let mut compiled_modules = vec![];
-    let mut compiled_script = None;
-    let compiled_units = move_lang::compile_program(Ok(program), Some(Address::new(sender)))?;
-    let (compiled_units, errors) = verify_units(compiled_units);
-    if !errors.is_empty() {
-        return Err(errors);
-    }
 
-    for unit in compiled_units {
-        match unit {
-            CompiledUnit::Module { module, .. } => compiled_modules.push(module),
-            CompiledUnit::Script { script, .. } => compiled_script = Some(script),
-        }
-    }
-    Ok((compiled_script.unwrap(), compiled_modules))
+    let sender_address = Address::new(sender);
+    let compiled_units = move_lang::compile_program(Ok(program), Some(sender_address))?;
+    let (mut units, errors) = verify_units(compiled_units);
+    check_errors(errors)?;
+
+    let script = match units.remove(units.len() - 1) {
+        CompiledUnit::Script { script, .. } => script,
+        CompiledUnit::Module { .. } => unreachable!(),
+    };
+    let modules = units
+        .into_iter()
+        .map(|unit| match unit {
+            CompiledUnit::Module { module, .. } => module,
+            CompiledUnit::Script { .. } => unreachable!(),
+        })
+        .collect();
+    Ok((script, modules))
 }
 
 pub fn serialize_script(script: CompiledScript) -> Vec<u8> {
