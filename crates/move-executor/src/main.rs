@@ -2,7 +2,6 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use libra_types::account_address::AccountAddress;
 use move_lang::errors::{report_errors, FilesSourceText};
 use structopt::StructOpt;
 
@@ -15,18 +14,14 @@ mod executor;
 mod io;
 mod serialization;
 
-fn parse_address(s: &str) -> AccountAddress {
-    AccountAddress::from_hex_literal(s).unwrap()
-}
-
 #[derive(StructOpt)]
 struct Options {
     // required positional
     #[structopt()]
     script: PathBuf,
 
-    #[structopt(short, long, parse(from_str = parse_address))]
-    sender: AccountAddress,
+    #[structopt(short, long)]
+    sender: String,
 
     #[structopt(long)]
     modules: Option<Vec<PathBuf>>,
@@ -68,13 +63,10 @@ fn main() -> Result<()> {
 
     let genesis = parse_genesis_json(options.genesis)?;
 
+    let sender = dfinance_dialect::parse_account_address(&options.sender)?;
     let script_fpath = leaked_fpath(options.script);
-    let exec_res = executor::compile_and_run(
-        (script_fpath, script_text.clone()),
-        &deps,
-        options.sender,
-        genesis,
-    );
+    let exec_res =
+        executor::compile_and_run((script_fpath, script_text.clone()), &deps, sender, genesis);
     let vm_result = match exec_res {
         Ok(vm_res) => vm_res,
         Err(errors) => {

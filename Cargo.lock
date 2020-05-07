@@ -540,6 +540,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "dialects"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "language-e2e-tests",
+ "libra-canonical-serialization",
+ "libra-crypto",
+ "libra-state-view",
+ "libra-types",
+ "move-core-types",
+ "move-lang",
+ "move-vm-runtime",
+ "move-vm-state",
+ "move-vm-types",
+ "vm",
+]
+
+[[package]]
 name = "difference"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1557,6 +1575,7 @@ version = "0.1.0"
 dependencies = [
  "analysis",
  "anyhow",
+ "dialects",
  "language-e2e-tests",
  "libra-canonical-serialization",
  "libra-crypto",
