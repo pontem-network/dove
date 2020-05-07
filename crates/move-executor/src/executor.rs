@@ -1,5 +1,5 @@
 use dialects::dfinance::get_resource_structs;
-use dialects::dfinance::types::{AccountAddress, Errors, VMResult};
+use dialects::dfinance::types::{AccountAddress, Error, VMResult};
 use dialects::{dfinance, FilePath};
 use genesis::serialize::serialize_write_set;
 use genesis::{changes_into_writeset, ResourceChange};
@@ -9,7 +9,7 @@ pub fn compile_and_run(
     deps: &[(FilePath, String)],
     sender: AccountAddress,
     genesis: Vec<ResourceChange>,
-) -> Result<VMResult<Vec<ResourceChange>>, Errors> {
+) -> Result<VMResult<Vec<ResourceChange>>, Vec<Error>> {
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
