@@ -1,36 +1,33 @@
-use anyhow::Result;
-
-use crate::resources::ResourceChange;
 use crate::FilePath;
-pub use language_e2e_tests::data_store::FakeDataStore;
-pub use libra_crypto::hash::CryptoHash;
-pub use libra_types::access_path::AccessPath;
-pub use libra_types::account_address::AccountAddress;
-pub use libra_types::language_storage::StructTag;
-pub use libra_types::vm_error::{StatusCode, VMStatus};
-use libra_types::write_set::WriteSetMut;
-pub use libra_types::write_set::{WriteOp, WriteSet};
+
+use anyhow::Result;
+use language_e2e_tests::data_store::FakeDataStore;
+
+use libra_crypto::hash::CryptoHash;
+use libra_types::access_path::AccessPath;
+use libra_types::account_address::AccountAddress;
+use libra_types::language_storage::{ResourceKey, StructTag};
+use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use move_core_types::identifier::Identifier;
-pub use move_ir_types::location::Loc;
-pub use move_lang::compiled_unit::{verify_units, CompiledUnit};
-pub use move_lang::errors::{report_errors, FilesSourceText};
-pub use move_lang::errors::{Error, Errors};
-use move_lang::parser;
-pub use move_lang::parser::ast::Definition;
-pub use move_lang::parser::syntax;
-pub use move_lang::shared::Address;
-pub use move_lang::strip_comments_and_verify;
+use move_lang::compiled_unit::{verify_units, CompiledUnit};
+use move_lang::errors::Errors;
+use move_lang::parser::ast::Definition;
+use move_lang::parser::syntax;
+use move_lang::shared::Address;
+use move_lang::{parser, strip_comments_and_verify};
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
-pub use move_vm_types::gas_schedule::zero_cost_schedule;
-pub use move_vm_types::values::Value;
+use move_vm_types::gas_schedule::zero_cost_schedule;
+use move_vm_types::values::Value;
 use std::collections::HashMap;
-pub use vm::access::ScriptAccess;
-pub use vm::errors::VMResult;
-pub use vm::file_format::CompiledScript;
-pub use vm::transaction_metadata::TransactionMetadata;
-pub use vm::CompiledModule;
+use vm::access::ScriptAccess;
+use vm::errors::VMResult;
+use vm::file_format::CompiledScript;
+use vm::transaction_metadata::TransactionMetadata;
+use vm::CompiledModule;
+
+pub mod types;
 
 pub fn parse_account_address(s: &str) -> Result<AccountAddress> {
     AccountAddress::from_hex_literal(s)
@@ -45,13 +42,13 @@ pub fn parse_file(fname: FilePath, text: &str) -> Result<Vec<Definition>, Errors
 pub fn check_parsed_program(
     current_file_defs: Vec<Definition>,
     dependencies: Vec<Definition>,
-    sender_opt: Address,
+    sender_opt: [u8; AccountAddress::LENGTH],
 ) -> Result<(), Errors> {
     let ast_program = parser::ast::Program {
         source_definitions: current_file_defs,
         lib_definitions: dependencies,
     };
-    move_lang::check_program(Ok(ast_program), Some(sender_opt))?;
+    move_lang::check_program(Ok(ast_program), Some(Address::new(sender_opt)))?;
     Ok(())
 }
 
@@ -59,7 +56,7 @@ pub fn compile_script(
     fname: FilePath,
     text: &str,
     deps: &[(FilePath, String)],
-    sender: Address,
+    sender: [u8; AccountAddress::LENGTH],
 ) -> Result<(CompiledScript, Vec<CompiledModule>), Errors> {
     let mut parsed_defs = parse_file(fname, text)?;
     for (fpath, text) in deps {
@@ -72,7 +69,7 @@ pub fn compile_script(
     };
     let mut compiled_modules = vec![];
     let mut compiled_script = None;
-    let compiled_units = move_lang::compile_program(Ok(program), Some(sender))?;
+    let compiled_units = move_lang::compile_program(Ok(program), Some(Address::new(sender)))?;
     let (compiled_units, errors) = verify_units(compiled_units);
     if !errors.is_empty() {
         return Err(errors);
@@ -93,24 +90,15 @@ pub fn serialize_script(script: CompiledScript) -> Vec<u8> {
     serialized
 }
 
-fn changes_into_writeset(changes: Vec<ResourceChange>) -> WriteSet {
-    let mut write_set = WriteSetMut::default();
-    for change in changes {
-        write_set.push(change.into_write_op());
-    }
-    write_set.freeze().unwrap()
-}
-
 pub fn prepare_fake_network_state(
     modules: Vec<CompiledModule>,
-    genesis_changes: Vec<ResourceChange>,
+    genesis_changes_writeset: WriteSet,
 ) -> FakeDataStore {
     let mut network_state = FakeDataStore::default();
     for module in modules {
         network_state.add_module(&module.self_id(), &module);
     }
-    let write_set = changes_into_writeset(genesis_changes);
-    network_state.add_write_set(&write_set);
+    network_state.add_write_set(&genesis_changes_writeset);
     network_state
 }
 
@@ -137,35 +125,9 @@ pub fn get_resource_structs(compiled_script: &CompiledScript) -> HashMap<Vec<u8>
     resource_structs
 }
 
-fn get_struct_tag_at(
-    access_path: AccessPath,
-    resource_structs: &HashMap<Vec<u8>, StructTag>,
-) -> Option<StructTag> {
-    // resource tag
-    let path = access_path.path;
-    let struct_sha3 = &path[1..];
-    if path[0] == 1 {
-        if let Some(struct_tag) = resource_structs.get(struct_sha3) {
-            return Some(struct_tag.clone());
-        }
-    }
-    None
-}
-
-#[allow(clippy::implicit_hasher)]
-pub fn serialize_write_set(
-    write_set: WriteSet,
-    resource_structs: &HashMap<Vec<u8>, StructTag>,
-) -> Vec<ResourceChange> {
-    let mut changed = vec![];
-    for (access_path, write_op) in write_set {
-        let struct_tag = get_struct_tag_at(access_path, resource_structs);
-        if let Some(struct_tag) = struct_tag {
-            let change = ResourceChange::new(struct_tag, write_op);
-            changed.push(change);
-        }
-    }
-    changed
+pub fn struct_tag_into_access_path(struct_tag: StructTag) -> AccessPath {
+    let resource_key = ResourceKey::new(struct_tag.address, struct_tag);
+    AccessPath::resource_access_path(&resource_key)
 }
 
 fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetadata {

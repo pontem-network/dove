@@ -1,9 +1,8 @@
-use dialects::dfinance::{
-    execute_script, get_resource_structs, prepare_fake_network_state, serialize_write_set,
-    AccountAddress, Address, Errors, VMResult,
-};
-use dialects::resources::ResourceChange;
+use dialects::dfinance::get_resource_structs;
+use dialects::dfinance::types::{AccountAddress, Errors, VMResult};
 use dialects::{dfinance, FilePath};
+use genesis::serialize::serialize_write_set;
+use genesis::{changes_into_writeset, ResourceChange};
 
 pub fn compile_and_run(
     script: (FilePath, String),
@@ -13,21 +12,19 @@ pub fn compile_and_run(
 ) -> Result<VMResult<Vec<ResourceChange>>, Errors> {
     let (fname, script_text) = script;
 
-    let (compiled_script, compiled_modules) = dialects::dfinance::compile_script(
-        fname,
-        &script_text,
-        deps,
-        Address::new(sender.into()),
-    )?;
+    let (compiled_script, compiled_modules) =
+        dialects::dfinance::compile_script(fname, &script_text, deps, sender.into())?;
     let available_resource_structs = get_resource_structs(&compiled_script);
 
-    let network_state = prepare_fake_network_state(compiled_modules, genesis);
+    let write_set = changes_into_writeset(genesis);
+    let network_state = dfinance::prepare_fake_network_state(compiled_modules, write_set);
 
     let serialized_script = dfinance::serialize_script(compiled_script);
-    let write_set = match execute_script(sender, &network_state, serialized_script, vec![]) {
-        Ok(ws) => ws,
-        Err(vm_status) => return Ok(Err(vm_status)),
-    };
+    let write_set =
+        match dfinance::execute_script(sender, &network_state, serialized_script, vec![]) {
+            Ok(ws) => ws,
+            Err(vm_status) => return Ok(Err(vm_status)),
+        };
 
     let changes = serialize_write_set(write_set, &available_resource_structs);
     Ok(Ok(changes))
@@ -41,7 +38,7 @@ mod tests {
     use crate::io;
 
     use super::*;
-    use dialects::dfinance::AccountAddress;
+    use dialects::dfinance::types::AccountAddress;
 
     fn get_record_module_dep() -> (FilePath, String) {
         let text = r"

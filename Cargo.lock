@@ -795,6 +795,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "genesis"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dialects",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "get_if_addrs"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1578,6 +1589,7 @@ dependencies = [
  "analysis",
  "anyhow",
  "dialects",
+ "genesis",
  "serde",
  "serde_derive",
  "serde_json",

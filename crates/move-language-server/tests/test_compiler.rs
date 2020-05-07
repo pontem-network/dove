@@ -52,7 +52,8 @@ fn diagnostics_with_config_and_filename(
 mod tests {
     use super::*;
     use analysis::db::RootDatabase;
-    use dialects::dfinance::{Address, FilesSourceText};
+    use dialects::dfinance::types::AccountAddress;
+    use dialects::FilesSourceText;
 
     #[test]
     fn test_fail_on_non_ascii_character() {
@@ -225,7 +226,11 @@ fun main() {
 }
     ";
         let config = Config {
-            sender_address: Address::parse_str("0x8572f83cee01047effd6e7d0b5c19743").unwrap(),
+            sender_address: AccountAddress::from_hex_literal(
+                "0x8572f83cee01047effd6e7d0b5c19743",
+            )
+            .unwrap()
+            .into(),
             stdlib_folder: Some(get_stdlib_path()),
             module_folders: vec![get_modules_path()],
             ..Config::default()
@@ -295,7 +300,9 @@ script {
         let config = Config {
             stdlib_folder: Some(get_stdlib_path()),
             module_folders: vec![get_modules_path()],
-            sender_address: Address::parse_str(sender_address).unwrap(),
+            sender_address: AccountAddress::from_hex_literal(sender_address)
+                .unwrap()
+                .into(),
             ..Config::default()
         };
         let errors = diagnostics_with_config(script_source_text, config);
@@ -330,7 +337,7 @@ script {
     fn test_syntax_error_in_dependency() {
         let config = Config {
             dialect: MoveDialect::Libra,
-            sender_address: Address::default(),
+            sender_address: [0; AccountAddress::LENGTH],
             module_folders: vec![get_modules_path()],
             stdlib_folder: None,
         };

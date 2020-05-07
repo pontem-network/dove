@@ -3,5 +3,6 @@ members = [
     "crates/move-language-server",
     "crates/analysis",
     "crates/move-executor",
+    "crates/move-executor/genesis",
     "crates/dialects",
 ]

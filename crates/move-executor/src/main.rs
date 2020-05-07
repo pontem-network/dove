@@ -6,10 +6,27 @@ use structopt::StructOpt;
 
 use analysis::utils::io::leaked_fpath;
 
-use dialects::dfinance::{report_errors, FilesSourceText};
-use dialects::resources::{ResourceChange, VMStatusVerbose};
-use dialects::FilePath;
-use move_executor::{executor, io};
+use dialects::dfinance::types::{report_errors, VMStatus};
+use dialects::{FilePath, FilesSourceText};
+use genesis::ResourceChange;
+
+mod executor;
+mod io;
+
+#[derive(Debug, serde::Serialize)]
+pub struct ExecStatus {
+    pub vm_status: VMStatus,
+    pub vm_status_description: String,
+}
+
+impl From<VMStatus> for ExecStatus {
+    fn from(vm_status: VMStatus) -> Self {
+        ExecStatus {
+            vm_status_description: format!("{:?}", vm_status.major_status),
+            vm_status,
+        }
+    }
+}
 
 #[derive(StructOpt)]
 struct Options {
@@ -73,8 +90,8 @@ fn main() -> Result<()> {
     let out = match vm_result {
         Ok(changes) => serde_json::to_string_pretty(&changes).unwrap(),
         Err(vm_status) => {
-            let vm_status = VMStatusVerbose::from(vm_status);
-            serde_json::to_string_pretty(&vm_status).unwrap()
+            let exec_status = ExecStatus::from(vm_status);
+            serde_json::to_string_pretty(&exec_status).unwrap()
         }
     };
     println!("{}", out);

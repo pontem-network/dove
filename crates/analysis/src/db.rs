@@ -3,8 +3,7 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
-use dialects::dfinance::{Address, Error, FilesSourceText, Loc};
-use dialects::FilePath;
+use dialects::{dfinance, FilePath, FilesSourceText};
 
 #[derive(Debug)]
 pub struct FileDiagnostic {
@@ -43,7 +42,7 @@ impl RootDatabase {
             .collect()
     }
 
-    pub fn sender_address(&self) -> Address {
+    pub fn sender_address(&self) -> [u8; dfinance::types::AccountAddress::LENGTH] {
         self.config.sender_address
     }
 
@@ -72,7 +71,7 @@ impl RootDatabase {
         }
     }
 
-    pub fn libra_error_into_diagnostic(&self, error: Error) -> FileDiagnostic {
+    pub fn libra_error_into_diagnostic(&self, error: dfinance::types::Error) -> FileDiagnostic {
         assert!(!error.is_empty(), "Libra's Error is an empty Vec");
         let (primary_loc, primary_message) = error.get(0).unwrap().to_owned();
         let mut diagnostic = {
@@ -99,7 +98,7 @@ impl RootDatabase {
         FileDiagnostic::new(primary_loc.file(), diagnostic)
     }
 
-    fn loc_to_range(&self, loc: Loc) -> Range {
+    fn loc_to_range(&self, loc: dfinance::types::Loc) -> Range {
         let text = self
             .tracked_files
             .get(loc.file())

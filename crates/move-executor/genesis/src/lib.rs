@@ -1,5 +1,7 @@
-use crate::dfinance::{AccessPath, StatusCode, StructTag, VMStatus, WriteOp};
-use libra_types::language_storage::ResourceKey;
+use dialects::dfinance;
+use dialects::dfinance::types::{AccessPath, StructTag, WriteOp, WriteSet, WriteSetMut};
+
+pub mod serialize;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
@@ -29,8 +31,7 @@ impl ResourceChange {
     }
 
     pub fn into_write_op(self) -> (AccessPath, WriteOp) {
-        let resource_key = ResourceKey::new(self.struct_tag.address, self.struct_tag);
-        let access_path = AccessPath::resource_access_path(&resource_key);
+        let access_path = dfinance::struct_tag_into_access_path(self.struct_tag);
         let write_op = match self.op {
             ResourceChangeOp::Delete => WriteOp::Deletion,
             ResourceChangeOp::SetValue { values } => WriteOp::Value(values),
@@ -39,22 +40,10 @@ impl ResourceChange {
     }
 }
 
-#[derive(Debug, serde::Serialize)]
-pub struct VMStatusVerbose {
-    pub major_status: StatusCode,
-    pub major_status_description: String,
-    pub sub_status: Option<u64>,
-    pub message: Option<String>,
-}
-
-impl From<VMStatus> for VMStatusVerbose {
-    fn from(vm_status: VMStatus) -> Self {
-        let status_desc = format!("{:?}", vm_status.major_status);
-        VMStatusVerbose {
-            major_status: vm_status.major_status,
-            major_status_description: status_desc,
-            sub_status: vm_status.sub_status,
-            message: vm_status.message,
-        }
+pub fn changes_into_writeset(changes: Vec<ResourceChange>) -> WriteSet {
+    let mut write_set = WriteSetMut::default();
+    for change in changes {
+        write_set.push(change.into_write_op());
     }
+    write_set.freeze().unwrap()
 }

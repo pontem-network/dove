@@ -4,7 +4,6 @@ use crate::change::AnalysisChange;
 use crate::completion;
 use crate::db::{FileDiagnostic, RootDatabase};
 use crate::utils::io;
-use dialects::dfinance::Definition;
 use dialects::{dfinance, FilePath};
 
 #[derive(Debug, Default)]
@@ -44,7 +43,7 @@ impl Analysis {
         &self,
         fpath: FilePath,
         text: &str,
-    ) -> Result<Vec<Definition>, Vec<FileDiagnostic>> {
+    ) -> Result<Vec<dfinance::types::Definition>, Vec<FileDiagnostic>> {
         dialects::dfinance::parse_file(fpath, text).map_err(|err| {
             err.into_iter()
                 .map(|err| self.db.libra_error_into_diagnostic(err))
