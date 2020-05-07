@@ -270,8 +270,11 @@ module CovidTracker {
                 .to_str()
                 .unwrap(),
         );
-        let errors =
-            diagnostics_with_config_and_filename(module_source_text, config, covid_tracker_module);
+        let errors = diagnostics_with_config_and_filename(
+            module_source_text,
+            config,
+            covid_tracker_module,
+        );
         assert!(errors.is_empty());
     }
 

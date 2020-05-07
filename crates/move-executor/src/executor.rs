@@ -1,6 +1,5 @@
 use language_e2e_tests::data_store::FakeDataStore;
 use libra_types::account_address::AccountAddress;
-
 use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use move_lang::compiled_unit::{verify_units, CompiledUnit};
@@ -8,15 +7,14 @@ use move_lang::errors::Errors;
 use move_lang::shared::Address;
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
+use move_vm_types::gas_schedule::zero_cost_schedule;
 use move_vm_types::values::Value;
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
-use vm::gas_schedule::zero_cost_schedule;
 use vm::transaction_metadata::TransactionMetadata;
 use vm::CompiledModule;
 
 use analysis::compiler;
-use analysis::compiler::parse_file;
 use analysis::db::FilePath;
 
 use crate::serialization::{
@@ -35,9 +33,9 @@ pub(crate) fn compile_script(
     deps: &[(FilePath, String)],
     sender: Address,
 ) -> Result<(CompiledScript, Vec<CompiledModule>), Errors> {
-    let mut parsed_defs = compiler::parse_file(fname, text).map_err(|err| vec![err])?;
+    let mut parsed_defs = compiler::parse_file(fname, text)?;
     for (fpath, text) in deps {
-        let defs = parse_file(fpath, &text).map_err(|e| vec![e])?;
+        let defs = compiler::parse_file(fpath, &text)?;
         parsed_defs.extend(defs);
     }
     let program = move_lang::parser::ast::Program {
@@ -172,7 +170,7 @@ address 0x111111111111111111111111 {
 
     #[test]
     fn test_show_compilation_errors() {
-        let sender = AccountAddress::new([1; 24]);
+        let sender = AccountAddress::new([1; AccountAddress::LENGTH]);
         let text = r"
 script {
     use 0x0::Transaction;
@@ -181,15 +179,15 @@ script {
         let _ = Transaction::sender();
     }
 }";
-        let errors =
-            compile_and_run((get_script_path(), text.to_string()), &[], sender, None).unwrap_err();
+        let errors = compile_and_run((get_script_path(), text.to_string()), &[], sender, None)
+            .unwrap_err();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
     }
 
     #[test]
     fn test_execute_custom_script_with_stdlib_module() {
-        let sender = AccountAddress::new([1; 24]);
+        let sender = AccountAddress::new([1; AccountAddress::LENGTH]);
         let text = r"
 script {
     use 0x0::Transaction;

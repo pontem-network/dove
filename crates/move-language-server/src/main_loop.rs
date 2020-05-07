@@ -186,7 +186,8 @@ pub fn loop_turn(
                             if let Some(new_config) = configs.get(0) {
                                 let mut config = Config::default();
                                 config.update(new_config);
-                                *world_state = WorldState::new(world_state.ws_root.clone(), config);
+                                *world_state =
+                                    WorldState::new(world_state.ws_root.clone(), config);
                             }
                         }
                         (None, None) => {
@@ -217,7 +218,8 @@ fn on_request(
     msg_sender: &Sender<Message>,
     req: Request,
 ) -> Result<()> {
-    let mut pool_dispatcher = PoolDispatcher::new(req, pool, world_state, msg_sender, task_sender);
+    let mut pool_dispatcher =
+        PoolDispatcher::new(req, pool, world_state, msg_sender, task_sender);
     pool_dispatcher
         .on::<req::Completion>(handlers::handle_completion)?
         .finish();
@@ -370,7 +372,9 @@ where
     Notification::new(N::METHOD.to_string(), params)
 }
 
-fn notification_is<N: lsp_types::notification::Notification>(notification: &Notification) -> bool {
+fn notification_is<N: lsp_types::notification::Notification>(
+    notification: &Notification,
+) -> bool {
     notification.method == N::METHOD
 }
 

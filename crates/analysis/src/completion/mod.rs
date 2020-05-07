@@ -2,8 +2,8 @@ use lsp_types::CompletionItem;
 
 pub fn get_keywords() -> Vec<CompletionItem> {
     vec![
-        "struct", "resource", "module", "fun", "return", "public", "native", "mut", "let", "move",
-        "copy",
+        "struct", "resource", "module", "fun", "return", "public", "native", "mut", "let",
+        "move", "copy",
     ]
     .into_iter()
     .map(|kw| format!("{} ", kw))

@@ -39,8 +39,16 @@ impl Analysis {
         &self.db
     }
 
-    pub fn parse(&self, fpath: FilePath, text: &str) -> Result<Vec<Definition>, FileDiagnostic> {
-        compiler::parse_file(fpath, text).map_err(|err| self.db.libra_error_into_diagnostic(err))
+    pub fn parse(
+        &self,
+        fpath: FilePath,
+        text: &str,
+    ) -> Result<Vec<Definition>, Vec<FileDiagnostic>> {
+        compiler::parse_file(fpath, text).map_err(|err| {
+            err.into_iter()
+                .map(|err| self.db.libra_error_into_diagnostic(err))
+                .collect()
+        })
     }
 
     pub fn completions(&self) -> Vec<CompletionItem> {
@@ -63,9 +71,7 @@ impl Analysis {
         current_fpath: FilePath,
         current_text: &str,
     ) -> Result<(), Vec<FileDiagnostic>> {
-        let current_file_defs = self
-            .parse(current_fpath, current_text)
-            .map_err(|d| vec![d])?;
+        let current_file_defs = self.parse(current_fpath, current_text)?;
         let mut deps = vec![];
         for (fpath, source_text) in self
             .read_stdlib_files()
@@ -73,18 +79,17 @@ impl Analysis {
             .chain(self.db.module_files().into_iter())
         {
             if fpath != current_fpath {
-                let defs = self.parse(fpath, &source_text).map_err(|d| vec![d])?;
+                let defs = self.parse(fpath, &source_text)?;
                 deps.extend(defs);
             }
         }
-        compiler::check_parsed_program(current_file_defs, deps, self.db().sender_address()).map_err(
-            |errors| {
+        compiler::check_parsed_program(current_file_defs, deps, self.db().sender_address())
+            .map_err(|errors| {
                 errors
                     .into_iter()
                     .map(|err| self.db.libra_error_into_diagnostic(err))
                     .collect()
-            },
-        )
+            })
     }
 
     fn read_stdlib_files(&self) -> Vec<(FilePath, String)> {

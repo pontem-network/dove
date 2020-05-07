@@ -59,7 +59,11 @@ impl Config {
                 .and_then(|it| T::deserialize(it).ok())
         }
 
-        fn set<'a, T: Deserialize<'a>>(value: &'a serde_json::Value, pointer: &str, slot: &mut T) {
+        fn set<'a, T: Deserialize<'a>>(
+            value: &'a serde_json::Value,
+            pointer: &str,
+            slot: &mut T,
+        ) {
             if let Some(new_value) = get(value, pointer) {
                 *slot = new_value
             }

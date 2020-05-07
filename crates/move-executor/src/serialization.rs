@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use libra_crypto::hash::CryptoHash;
-use libra_types::access_path::{AccessPath, Accesses};
+use libra_types::access_path::AccessPath;
 use libra_types::language_storage::{ResourceKey, StructTag};
 use libra_types::vm_error::{StatusCode, VMStatus};
 use libra_types::write_set::{WriteOp, WriteSet, WriteSetMut};
@@ -38,7 +38,7 @@ impl ResourceChange {
 
     pub fn into_write_op(self) -> (AccessPath, WriteOp) {
         let resource_key = ResourceKey::new(self.struct_tag.address, self.struct_tag);
-        let access_path = AccessPath::resource_access_path(&resource_key, &Accesses::empty());
+        let access_path = AccessPath::resource_access_path(&resource_key);
         let write_op = match self.op {
             ResourceChangeOp::Delete => WriteOp::Deletion,
             ResourceChangeOp::SetValue { values } => WriteOp::Value(values),
@@ -86,7 +86,7 @@ fn get_struct_tag_at(
 ) -> Option<StructTag> {
     // resource tag
     let path = access_path.path;
-    let struct_sha3 = &path[1..33];
+    let struct_sha3 = &path[1..];
     if path[0] == 1 {
         if let Some(struct_tag) = resource_structs.get(struct_sha3) {
             return Some(struct_tag.clone());

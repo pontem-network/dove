@@ -1,4 +1,4 @@
-use move_lang::errors::{Error, Errors};
+use move_lang::errors::Errors;
 use move_lang::parser as libra_parser;
 use move_lang::parser::ast::Definition;
 use move_lang::shared::Address;
@@ -6,9 +6,10 @@ use move_lang::strip_comments_and_verify;
 
 use crate::db::FilePath;
 
-pub fn parse_file(fname: FilePath, text: &str) -> Result<Vec<Definition>, Error> {
-    let no_comments_source = strip_comments_and_verify(fname, text)?;
-    libra_parser::syntax::parse_file_string(fname, &no_comments_source)
+pub fn parse_file(fname: FilePath, text: &str) -> Result<Vec<Definition>, Errors> {
+    let (no_comments_source, comment_map) = strip_comments_and_verify(fname, text)?;
+    let res = libra_parser::syntax::parse_file_string(fname, &no_comments_source, comment_map)?;
+    Ok(res.0)
 }
 
 pub fn check_parsed_program(
