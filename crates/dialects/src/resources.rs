@@ -1,6 +1,5 @@
-use crate::dfinance::{AccessPath, StatusCode, StructTag, VMStatus, WriteOp, WriteSet};
+use crate::dfinance::{AccessPath, StatusCode, StructTag, VMStatus, WriteOp};
 use libra_types::language_storage::ResourceKey;
-use libra_types::write_set::WriteSetMut;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
@@ -38,14 +37,6 @@ impl ResourceChange {
         };
         (access_path, write_op)
     }
-}
-
-pub fn changes_into_writeset(changes: Vec<ResourceChange>) -> WriteSet {
-    let mut write_set = WriteSetMut::default();
-    for change in changes {
-        write_set.push(change.into_write_op());
-    }
-    write_set.freeze().unwrap()
 }
 
 #[derive(Debug, serde::Serialize)]

@@ -27,15 +27,14 @@ struct Options {
     genesis: Option<PathBuf>,
 }
 
-fn parse_genesis_json(fpath: Option<PathBuf>) -> Result<Option<Vec<ResourceChange>>> {
+fn parse_genesis_json(fpath: Option<PathBuf>) -> Result<Vec<ResourceChange>> {
     let genesis = match fpath {
-        None => None,
+        None => vec![],
         Some(fpath) => {
             let text = fs::read_to_string(fpath.clone())?;
             let val = serde_json::from_str(&text)?;
-            let changes = serde_json::from_value::<Vec<ResourceChange>>(val)
-                .with_context(|| format!("{:?} contains invalid genesis data", fpath))?;
-            Some(changes)
+            serde_json::from_value::<Vec<ResourceChange>>(val)
+                .with_context(|| format!("{:?} contains invalid genesis data", fpath))?
         }
     };
     Ok(genesis)

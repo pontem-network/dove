@@ -8,6 +8,7 @@ pub use libra_types::access_path::AccessPath;
 pub use libra_types::account_address::AccountAddress;
 pub use libra_types::language_storage::StructTag;
 pub use libra_types::vm_error::{StatusCode, VMStatus};
+use libra_types::write_set::WriteSetMut;
 pub use libra_types::write_set::{WriteOp, WriteSet};
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use move_core_types::identifier::Identifier;
@@ -90,6 +91,27 @@ pub fn serialize_script(script: CompiledScript) -> Vec<u8> {
     let mut serialized = vec![];
     script.serialize(&mut serialized).unwrap();
     serialized
+}
+
+fn changes_into_writeset(changes: Vec<ResourceChange>) -> WriteSet {
+    let mut write_set = WriteSetMut::default();
+    for change in changes {
+        write_set.push(change.into_write_op());
+    }
+    write_set.freeze().unwrap()
+}
+
+pub fn prepare_fake_network_state(
+    modules: Vec<CompiledModule>,
+    genesis_changes: Vec<ResourceChange>,
+) -> FakeDataStore {
+    let mut network_state = FakeDataStore::default();
+    for module in modules {
+        network_state.add_module(&module.self_id(), &module);
+    }
+    let write_set = changes_into_writeset(genesis_changes);
+    network_state.add_write_set(&write_set);
+    network_state
 }
 
 pub fn get_resource_structs(compiled_script: &CompiledScript) -> HashMap<Vec<u8>, StructTag> {

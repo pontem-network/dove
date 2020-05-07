@@ -1,15 +1,15 @@
 use dialects::dfinance::{
-    execute_script, get_resource_structs, serialize_write_set, AccountAddress, Address, Errors,
-    FakeDataStore, VMResult,
+    execute_script, get_resource_structs, prepare_fake_network_state, serialize_write_set,
+    AccountAddress, Address, Errors, VMResult,
 };
-use dialects::resources::{changes_into_writeset, ResourceChange};
+use dialects::resources::ResourceChange;
 use dialects::{dfinance, FilePath};
 
 pub fn compile_and_run(
     script: (FilePath, String),
     deps: &[(FilePath, String)],
     sender: AccountAddress,
-    genesis: Option<Vec<ResourceChange>>,
+    genesis: Vec<ResourceChange>,
 ) -> Result<VMResult<Vec<ResourceChange>>, Errors> {
     let (fname, script_text) = script;
 
@@ -21,14 +21,7 @@ pub fn compile_and_run(
     )?;
     let available_resource_structs = get_resource_structs(&compiled_script);
 
-    let mut network_state = FakeDataStore::default();
-    for module in compiled_modules {
-        network_state.add_module(&module.self_id(), &module);
-    }
-    if let Some(changes) = genesis {
-        let write_set = changes_into_writeset(changes);
-        network_state.add_write_set(&write_set);
-    }
+    let network_state = prepare_fake_network_state(compiled_modules, genesis);
 
     let serialized_script = dfinance::serialize_script(compiled_script);
     let write_set = match execute_script(sender, &network_state, serialized_script, vec![]) {
@@ -102,7 +95,7 @@ script {
         let _ = Transaction::sender();
     }
 }";
-        let errors = compile_and_run((get_script_path(), text.to_string()), &[], sender, None)
+        let errors = compile_and_run((get_script_path(), text.to_string()), &[], sender, vec![])
             .unwrap_err();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
@@ -124,7 +117,7 @@ script {
             (existing_file_abspath(), text.to_string()),
             &deps,
             sender,
-            None,
+            vec![],
         )
         .unwrap();
         assert!(vm_res.is_ok());
@@ -150,7 +143,7 @@ script {
             (get_script_path(), script_text.to_string()),
             &deps,
             sender,
-            None,
+            vec![],
         )
         .unwrap();
         let changes = vm_res.unwrap();
@@ -200,7 +193,7 @@ script {
             (get_script_path(), script_text.to_string()),
             &deps,
             sender,
-            Some(genesis),
+            genesis,
         )
         .unwrap();
         let changes = vm_res.unwrap();
