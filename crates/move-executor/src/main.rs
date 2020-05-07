@@ -2,17 +2,14 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use move_lang::errors::{report_errors, FilesSourceText};
 use structopt::StructOpt;
 
-use analysis::db::FilePath;
 use analysis::utils::io::leaked_fpath;
 
-use crate::serialization::ResourceChange;
-
-mod executor;
-mod io;
-mod serialization;
+use dialects::dfinance::{report_errors, FilesSourceText};
+use dialects::resources::{ResourceChange, VMStatusVerbose};
+use dialects::FilePath;
+use move_executor::{executor, io};
 
 #[derive(StructOpt)]
 struct Options {
@@ -63,7 +60,7 @@ fn main() -> Result<()> {
 
     let genesis = parse_genesis_json(options.genesis)?;
 
-    let sender = dfinance_dialect::parse_account_address(&options.sender)?;
+    let sender = dialects::dfinance::parse_account_address(&options.sender)?;
     let script_fpath = leaked_fpath(options.script);
     let exec_res =
         executor::compile_and_run((script_fpath, script_text.clone()), &deps, sender, genesis);
@@ -77,7 +74,7 @@ fn main() -> Result<()> {
     let out = match vm_result {
         Ok(changes) => serde_json::to_string_pretty(&changes).unwrap(),
         Err(vm_status) => {
-            let vm_status = serialization::VMStatusVerbose::from(vm_status);
+            let vm_status = VMStatusVerbose::from(vm_status);
             serde_json::to_string_pretty(&vm_status).unwrap()
         }
     };

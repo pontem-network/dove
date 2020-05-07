@@ -8,6 +8,9 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.28"
+serde = "1.0.106"
+serde_derive = "1.0.106"
+serde_json = "1.0.52"
 
 move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "07.05.2020" }
 move-vm-state = { git = "https://github.com/dfinance/libra.git", branch = "07.05.2020" }
@@ -20,3 +23,5 @@ libra-types = { git = "https://github.com/dfinance/libra.git", branch = "07.05.2
 move-lang = { git = "https://github.com/dfinance/libra.git", branch = "07.05.2020" }
 libra-canonical-serialization = { git = "https://github.com/dfinance/libra.git", branch = "07.05.2020" }
 libra-crypto = { git = "https://github.com/dfinance/libra.git", branch = "07.05.2020" }
+move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "07.05.2020" }
+

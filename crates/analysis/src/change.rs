@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::db::FilePath;
+use dialects::FilePath;
 
 #[derive(Debug)]
 pub enum RootChange {

@@ -1,13 +1,12 @@
 use lsp_types::{Diagnostic, Position, Range};
-use move_lang::errors::FilesSourceText;
-use move_lang::shared::Address;
 
 use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::{Config, MoveDialect};
-use analysis::db::{FileDiagnostic, FilePath, RootDatabase};
+use analysis::db::FileDiagnostic;
 use analysis::utils::io::{leaked_fpath, read_move_files};
 use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
+use dialects::FilePath;
 use move_language_server::world::WorldState;
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -52,6 +51,8 @@ fn diagnostics_with_config_and_filename(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use analysis::db::RootDatabase;
+    use dialects::dfinance::{Address, FilesSourceText};
 
     #[test]
     fn test_fail_on_non_ascii_character() {

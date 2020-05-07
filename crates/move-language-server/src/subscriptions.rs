@@ -1,9 +1,8 @@
 //! Keeps track of file subscriptions -- the set of currently opened files for
 //! which we want to publish diagnostics, syntax highlighting, etc.
 
+use dialects::FilePath;
 use std::collections::HashSet;
-
-use analysis::db::FilePath;
 
 #[derive(Debug, Default, Clone)]
 pub struct OpenedFiles {

@@ -3,10 +3,10 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 
-use analysis::db::FilePath;
 use analysis::utils::io::{leaked_fpath, read_move_files};
+use dialects::FilePath;
 
-pub(crate) fn load_module_files(module_paths: Vec<PathBuf>) -> Result<Vec<(FilePath, String)>> {
+pub fn load_module_files(module_paths: Vec<PathBuf>) -> Result<Vec<(FilePath, String)>> {
     let mut deps = vec![];
     for module_path in module_paths {
         anyhow::ensure!(

@@ -1,9 +1,6 @@
+use dialects::FilePath;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-use move_lang::test_utils::MOVE_EXTENSION;
-
-use crate::db::FilePath;
 
 pub fn leaked_fpath<P: AsRef<Path>>(path: P) -> FilePath {
     let s = path.as_ref().to_str().unwrap();
@@ -28,7 +25,7 @@ fn iter_over_move_files<P: AsRef<Path>>(folder: P) -> Vec<String> {
     let dirfiles = iterate_directory(folder);
     dirfiles
         .flat_map(|path| {
-            if path.extension()?.to_str()? == MOVE_EXTENSION {
+            if path.extension()?.to_str()? == "move" {
                 path.into_os_string().into_string().ok()
             } else {
                 None

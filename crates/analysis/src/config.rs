@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
-use libra_types::account_address::AccountAddress;
-use move_lang::shared::Address;
+use dialects::dfinance::{AccountAddress, Address};
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]

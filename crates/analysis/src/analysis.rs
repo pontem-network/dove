@@ -1,10 +1,11 @@
 use lsp_types::CompletionItem;
-use move_lang::parser::ast::Definition;
 
 use crate::change::AnalysisChange;
-use crate::db::{FileDiagnostic, FilePath, RootDatabase};
+use crate::completion;
+use crate::db::{FileDiagnostic, RootDatabase};
 use crate::utils::io;
-use crate::{compiler, completion};
+use dialects::dfinance::Definition;
+use dialects::{dfinance, FilePath};
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {
@@ -44,7 +45,7 @@ impl Analysis {
         fpath: FilePath,
         text: &str,
     ) -> Result<Vec<Definition>, Vec<FileDiagnostic>> {
-        compiler::parse_file(fpath, text).map_err(|err| {
+        dialects::dfinance::parse_file(fpath, text).map_err(|err| {
             err.into_iter()
                 .map(|err| self.db.libra_error_into_diagnostic(err))
                 .collect()
@@ -83,7 +84,7 @@ impl Analysis {
                 deps.extend(defs);
             }
         }
-        compiler::check_parsed_program(current_file_defs, deps, self.db().sender_address())
+        dfinance::check_parsed_program(current_file_defs, deps, self.db().sender_address())
             .map_err(|errors| {
                 errors
                     .into_iter()

@@ -1,13 +1,10 @@
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
-use move_ir_types::location::Loc;
-use move_lang::errors::{Error, FilesSourceText};
-use move_lang::shared::Address;
 
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
-
-pub type FilePath = &'static str;
+use dialects::dfinance::{Address, Error, FilesSourceText, Loc};
+use dialects::FilePath;
 
 #[derive(Debug)]
 pub struct FileDiagnostic {
