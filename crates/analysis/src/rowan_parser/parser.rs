@@ -162,14 +162,3 @@ impl<'i> Parser<'i> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_binary_expression() {
-        let tree = parse("move !&*1").unwrap().to_syntax_node();
-        dbg!(tree);
-    }
-}

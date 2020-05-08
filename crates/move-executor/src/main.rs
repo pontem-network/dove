@@ -2,21 +2,28 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use libra_types::account_address::AccountAddress;
-use move_lang::errors::{report_errors, FilesSourceText};
 use structopt::StructOpt;
 
-use analysis::db::FilePath;
-use analysis::utils::io::leaked_fpath;
-
-use crate::serialization::ResourceChange;
+use analysis::utils::io;
+use dialects::dfinance::types::{report_errors, AccountAddress, VMStatus};
+use dialects::{leaked_fpath, FilePath, FilesSourceText};
+use genesis::ResourceChange;
 
 mod executor;
-mod io;
-mod serialization;
 
-fn parse_address(s: &str) -> AccountAddress {
-    AccountAddress::from_hex_literal(s).unwrap()
+#[derive(Debug, serde::Serialize)]
+pub struct ExecStatus {
+    pub vm_status: VMStatus,
+    pub vm_status_description: String,
+}
+
+impl From<VMStatus> for ExecStatus {
+    fn from(vm_status: VMStatus) -> Self {
+        ExecStatus {
+            vm_status_description: format!("{:?}", vm_status.major_status),
+            vm_status,
+        }
+    }
 }
 
 #[derive(StructOpt)]
@@ -25,8 +32,8 @@ struct Options {
     #[structopt()]
     script: PathBuf,
 
-    #[structopt(short, long, parse(from_str = parse_address))]
-    sender: AccountAddress,
+    #[structopt(short, long)]
+    sender: String,
 
     #[structopt(long)]
     modules: Option<Vec<PathBuf>>,
@@ -35,15 +42,14 @@ struct Options {
     genesis: Option<PathBuf>,
 }
 
-fn parse_genesis_json(fpath: Option<PathBuf>) -> Result<Option<Vec<ResourceChange>>> {
+fn parse_genesis_json(fpath: Option<PathBuf>) -> Result<Vec<ResourceChange>> {
     let genesis = match fpath {
-        None => None,
+        None => vec![],
         Some(fpath) => {
             let text = fs::read_to_string(fpath.clone())?;
             let val = serde_json::from_str(&text)?;
-            let changes = serde_json::from_value::<Vec<ResourceChange>>(val)
-                .with_context(|| format!("{:?} contains invalid genesis data", fpath))?;
-            Some(changes)
+            serde_json::from_value::<Vec<ResourceChange>>(val)
+                .with_context(|| format!("{:?} contains invalid genesis data", fpath))?
         }
     };
     Ok(genesis)
@@ -64,17 +70,14 @@ fn main() -> Result<()> {
     let options: Options = Options::from_args();
 
     let script_text = fs::read_to_string(&options.script)?;
-    let deps = io::load_module_files(options.modules.unwrap_or_default())?;
+    let deps = io::load_move_module_files(options.modules.unwrap_or_default())?;
 
     let genesis = parse_genesis_json(options.genesis)?;
 
+    let sender = AccountAddress::from_hex_literal(&options.sender)?;
     let script_fpath = leaked_fpath(options.script);
-    let exec_res = executor::compile_and_run(
-        (script_fpath, script_text.clone()),
-        &deps,
-        options.sender,
-        genesis,
-    );
+    let exec_res =
+        executor::compile_and_run((script_fpath, script_text.clone()), &deps, sender, genesis);
     let vm_result = match exec_res {
         Ok(vm_res) => vm_res,
         Err(errors) => {
@@ -85,8 +88,8 @@ fn main() -> Result<()> {
     let out = match vm_result {
         Ok(changes) => serde_json::to_string_pretty(&changes).unwrap(),
         Err(vm_status) => {
-            let vm_status = serialization::VMStatusVerbose::from(vm_status);
-            serde_json::to_string_pretty(&vm_status).unwrap()
+            let exec_status = ExecStatus::from(vm_status);
+            serde_json::to_string_pretty(&exec_status).unwrap()
         }
     };
     println!("{}", out);

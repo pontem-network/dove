@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
-use libra_types::account_address::AccountAddress;
-use move_lang::shared::Address;
+use dialects::dfinance::types::AccountAddress;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -16,7 +15,7 @@ pub struct Config {
     pub dialect: MoveDialect,
     pub stdlib_folder: Option<PathBuf>,
     pub module_folders: Vec<PathBuf>,
-    pub sender_address: Address,
+    pub sender_address: [u8; AccountAddress::LENGTH],
 }
 
 impl Default for Config {
@@ -25,7 +24,7 @@ impl Default for Config {
             dialect: MoveDialect::Libra,
             stdlib_folder: None,
             module_folders: vec![],
-            sender_address: Address::default(),
+            sender_address: [0; AccountAddress::LENGTH],
         }
     }
 }
@@ -40,14 +39,14 @@ impl Config {
         self.sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x0");
-                Address::default()
+                [0; AccountAddress::LENGTH]
             }
             Some(address) => match AccountAddress::from_hex_literal(address) {
-                Ok(_) => Address::parse_str(address).unwrap(),
+                Ok(acc_address) => acc_address.into(),
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);
                     log::info!("Using default account address 0x0");
-                    Address::default()
+                    [0; AccountAddress::LENGTH]
                 }
             },
         };

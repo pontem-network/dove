@@ -1,13 +1,12 @@
 use lsp_types::{Diagnostic, Position, Range};
-use move_lang::errors::FilesSourceText;
-use move_lang::shared::Address;
 
 use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::{Config, MoveDialect};
-use analysis::db::{FileDiagnostic, FilePath, RootDatabase};
-use analysis::utils::io::{leaked_fpath, read_move_files};
+use analysis::db::FileDiagnostic;
+use analysis::utils::io::read_move_files;
 use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
+use dialects::FilePath;
 use move_language_server::world::WorldState;
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -52,6 +51,10 @@ fn diagnostics_with_config_and_filename(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use analysis::db::RootDatabase;
+    use dialects::dfinance::types::AccountAddress;
+    use dialects::{leaked_fpath, FilesSourceText};
+    use std::string::ToString;
 
     #[test]
     fn test_fail_on_non_ascii_character() {
@@ -60,7 +63,7 @@ mod tests {
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((0, 22), (0, 22)));
     }
-    //
+
     #[test]
     fn test_successful_compilation() {
         let source = r"
@@ -224,7 +227,11 @@ fun main() {
 }
     ";
         let config = Config {
-            sender_address: Address::parse_str("0x8572f83cee01047effd6e7d0b5c19743").unwrap(),
+            sender_address: AccountAddress::from_hex_literal(
+                "0x8572f83cee01047effd6e7d0b5c19743",
+            )
+            .unwrap()
+            .into(),
             stdlib_folder: Some(get_stdlib_path()),
             module_folders: vec![get_modules_path()],
             ..Config::default()
@@ -294,7 +301,9 @@ script {
         let config = Config {
             stdlib_folder: Some(get_stdlib_path()),
             module_folders: vec![get_modules_path()],
-            sender_address: Address::parse_str(sender_address).unwrap(),
+            sender_address: AccountAddress::from_hex_literal(sender_address)
+                .unwrap()
+                .into(),
             ..Config::default()
         };
         let errors = diagnostics_with_config(script_source_text, config);
@@ -329,7 +338,7 @@ script {
     fn test_syntax_error_in_dependency() {
         let config = Config {
             dialect: MoveDialect::Libra,
-            sender_address: Address::default(),
+            sender_address: [0; AccountAddress::LENGTH],
             module_folders: vec![get_modules_path()],
             stdlib_folder: None,
         };

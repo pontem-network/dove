@@ -74,14 +74,12 @@ dependencies = [
  "codespan-reporting 0.8.0",
  "codespan-reporting 0.9.3",
  "crossbeam-channel",
+ "dialects",
  "env_logger",
  "hex",
- "libra-types",
  "log",
  "lsp-server",
  "lsp-types",
- "move-ir-types",
- "move-lang",
  "ra_vfs",
  "rowan",
  "serde",
@@ -540,6 +538,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "dialects"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "language-e2e-tests",
+ "libra-canonical-serialization",
+ "libra-crypto",
+ "libra-state-view",
+ "libra-types",
+ "move-core-types",
+ "move-ir-types",
+ "move-lang",
+ "move-vm-runtime",
+ "move-vm-state",
+ "move-vm-types",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "vm",
+]
+
+[[package]]
 name = "difference"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -772,6 +792,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c68f0274ae0e023facc3c97b2e00f076be70e254bc851d972503b328db79b2ec"
 dependencies = [
  "typenum",
+]
+
+[[package]]
+name = "genesis"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dialects",
+ "serde",
+ "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -1557,21 +1588,12 @@ version = "0.1.0"
 dependencies = [
  "analysis",
  "anyhow",
- "language-e2e-tests",
- "libra-canonical-serialization",
- "libra-crypto",
- "libra-state-view",
- "libra-types",
- "move-core-types",
- "move-lang",
- "move-vm-runtime",
- "move-vm-state",
- "move-vm-types",
+ "dialects",
+ "genesis",
  "serde",
  "serde_derive",
  "serde_json",
  "structopt",
- "vm",
 ]
 
 [[package]]
@@ -1625,14 +1647,12 @@ dependencies = [
  "codespan-reporting 0.8.0",
  "codespan-reporting 0.9.3",
  "crossbeam-channel",
+ "dialects",
  "env_logger",
  "hex",
- "libra-types",
  "log",
  "lsp-server",
  "lsp-types",
- "move-ir-types",
- "move-lang",
  "ra_vfs",
  "rowan",
  "serde",

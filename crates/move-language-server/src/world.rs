@@ -6,7 +6,7 @@ use ra_vfs::{Filter, RelativePath, RootEntry, Vfs, VfsChange, VfsTask, Watch};
 use analysis::analysis::{Analysis, AnalysisHost};
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
-use analysis::utils::io::leaked_fpath;
+use dialects::leaked_fpath;
 
 #[derive(Default)]
 struct MoveFilesFilter;

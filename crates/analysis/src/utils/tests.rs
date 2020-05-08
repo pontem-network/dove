@@ -1,5 +1,4 @@
-use crate::db::FilePath;
-use crate::utils::io::leaked_fpath;
+use dialects::{leaked_fpath, FilePath};
 use std::path::PathBuf;
 
 // just need some valid fname

@@ -22,14 +22,14 @@ use threadpool::ThreadPool;
 
 use analysis::analysis::Analysis;
 use analysis::config::Config;
-use analysis::db::{FileDiagnostic, FilePath};
-use analysis::utils::io::leaked_fpath;
 
 use crate::dispatcher::PoolDispatcher;
 use crate::handlers;
 use crate::req;
 use crate::subscriptions::OpenedFiles;
 use crate::world::WorldState;
+use analysis::db::FileDiagnostic;
+use dialects::{leaked_fpath, FilePath};
 
 #[derive(Debug)]
 pub struct LspError {
