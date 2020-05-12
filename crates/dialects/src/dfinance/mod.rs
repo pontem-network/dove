@@ -19,12 +19,12 @@ use move_lang::{parser, strip_comments_and_verify};
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
 use move_vm_types::gas_schedule::zero_cost_schedule;
+use move_vm_types::transaction_metadata::TransactionMetadata;
 use move_vm_types::values::Value;
 use std::collections::HashMap;
 use vm::access::ScriptAccess;
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
-use vm::transaction_metadata::TransactionMetadata;
 use vm::CompiledModule;
 
 pub mod types;
