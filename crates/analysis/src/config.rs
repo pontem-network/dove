@@ -1,6 +1,10 @@
 use std::path::PathBuf;
 
+use crate::utils::io;
+use core::fmt;
 use dialects::dfinance::types::AccountAddress;
+use serde::export::fmt::Debug;
+use serde::export::Formatter;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -10,12 +14,26 @@ pub enum MoveDialect {
     DFinance,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Config {
     pub dialect: MoveDialect,
     pub stdlib_folder: Option<PathBuf>,
     pub module_folders: Vec<PathBuf>,
     pub sender_address: [u8; AccountAddress::LENGTH],
+}
+
+impl Debug for Config {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Config")
+            .field("dialect", &self.dialect)
+            .field("stdlib_folder", &self.stdlib_folder)
+            .field("module_folders", &self.module_folders)
+            .field(
+                "sender_address",
+                &AccountAddress::new(self.sender_address).to_string(),
+            )
+            .finish()
+    }
 }
 
 impl Default for Config {
@@ -30,8 +48,26 @@ impl Default for Config {
 }
 
 impl Config {
+    fn log_available_module_files(&self) {
+        let stdlib_modules = self
+            .stdlib_folder
+            .as_ref()
+            .map(io::iter_over_move_files)
+            .unwrap_or_else(|| vec![]);
+        log::info!(
+            "available stdlib modules (from {:?}) = {:#?}",
+            self.stdlib_folder,
+            stdlib_modules
+        );
+
+        for folder in &self.module_folders {
+            let files = io::iter_over_move_files(folder);
+            log::info!("third party modules (from {:?}) = {:#?}", folder, files);
+        }
+    }
+
     pub fn update(&mut self, value: &serde_json::Value) {
-        log::info!("Config::update({:#})", value);
+        log::info!("Passed configuration = {:#}", value);
 
         set(value, "/dialect", &mut self.dialect);
         set(value, "/stdlib_folder", &mut self.stdlib_folder);
@@ -50,7 +86,9 @@ impl Config {
                 }
             },
         };
-        log::info!("Config::update() = {:#?}", self);
+        log::info!("Config updated to = {:#?}", self);
+
+        self.log_available_module_files();
 
         fn get<'a, T: Deserialize<'a>>(value: &'a serde_json::Value, pointer: &str) -> Option<T> {
             value

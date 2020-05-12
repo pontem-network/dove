@@ -46,7 +46,13 @@ impl Analysis {
     ) -> Result<Vec<dfinance::types::Definition>, Vec<FileDiagnostic>> {
         dialects::dfinance::parse_file(fpath, text).map_err(|err| {
             err.into_iter()
-                .map(|err| self.db.libra_error_into_diagnostic(err))
+                .filter_map(|err| match self.db.libra_error_into_diagnostic(err) {
+                    Ok(d) => Some(d),
+                    Err(err) => {
+                        log::error!("{}", err);
+                        None
+                    }
+                })
                 .collect()
         })
     }
@@ -83,11 +89,18 @@ impl Analysis {
                 deps.extend(defs);
             }
         }
+
         dfinance::check_parsed_program(current_file_defs, deps, self.db().sender_address())
             .map_err(|errors| {
                 errors
                     .into_iter()
-                    .map(|err| self.db.libra_error_into_diagnostic(err))
+                    .filter_map(|err| match self.db.libra_error_into_diagnostic(err) {
+                        Ok(d) => Some(d),
+                        Err(err) => {
+                            log::error!("{}", err);
+                            None
+                        }
+                    })
                     .collect()
             })
     }

@@ -17,7 +17,7 @@ fn iterate_directory<P: AsRef<Path>>(path: P) -> impl Iterator<Item = PathBuf> {
         .map(|entry| entry.path().to_path_buf())
 }
 
-fn iter_over_move_files<P: AsRef<Path>>(folder: P) -> Vec<String> {
+pub fn iter_over_move_files<P: AsRef<Path>>(folder: P) -> Vec<String> {
     let dirfiles = iterate_directory(folder);
     dirfiles
         .flat_map(|path| {

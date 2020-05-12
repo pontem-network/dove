@@ -362,7 +362,7 @@ script {
 
         let db = RootDatabase {
             config,
-            tracked_files: files,
+            available_files: files,
         };
         let analysis = Analysis::new(db);
         let errors = analysis.check_with_libra_compiler(main_fpath, source_text);

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 
 use crate::change::{AnalysisChange, RootChange};
@@ -30,12 +31,12 @@ impl FileDiagnostic {
 #[derive(Debug, Default, Clone)]
 pub struct RootDatabase {
     pub config: Config,
-    pub tracked_files: FilesSourceText,
+    pub available_files: FilesSourceText,
 }
 
 impl RootDatabase {
     pub fn module_files(&self) -> FilesSourceText {
-        self.tracked_files
+        self.available_files
             .clone()
             .into_iter()
             .filter(|(f, _)| self.is_fpath_for_a_module(f))
@@ -54,35 +55,38 @@ impl RootDatabase {
             match root_change {
                 RootChange::AddFile(fpath, text) => {
                     log::info!("AddFile: {:?}", fpath);
-                    self.tracked_files.insert(fpath, text);
+                    self.available_files.insert(fpath, text);
                 }
                 RootChange::ChangeFile(fpath, text) => {
                     log::info!("ChangeFile: {:?}", fpath);
-                    self.tracked_files.insert(fpath, text);
+                    self.available_files.insert(fpath, text);
                 }
                 RootChange::RemoveFile(fpath) => {
-                    if !self.tracked_files.contains_key(fpath) {
+                    if !self.available_files.contains_key(fpath) {
                         log::warn!("RemoveFile: file {:?} does not exist", fpath);
                     }
                     log::info!("RemoveFile: {:?}", fpath);
-                    self.tracked_files.remove(fpath);
+                    self.available_files.remove(fpath);
                 }
             }
         }
     }
 
-    pub fn libra_error_into_diagnostic(&self, error: dfinance::types::Error) -> FileDiagnostic {
+    pub fn libra_error_into_diagnostic(
+        &self,
+        error: dfinance::types::Error,
+    ) -> Result<FileDiagnostic> {
         assert!(!error.is_empty(), "Libra's Error is an empty Vec");
         let (primary_loc, primary_message) = error.get(0).unwrap().to_owned();
         let mut diagnostic = {
-            let range = self.loc_to_range(primary_loc);
+            let range = self.loc_to_range(primary_loc)?;
             Diagnostic::new_simple(range, primary_message)
         };
         // first error is an actual one, others are related info
         if error.len() > 1 {
             let mut related_info = vec![];
             for (related_loc, related_message) in error[1..].iter() {
-                let range = self.loc_to_range(*related_loc);
+                let range = self.loc_to_range(*related_loc)?;
                 let related_fpath = related_loc.file();
                 let file_uri = Url::from_file_path(related_fpath)
                     .unwrap_or_else(|_| panic!("Cannot build Url from path {:?}", related_fpath));
@@ -95,19 +99,25 @@ impl RootDatabase {
             }
             diagnostic.related_information = Some(related_info)
         }
-        FileDiagnostic::new(primary_loc.file(), diagnostic)
+        Ok(FileDiagnostic::new(primary_loc.file(), diagnostic))
     }
 
-    fn loc_to_range(&self, loc: dfinance::types::Loc) -> Range {
-        let text = self
-            .tracked_files
-            .get(loc.file())
-            .unwrap_or_else(|| panic!("No entry found for key {:?}", loc.file()))
-            .clone();
+    fn loc_to_range(&self, loc: dfinance::types::Loc) -> Result<Range> {
+        let file = loc.file();
+        let text = match self.available_files.get(file) {
+            Some(text) => text.clone(),
+            None => {
+                anyhow::bail!(
+                    "File {:?} is not present in the available files {:#?}",
+                    file,
+                    &self.available_files.keys()
+                );
+            }
+        };
         let file = File::new(text);
         let start_pos = file.position(loc.span().start().to_usize()).unwrap();
         let end_pos = file.position(loc.span().end().to_usize()).unwrap();
-        Range::new(start_pos, end_pos)
+        Ok(Range::new(start_pos, end_pos))
     }
 
     fn is_fpath_for_a_module(&self, fpath: FilePath) -> bool {

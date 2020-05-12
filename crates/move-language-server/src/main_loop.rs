@@ -12,7 +12,7 @@ use lsp_types::notification::{
 };
 use lsp_types::request::WorkspaceConfiguration;
 use lsp_types::{
-    ConfigurationItem, ConfigurationParams, MessageType, PublishDiagnosticsParams,
+    ConfigurationItem, ConfigurationParams, Diagnostic, MessageType, PublishDiagnosticsParams,
     ShowMessageParams, Url,
 };
 use ra_vfs::VfsTask;
@@ -226,6 +226,17 @@ fn on_request(
     Ok(())
 }
 
+fn diagnostic_as_string(d: &Diagnostic) -> String {
+    format!(
+        "({}, {}), ({}, {}): {}",
+        d.range.start.line,
+        d.range.start.character,
+        d.range.end.line,
+        d.range.end.character,
+        d.message
+    )
+}
+
 pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
     match task {
         Task::Respond(response) => {
@@ -234,13 +245,21 @@ pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
         Task::Diagnostic(loc_ds) => {
             for loc_d in loc_ds {
                 let uri = Url::from_file_path(loc_d.fpath).unwrap();
+
                 let mut diagnostics = vec![];
                 if loc_d.diagnostic.is_some() {
                     diagnostics.push(loc_d.diagnostic.unwrap());
                 }
-                let params = PublishDiagnosticsParams::new(uri, diagnostics, None);
-                log::info!("Send diagnostic {:#?}", &params);
+                log::info!(
+                    "Send diagnostic for file {:?}: {:#?}",
+                    loc_d.fpath,
+                    diagnostics
+                        .iter()
+                        .map(diagnostic_as_string)
+                        .collect::<Vec<String>>()
+                );
 
+                let params = PublishDiagnosticsParams::new(uri, diagnostics, None);
                 let not = notification_new::<PublishDiagnostics>(params);
                 msg_sender.send(not.into()).unwrap();
             }
@@ -344,20 +363,23 @@ fn update_file_notifications_on_threadpool(
     files: Vec<FilePath>,
 ) {
     pool.execute(move || {
-        log::info!("update_file_notifications_on_threadpool {:?}", files);
+        log::info!("Computing diagnostics for files: {:#?}", files);
+        let mut diagnostics = vec![];
         for fpath in files {
-            let text = analysis.db().tracked_files.get(fpath).unwrap();
-            let mut diagnostics = vec![FileDiagnostic::new_empty(fpath)];
-            let from_compile = analysis.check_with_libra_compiler(fpath, text);
-            diagnostics.extend(from_compile);
-            // let mut diagnostics = analysis.check_with_libra_compiler(fpath, text);
-            // if diagnostics.is_empty() {
-            //     diagnostics = vec![FileDiagnostic::new_empty(fpath)];
-            // }
-            log::info!("diagnostics from check = {:?}", diagnostics);
+            // clear previous diagnostics for file
+            diagnostics.push(FileDiagnostic::new_empty(fpath));
 
-            task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
+            let text = match analysis.db().available_files.get(fpath) {
+                Some(text) => text,
+                None => {
+                    log::warn!("Trying to check untracked file: {:?}", fpath);
+                    continue;
+                }
+            };
+            let from_file_compile_check = analysis.check_with_libra_compiler(fpath, text);
+            diagnostics.extend(from_file_compile_check);
         }
+        task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
     })
 }
 
