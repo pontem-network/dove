@@ -97,7 +97,7 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
     let mut loop_state = LoopState::default();
     let mut world_state = WorldState::new(ws_root, config);
 
-    let pool = ThreadPool::default();
+    let pool = ThreadPool::new(1);
     let (task_sender, task_receiver) = unbounded::<Task>();
 
     log::info!("server initialized, serving requests");
@@ -345,10 +345,9 @@ fn update_file_notifications_on_threadpool(
         log::info!("update_file_notifications_on_threadpool {:?}", files);
         for fpath in files {
             let text = analysis.db().tracked_files.get(fpath).unwrap();
-            let mut diagnostics = analysis.check_with_libra_compiler(fpath, text);
-            if diagnostics.is_empty() {
-                diagnostics = vec![FileDiagnostic::new_empty(fpath)];
-            }
+            let mut diagnostics = vec![FileDiagnostic::new_empty(fpath)];
+            let from_compiler = analysis.check_with_libra_compiler(fpath, text);
+            diagnostics.extend(from_compiler);
             task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
         }
     })
