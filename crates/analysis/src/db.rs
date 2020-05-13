@@ -102,11 +102,6 @@ impl RootDatabase {
             Diagnostic::new_simple(range, message)
         };
 
-        // let (primary_loc, primary_message) = error.get(0).unwrap().to_owned();
-        // let mut diagnostic = {
-        //     let range = self.loc_to_range(primary_loc)?;
-        //     Diagnostic::new_simple(range, primary_message)
-        // };
         // first error is an actual one, others are related info
         if error.parts.len() > 1 {
             let mut related_info = vec![];
@@ -125,54 +120,6 @@ impl RootDatabase {
             diagnostic.related_information = Some(related_info)
         }
         Ok(FileDiagnostic::new(prim_location.fpath, diagnostic))
-    }
-
-    pub fn libra_error_into_diagnostic(
-        &self,
-        error: dfinance::types::Error,
-    ) -> Result<FileDiagnostic> {
-        assert!(!error.is_empty(), "Libra's Error is an empty Vec");
-        let (primary_loc, primary_message) = error.get(0).unwrap().to_owned();
-        let mut diagnostic = {
-            let range = self.loc_to_range(primary_loc)?;
-            Diagnostic::new_simple(range, primary_message)
-        };
-        // first error is an actual one, others are related info
-        if error.len() > 1 {
-            let mut related_info = vec![];
-            for (related_loc, related_message) in error[1..].iter() {
-                let range = self.loc_to_range(*related_loc)?;
-                let related_fpath = related_loc.file();
-                let file_uri = Url::from_file_path(related_fpath)
-                    .unwrap_or_else(|_| panic!("Cannot build Url from path {:?}", related_fpath));
-
-                let related_info_item = DiagnosticRelatedInformation {
-                    location: Location::new(file_uri, range),
-                    message: related_message.to_string(),
-                };
-                related_info.push(related_info_item);
-            }
-            diagnostic.related_information = Some(related_info)
-        }
-        Ok(FileDiagnostic::new(primary_loc.file(), diagnostic))
-    }
-
-    fn loc_to_range(&self, loc: dfinance::types::Loc) -> Result<Range> {
-        let file = loc.file();
-        let text = match self.available_files.get(file) {
-            Some(text) => text.clone(),
-            None => {
-                anyhow::bail!(
-                    "File {:?} is not present in the available files {:#?}",
-                    file,
-                    &self.available_files.keys()
-                );
-            }
-        };
-        let file = File::new(text);
-        let start_pos = file.position(loc.span().start().to_usize()).unwrap();
-        let end_pos = file.position(loc.span().end().to_usize()).unwrap();
-        Ok(Range::new(start_pos, end_pos))
     }
 
     fn is_fpath_for_a_module(&self, fpath: FilePath) -> bool {
