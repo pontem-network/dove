@@ -4,7 +4,7 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
-use dialects::{dfinance, FilePath, FilesSourceText};
+use dialects::{dfinance, CompilerError, CompilerErrorPart, FilePath, FilesSourceText};
 
 #[derive(Debug)]
 pub struct FileDiagnostic {
@@ -70,6 +70,61 @@ impl RootDatabase {
                 }
             }
         }
+    }
+
+    fn comp_location_to_range(&self, loc: &dialects::Location) -> Result<Range> {
+        let file = loc.fpath;
+        let text = match self.available_files.get(file) {
+            Some(text) => text.clone(),
+            None => {
+                anyhow::bail!(
+                    "File {:?} is not present in the available files {:#?}",
+                    file,
+                    &self.available_files.keys()
+                );
+            }
+        };
+        let file = File::new(text);
+        let start_pos = file.position(loc.span.0).unwrap();
+        let end_pos = file.position(loc.span.1).unwrap();
+        Ok(Range::new(start_pos, end_pos))
+    }
+
+    pub fn compiler_error_into_diagnostic(&self, error: CompilerError) -> Result<FileDiagnostic> {
+        assert!(!error.parts.is_empty(), "No parts in CompilerError");
+
+        let CompilerErrorPart {
+            location: prim_location,
+            message,
+        } = error.parts[0].to_owned();
+        let mut diagnostic = {
+            let range = self.comp_location_to_range(&prim_location)?;
+            Diagnostic::new_simple(range, message)
+        };
+
+        // let (primary_loc, primary_message) = error.get(0).unwrap().to_owned();
+        // let mut diagnostic = {
+        //     let range = self.loc_to_range(primary_loc)?;
+        //     Diagnostic::new_simple(range, primary_message)
+        // };
+        // first error is an actual one, others are related info
+        if error.parts.len() > 1 {
+            let mut related_info = vec![];
+            for CompilerErrorPart { location, message } in error.parts[1..].iter() {
+                let range = self.comp_location_to_range(location)?;
+                let related_fpath = location.fpath;
+                let file_uri = Url::from_file_path(related_fpath)
+                    .unwrap_or_else(|_| panic!("Cannot build Url from path {:?}", related_fpath));
+
+                let related_info_item = DiagnosticRelatedInformation {
+                    location: Location::new(file_uri, range),
+                    message: message.to_string(),
+                };
+                related_info.push(related_info_item);
+            }
+            diagnostic.related_information = Some(related_info)
+        }
+        Ok(FileDiagnostic::new(prim_location.fpath, diagnostic))
     }
 
     pub fn libra_error_into_diagnostic(

@@ -6,6 +6,13 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = []
+
+# different dialect features
+dfinance = []
+libra = []
+
 [dependencies]
 anyhow = "1.0.28"
 serde = "1.0.106"
