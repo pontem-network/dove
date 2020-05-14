@@ -5,8 +5,8 @@ use anyhow::{Context, Result};
 use structopt::StructOpt;
 
 use analysis::utils::io;
-use dialects::dfinance::types::{report_errors, AccountAddress, VMStatus};
-use dialects::{leaked_fpath, FilePath, FilesSourceText};
+use dialects::dfinance::types::{report_errors, VMStatus};
+use dialects::{leaked_fpath, DFinanceDialect, Dialect, FilePath, FilesSourceText};
 use genesis::ResourceChange;
 
 mod executor;
@@ -74,7 +74,8 @@ fn main() -> Result<()> {
 
     let genesis = parse_genesis_json(options.genesis)?;
 
-    let sender = AccountAddress::from_hex_literal(&options.sender)?;
+    let sender = DFinanceDialect::validate_sender_address(options.sender)?;
+    // let sender = AccountAddress::from_hex_literal(&options.sender)?;
     let script_fpath = leaked_fpath(options.script);
     let exec_res =
         executor::compile_and_run((script_fpath, script_text.clone()), &deps, sender, genesis);

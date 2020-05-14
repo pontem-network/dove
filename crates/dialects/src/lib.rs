@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::dfinance::types::{AccountAddress, Definition, Error};
 use move_lang::parser;
 use move_lang::shared::Address;
@@ -114,4 +116,17 @@ pub fn check_with_compiler(
 ) -> Result<(), Vec<CompilerError>> {
     let (script_defs, dep_defs) = parse_files(current, deps)?;
     check_parsed_program(script_defs, dep_defs, sender)
+}
+
+pub trait Dialect {
+    fn validate_sender_address(s: String) -> Result<String>;
+}
+
+pub struct DFinanceDialect;
+
+impl Dialect for DFinanceDialect {
+    fn validate_sender_address(s: String) -> Result<String> {
+        dfinance::types::AccountAddress::from_hex_literal(&s)?;
+        Ok(s)
+    }
 }
