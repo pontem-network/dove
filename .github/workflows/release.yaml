@@ -46,7 +46,7 @@ jobs:
     - name: Build with --release
       run: cargo build --release
 
-    - name: Upload binary as Release Asset (ubuntu, macos)
+    - name: Language Server - upload binary as Release Asset (ubuntu, macos)
       if: matrix.os != 'windows-latest'
       uses: actions/upload-release-asset@v1
       env:
@@ -57,7 +57,7 @@ jobs:
         asset_name: move-language-server-${{ matrix.platform }}
         asset_content_type: application/octet-stream
 
-    - name: Upload binary as Release Asset (windows)
+    - name: Language Server - upload binary as Release Asset (windows)
       if: matrix.os == 'windows-latest'
       uses: actions/upload-release-asset@v1
       env:
@@ -66,4 +66,26 @@ jobs:
         upload_url: ${{ github.event.release.upload_url }}
         asset_path: ${{ github.workspace }}\target\release\move-language-server.exe
         asset_name: move-language-server-${{ matrix.platform }}.exe
+        asset_content_type: application/octet-stream
+
+    - name: Executor - upload binary as Release Asset (ubuntu, macos)
+      if: matrix.os != 'windows-latest'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./target/release/move-executor
+        asset_name: move-executor-${{ matrix.platform }}
+        asset_content_type: application/octet-stream
+
+    - name: Language Server - upload binary as Release Asset (windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ github.workspace }}\target\release\move-executor.exe
+        asset_name: move-executor-${{ matrix.platform }}.exe
         asset_content_type: application/octet-stream
