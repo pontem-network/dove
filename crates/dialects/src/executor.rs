@@ -1,19 +1,21 @@
-use dialects::dfinance::get_resource_structs;
-use dialects::dfinance::types::{AccountAddress, Error, VMResult};
-use dialects::{dfinance, FilePath};
-use genesis::serialize::serialize_write_set;
-use genesis::{changes_into_writeset, ResourceChange};
+use crate::dfinance;
+use crate::dfinance::get_resource_structs;
+use crate::dfinance::types::{AccountAddress, Error, VMResult};
+use crate::genesis::serialize::serialize_write_set;
+use crate::genesis::{changes_into_writeset, ResourceChange};
+use utils::FilePath;
 
 pub fn compile_and_run(
     script: (FilePath, String),
     deps: &[(FilePath, String)],
-    sender: AccountAddress,
+    sender: String,
     genesis: Vec<ResourceChange>,
 ) -> Result<VMResult<Vec<ResourceChange>>, Vec<Error>> {
+    let sender = AccountAddress::from_hex_literal(&sender).unwrap();
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
-        dialects::dfinance::compile_script(fname, &script_text, deps, sender.into())?;
+        dfinance::compile_script(fname, &script_text, deps, sender.into())?;
     let available_resource_structs = get_resource_structs(&compiled_script);
 
     let write_set = changes_into_writeset(genesis);
@@ -32,12 +34,11 @@ pub fn compile_and_run(
 
 #[cfg(test)]
 mod tests {
-    use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
+    use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 
     use super::*;
-    use analysis::utils::io;
-    use dialects::dfinance::types::AccountAddress;
-    use dialects::leaked_fpath;
+    use crate::dfinance::types::AccountAddress;
+    use utils::{io, leaked_fpath};
 
     fn get_record_module_dep() -> (FilePath, String) {
         let text = r"
@@ -82,7 +83,6 @@ address 0x111111111111111111111111 {
 
     #[test]
     fn test_show_compilation_errors() {
-        let sender = AccountAddress::new([1; AccountAddress::LENGTH]);
         let text = r"
 script {
     use 0x0::Transaction;
@@ -91,15 +91,19 @@ script {
         let _ = Transaction::sender();
     }
 }";
-        let errors = compile_and_run((get_script_path(), text.to_string()), &[], sender, vec![])
-            .unwrap_err();
+        let errors = compile_and_run(
+            (get_script_path(), text.to_string()),
+            &[],
+            "0x111111111111111111111111".to_string(),
+            vec![],
+        )
+        .unwrap_err();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
     }
 
     #[test]
     fn test_execute_custom_script_with_stdlib_module() {
-        let sender = AccountAddress::new([1; AccountAddress::LENGTH]);
         let text = r"
 script {
     use 0x0::Transaction;
@@ -112,7 +116,7 @@ script {
         let vm_res = compile_and_run(
             (existing_file_abspath(), text.to_string()),
             &deps,
-            sender,
+            "0x111111111111111111111111".to_string(),
             vec![],
         )
         .unwrap();
@@ -138,7 +142,7 @@ script {
         let vm_res = compile_and_run(
             (get_script_path(), script_text.to_string()),
             &deps,
-            sender,
+            "0x111111111111111111111111".to_string(),
             vec![],
         )
         .unwrap();
@@ -188,7 +192,7 @@ script {
         let vm_res = compile_and_run(
             (get_script_path(), script_text.to_string()),
             &deps,
-            sender,
+            "0x111111111111111111111111".to_string(),
             genesis,
         )
         .unwrap();

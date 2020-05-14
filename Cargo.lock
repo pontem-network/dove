@@ -85,7 +85,7 @@ dependencies = [
  "serde",
  "serde_json",
  "threadpool",
- "walkdir",
+ "utils",
 ]
 
 [[package]]
@@ -99,9 +99,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.28"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9a60d744a80c30fcb657dfe2c1b22bcb3e814c1a1e3674f32bf5820b570fbff"
+checksum = "2494382e9ba43995f3c56359e518641f450f5c36feeb4632a75cde2ec297c867"
 
 [[package]]
 name = "arc-swap"
@@ -556,6 +556,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "utils",
  "vm",
 ]
 
@@ -816,17 +817,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c68f0274ae0e023facc3c97b2e00f076be70e254bc851d972503b328db79b2ec"
 dependencies = [
  "typenum",
-]
-
-[[package]]
-name = "genesis"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dialects",
- "serde",
- "serde_derive",
- "serde_json",
 ]
 
 [[package]]
@@ -1619,11 +1609,11 @@ dependencies = [
  "analysis",
  "anyhow",
  "dialects",
- "genesis",
  "serde",
  "serde_derive",
  "serde_json",
  "structopt",
+ "utils",
 ]
 
 [[package]]
@@ -1688,6 +1678,7 @@ dependencies = [
  "serde",
  "serde_json",
  "threadpool",
+ "utils",
  "walkdir",
 ]
 
@@ -3191,6 +3182,16 @@ dependencies = [
  "matches",
  "percent-encoding",
  "serde",
+]
+
+[[package]]
+name = "utils"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger",
+ "log",
+ "walkdir",
 ]
 
 [[package]]

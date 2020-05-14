@@ -29,7 +29,7 @@ use crate::req;
 use crate::subscriptions::OpenedFiles;
 use crate::world::WorldState;
 use analysis::db::FileDiagnostic;
-use dialects::{leaked_fpath, FilePath};
+use utils::{leaked_fpath, FilePath};
 
 #[derive(Debug)]
 pub struct LspError {

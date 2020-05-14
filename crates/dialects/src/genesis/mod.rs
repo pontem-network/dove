@@ -1,5 +1,5 @@
-use dialects::dfinance;
-use dialects::dfinance::types::{AccessPath, StructTag, WriteOp, WriteSet, WriteSetMut};
+use crate::dfinance;
+use crate::dfinance::types::{AccessPath, StructTag, WriteOp, WriteSet, WriteSetMut};
 
 pub mod serialize;
 

@@ -1,5 +1,5 @@
+use crate::{leaked_fpath, FilePath};
 use anyhow::Result;
-use dialects::{leaked_fpath, FilePath};
 use std::fs;
 use std::path::{Path, PathBuf};
 

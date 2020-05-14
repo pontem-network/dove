@@ -30,3 +30,4 @@ rowan = "0.10.0"
 
 analysis = { path = "../analysis" }
 dialects = { path = "../dialects" }
+utils = { path = "../utils" }

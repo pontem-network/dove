@@ -15,4 +15,4 @@ serde_json = "1.0.52"
 
 dialects = { path = "../dialects" }
 analysis = { path = "../analysis" }
-genesis = { path = "./genesis" }
+utils = { path = "../utils" }

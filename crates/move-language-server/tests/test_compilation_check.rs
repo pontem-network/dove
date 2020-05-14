@@ -4,10 +4,10 @@ use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::{Config, MoveDialect};
 use analysis::db::FileDiagnostic;
-use analysis::utils::io::read_move_files;
-use analysis::utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
-use dialects::FilePath;
 use move_language_server::world::WorldState;
+use utils::io::read_move_files;
+use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
+use utils::FilePath;
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
@@ -53,8 +53,8 @@ mod tests {
     use super::*;
     use analysis::db::RootDatabase;
     use dialects::dfinance::types::AccountAddress;
-    use dialects::{leaked_fpath, FilesSourceText};
     use std::string::ToString;
+    use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
     fn test_fail_on_non_ascii_character() {

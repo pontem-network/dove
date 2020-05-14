@@ -1,4 +1,4 @@
-use dialects::{leaked_fpath, FilePath};
+use crate::{leaked_fpath, FilePath};
 use std::path::PathBuf;
 
 // just need some valid fname

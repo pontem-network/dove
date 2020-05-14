@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
-use crate::utils::io;
 use core::fmt;
 use dialects::dfinance::types::AccountAddress;
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;
+use utils::io;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]

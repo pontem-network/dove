@@ -3,8 +3,7 @@ use lsp_types::CompletionItem;
 use crate::change::AnalysisChange;
 use crate::completion;
 use crate::db::{FileDiagnostic, RootDatabase};
-use crate::utils::io;
-use dialects::{dfinance, FilePath};
+use utils::{io, FilePath};
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {
@@ -39,24 +38,6 @@ impl Analysis {
         &self.db
     }
 
-    pub fn parse(
-        &self,
-        fpath: FilePath,
-        text: &str,
-    ) -> Result<Vec<dfinance::types::Definition>, Vec<FileDiagnostic>> {
-        dialects::dfinance::parse_file(fpath, text).map_err(|err| {
-            err.into_iter()
-                .filter_map(|err| match self.db.libra_error_into_diagnostic(err) {
-                    Ok(d) => Some(d),
-                    Err(err) => {
-                        log::error!("{}", err);
-                        None
-                    }
-                })
-                .collect()
-        })
-    }
-
     pub fn completions(&self) -> Vec<CompletionItem> {
         let mut completions = vec![];
         completions.extend(completion::get_keywords());
@@ -77,32 +58,30 @@ impl Analysis {
         current_fpath: FilePath,
         current_text: &str,
     ) -> Result<(), Vec<FileDiagnostic>> {
-        let current_file_defs = self.parse(current_fpath, current_text)?;
-        let mut deps = vec![];
-        for (fpath, source_text) in self
+        let deps: Vec<(FilePath, String)> = self
             .read_stdlib_files()
             .into_iter()
             .chain(self.db.module_files().into_iter())
-        {
-            if fpath != current_fpath {
-                let defs = self.parse(fpath, &source_text)?;
-                deps.extend(defs);
-            }
-        }
+            .filter(|(fpath, _)| *fpath != current_fpath)
+            .collect();
 
-        dfinance::check_parsed_program(current_file_defs, deps, self.db().sender_address())
-            .map_err(|errors| {
-                errors
-                    .into_iter()
-                    .filter_map(|err| match self.db.libra_error_into_diagnostic(err) {
-                        Ok(d) => Some(d),
-                        Err(err) => {
-                            log::error!("{}", err);
-                            None
-                        }
-                    })
-                    .collect()
-            })
+        dialects::check_with_compiler(
+            (current_fpath, current_text.to_string()),
+            deps,
+            self.db.sender_address(),
+        )
+        .map_err(|errors| {
+            errors
+                .into_iter()
+                .filter_map(|err| match self.db.compiler_error_into_diagnostic(err) {
+                    Ok(d) => Some(d),
+                    Err(err) => {
+                        log::error!("{}", err);
+                        None
+                    }
+                })
+                .collect()
+        })
     }
 
     fn read_stdlib_files(&self) -> Vec<(FilePath, String)> {
