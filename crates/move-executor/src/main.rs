@@ -9,8 +9,6 @@ use dialects::genesis::ResourceChange;
 use dialects::{DFinanceDialect, Dialect};
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 
-mod executor;
-
 #[derive(Debug, serde::Serialize)]
 pub struct ExecStatus {
     pub vm_status: VMStatus,
