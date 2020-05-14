@@ -3,14 +3,13 @@ use anyhow::Result;
 use crate::dfinance::types::{AccountAddress, Definition, Error};
 use move_lang::parser;
 use move_lang::shared::Address;
-use std::collections::HashMap;
-use std::path::Path;
+
+use utils::FilePath;
 
 pub mod dfinance;
+pub mod executor;
+pub mod genesis;
 pub mod libra;
-
-pub type FilePath = &'static str;
-pub type FilesSourceText = HashMap<&'static str, String>;
 
 #[derive(Debug, Clone)]
 pub struct Location {
@@ -44,11 +43,6 @@ impl From<Error> for CompilerError {
         }
         CompilerError { parts }
     }
-}
-
-pub fn leaked_fpath<P: AsRef<Path>>(path: P) -> FilePath {
-    let s = path.as_ref().to_str().unwrap();
-    Box::leak(Box::new(s.to_owned()))
 }
 
 fn parse_files(

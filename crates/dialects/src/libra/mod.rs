@@ -1,5 +1,3 @@
-use crate::FilePath;
-
 use anyhow::Result;
 
 use language_e2e_tests::data_store::FakeDataStore;
@@ -23,6 +21,7 @@ use move_vm_types::gas_schedule::zero_cost_schedule;
 use move_vm_types::transaction_metadata::TransactionMetadata;
 use move_vm_types::values::Value;
 use std::collections::HashMap;
+use utils::FilePath;
 use vm::access::ScriptAccess;
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;

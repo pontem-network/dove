@@ -3,8 +3,7 @@ use lsp_types::CompletionItem;
 use crate::change::AnalysisChange;
 use crate::completion;
 use crate::db::{FileDiagnostic, RootDatabase};
-use crate::utils::io;
-use dialects::FilePath;
+use utils::{io, FilePath};
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {

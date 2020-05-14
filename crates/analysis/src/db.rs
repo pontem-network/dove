@@ -4,7 +4,8 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
-use dialects::{dfinance, CompilerError, CompilerErrorPart, FilePath, FilesSourceText};
+use dialects::{dfinance, CompilerError, CompilerErrorPart};
+use utils::{FilePath, FilesSourceText};
 
 #[derive(Debug)]
 pub struct FileDiagnostic {

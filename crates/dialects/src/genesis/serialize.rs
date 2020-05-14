@@ -1,5 +1,5 @@
-use crate::ResourceChange;
-use dialects::dfinance::types::{StructTag, WriteSet};
+use crate::dfinance::types::{StructTag, WriteSet};
+use crate::genesis::ResourceChange;
 use std::collections::HashMap;
 
 fn get_struct_tag_at(

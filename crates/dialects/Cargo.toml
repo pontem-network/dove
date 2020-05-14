@@ -32,3 +32,4 @@ libra-canonical-serialization = { git = "https://github.com/dfinance/libra.git",
 libra-crypto = { git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
 move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
 
+utils = { path = "../utils" }
