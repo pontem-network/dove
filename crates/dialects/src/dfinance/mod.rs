@@ -8,12 +8,11 @@ use libra_types::account_address::AccountAddress;
 use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 
-use move_lang::compiled_unit::{verify_units, CompiledUnit};
-use move_lang::errors::{check_errors, Errors};
+use move_lang::errors::{Error, FilesSourceText};
 use move_lang::parser::ast::Definition;
 use move_lang::parser::syntax;
-use move_lang::shared::Address;
-use move_lang::{parser, strip_comments_and_verify};
+
+use move_lang::strip_comments_and_verify;
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::SystemExecutionContext;
 use move_vm_types::gas_schedule::zero_cost_schedule;
@@ -23,64 +22,155 @@ use move_vm_types::values::{GlobalValue, Value};
 use std::collections::BTreeMap;
 use utils::FilePath;
 
+use crate::dfinance::types::Loc;
+use crate::errors::{
+    CompilerError, CompilerErrorPart, CompilerErrors, Location, OffsetsMap, ProjectOffsetsMap,
+};
+use crate::{check_defs, generate_bytecode};
+use codespan::ByteIndex;
+use move_lang::shared::Address;
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
 
+pub mod bech32;
 pub mod types;
 
-pub fn parse_file(fname: FilePath, text: &str) -> Result<Vec<Definition>, Errors> {
-    let (no_comments_source, comment_map) = strip_comments_and_verify(fname, text)?;
-    let res = syntax::parse_file_string(fname, &no_comments_source, comment_map)?;
-    Ok(res.0)
+fn from_compiler_error(comp_error: CompilerError) -> Error {
+    comp_error
+        .parts
+        .into_iter()
+        .map(|part| {
+            let CompilerErrorPart {
+                location: Location { fpath, span },
+                message,
+            } = part;
+            (
+                Loc::new(
+                    fpath,
+                    codespan::Span::new(ByteIndex(span.0 as u32), ByteIndex(span.1 as u32)),
+                ),
+                message,
+            )
+        })
+        .collect()
 }
 
-pub fn check_parsed_program(
-    current_file_defs: Vec<Definition>,
-    dependencies: Vec<Definition>,
-    sender: [u8; AccountAddress::LENGTH],
-) -> Result<(), Errors> {
-    let ast_program = parser::ast::Program {
-        source_definitions: current_file_defs,
-        lib_definitions: dependencies,
+pub fn report_errors(files: FilesSourceText, errors: Vec<CompilerError>) -> ! {
+    let errors = errors.into_iter().map(from_compiler_error).collect();
+    move_lang::errors::report_errors(files, errors)
+}
+
+fn into_compiler_error(error: Error) -> CompilerError {
+    let mut parts = vec![];
+    for (loc, message) in error {
+        let part = CompilerErrorPart {
+            location: Location {
+                fpath: loc.file(),
+                span: (loc.span().start().to_usize(), loc.span().end().to_usize()),
+            },
+            message,
+        };
+        parts.push(part);
+    }
+    CompilerError { parts }
+}
+
+pub fn into_compiler_errors(
+    errors: Vec<Error>,
+    offsets_map: ProjectOffsetsMap,
+) -> CompilerErrors {
+    let mut compiler_errors = vec![];
+    for error in errors {
+        compiler_errors.push(into_compiler_error(error));
+    }
+    CompilerErrors::new(compiler_errors, offsets_map)
+}
+
+fn parse_file(
+    fname: FilePath,
+    text: &str,
+) -> Result<(Vec<Definition>, OffsetsMap), CompilerErrors> {
+    let (no_comments_source, comment_map) =
+        strip_comments_and_verify(fname, text).map_err(|errors| {
+            into_compiler_errors(
+                errors,
+                ProjectOffsetsMap::with_file_map(fname, OffsetsMap::new()),
+            )
+        })?;
+    let (bech32_converted_source, offsets_map) =
+        bech32::replace_bech32_addresses(&no_comments_source);
+    let (defs, _) = syntax::parse_file_string(fname, &bech32_converted_source, comment_map)
+        .map_err(|errors| {
+            into_compiler_errors(
+                errors,
+                ProjectOffsetsMap::with_file_map(fname, offsets_map.clone()),
+            )
+        })?;
+    Ok((defs, offsets_map))
+}
+
+pub fn parse_files(
+    current: (FilePath, String),
+    deps: &[(FilePath, String)],
+) -> Result<
+    (
+        Vec<types::Definition>,
+        Vec<types::Definition>,
+        ProjectOffsetsMap,
+    ),
+    CompilerErrors,
+> {
+    let (s_fpath, s_text) = current;
+    let mut parse_errors = CompilerErrors::default();
+
+    let mut project_offsets_map = ProjectOffsetsMap::default();
+    let script_defs = match parse_file(s_fpath, &s_text) {
+        Ok((defs, offsets_map)) => {
+            project_offsets_map.0.insert(s_fpath, offsets_map);
+            defs
+        }
+        Err(errors) => {
+            parse_errors.extend(errors);
+            vec![]
+        }
     };
-    let sender_address = Address::new(sender);
-    move_lang::check_program(Ok(ast_program), Some(sender_address)).map(|_| ())
+
+    let mut dep_defs = vec![];
+    for (fpath, text) in deps.iter() {
+        let defs = match parse_file(fpath, text) {
+            Ok((defs, offsets_map)) => {
+                project_offsets_map.0.insert(fpath, offsets_map);
+                defs
+            }
+            Err(errors) => {
+                parse_errors.extend(errors);
+                vec![]
+            }
+        };
+        dep_defs.extend(defs);
+    }
+    if !parse_errors.0.is_empty() {
+        return Err(parse_errors);
+    }
+    Ok((script_defs, dep_defs, project_offsets_map))
 }
 
-pub fn compile_script(
+pub fn check_and_generate_bytecode(
     fname: FilePath,
     text: &str,
     deps: &[(FilePath, String)],
     sender: [u8; AccountAddress::LENGTH],
-) -> Result<(CompiledScript, Vec<CompiledModule>), Errors> {
-    let mut parsed_defs = parse_file(fname, text)?;
-    for (fpath, text) in deps {
-        let defs = parse_file(fpath, &text)?;
-        parsed_defs.extend(defs);
-    }
-    let program = move_lang::parser::ast::Program {
-        source_definitions: parsed_defs,
-        lib_definitions: vec![],
-    };
-
-    let sender_address = Address::new(sender);
-    let compiled_units = move_lang::compile_program(Ok(program), Some(sender_address))?;
-    let (mut units, errors) = verify_units(compiled_units);
-    check_errors(errors)?;
-
-    let script = match units.remove(units.len() - 1) {
-        CompiledUnit::Script { script, .. } => script,
-        CompiledUnit::Module { .. } => unreachable!(),
-    };
-    let modules = units
-        .into_iter()
-        .map(|unit| match unit {
-            CompiledUnit::Module { module, .. } => module,
-            CompiledUnit::Script { .. } => unreachable!(),
-        })
-        .collect();
-    Ok((script, modules))
+) -> Result<(CompiledScript, Vec<CompiledModule>), Vec<CompilerError>> {
+    let (mut script_defs, modules_defs, project_offsets_map) =
+        parse_files((fname, text.to_owned()), deps).map_err(|errors| errors.apply_offsets())?;
+    script_defs.extend(modules_defs);
+    let sender = Address::new(sender);
+    let program = check_defs(script_defs, vec![], sender).map_err(|errors| {
+        into_compiler_errors(errors, project_offsets_map.clone()).apply_offsets()
+    })?;
+    generate_bytecode(program)
+        .map_err(|errors| into_compiler_errors(errors, project_offsets_map).apply_offsets())
 }
 
 pub fn serialize_script(script: CompiledScript) -> Vec<u8> {

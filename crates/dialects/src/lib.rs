@@ -1,106 +1,51 @@
 use anyhow::Result;
 
-use crate::dfinance::types::{AccountAddress, Definition, Error};
-use move_lang::parser;
+use crate::dfinance::types::{Definition, Error};
 use move_lang::shared::Address;
+use move_lang::{cfgir, parser, to_bytecode};
 
+use crate::dfinance::into_compiler_errors;
+use crate::errors::CompilerError;
+use move_lang::compiled_unit::CompiledUnit;
 use utils::FilePath;
+use vm::file_format::CompiledScript;
+use vm::CompiledModule;
 
 pub mod changes;
 pub mod dfinance;
+pub mod errors;
 pub mod executor;
-pub mod libra;
 
-#[derive(Debug, Clone)]
-pub struct Location {
-    pub fpath: FilePath,
-    pub span: (usize, usize),
-}
+type PreBytecodeProgram = cfgir::ast::Program;
 
-#[derive(Debug, Clone)]
-pub struct CompilerErrorPart {
-    pub location: Location,
-    pub message: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct CompilerError {
-    pub parts: Vec<CompilerErrorPart>,
-}
-
-impl From<Error> for CompilerError {
-    fn from(error: Error) -> Self {
-        let mut parts = vec![];
-        for (loc, message) in error {
-            let part = CompilerErrorPart {
-                location: Location {
-                    fpath: loc.file(),
-                    span: (loc.span().start().to_usize(), loc.span().end().to_usize()),
-                },
-                message,
-            };
-            parts.push(part);
-        }
-        CompilerError { parts }
-    }
-}
-
-fn parse_files(
-    current: (FilePath, String),
-    deps: Vec<(FilePath, String)>,
-) -> Result<
-    (
-        Vec<dfinance::types::Definition>,
-        Vec<dfinance::types::Definition>,
-    ),
-    Vec<CompilerError>,
-> {
-    let (s_fpath, s_text) = current;
-    let mut parse_errors: Vec<CompilerError> = vec![];
-
-    let script_defs = match dfinance::parse_file(s_fpath, &s_text) {
-        Ok(parsed) => parsed,
-        Err(errors) => {
-            for error in errors {
-                parse_errors.push(error.into());
-            }
-            vec![]
-        }
-    };
-
-    let mut dep_defs = vec![];
-    for (fpath, text) in deps.into_iter() {
-        let defs = match dfinance::parse_file(fpath, &text) {
-            Ok(parsed) => parsed,
-            Err(errors) => {
-                for error in errors {
-                    parse_errors.push(error.into());
-                }
-                vec![]
-            }
-        };
-        dep_defs.extend(defs);
-    }
-    if !parse_errors.is_empty() {
-        return Err(parse_errors);
-    }
-    Ok((script_defs, dep_defs))
-}
-
-fn check_parsed_program(
-    current_file_defs: Vec<Definition>,
-    dependencies: Vec<Definition>,
-    sender: [u8; AccountAddress::LENGTH],
-) -> Result<(), Vec<CompilerError>> {
+pub fn check_defs(
+    source_definitions: Vec<Definition>,
+    lib_definitions: Vec<Definition>,
+    sender: Address,
+) -> Result<PreBytecodeProgram, Vec<Error>> {
     let ast_program = parser::ast::Program {
-        source_definitions: current_file_defs,
-        lib_definitions: dependencies,
+        source_definitions,
+        lib_definitions,
     };
-    let sender_address = Address::new(sender);
-    match move_lang::check_program(Ok(ast_program), Some(sender_address)) {
-        Ok(_) => Ok(()),
-        Err(errors) => Err(errors.into_iter().map(CompilerError::from).collect()),
-    }
+    move_lang::check_program(Ok(ast_program), Some(sender))
+}
+
+pub fn generate_bytecode(
+    program: PreBytecodeProgram,
+) -> Result<(CompiledScript, Vec<CompiledModule>), Vec<Error>> {
+    let mut units = to_bytecode::translate::program(program)?;
+    let script = match units.remove(units.len() - 1) {
+        CompiledUnit::Script { script, .. } => script,
+        CompiledUnit::Module { .. } => unreachable!(),
+    };
+    let modules = units
+        .into_iter()
+        .map(|unit| match unit {
+            CompiledUnit::Module { module, .. } => module,
+            CompiledUnit::Script { .. } => unreachable!(),
+        })
+        .collect();
+    Ok((script, modules))
 }
 
 pub fn check_with_compiler(
@@ -108,8 +53,14 @@ pub fn check_with_compiler(
     deps: Vec<(FilePath, String)>,
     sender: [u8; dfinance::types::AccountAddress::LENGTH],
 ) -> Result<(), Vec<CompilerError>> {
-    let (script_defs, dep_defs) = parse_files(current, deps)?;
-    check_parsed_program(script_defs, dep_defs, sender)
+    let (script_defs, dep_defs, offsets_map) =
+        dfinance::parse_files(current, &deps).map_err(|errors| errors.apply_offsets())?;
+
+    let sender = Address::new(sender);
+    match check_defs(script_defs, dep_defs, sender) {
+        Ok(_) => Ok(()),
+        Err(errors) => Err(into_compiler_errors(errors, offsets_map).apply_offsets()),
+    }
 }
 
 pub trait Dialect {

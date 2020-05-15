@@ -4,7 +4,8 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
-use dialects::{dfinance, CompilerError, CompilerErrorPart};
+use dialects::dfinance;
+use dialects::errors::{CompilerError, CompilerErrorPart};
 use utils::{FilePath, FilesSourceText};
 
 #[derive(Debug)]
@@ -73,7 +74,7 @@ impl RootDatabase {
         }
     }
 
-    fn comp_location_to_range(&self, loc: &dialects::Location) -> Result<Range> {
+    fn comp_location_to_range(&self, loc: &dialects::errors::Location) -> Result<Range> {
         let file = loc.fpath;
         let text = match self.available_files.get(file) {
             Some(text) => text.clone(),

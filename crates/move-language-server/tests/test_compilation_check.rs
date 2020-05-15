@@ -6,8 +6,8 @@ use analysis::config::{Config, MoveDialect};
 use analysis::db::FileDiagnostic;
 use move_language_server::world::WorldState;
 use utils::io::read_move_files;
-use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
-use utils::FilePath;
+use utils::tests::{get_modules_path, get_resources_dir, get_stdlib_path};
+use utils::{leaked_fpath, FilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
@@ -22,7 +22,11 @@ fn diagnostics(text: &str) -> Vec<Diagnostic> {
 }
 
 fn diagnostics_with_config(text: &str, config: Config) -> Vec<FileDiagnostic> {
-    diagnostics_with_config_and_filename(text, config, existing_file_abspath())
+    diagnostics_with_config_and_filename(
+        text,
+        config,
+        leaked_fpath(get_resources_dir().join("some_script.move")),
+    )
 }
 
 fn diagnostics_with_config_and_filename(
@@ -395,5 +399,75 @@ address 0x0 {
             leaked_fpath(get_stdlib_path().join("debug.move")),
         );
         assert!(errors.is_empty(), "{:?}", errors);
+    }
+
+    #[test]
+    fn error_in_presence_of_bech32_address() {
+        let source_text = r"
+address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+    module Debug {
+        public fun main() {}
+    }
+}
+    ";
+        let errors = diagnostics(source_text);
+        assert!(errors.is_empty());
+
+        let invalid_source_text = r"
+address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+    module Debug {
+        pubic fun main() {}
+    }
+}
+    ";
+        let errors = diagnostics(invalid_source_text);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].message, "Unexpected \'pubic\'");
+        assert_eq!(errors[0].range, range((3, 8), (3, 13)))
+    }
+
+    #[test]
+    fn two_bech32_addresses_one_in_the_middle_of_script() {
+        let source_text = r"
+address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+    module Debug {
+        public fun main() {
+            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+        }
+    }
+}
+    ";
+        let errors = diagnostics(source_text);
+        assert!(errors.is_empty(), "{:?}", errors);
+
+        let invalid_source_text = r"
+address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+    module Debug {
+        public fun main() {
+            let addr = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+        }
+    }
+}
+    ";
+        let errors = diagnostics(invalid_source_text);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].message, "Unused assignment or binding for local 'addr'. Consider removing or replacing it with '_'");
+        assert_eq!(errors[0].range, range((4, 16), (4, 20)));
+
+        let invalid_source_text = r"
+address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+    module Debug {
+        public fun main() {
+            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let _: u10;
+        }
+    }
+}
+    ";
+        let errors = diagnostics(invalid_source_text);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].message, "Unbound type 'u10' in current scope");
+        assert_eq!(errors[0].range, range((6, 19), (6, 22)));
     }
 }

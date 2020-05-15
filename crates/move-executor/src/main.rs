@@ -5,8 +5,8 @@ use anyhow::{Context, Result};
 use structopt::StructOpt;
 
 use dialects::changes::ResourceChange;
-use dialects::dfinance::types::{report_errors, VMStatus};
-use dialects::{DFinanceDialect, Dialect};
+use dialects::dfinance::types::VMStatus;
+use dialects::{dfinance, DFinanceDialect, Dialect};
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 
 #[derive(Debug, serde::Serialize)]
@@ -85,7 +85,7 @@ fn main() -> Result<()> {
         Ok(vm_res) => vm_res,
         Err(errors) => {
             let files_mapping = get_file_sources_mapping((script_fpath, script_text), deps);
-            report_errors(files_mapping, errors);
+            dfinance::report_errors(files_mapping, errors);
         }
     };
     let out = match vm_result {

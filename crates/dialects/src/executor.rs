@@ -1,7 +1,8 @@
 use crate::changes::{changes_into_writeset, ResourceChange};
 use crate::dfinance;
 
-use crate::dfinance::types::{AccountAddress, Error, VMResult};
+use crate::dfinance::types::{AccountAddress, VMResult};
+use crate::errors::CompilerError;
 use libra_types::vm_error::StatusCode;
 use libra_types::write_set::WriteOp;
 use utils::FilePath;
@@ -12,12 +13,13 @@ pub fn compile_and_run(
     deps: &[(FilePath, String)],
     sender: String,
     genesis: Vec<ResourceChange>,
-) -> Result<VMResult<Vec<ResourceChange>>, Vec<Error>> {
+) -> Result<VMResult<Vec<ResourceChange>>, Vec<CompilerError>> {
     let sender = AccountAddress::from_hex_literal(&sender).unwrap();
+
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
-        dfinance::compile_script(fname, &script_text, deps, sender.into())?;
+        dfinance::check_and_generate_bytecode(fname, &script_text, deps, sender.into())?;
 
     let write_set = changes_into_writeset(genesis);
     let network_state = dfinance::prepare_fake_network_state(compiled_modules, write_set);
@@ -126,7 +128,10 @@ script {
         )
         .unwrap_err();
         assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
+        assert_eq!(
+            errors[0].parts[0].message,
+            "Unbound module \'0x0::Transaction\'"
+        );
     }
 
     #[test]
