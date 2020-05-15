@@ -6,9 +6,9 @@ use move_lang::shared::Address;
 
 use utils::FilePath;
 
+pub mod changes;
 pub mod dfinance;
 pub mod executor;
-pub mod genesis;
 pub mod libra;
 
 #[derive(Debug, Clone)]

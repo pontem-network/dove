@@ -2,13 +2,12 @@ use anyhow::Result;
 
 use language_e2e_tests::data_store::FakeDataStore;
 
-use libra_crypto::hash::CryptoHash;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
-use libra_types::language_storage::{ResourceKey, StructTag};
+
 use libra_types::write_set::WriteSet;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-use move_core_types::identifier::Identifier;
+
 use move_lang::compiled_unit::{verify_units, CompiledUnit};
 use move_lang::errors::{check_errors, Errors};
 use move_lang::parser::ast::Definition;
@@ -16,13 +15,14 @@ use move_lang::parser::syntax;
 use move_lang::shared::Address;
 use move_lang::{parser, strip_comments_and_verify};
 use move_vm_runtime::MoveVM;
-use move_vm_state::execution_context::{ExecutionContext, SystemExecutionContext};
+use move_vm_state::execution_context::SystemExecutionContext;
 use move_vm_types::gas_schedule::zero_cost_schedule;
+use move_vm_types::loaded_data::types::FatStructType;
 use move_vm_types::transaction_metadata::TransactionMetadata;
-use move_vm_types::values::Value;
-use std::collections::HashMap;
+use move_vm_types::values::{GlobalValue, Value};
+use std::collections::BTreeMap;
 use utils::FilePath;
-use vm::access::ScriptAccess;
+
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
@@ -101,46 +101,20 @@ pub fn prepare_fake_network_state(
     network_state
 }
 
-pub fn get_resource_structs(compiled_script: &CompiledScript) -> HashMap<Vec<u8>, StructTag> {
-    let mut resource_structs = HashMap::new();
-    for struct_handle in compiled_script.struct_handles() {
-        if struct_handle.is_nominal_resource {
-            let module = compiled_script.module_handle_at(struct_handle.module);
-            let module_address = compiled_script.address_identifier_at(module.address);
-            let module_name =
-                Identifier::new(compiled_script.identifier_at(module.name).as_str()).unwrap();
-            let struct_name =
-                Identifier::new(compiled_script.identifier_at(struct_handle.name).as_str())
-                    .unwrap();
-            let struct_tag = StructTag {
-                address: *module_address,
-                module: module_name,
-                name: struct_name,
-                type_params: vec![],
-            };
-            resource_structs.insert(struct_tag.hash().to_vec(), struct_tag);
-        }
-    }
-    resource_structs
-}
-
-pub fn struct_tag_into_access_path(struct_tag: StructTag) -> AccessPath {
-    let resource_key = ResourceKey::new(struct_tag.address, struct_tag);
-    AccessPath::resource_access_path(&resource_key)
-}
-
 fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetadata {
     let mut metadata = TransactionMetadata::default();
     metadata.sender = sender_address;
     metadata
 }
 
+type ChangedMoveResources = BTreeMap<AccessPath, Option<(FatStructType, GlobalValue)>>;
+
 pub fn execute_script(
     sender_address: AccountAddress,
     data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
-) -> VMResult<WriteSet> {
+) -> VMResult<ChangedMoveResources> {
     let mut exec_context = SystemExecutionContext::new(data_store, GasUnits::new(1_000_000));
     let zero_cost_table = zero_cost_schedule();
     let txn_metadata = get_transaction_metadata(sender_address);
@@ -154,5 +128,5 @@ pub fn execute_script(
         vec![],
         args,
     )?;
-    exec_context.make_write_set()
+    Ok(exec_context.data_map())
 }

@@ -4,8 +4,8 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use structopt::StructOpt;
 
+use dialects::changes::ResourceChange;
 use dialects::dfinance::types::{report_errors, VMStatus};
-use dialects::genesis::ResourceChange;
 use dialects::{DFinanceDialect, Dialect};
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 

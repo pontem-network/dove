@@ -1,9 +1,11 @@
+use crate::changes::{changes_into_writeset, ResourceChange};
 use crate::dfinance;
-use crate::dfinance::get_resource_structs;
+
 use crate::dfinance::types::{AccountAddress, Error, VMResult};
-use crate::genesis::serialize::serialize_write_set;
-use crate::genesis::{changes_into_writeset, ResourceChange};
+use libra_types::vm_error::StatusCode;
+use libra_types::write_set::WriteOp;
 use utils::FilePath;
+use vm::errors::{vm_error, Location};
 
 pub fn compile_and_run(
     script: (FilePath, String),
@@ -16,19 +18,44 @@ pub fn compile_and_run(
 
     let (compiled_script, compiled_modules) =
         dfinance::compile_script(fname, &script_text, deps, sender.into())?;
-    let available_resource_structs = get_resource_structs(&compiled_script);
 
     let write_set = changes_into_writeset(genesis);
     let network_state = dfinance::prepare_fake_network_state(compiled_modules, write_set);
 
     let serialized_script = dfinance::serialize_script(compiled_script);
-    let write_set =
+    let changed_resources =
         match dfinance::execute_script(sender, &network_state, serialized_script, vec![]) {
             Ok(ws) => ws,
             Err(vm_status) => return Ok(Err(vm_status)),
         };
+    let mut changes = vec![];
+    for (_, global_val) in changed_resources {
+        match global_val {
+            None => {
+                // deletion is not yet supported
+                continue;
+            }
+            Some((struct_type, global_val)) => {
+                if !global_val.is_clean().unwrap() {
+                    // into_owned_struct will check if all references are properly released
+                    // at the end of a transaction
+                    let data = global_val.into_owned_struct().unwrap();
+                    let val = match data.simple_serialize(&struct_type) {
+                        Some(blob) => blob,
+                        None => {
+                            return Ok(Err(vm_error(
+                                Location::new(),
+                                StatusCode::VALUE_SERIALIZATION_ERROR,
+                            )));
+                        }
+                    };
+                    let change = ResourceChange::new(struct_type, WriteOp::Value(val));
+                    changes.push(change);
+                }
+            }
+        }
+    }
 
-    let changes = serialize_write_set(write_set, &available_resource_structs);
     Ok(Ok(changes))
 }
 
@@ -152,11 +179,13 @@ script {
         assert_eq!(
             serde_json::to_value(&changes[0]).unwrap(),
             serde_json::json!({
-                "struct_tag": {
+                "struct_type": {
                     "address": sender.to_string(),
+                    "is_resource": true,
                     "module": "Record",
                     "name": "T",
-                    "type_params": []
+                    "ty_args": [],
+                    "layout": ["U8", "U8"]
                 },
                 "op": {"type": "SetValue", "values": [10, 20]}
             })
@@ -180,11 +209,13 @@ script {
 }";
 
         let genesis = serde_json::json!([{
-            "struct_tag": {
+            "struct_type": {
                 "address": sender.to_string(),
                 "module": "Record",
                 "name": "T",
-                "type_params": []
+                "is_resource": true,
+                "ty_args": [],
+                "layout": ["U8", "U8"]
             },
             "op": {"type": "SetValue", "values": [10, 20]}
         }]);
@@ -201,14 +232,53 @@ script {
         assert_eq!(
             serde_json::to_value(&changes[0]).unwrap(),
             serde_json::json!({
-                "struct_tag": {
+                "struct_type": {
                     "address": sender.to_string(),
                     "module": "Record",
                     "name": "T",
-                    "type_params": []
+                    "is_resource": true,
+                    "ty_args": [],
+                    "layout": ["U8", "U8"]
                 },
                 "op": {"type": "SetValue", "values": [11, 20]}
             })
         );
+    }
+
+    #[test]
+    fn missing_writesets_for_move_to_sender() {
+        let module_text = r"
+address 0x1 {
+    module M {
+        resource struct T { value: u8 }
+
+        public fun get_t(v: u8) {
+            move_to_sender<T>(T { value: v })
+        }
+    }
+}
+        ";
+        let script_text = r"
+script {
+    fun main() {
+        0x1::M::get_t(10);
+    }
+}
+        ";
+        let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
+        deps.push((
+            leaked_fpath(get_modules_path().join("m.move")),
+            module_text.to_string(),
+        ));
+
+        let vm_res = compile_and_run(
+            (get_script_path(), script_text.to_string()),
+            &deps,
+            "0x1".to_string(),
+            vec![],
+        )
+        .unwrap();
+        let changes = vm_res.unwrap();
+        println!("{}", serde_json::to_string_pretty(&changes).unwrap());
     }
 }
