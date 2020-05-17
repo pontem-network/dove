@@ -56,8 +56,7 @@ fn diagnostics_with_config_and_filename(
 mod tests {
     use super::*;
     use analysis::db::RootDatabase;
-    use dialects::dfinance::types::AccountAddress;
-    use std::string::ToString;
+
     use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
@@ -231,11 +230,7 @@ fun main() {
 }
     ";
         let config = Config {
-            sender_address: AccountAddress::from_hex_literal(
-                "0x8572f83cee01047effd6e7d0b5c19743",
-            )
-            .unwrap()
-            .into(),
+            sender_address: "0x8572f83cee01047effd6e7d0b5c19743".to_string(),
             stdlib_folder: Some(get_stdlib_path()),
             module_folders: vec![get_modules_path()],
             ..Config::default()
@@ -292,7 +287,7 @@ module CovidTracker {
     #[test]
     fn test_compile_with_sender_address_specified() {
         // hardcoded sender address
-        let sender_address = "0x11111111111111111111111111111111";
+        let sender_address = "0x11111111111111111111111111111111".to_string();
         let script_source_text = r"
 script {
     use 0x11111111111111111111111111111111::CovidTracker;
@@ -305,9 +300,7 @@ script {
         let config = Config {
             stdlib_folder: Some(get_stdlib_path()),
             module_folders: vec![get_modules_path()],
-            sender_address: AccountAddress::from_hex_literal(sender_address)
-                .unwrap()
-                .into(),
+            sender_address,
             ..Config::default()
         };
         let errors = diagnostics_with_config(script_source_text, config);
@@ -342,7 +335,7 @@ script {
     fn test_syntax_error_in_dependency() {
         let config = Config {
             dialect: MoveDialect::Libra,
-            sender_address: [0; AccountAddress::LENGTH],
+            sender_address: "0x0".to_string(),
             module_folders: vec![get_modules_path()],
             stdlib_folder: None,
         };

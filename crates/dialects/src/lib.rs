@@ -6,6 +6,7 @@ use move_lang::{cfgir, parser, to_bytecode};
 
 use crate::dfinance::into_compiler_errors;
 use crate::errors::CompilerError;
+use move_core_types::account_address::AccountAddress;
 use move_lang::compiled_unit::CompiledUnit;
 use utils::FilePath;
 use vm::file_format::CompiledScript;
@@ -51,12 +52,12 @@ pub fn generate_bytecode(
 pub fn check_with_compiler(
     current: (FilePath, String),
     deps: Vec<(FilePath, String)>,
-    sender: [u8; dfinance::types::AccountAddress::LENGTH],
+    sender: &str,
 ) -> Result<(), Vec<CompilerError>> {
     let (script_defs, dep_defs, offsets_map) =
         dfinance::parse_files(current, &deps).map_err(|errors| errors.apply_offsets())?;
 
-    let sender = Address::new(sender);
+    let sender = DFinanceDialect::parse_address(sender).unwrap();
     match check_defs(script_defs, dep_defs, sender) {
         Ok(_) => Ok(()),
         Err(errors) => Err(into_compiler_errors(errors, offsets_map).apply_offsets()),
@@ -65,6 +66,8 @@ pub fn check_with_compiler(
 
 pub trait Dialect {
     fn validate_sender_address(s: String) -> Result<String>;
+    fn parse_address(s: &str) -> Result<Address>;
+    fn parse_account_address(s: &str) -> Result<AccountAddress>;
 }
 
 pub struct DFinanceDialect;
@@ -73,5 +76,15 @@ impl Dialect for DFinanceDialect {
     fn validate_sender_address(s: String) -> Result<String> {
         dfinance::types::AccountAddress::from_hex_literal(&s)?;
         Ok(s)
+    }
+
+    fn parse_address(s: &str) -> Result<Address> {
+        Ok(dfinance::types::Address::new(
+            Self::parse_account_address(s)?.into(),
+        ))
+    }
+
+    fn parse_account_address(s: &str) -> Result<AccountAddress> {
+        dfinance::types::AccountAddress::from_hex_literal(s)
     }
 }

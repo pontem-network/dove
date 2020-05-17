@@ -4,7 +4,6 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
-use dialects::dfinance;
 use dialects::errors::{CompilerError, CompilerErrorPart};
 use utils::{FilePath, FilesSourceText};
 
@@ -43,10 +42,6 @@ impl RootDatabase {
             .into_iter()
             .filter(|(f, _)| self.is_fpath_for_a_module(f))
             .collect()
-    }
-
-    pub fn sender_address(&self) -> [u8; dfinance::types::AccountAddress::LENGTH] {
-        self.config.sender_address
     }
 
     pub fn apply_change(&mut self, change: AnalysisChange) {

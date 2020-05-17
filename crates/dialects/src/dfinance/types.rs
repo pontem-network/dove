@@ -7,4 +7,5 @@ pub use move_ir_types::location::Loc;
 pub use move_lang::errors::report_errors;
 pub use move_lang::errors::Error;
 pub use move_lang::parser::ast::Definition;
+pub use move_lang::shared::Address;
 pub use vm::errors::VMResult;
