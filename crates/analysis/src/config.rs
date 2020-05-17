@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use dialects::dfinance::types::AccountAddress;
+use lang::types::AccountAddress;
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;

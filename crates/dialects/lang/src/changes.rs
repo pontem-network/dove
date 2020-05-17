@@ -1,6 +1,4 @@
-use crate::dfinance::types::{AccessPath, WriteOp, WriteSet, WriteSetMut};
-use libra_types::language_storage::ResourceKey;
-use move_vm_types::loaded_data::types::FatStructType;
+use crate::types::{AccessPath, FatStructType, ResourceKey, WriteOp, WriteSet, WriteSetMut};
 
 pub fn struct_type_into_access_path(struct_type: FatStructType) -> AccessPath {
     let resource_key = ResourceKey::new(struct_type.address, struct_type.struct_tag().unwrap());

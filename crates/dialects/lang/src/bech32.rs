@@ -1,7 +1,7 @@
-use crate::errors::OffsetsMap;
 use anyhow::{ensure, Result};
 use bech32::u5;
 use lazy_static::lazy_static;
+use shared::errors::OffsetsMap;
 
 use regex::Regex;
 

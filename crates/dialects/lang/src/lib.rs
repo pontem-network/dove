@@ -12,7 +12,7 @@ use move_lang::errors::{Error, FilesSourceText};
 use move_lang::parser::ast::Definition;
 use move_lang::parser::syntax;
 
-use move_lang::strip_comments_and_verify;
+use move_lang::{cfgir, parser, strip_comments_and_verify, to_bytecode};
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::SystemExecutionContext;
 use move_vm_types::gas_schedule::zero_cost_schedule;
@@ -22,18 +22,20 @@ use move_vm_types::values::{GlobalValue, Value};
 use std::collections::BTreeMap;
 use utils::FilePath;
 
-use crate::dfinance::types::Loc;
-use crate::errors::{
+use crate::types::Loc;
+use codespan::ByteIndex;
+use move_lang::compiled_unit::CompiledUnit;
+use move_lang::shared::Address;
+use shared::errors::{
     CompilerError, CompilerErrorPart, CompilerErrors, Location, OffsetsMap, ProjectOffsetsMap,
 };
-use crate::{check_defs, generate_bytecode};
-use codespan::ByteIndex;
-use move_lang::shared::Address;
 use vm::errors::VMResult;
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
 
 pub mod bech32;
+pub mod changes;
+pub mod executor;
 pub mod types;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {
@@ -219,4 +221,59 @@ pub fn execute_script(
         args,
     )?;
     Ok(exec_context.data_map())
+}
+
+type PreBytecodeProgram = cfgir::ast::Program;
+
+pub fn check_defs(
+    source_definitions: Vec<Definition>,
+    lib_definitions: Vec<Definition>,
+    sender: Address,
+) -> Result<PreBytecodeProgram, Vec<Error>> {
+    let ast_program = parser::ast::Program {
+        source_definitions,
+        lib_definitions,
+    };
+    move_lang::check_program(Ok(ast_program), Some(sender))
+}
+
+pub fn generate_bytecode(
+    program: PreBytecodeProgram,
+) -> Result<(CompiledScript, Vec<CompiledModule>), Vec<Error>> {
+    let mut units = to_bytecode::translate::program(program)?;
+    let script = match units.remove(units.len() - 1) {
+        CompiledUnit::Script { script, .. } => script,
+        CompiledUnit::Module { .. } => unreachable!(),
+    };
+    let modules = units
+        .into_iter()
+        .map(|unit| match unit {
+            CompiledUnit::Module { module, .. } => module,
+            CompiledUnit::Script { .. } => unreachable!(),
+        })
+        .collect();
+    Ok((script, modules))
+}
+
+pub fn parse_account_address(s: &str) -> Result<AccountAddress> {
+    AccountAddress::from_hex_literal(s)
+}
+
+pub fn parse_address(s: &str) -> Result<Address> {
+    Ok(Address::new(parse_account_address(s)?.into()))
+}
+
+pub fn check_with_compiler(
+    current: (FilePath, String),
+    deps: Vec<(FilePath, String)>,
+    sender: &str,
+) -> Result<(), Vec<CompilerError>> {
+    let (script_defs, dep_defs, offsets_map) =
+        parse_files(current, &deps).map_err(|errors| errors.apply_offsets())?;
+
+    let sender = parse_address(sender).unwrap();
+    match check_defs(script_defs, dep_defs, sender) {
+        Ok(_) => Ok(()),
+        Err(errors) => Err(into_compiler_errors(errors, offsets_map).apply_offsets()),
+    }
 }
