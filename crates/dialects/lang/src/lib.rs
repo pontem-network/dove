@@ -183,13 +183,13 @@ pub fn serialize_script(script: CompiledScript) -> Vec<u8> {
 
 pub fn prepare_fake_network_state(
     modules: Vec<CompiledModule>,
-    genesis_changes_writeset: WriteSet,
+    genesis_write_set: WriteSet,
 ) -> FakeDataStore {
     let mut network_state = FakeDataStore::default();
     for module in modules {
         network_state.add_module(&module.self_id(), &module);
     }
-    network_state.add_write_set(&genesis_changes_writeset);
+    network_state.add_write_set(&genesis_write_set);
     network_state
 }
 

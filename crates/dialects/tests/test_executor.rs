@@ -1,6 +1,7 @@
-use lang::changes::ResourceChange;
+use lang::changes::changes_into_writeset;
 use lang::executor::compile_and_run;
-use lang::types::AccountAddress;
+use lang::types::{AccountAddress, WriteSet};
+
 use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use utils::{io, leaked_fpath, FilePath};
 
@@ -59,7 +60,7 @@ script {
         (get_script_path(), text.to_string()),
         &[],
         "0x111111111111111111111111".to_string(),
-        vec![],
+        WriteSet::default(),
     )
     .unwrap_err();
     assert_eq!(errors.len(), 1);
@@ -84,7 +85,7 @@ script {
         (existing_file_abspath(), text.to_string()),
         &deps,
         "0x111111111111111111111111".to_string(),
-        vec![],
+        WriteSet::default(),
     )
     .unwrap();
     assert!(vm_res.is_ok());
@@ -110,7 +111,7 @@ script {
         (get_script_path(), script_text.to_string()),
         &deps,
         "0x111111111111111111111111".to_string(),
-        vec![],
+        WriteSet::default(),
     )
     .unwrap();
     let changes = vm_res.unwrap();
@@ -119,9 +120,8 @@ script {
     assert_eq!(
         serde_json::to_value(&changes[0]).unwrap(),
         serde_json::json!({
-            "struct_type": {
+            "ty": {
                 "address": sender.to_string(),
-                "is_resource": true,
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -149,22 +149,22 @@ script {
 }";
 
     let genesis = serde_json::json!([{
-        "struct_type": {
+        "ty": {
             "address": sender.to_string(),
             "module": "Record",
             "name": "T",
-            "is_resource": true,
             "ty_args": [],
             "layout": ["U8", "U8"]
         },
         "op": {"type": "SetValue", "values": [10, 20]}
     }]);
-    let genesis: Vec<ResourceChange> = serde_json::from_value(genesis).unwrap();
+    let changes = serde_json::from_value(genesis).unwrap();
+    let genesis_write_set = changes_into_writeset(changes).unwrap();
     let vm_res = compile_and_run(
         (get_script_path(), script_text.to_string()),
         &deps,
         "0x111111111111111111111111".to_string(),
-        genesis,
+        genesis_write_set,
     )
     .unwrap();
     let changes = vm_res.unwrap();
@@ -172,11 +172,10 @@ script {
     assert_eq!(
         serde_json::to_value(&changes[0]).unwrap(),
         serde_json::json!({
-            "struct_type": {
+            "ty": {
                 "address": sender.to_string(),
                 "module": "Record",
                 "name": "T",
-                "is_resource": true,
                 "ty_args": [],
                 "layout": ["U8", "U8"]
             },
@@ -215,9 +214,30 @@ script {
         (get_script_path(), script_text.to_string()),
         &deps,
         "0x1".to_string(),
-        vec![],
+        WriteSet::default(),
     )
     .unwrap();
     let changes = vm_res.unwrap();
-    println!("{}", serde_json::to_string_pretty(&changes).unwrap());
+    assert_eq!(
+        serde_json::to_value(changes).unwrap(),
+        serde_json::json!([
+          {
+            "ty": {
+              "address": "000000000000000000000000000000000000000000000001",
+              "module": "M",
+              "name": "T",
+              "ty_args": [],
+              "layout": [
+                "U8"
+              ]
+            },
+            "op": {
+              "type": "SetValue",
+              "values": [
+                10
+              ]
+            }
+          }
+        ])
+    );
 }

@@ -1,17 +1,18 @@
 use crate::types::{AccountAddress, VMResult};
 use libra_types::vm_error::StatusCode;
-use libra_types::write_set::WriteOp;
+use libra_types::write_set::{WriteOp, WriteSet};
 use utils::FilePath;
 use vm::errors::{vm_error, Location};
 
-use crate::changes::{changes_into_writeset, ResourceChange};
+use crate::changes::{ResourceStructType, ResourceWriteOp};
+use shared::changes::ResourceChange;
 use shared::errors::CompilerError;
 
 pub fn compile_and_run(
     script: (FilePath, String),
     deps: &[(FilePath, String)],
     sender: String,
-    genesis: Vec<ResourceChange>,
+    genesis_write_set: WriteSet,
 ) -> Result<VMResult<Vec<ResourceChange>>, Vec<CompilerError>> {
     let sender = AccountAddress::from_hex_literal(&sender).unwrap();
 
@@ -20,8 +21,7 @@ pub fn compile_and_run(
     let (compiled_script, compiled_modules) =
         crate::check_and_generate_bytecode(fname, &script_text, deps, sender.into())?;
 
-    let write_set = changes_into_writeset(genesis);
-    let network_state = crate::prepare_fake_network_state(compiled_modules, write_set);
+    let network_state = crate::prepare_fake_network_state(compiled_modules, genesis_write_set);
 
     let serialized_script = crate::serialize_script(compiled_script);
     let changed_resources =
@@ -50,7 +50,10 @@ pub fn compile_and_run(
                             )));
                         }
                     };
-                    let change = ResourceChange::new(struct_type, WriteOp::Value(val));
+                    let change = ResourceChange::new(
+                        ResourceStructType(struct_type),
+                        ResourceWriteOp(WriteOp::Value(val)),
+                    );
                     changes.push(change);
                 }
             }

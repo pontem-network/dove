@@ -2559,6 +2559,11 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "codespan 0.8.0",
+ "serde",
+ "serde_derive",
+ "serde_json",
  "utils",
 ]
 

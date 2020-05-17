@@ -5,8 +5,9 @@ use anyhow::{Context, Result};
 use structopt::StructOpt;
 
 use dialects::{DFinanceDialect, Dialect};
-use lang::changes::ResourceChange;
+use lang::changes::changes_into_writeset;
 use lang::types::VMStatus;
+use shared::changes::ResourceChange;
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 
 #[derive(Debug, serde::Serialize)]
@@ -74,11 +75,12 @@ fn main() -> Result<()> {
     let sender = DFinanceDialect::validate_sender_address(options.sender)?;
 
     let script_fpath = leaked_fpath(options.script);
+    let genesis_write_set = changes_into_writeset(genesis_changes)?;
     let exec_res = lang::executor::compile_and_run(
         (script_fpath, script_text.clone()),
         &deps,
         sender,
-        genesis_changes,
+        genesis_write_set,
     );
     let vm_result = match exec_res {
         Ok(vm_res) => vm_res,
