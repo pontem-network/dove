@@ -22,7 +22,7 @@ use move_vm_types::values::{GlobalValue, Value};
 use std::collections::BTreeMap;
 use utils::FilePath;
 
-use crate::types::Loc;
+use crate::types::{Loc, ResourceKey};
 use codespan::ByteIndex;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::shared::Address;
@@ -276,4 +276,9 @@ pub fn check_with_compiler(
         Ok(_) => Ok(()),
         Err(errors) => Err(into_compiler_errors(errors, offsets_map).apply_offsets()),
     }
+}
+
+pub fn struct_type_into_access_path(struct_type: FatStructType) -> AccessPath {
+    let resource_key = ResourceKey::new(struct_type.address, struct_type.struct_tag().unwrap());
+    AccessPath::resource_access_path(&resource_key)
 }

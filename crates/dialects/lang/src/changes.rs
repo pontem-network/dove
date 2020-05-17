@@ -1,9 +1,5 @@
-use crate::types::{AccessPath, FatStructType, ResourceKey, WriteOp, WriteSet, WriteSetMut};
-
-pub fn struct_type_into_access_path(struct_type: FatStructType) -> AccessPath {
-    let resource_key = ResourceKey::new(struct_type.address, struct_type.struct_tag().unwrap());
-    AccessPath::resource_access_path(&resource_key)
-}
+use crate::struct_type_into_access_path;
+use crate::types::{AccessPath, FatStructType, WriteOp, WriteSet, WriteSetMut};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
