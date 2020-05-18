@@ -6,24 +6,9 @@ use structopt::StructOpt;
 
 use dialects::{DFinanceDialect, Dialect};
 use lang::changes::changes_into_writeset;
-use lang::types::VMStatus;
+
 use shared::changes::ResourceChange;
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
-
-#[derive(Debug, serde::Serialize)]
-pub struct ExecStatus {
-    pub vm_status: VMStatus,
-    pub vm_status_description: String,
-}
-
-impl From<VMStatus> for ExecStatus {
-    fn from(vm_status: VMStatus) -> Self {
-        ExecStatus {
-            vm_status_description: format!("{:?}", vm_status.major_status),
-            vm_status,
-        }
-    }
-}
 
 #[derive(StructOpt)]
 struct Options {
@@ -91,10 +76,7 @@ fn main() -> Result<()> {
     };
     let out = match vm_result {
         Ok(changes) => serde_json::to_string_pretty(&changes).unwrap(),
-        Err(vm_status) => {
-            let exec_status = ExecStatus::from(vm_status);
-            serde_json::to_string_pretty(&exec_status).unwrap()
-        }
+        Err(status) => serde_json::to_string_pretty(&status).unwrap(),
     };
     println!("{}", out);
     Ok(())
