@@ -78,14 +78,11 @@ dependencies = [
  "env_logger",
  "hex",
  "log",
- "lsp-server",
  "lsp-types",
- "ra_vfs",
  "rowan",
  "serde",
  "serde_json",
  "shared",
- "threadpool",
  "utils",
 ]
 
@@ -1633,7 +1630,6 @@ dependencies = [
 name = "move-executor"
 version = "0.1.0"
 dependencies = [
- "analysis",
  "anyhow",
  "dialects",
  "lang",
@@ -2558,10 +2554,8 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "codespan 0.8.0",
  "serde",
  "serde_derive",
- "serde_json",
  "utils",
 ]
 
