@@ -26,11 +26,21 @@ impl Into<ResourceType> for ResourceStructType {
             name: name.into_string(),
             ty_args: ty_args
                 .into_iter()
-                .map(|ty_arg| ty_arg.type_tag().unwrap().to_string())
+                .map(|ty_arg| {
+                    ty_arg
+                        .type_tag()
+                        .expect("Should be a standard type")
+                        .to_string()
+                })
                 .collect(),
             layout: layout
                 .into_iter()
-                .map(|lay_arg| lay_arg.type_tag().unwrap().to_string())
+                .map(|lay_arg| {
+                    lay_arg
+                        .type_tag()
+                        .expect("Should be a standard type")
+                        .to_string()
+                })
                 .collect(),
         }
     }
@@ -59,7 +69,8 @@ pub fn resource_into_access_path(ty: ResourceType) -> Result<AccessPath> {
         ty_args,
         layout,
     };
-    let resource_key = ResourceKey::new(struct_type.address, struct_type.struct_tag().unwrap());
+    let struct_tag = struct_type.struct_tag()?;
+    let resource_key = ResourceKey::new(struct_type.address, struct_tag);
     Ok(AccessPath::resource_access_path(&resource_key))
 }
 
