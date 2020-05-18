@@ -27,17 +27,17 @@ use codespan::ByteIndex;
 use libra_types::vm_error::VMStatus;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::shared::Address;
-use shared::changes::{ExecResult, ExecStatus};
 use shared::errors::{
     CompilerError, CompilerErrorPart, CompilerErrors, Location, OffsetsMap, ProjectOffsetsMap,
 };
+use shared::results::{ExecResult, ExecStatus};
 
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
 
 pub mod bech32;
-pub mod changes;
 pub mod executor;
+pub mod resources;
 pub mod types;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {

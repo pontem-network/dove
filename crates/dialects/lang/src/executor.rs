@@ -4,10 +4,10 @@ use libra_types::write_set::{WriteOp, WriteSet};
 use utils::FilePath;
 use vm::errors::{vm_error, Location};
 
-use crate::changes::{ResourceStructType, ResourceWriteOp};
+use crate::resources::{ResourceStructType, ResourceWriteOp};
 use crate::vm_status_into_exec_status;
-use shared::changes::{ExecResult, ResourceChange};
 use shared::errors::CompilerError;
+use shared::results::{ExecResult, ResourceChange};
 
 pub fn compile_and_run(
     script: (FilePath, String),

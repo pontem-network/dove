@@ -5,9 +5,9 @@ use anyhow::{Context, Result};
 use structopt::StructOpt;
 
 use dialects::{DFinanceDialect, Dialect};
-use lang::changes::changes_into_writeset;
+use lang::resources::changes_into_writeset;
 
-use shared::changes::ResourceChange;
+use shared::results::ResourceChange;
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 
 #[derive(StructOpt)]
