@@ -81,11 +81,6 @@ pub fn into_write_op(op: ResourceChangeOp) -> WriteOp {
     }
 }
 
-pub fn struct_type_into_access_path(struct_type: FatStructType) -> AccessPath {
-    let resource_key = ResourceKey::new(struct_type.address, struct_type.struct_tag().unwrap());
-    AccessPath::resource_access_path(&resource_key)
-}
-
 pub fn changes_into_writeset(changes: Vec<ResourceChange>) -> Result<WriteSet> {
     let mut write_set = WriteSetMut::default();
     for change in changes {
