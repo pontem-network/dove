@@ -21,16 +21,26 @@ impl Into<ResourceType> for ResourceStructType {
             ..
         } = self.0;
         ResourceType {
-            address: address.to_string(),
+            address: format!("0x{}", address),
             module: module.into_string(),
             name: name.into_string(),
             ty_args: ty_args
                 .into_iter()
-                .map(|ty_arg| ty_arg.type_tag().unwrap().to_string())
+                .map(|ty_arg| {
+                    ty_arg
+                        .type_tag()
+                        .expect("Should be a standard type")
+                        .to_string()
+                })
                 .collect(),
             layout: layout
                 .into_iter()
-                .map(|lay_arg| lay_arg.type_tag().unwrap().to_string())
+                .map(|lay_arg| {
+                    lay_arg
+                        .type_tag()
+                        .expect("Should be a standard type")
+                        .to_string()
+                })
                 .collect(),
         }
     }
@@ -52,14 +62,15 @@ pub fn resource_into_access_path(ty: ResourceType) -> Result<AccessPath> {
         layout.push(item);
     }
     let struct_type = FatStructType {
-        address: AccountAddress::from_hex_literal(&format!("0x{}", ty.address))?,
+        address: AccountAddress::from_hex_literal(&ty.address)?,
         module: Identifier::new(ty.module)?,
         name: Identifier::new(ty.name)?,
         is_resource: true,
         ty_args,
         layout,
     };
-    let resource_key = ResourceKey::new(struct_type.address, struct_type.struct_tag().unwrap());
+    let struct_tag = struct_type.struct_tag()?;
+    let resource_key = ResourceKey::new(struct_type.address, struct_tag);
     Ok(AccessPath::resource_access_path(&resource_key))
 }
 
@@ -79,11 +90,6 @@ pub fn into_write_op(op: ResourceChangeOp) -> WriteOp {
         ResourceChangeOp::SetValue { values } => WriteOp::Value(values),
         ResourceChangeOp::Delete => WriteOp::Deletion,
     }
-}
-
-pub fn struct_type_into_access_path(struct_type: FatStructType) -> AccessPath {
-    let resource_key = ResourceKey::new(struct_type.address, struct_type.struct_tag().unwrap());
-    AccessPath::resource_access_path(&resource_key)
 }
 
 pub fn changes_into_writeset(changes: Vec<ResourceChange>) -> Result<WriteSet> {

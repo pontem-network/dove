@@ -1,7 +1,8 @@
 use lang::executor::compile_and_run;
 use lang::resources::changes_into_writeset;
-use lang::types::{AccountAddress, WriteSet};
+use lang::types::WriteSet;
 
+use shared::errors::ExecCompilerError;
 use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use utils::{io, leaked_fpath, FilePath};
 
@@ -38,8 +39,8 @@ address 0x111111111111111111111111 {
     (fpath, text)
 }
 
-fn get_sender() -> AccountAddress {
-    AccountAddress::from_hex_literal("0x111111111111111111111111").unwrap()
+fn get_sender() -> String {
+    "0x111111111111111111111111".to_string()
 }
 
 fn get_script_path() -> FilePath {
@@ -62,7 +63,10 @@ script {
         "0x111111111111111111111111".to_string(),
         WriteSet::default(),
     )
-    .unwrap_err();
+    .unwrap_err()
+    .downcast::<ExecCompilerError>()
+    .unwrap()
+    .0;
     assert_eq!(errors.len(), 1);
     assert_eq!(
         errors[0].parts[0].message,
@@ -81,19 +85,17 @@ script {
     }
 }";
     let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
-    let vm_res = compile_and_run(
+    compile_and_run(
         (existing_file_abspath(), text.to_string()),
         &deps,
-        "0x111111111111111111111111".to_string(),
+        get_sender(),
         WriteSet::default(),
     )
     .unwrap();
-    assert!(vm_res.is_ok());
 }
 
 #[test]
 fn test_execute_script_and_record_resource_changes() {
-    let sender = get_sender();
     let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
     deps.push(get_record_module_dep());
 
@@ -107,21 +109,20 @@ script {
     }
 }";
 
-    let vm_res = compile_and_run(
+    let changes = compile_and_run(
         (get_script_path(), script_text.to_string()),
         &deps,
-        "0x111111111111111111111111".to_string(),
+        get_sender(),
         WriteSet::default(),
     )
     .unwrap();
-    let changes = vm_res.unwrap();
     assert_eq!(changes.len(), 1);
 
     assert_eq!(
         serde_json::to_value(&changes[0]).unwrap(),
         serde_json::json!({
             "ty": {
-                "address": sender.to_string(),
+                "address": "0x000000000000000000000000111111111111111111111111",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -134,7 +135,7 @@ script {
 
 #[test]
 fn test_execute_script_with_genesis_state_provided() {
-    let sender = get_sender();
+    let _sender = get_sender();
     let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
     deps.push(get_record_module_dep());
 
@@ -150,7 +151,7 @@ script {
 
     let genesis = serde_json::json!([{
         "ty": {
-            "address": sender.to_string(),
+            "address": "0x000000000000000000000000111111111111111111111111",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -160,20 +161,19 @@ script {
     }]);
     let changes = serde_json::from_value(genesis).unwrap();
     let genesis_write_set = changes_into_writeset(changes).unwrap();
-    let vm_res = compile_and_run(
+    let changes = compile_and_run(
         (get_script_path(), script_text.to_string()),
         &deps,
-        "0x111111111111111111111111".to_string(),
+        get_sender(),
         genesis_write_set,
     )
     .unwrap();
-    let changes = vm_res.unwrap();
     assert_eq!(changes.len(), 1);
     assert_eq!(
         serde_json::to_value(&changes[0]).unwrap(),
         serde_json::json!({
             "ty": {
-                "address": sender.to_string(),
+                "address": "0x000000000000000000000000111111111111111111111111",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -210,20 +210,20 @@ script {
         module_text.to_string(),
     ));
 
-    let vm_res = compile_and_run(
+    let sender = "0x1".to_string();
+    let changes = compile_and_run(
         (get_script_path(), script_text.to_string()),
         &deps,
-        "0x1".to_string(),
+        sender,
         WriteSet::default(),
     )
     .unwrap();
-    let changes = vm_res.unwrap();
     assert_eq!(
         serde_json::to_value(changes).unwrap(),
         serde_json::json!([
           {
             "ty": {
-              "address": "000000000000000000000000000000000000000000000001",
+              "address": "0x000000000000000000000000000000000000000000000001",
               "module": "M",
               "name": "T",
               "ty_args": [],

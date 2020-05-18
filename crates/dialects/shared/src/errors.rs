@@ -1,5 +1,8 @@
 use std::collections::{BTreeMap, HashMap};
 
+use serde::export::Formatter;
+use std::fmt;
+
 use utils::FilePath;
 
 fn is_inside_interval(pos: usize, interval: (usize, usize)) -> bool {
@@ -9,7 +12,7 @@ fn is_inside_interval(pos: usize, interval: (usize, usize)) -> bool {
 // needs to be sorted
 pub type OffsetsMap = BTreeMap<(usize, usize), usize>;
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct ProjectOffsetsMap(pub HashMap<FilePath, OffsetsMap>);
 
 impl ProjectOffsetsMap {
@@ -80,18 +83,6 @@ impl CompilerErrorPart {
             message: self.message,
         }
     }
-
-    pub fn translated(self, offset: usize) -> CompilerErrorPart {
-        let span = (self.location.span.0 - offset, self.location.span.1 - offset);
-        let location = Location {
-            fpath: self.location.fpath,
-            span,
-        };
-        CompilerErrorPart {
-            location,
-            message: self.message,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -99,30 +90,31 @@ pub struct CompilerError {
     pub parts: Vec<CompilerErrorPart>,
 }
 
-#[derive(Default)]
-pub struct CompilerErrors(pub Vec<CompilerError>, ProjectOffsetsMap);
+#[derive(Debug, Default)]
+pub struct ExecCompilerError(pub Vec<CompilerError>, pub ProjectOffsetsMap);
 
-impl CompilerErrors {
-    pub fn new(
-        compiler_errors: Vec<CompilerError>,
-        offsets_map: ProjectOffsetsMap,
-    ) -> CompilerErrors {
-        CompilerErrors(compiler_errors, offsets_map)
-    }
-
+impl ExecCompilerError {
     pub fn apply_offsets(self) -> Vec<CompilerError> {
-        let CompilerErrors(errors, offsets_map) = self;
+        let ExecCompilerError(errors, offsets_map) = self;
         errors
             .into_iter()
             .map(|error| offsets_map.apply_offsets_to_error(error))
             .collect()
     }
 
-    pub fn extend(&mut self, other: CompilerErrors) {
-        let CompilerErrors(errors, proj_offsets_map) = other;
+    pub fn extend(&mut self, other: ExecCompilerError) {
+        let ExecCompilerError(errors, proj_offsets_map) = other;
         self.0.extend(errors);
         for (fpath, offsets_map) in proj_offsets_map.0.into_iter() {
             self.1.insert(fpath, offsets_map);
         }
+    }
+}
+
+impl std::error::Error for ExecCompilerError {}
+
+impl fmt::Display for ExecCompilerError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }

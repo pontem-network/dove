@@ -1,12 +1,12 @@
 use anyhow::Result;
 use lang::types::WriteSet;
 use shared::errors::CompilerError;
-use shared::results::{ExecResult, ResourceChange};
+use shared::results::ResourceChange;
 
 use utils::FilePath;
 
 pub trait Dialect {
-    fn validate_sender_address(&self, s: &str) -> Result<String>;
+    fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String>;
 
     fn check_with_compiler(
         &self,
@@ -19,18 +19,17 @@ pub trait Dialect {
         &self,
         script: (FilePath, String),
         deps: &[(FilePath, String)],
-        sender: String,
+        sender_address: String,
         genesis_write_set: WriteSet,
-    ) -> Result<ExecResult<Vec<ResourceChange>>, Vec<CompilerError>>;
+    ) -> Result<Vec<ResourceChange>>;
 }
 
 #[derive(Default)]
 pub struct DFinanceDialect;
 
 impl Dialect for DFinanceDialect {
-    fn validate_sender_address(&self, s: &str) -> Result<String> {
-        lang::types::AccountAddress::from_hex_literal(s)?;
-        Ok(s.to_string())
+    fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String> {
+        lang::parse_account_address(s).map(|address| format!("0x{}", address))
     }
 
     fn check_with_compiler(
@@ -46,10 +45,10 @@ impl Dialect for DFinanceDialect {
         &self,
         script: (FilePath, String),
         deps: &[(FilePath, String)],
-        sender: String,
+        sender_address: String,
         genesis_write_set: WriteSet,
-    ) -> Result<ExecResult<Vec<ResourceChange>>, Vec<CompilerError>> {
-        lang::executor::compile_and_run(script, deps, sender, genesis_write_set)
+    ) -> Result<Vec<ResourceChange>> {
+        lang::executor::compile_and_run(script, deps, sender_address, genesis_write_set)
     }
 }
 
@@ -57,7 +56,7 @@ impl Dialect for DFinanceDialect {
 pub struct MoveDialect;
 
 impl Dialect for MoveDialect {
-    fn validate_sender_address(&self, _s: &str) -> Result<String> {
+    fn preprocess_and_validate_account_address(&self, _s: &str) -> Result<String> {
         unimplemented!()
     }
 
@@ -74,9 +73,9 @@ impl Dialect for MoveDialect {
         &self,
         _script: (&'static str, String),
         _deps: &[(&'static str, String)],
-        _sender: String,
+        _sender_address: String,
         _genesis_write_set: WriteSet,
-    ) -> Result<ExecResult<Vec<ResourceChange>>, Vec<CompilerError>> {
+    ) -> Result<Vec<ResourceChange>> {
         unimplemented!()
     }
 }
