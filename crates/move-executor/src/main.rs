@@ -57,7 +57,8 @@ fn main() -> Result<()> {
     let deps = io::load_move_module_files(options.modules.unwrap_or_default())?;
 
     let genesis_changes = parse_genesis_json(options.genesis)?;
-    let sender = DFinanceDialect::validate_sender_address(options.sender)?;
+    let dialect = DFinanceDialect::default();
+    let sender = dialect.validate_sender_address(&options.sender)?;
 
     let script_fpath = leaked_fpath(options.script);
     let genesis_write_set = changes_into_writeset(genesis_changes)?;

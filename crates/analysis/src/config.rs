@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use lang::types::AccountAddress;
+use dialects::{DFinanceDialect, Dialect, MoveDialect};
+
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;
@@ -9,14 +10,14 @@ use utils::io;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum MoveDialect {
+pub enum DialectName {
     Libra,
     DFinance,
 }
 
 #[derive(Clone)]
 pub struct Config {
-    pub dialect: MoveDialect,
+    pub dialect: DialectName,
     pub stdlib_folder: Option<PathBuf>,
     pub module_folders: Vec<PathBuf>,
     pub sender_address: String,
@@ -36,7 +37,7 @@ impl Debug for Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            dialect: MoveDialect::Libra,
+            dialect: DialectName::DFinance,
             stdlib_folder: None,
             module_folders: vec![],
             sender_address: "0x0".to_string(),
@@ -45,6 +46,13 @@ impl Default for Config {
 }
 
 impl Config {
+    fn dialect(&self) -> Box<dyn Dialect> {
+        match self.dialect {
+            DialectName::Libra => Box::new(MoveDialect::default()),
+            DialectName::DFinance => Box::new(DFinanceDialect::default()),
+        }
+    }
+
     fn log_available_module_files(&self) {
         let stdlib_modules = self
             .stdlib_folder
@@ -75,17 +83,14 @@ impl Config {
                 log::info!("Using default account address 0x0");
                 "0x0"
             }
-            Some(address) => {
-                // 24-byte libra address is hard-coded for now
-                match AccountAddress::from_hex_literal(address) {
-                    Ok(_) => address,
-                    Err(error) => {
-                        log::error!("Invalid sender_address string: {:?}", error);
-                        log::info!("Using default account address 0x0");
-                        "0x0"
-                    }
+            Some(address) => match self.dialect().validate_sender_address(address) {
+                Ok(_) => address,
+                Err(error) => {
+                    log::error!("Invalid sender_address string: {:?}", error);
+                    log::info!("Using default account address 0x0");
+                    "0x0"
                 }
-            }
+            },
         }
         .to_string();
 
