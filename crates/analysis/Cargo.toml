@@ -26,5 +26,8 @@ ra_vfs = "0.5.3"
 hex = "0.4.2"
 
 rowan = "0.10.0"
+
+shared = { path = "../dialects/shared" }
+lang = { path = "../dialects/lang" }
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }

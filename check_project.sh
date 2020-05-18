@@ -15,6 +15,6 @@ fi
 # Clippy
 # install: rustup component add clippy --toolchain stable
 # clippy available in stable channel only
-cargo +stable clippy --tests --examples -- -Dwarnings
+cargo +stable clippy --tests --workspace -- -Dwarnings
 
 cargo test --tests

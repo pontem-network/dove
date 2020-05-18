@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use dialects::dfinance::types::AccountAddress;
+use lang::types::AccountAddress;
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;
@@ -19,7 +19,7 @@ pub struct Config {
     pub dialect: MoveDialect,
     pub stdlib_folder: Option<PathBuf>,
     pub module_folders: Vec<PathBuf>,
-    pub sender_address: [u8; AccountAddress::LENGTH],
+    pub sender_address: String,
 }
 
 impl Debug for Config {
@@ -28,10 +28,7 @@ impl Debug for Config {
             .field("dialect", &self.dialect)
             .field("stdlib_folder", &self.stdlib_folder)
             .field("module_folders", &self.module_folders)
-            .field(
-                "sender_address",
-                &AccountAddress::new(self.sender_address).to_string(),
-            )
+            .field("sender_address", &self.sender_address)
             .finish()
     }
 }
@@ -42,7 +39,7 @@ impl Default for Config {
             dialect: MoveDialect::Libra,
             stdlib_folder: None,
             module_folders: vec![],
-            sender_address: [0; AccountAddress::LENGTH],
+            sender_address: "0x0".to_string(),
         }
     }
 }
@@ -72,22 +69,27 @@ impl Config {
         set(value, "/dialect", &mut self.dialect);
         set(value, "/stdlib_folder", &mut self.stdlib_folder);
         set(value, "/modules_folders", &mut self.module_folders);
+
         self.sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x0");
-                [0; AccountAddress::LENGTH]
+                "0x0"
             }
-            Some(address) => match AccountAddress::from_hex_literal(address) {
-                Ok(acc_address) => acc_address.into(),
-                Err(error) => {
-                    log::error!("Invalid sender_address string: {:?}", error);
-                    log::info!("Using default account address 0x0");
-                    [0; AccountAddress::LENGTH]
+            Some(address) => {
+                // 24-byte libra address is hard-coded for now
+                match AccountAddress::from_hex_literal(address) {
+                    Ok(_) => address,
+                    Err(error) => {
+                        log::error!("Invalid sender_address string: {:?}", error);
+                        log::info!("Using default account address 0x0");
+                        "0x0"
+                    }
                 }
-            },
-        };
-        log::info!("Config updated to = {:#?}", self);
+            }
+        }
+        .to_string();
 
+        log::info!("Config updated to = {:#?}", self);
         self.log_available_module_files();
 
         fn get<'a, T: Deserialize<'a>>(value: &'a serde_json::Value, pointer: &str) -> Option<T> {

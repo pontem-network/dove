@@ -65,10 +65,10 @@ impl Analysis {
             .filter(|(fpath, _)| *fpath != current_fpath)
             .collect();
 
-        dialects::check_with_compiler(
+        lang::check_with_compiler(
             (current_fpath, current_text.to_string()),
             deps,
-            self.db.sender_address(),
+            &self.db.config.sender_address,
         )
         .map_err(|errors| {
             errors

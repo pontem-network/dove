@@ -4,9 +4,10 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use structopt::StructOpt;
 
-use dialects::changes::ResourceChange;
-use dialects::dfinance::types::VMStatus;
-use dialects::{dfinance, DFinanceDialect, Dialect};
+use dialects::{DFinanceDialect, Dialect};
+use lang::changes::changes_into_writeset;
+use lang::types::VMStatus;
+use shared::changes::ResourceChange;
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 
 #[derive(Debug, serde::Serialize)]
@@ -70,22 +71,22 @@ fn main() -> Result<()> {
     let script_text = fs::read_to_string(&options.script)?;
     let deps = io::load_move_module_files(options.modules.unwrap_or_default())?;
 
-    let genesis = parse_genesis_json(options.genesis)?;
-
+    let genesis_changes = parse_genesis_json(options.genesis)?;
     let sender = DFinanceDialect::validate_sender_address(options.sender)?;
-    // let sender = AccountAddress::from_hex_literal(&options.sender)?;
+
     let script_fpath = leaked_fpath(options.script);
-    let exec_res = dialects::executor::compile_and_run(
+    let genesis_write_set = changes_into_writeset(genesis_changes)?;
+    let exec_res = lang::executor::compile_and_run(
         (script_fpath, script_text.clone()),
         &deps,
         sender,
-        genesis,
+        genesis_write_set,
     );
     let vm_result = match exec_res {
         Ok(vm_res) => vm_res,
         Err(errors) => {
             let files_mapping = get_file_sources_mapping((script_fpath, script_text), deps);
-            dfinance::report_errors(files_mapping, errors);
+            lang::report_errors(files_mapping, errors);
         }
     };
     let out = match vm_result {

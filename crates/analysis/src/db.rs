@@ -4,8 +4,7 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
-use dialects::dfinance;
-use dialects::errors::{CompilerError, CompilerErrorPart};
+use shared::errors::{CompilerError, CompilerErrorPart};
 use utils::{FilePath, FilesSourceText};
 
 #[derive(Debug)]
@@ -45,10 +44,6 @@ impl RootDatabase {
             .collect()
     }
 
-    pub fn sender_address(&self) -> [u8; dfinance::types::AccountAddress::LENGTH] {
-        self.config.sender_address
-    }
-
     pub fn apply_change(&mut self, change: AnalysisChange) {
         if let Some(config) = change.config_changed {
             self.config = config;
@@ -74,7 +69,7 @@ impl RootDatabase {
         }
     }
 
-    fn comp_location_to_range(&self, loc: &dialects::errors::Location) -> Result<Range> {
+    fn comp_location_to_range(&self, loc: &shared::errors::Location) -> Result<Range> {
         let file = loc.fpath;
         let text = match self.available_files.get(file) {
             Some(text) => text.clone(),
