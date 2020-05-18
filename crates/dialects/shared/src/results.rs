@@ -28,3 +28,17 @@ impl ResourceChange {
         }
     }
 }
+
+#[derive(Debug, serde::Serialize)]
+pub struct ExecStatus {
+    /// String representation of StatusCode enum.
+    pub status: String,
+
+    /// The optional sub status.
+    pub sub_status: Option<u64>,
+
+    /// The optional message.
+    pub message: Option<String>,
+}
+
+pub type ExecResult<T> = Result<T, ExecStatus>;

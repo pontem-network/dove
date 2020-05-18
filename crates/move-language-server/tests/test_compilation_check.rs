@@ -2,7 +2,7 @@ use lsp_types::{Diagnostic, Position, Range};
 
 use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
-use analysis::config::{Config, MoveDialect};
+use analysis::config::Config;
 use analysis::db::FileDiagnostic;
 use move_language_server::world::WorldState;
 use utils::io::read_move_files;
@@ -334,10 +334,8 @@ script {
     #[test]
     fn test_syntax_error_in_dependency() {
         let config = Config {
-            dialect: MoveDialect::Libra,
-            sender_address: "0x0".to_string(),
             module_folders: vec![get_modules_path()],
-            stdlib_folder: None,
+            ..Config::default()
         };
 
         let mut files = FilesSourceText::new();

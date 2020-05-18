@@ -1,5 +1,5 @@
-use lang::changes::changes_into_writeset;
 use lang::executor::compile_and_run;
+use lang::resources::changes_into_writeset;
 use lang::types::{AccountAddress, WriteSet};
 
 use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};

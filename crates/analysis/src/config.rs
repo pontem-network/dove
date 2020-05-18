@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use lang::types::AccountAddress;
+use dialects::{DFinanceDialect, Dialect, MoveDialect};
+
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;
@@ -9,14 +10,14 @@ use utils::io;
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum MoveDialect {
+pub enum DialectName {
     Libra,
     DFinance,
 }
 
 #[derive(Clone)]
 pub struct Config {
-    pub dialect: MoveDialect,
+    pub dialect_name: DialectName,
     pub stdlib_folder: Option<PathBuf>,
     pub module_folders: Vec<PathBuf>,
     pub sender_address: String,
@@ -25,7 +26,7 @@ pub struct Config {
 impl Debug for Config {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
-            .field("dialect", &self.dialect)
+            .field("dialect", &self.dialect_name)
             .field("stdlib_folder", &self.stdlib_folder)
             .field("module_folders", &self.module_folders)
             .field("sender_address", &self.sender_address)
@@ -36,7 +37,7 @@ impl Debug for Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            dialect: MoveDialect::Libra,
+            dialect_name: DialectName::DFinance,
             stdlib_folder: None,
             module_folders: vec![],
             sender_address: "0x0".to_string(),
@@ -63,10 +64,17 @@ impl Config {
         }
     }
 
+    pub fn dialect(&self) -> Box<dyn Dialect> {
+        match self.dialect_name {
+            DialectName::Libra => Box::new(MoveDialect::default()),
+            DialectName::DFinance => Box::new(DFinanceDialect::default()),
+        }
+    }
+
     pub fn update(&mut self, value: &serde_json::Value) {
         log::info!("Passed configuration = {:#}", value);
 
-        set(value, "/dialect", &mut self.dialect);
+        set(value, "/dialect", &mut self.dialect_name);
         set(value, "/stdlib_folder", &mut self.stdlib_folder);
         set(value, "/modules_folders", &mut self.module_folders);
 
@@ -75,17 +83,14 @@ impl Config {
                 log::info!("Using default account address 0x0");
                 "0x0"
             }
-            Some(address) => {
-                // 24-byte libra address is hard-coded for now
-                match AccountAddress::from_hex_literal(address) {
-                    Ok(_) => address,
-                    Err(error) => {
-                        log::error!("Invalid sender_address string: {:?}", error);
-                        log::info!("Using default account address 0x0");
-                        "0x0"
-                    }
+            Some(address) => match self.dialect().validate_sender_address(address) {
+                Ok(_) => address,
+                Err(error) => {
+                    log::error!("Invalid sender_address string: {:?}", error);
+                    log::info!("Using default account address 0x0");
+                    "0x0"
                 }
-            }
+            },
         }
         .to_string();
 

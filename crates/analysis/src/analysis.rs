@@ -65,23 +65,23 @@ impl Analysis {
             .filter(|(fpath, _)| *fpath != current_fpath)
             .collect();
 
-        lang::check_with_compiler(
-            (current_fpath, current_text.to_string()),
-            deps,
-            &self.db.config.sender_address,
-        )
-        .map_err(|errors| {
-            errors
-                .into_iter()
-                .filter_map(|err| match self.db.compiler_error_into_diagnostic(err) {
-                    Ok(d) => Some(d),
-                    Err(err) => {
-                        log::error!("{}", err);
-                        None
-                    }
-                })
-                .collect()
-        })
+        let current_file = (current_fpath, current_text.to_string());
+        self.db
+            .config
+            .dialect()
+            .check_with_compiler(current_file, deps, &self.db.config.sender_address)
+            .map_err(|errors| {
+                errors
+                    .into_iter()
+                    .filter_map(|err| match self.db.compiler_error_into_diagnostic(err) {
+                        Ok(d) => Some(d),
+                        Err(err) => {
+                            log::error!("{}", err);
+                            None
+                        }
+                    })
+                    .collect()
+            })
     }
 
     fn read_stdlib_files(&self) -> Vec<(FilePath, String)> {

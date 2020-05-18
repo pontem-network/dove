@@ -24,18 +24,20 @@ use utils::FilePath;
 
 use crate::types::{Loc, ResourceKey};
 use codespan::ByteIndex;
+use libra_types::vm_error::VMStatus;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::shared::Address;
 use shared::errors::{
     CompilerError, CompilerErrorPart, CompilerErrors, Location, OffsetsMap, ProjectOffsetsMap,
 };
-use vm::errors::VMResult;
+use shared::results::{ExecResult, ExecStatus};
+
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
 
 pub mod bech32;
-pub mod changes;
 pub mod executor;
+pub mod resources;
 pub mod types;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {
@@ -201,12 +203,20 @@ fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetada
 
 type ChangedMoveResources = BTreeMap<AccessPath, Option<(FatStructType, GlobalValue)>>;
 
+fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecStatus {
+    ExecStatus {
+        status: format!("{:?}", vm_status.major_status),
+        sub_status: vm_status.sub_status,
+        message: vm_status.message,
+    }
+}
+
 pub fn execute_script(
     sender_address: AccountAddress,
     data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
-) -> VMResult<ChangedMoveResources> {
+) -> ExecResult<ChangedMoveResources> {
     let mut exec_context = SystemExecutionContext::new(data_store, GasUnits::new(1_000_000));
     let zero_cost_table = zero_cost_schedule();
     let txn_metadata = get_transaction_metadata(sender_address);
@@ -219,7 +229,8 @@ pub fn execute_script(
         &txn_metadata,
         vec![],
         args,
-    )?;
+    )
+    .map_err(vm_status_into_exec_status)?;
     Ok(exec_context.data_map())
 }
 

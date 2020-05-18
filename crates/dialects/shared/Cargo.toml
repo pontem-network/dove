@@ -10,7 +10,5 @@ edition = "2018"
 anyhow = "1.0.28"
 serde = "1.0.106"
 serde_derive = "1.0.106"
-serde_json = "1.0.52"
-codespan = "0.8.0"
 
 utils = { path = "../../utils" }

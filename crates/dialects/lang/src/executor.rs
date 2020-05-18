@@ -1,19 +1,20 @@
-use crate::types::{AccountAddress, VMResult};
+use crate::types::AccountAddress;
 use libra_types::vm_error::StatusCode;
 use libra_types::write_set::{WriteOp, WriteSet};
 use utils::FilePath;
 use vm::errors::{vm_error, Location};
 
-use crate::changes::{ResourceStructType, ResourceWriteOp};
-use shared::changes::ResourceChange;
+use crate::resources::{ResourceStructType, ResourceWriteOp};
+use crate::vm_status_into_exec_status;
 use shared::errors::CompilerError;
+use shared::results::{ExecResult, ResourceChange};
 
 pub fn compile_and_run(
     script: (FilePath, String),
     deps: &[(FilePath, String)],
     sender: String,
     genesis_write_set: WriteSet,
-) -> Result<VMResult<Vec<ResourceChange>>, Vec<CompilerError>> {
+) -> Result<ExecResult<Vec<ResourceChange>>, Vec<CompilerError>> {
     let sender = AccountAddress::from_hex_literal(&sender).unwrap();
 
     let (fname, script_text) = script;
@@ -44,10 +45,9 @@ pub fn compile_and_run(
                     let val = match data.simple_serialize(&struct_type) {
                         Some(blob) => blob,
                         None => {
-                            return Ok(Err(vm_error(
-                                Location::new(),
-                                StatusCode::VALUE_SERIALIZATION_ERROR,
-                            )));
+                            let vm_status =
+                                vm_error(Location::new(), StatusCode::VALUE_SERIALIZATION_ERROR);
+                            return Ok(Err(vm_status_into_exec_status(vm_status)));
                         }
                     };
                     let change = ResourceChange::new(
