@@ -169,6 +169,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
 
 [[package]]
+name = "base64"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53d1ccbaf7d9ec9537465a97bf19edc1a4e158ecb49fc16178202238c569cc42"
+
+[[package]]
 name = "bech32"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1485,11 +1491,11 @@ dependencies = [
 
 [[package]]
 name = "lsp-types"
-version = "0.73.0"
+version = "0.74.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93d0cf64ea141b43d9e055f6b9df13f0bce32b103d84237509ce0a571ab9b159"
+checksum = "57c0e6a2b8837d27b29deb3f3e6dc1c6d2f57947677f9be1024e482ec5b59525"
 dependencies = [
- "base64",
+ "base64 0.12.1",
  "bitflags",
  "serde",
  "serde_json",
@@ -2877,7 +2883,7 @@ checksum = "4afef9ce97ea39593992cf3fa00ff33b1ad5eb07665b31355df63a690e38c736"
 dependencies = [
  "async-stream",
  "async-trait",
- "base64",
+ "base64 0.11.0",
  "bytes",
  "futures-core",
  "futures-util",
