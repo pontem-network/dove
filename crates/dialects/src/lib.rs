@@ -1,11 +1,12 @@
 use anyhow::Result;
+use lang::types::WriteSet;
 use shared::errors::CompilerError;
+use shared::results::{ExecResult, ResourceChange};
+
 use utils::FilePath;
 
 pub trait Dialect {
     fn validate_sender_address(&self, s: &str) -> Result<String>;
-    // fn parse_address(s: &str) -> Result<Address>;
-    // fn parse_account_address(s: &str) -> Result<AccountAddress>;
 
     fn check_with_compiler(
         &self,
@@ -13,6 +14,14 @@ pub trait Dialect {
         deps: Vec<(FilePath, String)>,
         sender: &str,
     ) -> Result<(), Vec<CompilerError>>;
+
+    fn compile_and_run(
+        &self,
+        script: (FilePath, String),
+        deps: &[(FilePath, String)],
+        sender: String,
+        genesis_write_set: WriteSet,
+    ) -> Result<ExecResult<Vec<ResourceChange>>, Vec<CompilerError>>;
 }
 
 #[derive(Default)]
@@ -33,15 +42,15 @@ impl Dialect for DFinanceDialect {
         lang::check_with_compiler(current, deps, sender)
     }
 
-    // fn parse_address(s: &str) -> Result<Address> {
-    //     Ok(dfinance::types::Address::new(
-    //         Self::parse_account_address(s)?.into(),
-    //     ))
-    // }
-    //
-    // fn parse_account_address(s: &str) -> Result<AccountAddress> {
-    //     dfinance::types::AccountAddress::from_hex_literal(s)
-    // }
+    fn compile_and_run(
+        &self,
+        script: (FilePath, String),
+        deps: &[(FilePath, String)],
+        sender: String,
+        genesis_write_set: WriteSet,
+    ) -> Result<ExecResult<Vec<ResourceChange>>, Vec<CompilerError>> {
+        lang::executor::compile_and_run(script, deps, sender, genesis_write_set)
+    }
 }
 
 #[derive(Default)]
@@ -58,6 +67,16 @@ impl Dialect for MoveDialect {
         _deps: Vec<(&'static str, String)>,
         _sender: &str,
     ) -> Result<(), Vec<CompilerError>> {
+        unimplemented!()
+    }
+
+    fn compile_and_run(
+        &self,
+        _script: (&'static str, String),
+        _deps: &[(&'static str, String)],
+        _sender: String,
+        _genesis_write_set: WriteSet,
+    ) -> Result<ExecResult<Vec<ResourceChange>>, Vec<CompilerError>> {
         unimplemented!()
     }
 }

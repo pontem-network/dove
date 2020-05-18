@@ -62,7 +62,7 @@ fn main() -> Result<()> {
 
     let script_fpath = leaked_fpath(options.script);
     let genesis_write_set = changes_into_writeset(genesis_changes)?;
-    let exec_res = lang::executor::compile_and_run(
+    let exec_res = dialect.compile_and_run(
         (script_fpath, script_text.clone()),
         &deps,
         sender,
