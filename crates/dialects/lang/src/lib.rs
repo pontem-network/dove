@@ -28,9 +28,9 @@ use libra_types::vm_error::VMStatus;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::shared::Address;
 use shared::errors::{
-    CompilerError, CompilerErrorPart, CompilerErrors, Location, OffsetsMap, ProjectOffsetsMap,
+    CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap, ProjectOffsetsMap,
 };
-use shared::results::{ExecResult, ExecStatus};
+use shared::results::{ExecResult, ExecutionError};
 
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
@@ -80,24 +80,24 @@ fn into_compiler_error(error: Error) -> CompilerError {
     CompilerError { parts }
 }
 
-pub fn into_compiler_errors(
+pub fn into_exec_compiler_error(
     errors: Vec<Error>,
     offsets_map: ProjectOffsetsMap,
-) -> CompilerErrors {
+) -> ExecCompilerError {
     let mut compiler_errors = vec![];
     for error in errors {
         compiler_errors.push(into_compiler_error(error));
     }
-    CompilerErrors::new(compiler_errors, offsets_map)
+    ExecCompilerError(compiler_errors, offsets_map)
 }
 
 fn parse_file(
     fname: FilePath,
     text: &str,
-) -> Result<(Vec<Definition>, OffsetsMap), CompilerErrors> {
+) -> Result<(Vec<Definition>, OffsetsMap), ExecCompilerError> {
     let (no_comments_source, comment_map) =
         strip_comments_and_verify(fname, text).map_err(|errors| {
-            into_compiler_errors(
+            into_exec_compiler_error(
                 errors,
                 ProjectOffsetsMap::with_file_map(fname, OffsetsMap::new()),
             )
@@ -106,7 +106,7 @@ fn parse_file(
         bech32::replace_bech32_addresses(&no_comments_source);
     let (defs, _) = syntax::parse_file_string(fname, &bech32_converted_source, comment_map)
         .map_err(|errors| {
-            into_compiler_errors(
+            into_exec_compiler_error(
                 errors,
                 ProjectOffsetsMap::with_file_map(fname, offsets_map.clone()),
             )
@@ -123,10 +123,10 @@ pub fn parse_files(
         Vec<types::Definition>,
         ProjectOffsetsMap,
     ),
-    CompilerErrors,
+    ExecCompilerError,
 > {
     let (s_fpath, s_text) = current;
-    let mut parse_errors = CompilerErrors::default();
+    let mut exec_compiler_error = ExecCompilerError::default();
 
     let mut project_offsets_map = ProjectOffsetsMap::default();
     let script_defs = match parse_file(s_fpath, &s_text) {
@@ -134,8 +134,8 @@ pub fn parse_files(
             project_offsets_map.0.insert(s_fpath, offsets_map);
             defs
         }
-        Err(errors) => {
-            parse_errors.extend(errors);
+        Err(error) => {
+            exec_compiler_error.extend(error);
             vec![]
         }
     };
@@ -147,15 +147,15 @@ pub fn parse_files(
                 project_offsets_map.0.insert(fpath, offsets_map);
                 defs
             }
-            Err(errors) => {
-                parse_errors.extend(errors);
+            Err(error) => {
+                exec_compiler_error.extend(error);
                 vec![]
             }
         };
         dep_defs.extend(defs);
     }
-    if !parse_errors.0.is_empty() {
-        return Err(parse_errors);
+    if !exec_compiler_error.0.is_empty() {
+        return Err(exec_compiler_error);
     }
     Ok((script_defs, dep_defs, project_offsets_map))
 }
@@ -165,22 +165,22 @@ pub fn check_and_generate_bytecode(
     text: &str,
     deps: &[(FilePath, String)],
     sender: [u8; AccountAddress::LENGTH],
-) -> Result<(CompiledScript, Vec<CompiledModule>), Vec<CompilerError>> {
+) -> Result<(CompiledScript, Vec<CompiledModule>), ExecCompilerError> {
     let (mut script_defs, modules_defs, project_offsets_map) =
-        parse_files((fname, text.to_owned()), deps).map_err(|errors| errors.apply_offsets())?;
+        parse_files((fname, text.to_owned()), deps)?;
     script_defs.extend(modules_defs);
+
     let sender = Address::new(sender);
-    let program = check_defs(script_defs, vec![], sender).map_err(|errors| {
-        into_compiler_errors(errors, project_offsets_map.clone()).apply_offsets()
-    })?;
+    let program = check_defs(script_defs, vec![], sender)
+        .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map.clone()))?;
     generate_bytecode(program)
-        .map_err(|errors| into_compiler_errors(errors, project_offsets_map).apply_offsets())
+        .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map))
 }
 
-pub fn serialize_script(script: CompiledScript) -> Vec<u8> {
+pub fn serialize_script(script: CompiledScript) -> Result<Vec<u8>> {
     let mut serialized = vec![];
-    script.serialize(&mut serialized).unwrap();
-    serialized
+    script.serialize(&mut serialized)?;
+    Ok(serialized)
 }
 
 pub fn prepare_fake_network_state(
@@ -203,8 +203,8 @@ fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetada
 
 type ChangedMoveResources = BTreeMap<AccessPath, Option<(FatStructType, GlobalValue)>>;
 
-fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecStatus {
-    ExecStatus {
+fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecutionError {
+    ExecutionError {
         status: format!("{:?}", vm_status.major_status),
         sub_status: vm_status.sub_status,
         message: vm_status.message,
@@ -282,10 +282,10 @@ pub fn check_with_compiler(
     let (script_defs, dep_defs, offsets_map) =
         parse_files(current, &deps).map_err(|errors| errors.apply_offsets())?;
 
-    let sender = parse_address(sender).unwrap();
-    match check_defs(script_defs, dep_defs, sender) {
+    let sender_address = parse_address(sender).expect("Checked before");
+    match check_defs(script_defs, dep_defs, sender_address) {
         Ok(_) => Ok(()),
-        Err(errors) => Err(into_compiler_errors(errors, offsets_map).apply_offsets()),
+        Err(errors) => Err(into_exec_compiler_error(errors, offsets_map).apply_offsets()),
     }
 }
 

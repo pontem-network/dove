@@ -83,7 +83,10 @@ impl Config {
                 log::info!("Using default account address 0x0");
                 "0x0"
             }
-            Some(address) => match self.dialect().validate_sender_address(address) {
+            Some(address) => match self
+                .dialect()
+                .preprocess_and_validate_account_address(address)
+            {
                 Ok(_) => address,
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);

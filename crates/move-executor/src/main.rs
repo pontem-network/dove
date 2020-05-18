@@ -7,7 +7,8 @@ use structopt::StructOpt;
 use dialects::{DFinanceDialect, Dialect};
 use lang::resources::changes_into_writeset;
 
-use shared::results::ResourceChange;
+use shared::errors::ExecCompilerError;
+use shared::results::{ExecutionError, ResourceChange};
 use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 
 #[derive(StructOpt)]
@@ -58,27 +59,42 @@ fn main() -> Result<()> {
 
     let genesis_changes = parse_genesis_json(options.genesis)?;
     let dialect = DFinanceDialect::default();
-    let sender = dialect.validate_sender_address(&options.sender)?;
+    let sender_address = dialect.preprocess_and_validate_account_address(&options.sender)?;
 
     let script_fpath = leaked_fpath(options.script);
     let genesis_write_set = changes_into_writeset(genesis_changes)?;
-    let exec_res = dialect.compile_and_run(
+    let res = dialect.compile_and_run(
         (script_fpath, script_text.clone()),
         &deps,
-        sender,
+        sender_address,
         genesis_write_set,
     );
-    let vm_result = match exec_res {
-        Ok(vm_res) => vm_res,
-        Err(errors) => {
-            let files_mapping = get_file_sources_mapping((script_fpath, script_text), deps);
-            lang::report_errors(files_mapping, errors);
+    match res {
+        Ok(changes) => {
+            let out =
+                serde_json::to_string_pretty(&changes).expect("Should always be serializable");
+            print!("{}", out);
+            Ok(())
         }
-    };
-    let out = match vm_result {
-        Ok(changes) => serde_json::to_string_pretty(&changes).unwrap(),
-        Err(status) => serde_json::to_string_pretty(&status).unwrap(),
-    };
-    println!("{}", out);
-    Ok(())
+        Err(error) => {
+            let error = match error.downcast::<ExecCompilerError>() {
+                Ok(compiler_error) => {
+                    let files_mapping =
+                        get_file_sources_mapping((script_fpath, script_text), deps);
+                    lang::report_errors(files_mapping, compiler_error.apply_offsets());
+                }
+                Err(error) => error,
+            };
+            let error = match error.downcast::<ExecutionError>() {
+                Ok(exec_error) => {
+                    let out = serde_json::to_string_pretty(&exec_error)
+                        .expect("Should always be serializable");
+                    print!("{}", out);
+                    std::process::exit(1)
+                }
+                Err(error) => error,
+            };
+            Err(error)
+        }
+    }
 }

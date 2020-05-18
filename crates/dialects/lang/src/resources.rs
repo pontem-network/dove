@@ -21,7 +21,7 @@ impl Into<ResourceType> for ResourceStructType {
             ..
         } = self.0;
         ResourceType {
-            address: address.to_string(),
+            address: format!("0x{}", address),
             module: module.into_string(),
             name: name.into_string(),
             ty_args: ty_args
@@ -52,7 +52,7 @@ pub fn resource_into_access_path(ty: ResourceType) -> Result<AccessPath> {
         layout.push(item);
     }
     let struct_type = FatStructType {
-        address: AccountAddress::from_hex_literal(&format!("0x{}", ty.address))?,
+        address: AccountAddress::from_hex_literal(&ty.address)?,
         module: Identifier::new(ty.module)?,
         name: Identifier::new(ty.name)?,
         is_resource: true,

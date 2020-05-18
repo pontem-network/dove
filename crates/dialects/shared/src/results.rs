@@ -1,3 +1,7 @@
+use core::fmt;
+use serde::export::Formatter;
+use std::fmt::Display;
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
 pub enum ResourceChangeOp {
@@ -30,7 +34,7 @@ impl ResourceChange {
 }
 
 #[derive(Debug, serde::Serialize)]
-pub struct ExecStatus {
+pub struct ExecutionError {
     /// String representation of StatusCode enum.
     pub status: String,
 
@@ -41,4 +45,12 @@ pub struct ExecStatus {
     pub message: Option<String>,
 }
 
-pub type ExecResult<T> = Result<T, ExecStatus>;
+pub type ExecResult<T> = Result<T, ExecutionError>;
+
+impl Display for ExecutionError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for ExecutionError {}
