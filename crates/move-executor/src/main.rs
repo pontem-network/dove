@@ -5,7 +5,6 @@ use anyhow::{Context, Result};
 use structopt::StructOpt;
 
 use dialects::{DFinanceDialect, Dialect};
-use lang::resources::changes_into_writeset;
 
 use shared::errors::ExecCompilerError;
 use shared::results::{ExecutionError, ResourceChange};
@@ -62,12 +61,11 @@ fn main() -> Result<()> {
     let sender_address = dialect.preprocess_and_validate_account_address(&options.sender)?;
 
     let script_fpath = leaked_fpath(options.script);
-    let genesis_write_set = changes_into_writeset(genesis_changes)?;
     let res = dialect.compile_and_run(
         (script_fpath, script_text.clone()),
         &deps,
         sender_address,
-        genesis_write_set,
+        genesis_changes,
     );
     match res {
         Ok(changes) => {
@@ -81,7 +79,10 @@ fn main() -> Result<()> {
                 Ok(compiler_error) => {
                     let files_mapping =
                         get_file_sources_mapping((script_fpath, script_text), deps);
-                    lang::report_errors(files_mapping, compiler_error.apply_offsets());
+                    dialect.print_compiler_errors_and_exit(
+                        files_mapping,
+                        compiler_error.apply_offsets(),
+                    );
                 }
                 Err(error) => error,
             };

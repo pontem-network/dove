@@ -1,9 +1,9 @@
 use anyhow::Result;
-use lang::types::WriteSet;
+
 use shared::errors::CompilerError;
 use shared::results::ResourceChange;
 
-use utils::FilePath;
+use utils::{FilePath, FilesSourceText};
 
 pub trait Dialect {
     fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String>;
@@ -20,8 +20,14 @@ pub trait Dialect {
         script: (FilePath, String),
         deps: &[(FilePath, String)],
         sender_address: String,
-        genesis_write_set: WriteSet,
+        genesis_changes: Vec<ResourceChange>,
     ) -> Result<Vec<ResourceChange>>;
+
+    fn print_compiler_errors_and_exit(
+        &self,
+        files: FilesSourceText,
+        errors: Vec<CompilerError>,
+    ) -> !;
 }
 
 #[derive(Default)]
@@ -46,9 +52,18 @@ impl Dialect for DFinanceDialect {
         script: (FilePath, String),
         deps: &[(FilePath, String)],
         sender_address: String,
-        genesis_write_set: WriteSet,
+        genesis_changes: Vec<ResourceChange>,
     ) -> Result<Vec<ResourceChange>> {
+        let genesis_write_set = lang::resources::changes_into_writeset(genesis_changes)?;
         lang::executor::compile_and_run(script, deps, sender_address, genesis_write_set)
+    }
+
+    fn print_compiler_errors_and_exit(
+        &self,
+        files: FilesSourceText,
+        errors: Vec<CompilerError>,
+    ) -> ! {
+        lang::report_errors(files, errors)
     }
 }
 
@@ -74,8 +89,16 @@ impl Dialect for MoveDialect {
         _script: (&'static str, String),
         _deps: &[(&'static str, String)],
         _sender_address: String,
-        _genesis_write_set: WriteSet,
+        _genesis_changes: Vec<ResourceChange>,
     ) -> Result<Vec<ResourceChange>> {
+        unimplemented!()
+    }
+
+    fn print_compiler_errors_and_exit(
+        &self,
+        _files: FilesSourceText,
+        _errors: Vec<CompilerError>,
+    ) -> ! {
         unimplemented!()
     }
 }
