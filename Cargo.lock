@@ -77,7 +77,6 @@ dependencies = [
  "dialects",
  "env_logger",
  "hex",
- "lang",
  "log",
  "lsp-server",
  "lsp-types",

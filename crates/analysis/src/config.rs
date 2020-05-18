@@ -17,7 +17,7 @@ pub enum DialectName {
 
 #[derive(Clone)]
 pub struct Config {
-    pub dialect: DialectName,
+    pub dialect_name: DialectName,
     pub stdlib_folder: Option<PathBuf>,
     pub module_folders: Vec<PathBuf>,
     pub sender_address: String,
@@ -26,7 +26,7 @@ pub struct Config {
 impl Debug for Config {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
-            .field("dialect", &self.dialect)
+            .field("dialect", &self.dialect_name)
             .field("stdlib_folder", &self.stdlib_folder)
             .field("module_folders", &self.module_folders)
             .field("sender_address", &self.sender_address)
@@ -37,7 +37,7 @@ impl Debug for Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            dialect: DialectName::DFinance,
+            dialect_name: DialectName::DFinance,
             stdlib_folder: None,
             module_folders: vec![],
             sender_address: "0x0".to_string(),
@@ -46,13 +46,6 @@ impl Default for Config {
 }
 
 impl Config {
-    fn dialect(&self) -> Box<dyn Dialect> {
-        match self.dialect {
-            DialectName::Libra => Box::new(MoveDialect::default()),
-            DialectName::DFinance => Box::new(DFinanceDialect::default()),
-        }
-    }
-
     fn log_available_module_files(&self) {
         let stdlib_modules = self
             .stdlib_folder
@@ -71,10 +64,17 @@ impl Config {
         }
     }
 
+    pub fn dialect(&self) -> Box<dyn Dialect> {
+        match self.dialect_name {
+            DialectName::Libra => Box::new(MoveDialect::default()),
+            DialectName::DFinance => Box::new(DFinanceDialect::default()),
+        }
+    }
+
     pub fn update(&mut self, value: &serde_json::Value) {
         log::info!("Passed configuration = {:#}", value);
 
-        set(value, "/dialect", &mut self.dialect);
+        set(value, "/dialect", &mut self.dialect_name);
         set(value, "/stdlib_folder", &mut self.stdlib_folder);
         set(value, "/modules_folders", &mut self.module_folders);
 
