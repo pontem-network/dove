@@ -22,7 +22,6 @@ use move_vm_types::values::{GlobalValue, Value};
 use std::collections::BTreeMap;
 use utils::FilePath;
 
-use crate::types::Loc;
 use codespan::ByteIndex;
 use libra_types::vm_error::VMStatus;
 use move_lang::compiled_unit::CompiledUnit;
@@ -32,13 +31,13 @@ use shared::errors::{
 };
 use shared::results::{ExecResult, ExecutionError};
 
+use move_ir_types::location::Loc;
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
 
 pub mod bech32;
 pub mod executor;
 pub mod resources;
-pub mod types;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {
     comp_error
@@ -117,14 +116,7 @@ fn parse_file(
 pub fn parse_files(
     current: (FilePath, String),
     deps: &[(FilePath, String)],
-) -> Result<
-    (
-        Vec<types::Definition>,
-        Vec<types::Definition>,
-        ProjectOffsetsMap,
-    ),
-    ExecCompilerError,
-> {
+) -> Result<(Vec<Definition>, Vec<Definition>, ProjectOffsetsMap), ExecCompilerError> {
     let (s_fpath, s_text) = current;
     let mut exec_compiler_error = ExecCompilerError::default();
 

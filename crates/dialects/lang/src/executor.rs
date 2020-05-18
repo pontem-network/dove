@@ -1,6 +1,5 @@
 use anyhow::Result;
 
-use crate::types::AccountAddress;
 use libra_types::vm_error::StatusCode;
 use libra_types::write_set::{WriteOp, WriteSet};
 use utils::FilePath;
@@ -11,6 +10,7 @@ use crate::vm_status_into_exec_status;
 use move_vm_types::loaded_data::types::FatStructType;
 use move_vm_types::values::GlobalValue;
 
+use move_core_types::account_address::AccountAddress;
 use shared::results::ResourceChange;
 
 fn convert_set_value(struct_type: FatStructType, val: GlobalValue) -> VMResult<ResourceChange> {
