@@ -29,7 +29,6 @@ hex = "0.4.2"
 rowan = "0.10.0"
 
 shared = { path = "../dialects/shared" }
-lang = { path = "../dialects/lang" }
 analysis = { path = "../analysis" }
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }
