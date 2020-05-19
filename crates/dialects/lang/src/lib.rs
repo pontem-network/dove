@@ -1,2 +1,2 @@
-pub mod dfinance_generated;
+pub mod dfina;
 pub mod libra;

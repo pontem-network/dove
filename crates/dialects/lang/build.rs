@@ -21,7 +21,7 @@ fn build_replacement_table() -> HashMap<&'static str, &'static str> {
     table.insert("libra_crypto::", "dfinance_libra_crypto::");
     table.insert("language_e2e_tests::", "dfinance_language_e2e_tests::");
 
-    table.insert("crate::libra", "crate::dfinance_generated");
+    table.insert("crate::libra", "crate::dfina");
     table
 }
 
@@ -36,15 +36,20 @@ fn convert_contents_into_dialect(s: &str) -> String {
 fn main() {
     let sources_dir = std::env::current_dir().unwrap().join("src");
     let libra_dir = sources_dir.join("libra");
-    let dfinance_dir = sources_dir.join("dfinance_generated");
+    let dfinance_dir = sources_dir.join("dfina");
 
     for file in walkdir::WalkDir::new(libra_dir).max_depth(1) {
         let entry = file.unwrap();
         let dfinance_file_path = dfinance_dir.join(entry.file_name());
         if entry.file_type().is_file() {
-            let contents = fs::read_to_string(entry.path()).unwrap();
-            let dialected_contents = convert_contents_into_dialect(&contents);
-            fs::write(dfinance_file_path, dialected_contents).unwrap();
+            let original_s = fs::read_to_string(entry.path()).unwrap();
+            let old_transformed_s = fs::read_to_string(&dfinance_file_path).unwrap();
+
+            let transformed_s = convert_contents_into_dialect(&original_s);
+            if old_transformed_s != transformed_s {
+                dbg!("writing file");
+                fs::write(dfinance_file_path, transformed_s).unwrap();
+            }
         }
     }
 }

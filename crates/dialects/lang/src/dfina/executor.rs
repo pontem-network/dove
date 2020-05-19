@@ -10,8 +10,8 @@ use dfinance_vm::errors::{vm_error, Location, VMResult};
 use shared::results::ResourceChange;
 use utils::FilePath;
 
-use crate::dfinance_generated::resources::{ResourceStructType, ResourceWriteOp};
-use crate::dfinance_generated::vm_status_into_exec_status;
+use crate::dfina::resources::{ResourceStructType, ResourceWriteOp};
+use crate::dfina::vm_status_into_exec_status;
 
 fn convert_set_value(struct_type: FatStructType, val: GlobalValue) -> VMResult<ResourceChange> {
     // into_owned_struct will check if all references are properly released at the end of a transaction
@@ -40,14 +40,14 @@ pub fn compile_and_run(
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
-        crate::dfinance_generated::check_and_generate_bytecode(fname, &script_text, deps, sender.into())?;
+        crate::dfina::check_and_generate_bytecode(fname, &script_text, deps, sender.into())?;
 
     let network_state =
-        crate::dfinance_generated::prepare_fake_network_state(compiled_modules, genesis_write_set);
+        crate::dfina::prepare_fake_network_state(compiled_modules, genesis_write_set);
 
-    let serialized_script = crate::dfinance_generated::serialize_script(compiled_script)?;
+    let serialized_script = crate::dfina::serialize_script(compiled_script)?;
     let changed_resources =
-        crate::dfinance_generated::execute_script(sender, &network_state, serialized_script, vec![])?;
+        crate::dfina::execute_script(sender, &network_state, serialized_script, vec![])?;
 
     let mut changes = vec![];
     for (_, global_val) in changed_resources {
