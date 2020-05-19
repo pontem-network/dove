@@ -1,7 +1,7 @@
 use lang::executor::compile_and_run;
 use lang::resources::changes_into_writeset;
-use lang::types::WriteSet;
 
+use dialects::{DFinanceDialect, Dialect};
 use shared::errors::ExecCompilerError;
 use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use utils::{io, leaked_fpath, FilePath};
@@ -57,16 +57,17 @@ script {
         let _ = Transaction::sender();
     }
 }";
-    let errors = compile_and_run(
-        (get_script_path(), text.to_string()),
-        &[],
-        "0x111111111111111111111111".to_string(),
-        WriteSet::default(),
-    )
-    .unwrap_err()
-    .downcast::<ExecCompilerError>()
-    .unwrap()
-    .0;
+    let errors = DFinanceDialect::default()
+        .compile_and_run(
+            (get_script_path(), text.to_string()),
+            &[],
+            "0x111111111111111111111111".to_string(),
+            vec![],
+        )
+        .unwrap_err()
+        .downcast::<ExecCompilerError>()
+        .unwrap()
+        .0;
     assert_eq!(errors.len(), 1);
     assert_eq!(
         errors[0].parts[0].message,
@@ -85,13 +86,14 @@ script {
     }
 }";
     let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
-    compile_and_run(
-        (existing_file_abspath(), text.to_string()),
-        &deps,
-        get_sender(),
-        WriteSet::default(),
-    )
-    .unwrap();
+    DFinanceDialect::default()
+        .compile_and_run(
+            (existing_file_abspath(), text.to_string()),
+            &deps,
+            get_sender(),
+            vec![],
+        )
+        .unwrap();
 }
 
 #[test]
@@ -109,13 +111,14 @@ script {
     }
 }";
 
-    let changes = compile_and_run(
-        (get_script_path(), script_text.to_string()),
-        &deps,
-        get_sender(),
-        WriteSet::default(),
-    )
-    .unwrap();
+    let changes = DFinanceDialect::default()
+        .compile_and_run(
+            (get_script_path(), script_text.to_string()),
+            &deps,
+            get_sender(),
+            vec![],
+        )
+        .unwrap();
     assert_eq!(changes.len(), 1);
 
     assert_eq!(
@@ -211,13 +214,14 @@ script {
     ));
 
     let sender = "0x1".to_string();
-    let changes = compile_and_run(
-        (get_script_path(), script_text.to_string()),
-        &deps,
-        sender,
-        WriteSet::default(),
-    )
-    .unwrap();
+    let changes = DFinanceDialect::default()
+        .compile_and_run(
+            (get_script_path(), script_text.to_string()),
+            &deps,
+            sender,
+            vec![],
+        )
+        .unwrap();
     assert_eq!(
         serde_json::to_value(changes).unwrap(),
         serde_json::json!([
