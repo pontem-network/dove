@@ -1,6 +1,3 @@
-use lang::executor::compile_and_run;
-use lang::resources::changes_into_writeset;
-
 use dialects::{DFinanceDialect, Dialect};
 use shared::errors::ExecCompilerError;
 use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
@@ -47,6 +44,10 @@ fn get_script_path() -> FilePath {
     leaked_fpath(get_modules_path().join("script.move"))
 }
 
+fn get_dfinance_dialect() -> DFinanceDialect {
+    DFinanceDialect::default()
+}
+
 #[test]
 fn test_show_compilation_errors() {
     let text = r"
@@ -57,7 +58,7 @@ script {
         let _ = Transaction::sender();
     }
 }";
-    let errors = DFinanceDialect::default()
+    let errors = get_dfinance_dialect()
         .compile_and_run(
             (get_script_path(), text.to_string()),
             &[],
@@ -86,7 +87,7 @@ script {
     }
 }";
     let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
-    DFinanceDialect::default()
+    get_dfinance_dialect()
         .compile_and_run(
             (existing_file_abspath(), text.to_string()),
             &deps,
@@ -111,7 +112,7 @@ script {
     }
 }";
 
-    let changes = DFinanceDialect::default()
+    let changes = get_dfinance_dialect()
         .compile_and_run(
             (get_script_path(), script_text.to_string()),
             &deps,
@@ -162,15 +163,15 @@ script {
         },
         "op": {"type": "SetValue", "values": [10, 20]}
     }]);
-    let changes = serde_json::from_value(genesis).unwrap();
-    let genesis_write_set = changes_into_writeset(changes).unwrap();
-    let changes = compile_and_run(
-        (get_script_path(), script_text.to_string()),
-        &deps,
-        get_sender(),
-        genesis_write_set,
-    )
-    .unwrap();
+    let genesis_changes = serde_json::from_value(genesis).unwrap();
+    let changes = get_dfinance_dialect()
+        .compile_and_run(
+            (get_script_path(), script_text.to_string()),
+            &deps,
+            get_sender(),
+            genesis_changes,
+        )
+        .unwrap();
     assert_eq!(changes.len(), 1);
     assert_eq!(
         serde_json::to_value(&changes[0]).unwrap(),
@@ -214,7 +215,7 @@ script {
     ));
 
     let sender = "0x1".to_string();
-    let changes = DFinanceDialect::default()
+    let changes = get_dfinance_dialect()
         .compile_and_run(
             (get_script_path(), script_text.to_string()),
             &deps,
