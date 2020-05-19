@@ -32,10 +32,10 @@ use shared::errors::{
 use shared::results::{ExecResult, ExecutionError};
 
 use move_ir_types::location::Loc;
+use shared::bech32;
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
 
-pub mod bech32;
 pub mod executor;
 pub mod resources;
 

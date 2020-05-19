@@ -1,8 +1,8 @@
 use anyhow::{ensure, Result};
 use bech32::u5;
 use lazy_static::lazy_static;
-use shared::errors::OffsetsMap;
 
+use crate::errors::OffsetsMap;
 use regex::Regex;
 
 pub static HRP: &str = "wallet";
@@ -11,7 +11,7 @@ lazy_static! {
     static ref BECH32_REGEX: Regex = Regex::new(
         r#"[\s=]+(["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})"#,
     )
-    .expect("Is valid regex");
+    .unwrap();
 }
 
 pub fn bech32_into_libra(address: &str) -> Result<String> {
@@ -42,7 +42,7 @@ pub fn replace_bech32_addresses(source: &str) -> (String, OffsetsMap) {
     let mut overall_offset = 0;
 
     for mat in BECH32_REGEX.captures_iter(source).into_iter() {
-        let item = mat.get(1).expect("Has been captured, so should be present");
+        let item = mat.get(1).unwrap();
 
         let address = item.as_str();
         if address.starts_with("0x") {
