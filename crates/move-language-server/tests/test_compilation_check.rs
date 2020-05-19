@@ -461,4 +461,26 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
         assert_eq!(errors[0].message, "Unbound type 'u10' in current scope");
         assert_eq!(errors[0].range, range((6, 19), (6, 22)));
     }
+
+    #[test]
+    fn pass_bech32_address_as_sender() {
+        let source_text = r"
+address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+    module Debug {
+        public fun main() {}
+    }
+}
+    ";
+        let mut config = Config::default();
+        config.update(&serde_json::json!({
+            "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
+        }));
+        assert_eq!(
+            config.sender_address,
+            "0xde5f86ce8ad7944f272d693cb4625a955b61015000000000"
+        );
+
+        let errors = diagnostics_with_config(source_text, config);
+        assert!(errors.is_empty(), "{:?}", errors);
+    }
 }

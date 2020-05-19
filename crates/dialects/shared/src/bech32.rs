@@ -17,7 +17,7 @@ lazy_static! {
 pub fn bech32_into_libra(address: &str) -> Result<String> {
     let (_, data_bytes) = bech32::decode(address)?;
     let data = bech32::convert_bits(&data_bytes, 5, 8, true)?;
-    Ok(format!("{}00000000", hex::encode(&data)))
+    Ok(format!("0x{}00000000", hex::encode(&data)))
 }
 
 pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
@@ -54,10 +54,9 @@ pub fn replace_bech32_addresses(source: &str) -> (String, OffsetsMap) {
             offsets_map.insert((last_interval_pos, end), overall_offset);
             last_interval_pos = end;
 
-            let libra_address_s = format!("0x{}", libra_address);
-            transformed_source = transformed_source.replace(address, &libra_address_s);
+            transformed_source = transformed_source.replace(address, &libra_address);
 
-            let len_diff = libra_address_s.len() - address.len();
+            let len_diff = libra_address.len() - address.len();
             overall_offset += len_diff;
         }
     }
