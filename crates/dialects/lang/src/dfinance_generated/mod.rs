@@ -27,7 +27,8 @@ use dfinance_move_vm_types::{
     transaction_metadata::TransactionMetadata,
     values::{GlobalValue, Value},
 };
-use dfinance_vm::{file_format::CompiledScript, CompiledModule};
+use dfinance_vm::file_format::CompiledScript;
+use dfinance_vm::CompiledModule;
 
 use shared::bech32;
 use shared::errors::{

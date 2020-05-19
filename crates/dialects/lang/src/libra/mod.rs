@@ -1,40 +1,41 @@
+use std::collections::BTreeMap;
+
 use anyhow::Result;
-
+use codespan::ByteIndex;
 use language_e2e_tests::data_store::FakeDataStore;
-
-use libra_types::access_path::AccessPath;
-use libra_types::account_address::AccountAddress;
-
-use libra_types::write_set::WriteSet;
+use libra_types::{
+    access_path::AccessPath, account_address::AccountAddress, vm_error::VMStatus,
+    write_set::WriteSet,
+};
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-
-use move_lang::errors::{Error, FilesSourceText};
-use move_lang::parser::ast::Definition;
-use move_lang::parser::syntax;
-
-use move_lang::{cfgir, parser, strip_comments_and_verify, to_bytecode};
+use move_ir_types::location::Loc;
+use move_lang::{
+    cfgir,
+    compiled_unit::CompiledUnit,
+    errors::{Error, FilesSourceText},
+    parser,
+    parser::ast::Definition,
+    parser::syntax,
+    shared::Address,
+    strip_comments_and_verify, to_bytecode,
+};
 use move_vm_runtime::MoveVM;
 use move_vm_state::execution_context::SystemExecutionContext;
-use move_vm_types::gas_schedule::zero_cost_schedule;
-use move_vm_types::loaded_data::types::FatStructType;
-use move_vm_types::transaction_metadata::TransactionMetadata;
-use move_vm_types::values::{GlobalValue, Value};
-use std::collections::BTreeMap;
-use utils::FilePath;
+use move_vm_types::{
+    gas_schedule::zero_cost_schedule,
+    loaded_data::types::FatStructType,
+    transaction_metadata::TransactionMetadata,
+    values::{GlobalValue, Value},
+};
+use vm::file_format::CompiledScript;
+use vm::CompiledModule;
 
-use codespan::ByteIndex;
-use libra_types::vm_error::VMStatus;
-use move_lang::compiled_unit::CompiledUnit;
-use move_lang::shared::Address;
+use shared::bech32;
 use shared::errors::{
     CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap, ProjectOffsetsMap,
 };
 use shared::results::{ExecResult, ExecutionError};
-
-use move_ir_types::location::Loc;
-use shared::bech32;
-use vm::file_format::CompiledScript;
-use vm::CompiledModule;
+use utils::FilePath;
 
 pub mod executor;
 pub mod resources;

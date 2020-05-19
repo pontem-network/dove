@@ -1,11 +1,12 @@
 use anyhow::Result;
-
-use libra_types::access_path::AccessPath;
-use libra_types::language_storage::ResourceKey;
-use libra_types::write_set::{WriteOp, WriteSet, WriteSetMut};
-use move_core_types::account_address::AccountAddress;
-use move_core_types::identifier::Identifier;
+use libra_types::{
+    access_path::AccessPath,
+    language_storage::ResourceKey,
+    write_set::{WriteOp, WriteSet, WriteSetMut},
+};
+use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use move_vm_types::loaded_data::types::{FatStructType, FatType};
+
 use shared::results::{ResourceChange, ResourceChangeOp, ResourceType};
 
 pub struct ResourceStructType(pub FatStructType);

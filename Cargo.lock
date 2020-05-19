@@ -1302,6 +1302,7 @@ dependencies = [
  "utils",
  "vm 0.1.0 (git+https://github.com/dfinance/libra.git?branch=12.05.2020)",
  "vm 0.1.0 (git+https://github.com/dfinance/libra.git?branch=12.05.2020.original)",
+ "walkdir",
 ]
 
 [[package]]

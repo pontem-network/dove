@@ -1,9 +1,10 @@
 use anyhow::Result;
-use libra_types::vm_error::StatusCode;
-use libra_types::write_set::{WriteOp, WriteSet};
+use libra_types::{
+    vm_error::StatusCode,
+    write_set::{WriteOp, WriteSet},
+};
 use move_core_types::account_address::AccountAddress;
-use move_vm_types::loaded_data::types::FatStructType;
-use move_vm_types::values::GlobalValue;
+use move_vm_types::{loaded_data::types::FatStructType, values::GlobalValue};
 use vm::errors::{vm_error, Location, VMResult};
 
 use shared::results::ResourceChange;
