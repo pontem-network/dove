@@ -81,21 +81,20 @@ impl Config {
         self.sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x0");
-                "0x0"
+                "0x0".to_string()
             }
             Some(address) => match self
                 .dialect()
                 .preprocess_and_validate_account_address(address)
             {
-                Ok(_) => address,
+                Ok(parsed_address) => parsed_address,
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);
                     log::info!("Using default account address 0x0");
-                    "0x0"
+                    "0x0".to_string()
                 }
             },
-        }
-        .to_string();
+        };
 
         log::info!("Config updated to = {:#?}", self);
         self.log_available_module_files();

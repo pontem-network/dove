@@ -3,6 +3,7 @@ use anyhow::Result;
 use shared::errors::CompilerError;
 use shared::results::ResourceChange;
 
+use shared::bech32::bech32_into_libra;
 use utils::{FilePath, FilesSourceText};
 
 pub trait Dialect {
@@ -35,7 +36,8 @@ pub struct DFinanceDialect;
 
 impl Dialect for DFinanceDialect {
     fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String> {
-        lang::parse_account_address(s).map(|address| format!("0x{}", address))
+        let s = bech32_into_libra(s)?;
+        lang::parse_account_address(&s).map(|address| format!("0x{}", address))
     }
 
     fn check_with_compiler(
