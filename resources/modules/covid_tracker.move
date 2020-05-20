@@ -1,6 +1,7 @@
 module CovidTracker {
     use 0x0::Vector;
     use 0x0::Transaction;
+
 	struct NewsReport {
 		news_source_id: u64,
 		infected_count: u64,

@@ -1,4 +1,5 @@
 use dialects::{DFinanceDialect, Dialect};
+use move_executor::compile_and_execute_script;
 use shared::errors::ExecCompilerError;
 use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use utils::{io, leaked_fpath, FilePath};
@@ -229,6 +230,62 @@ script {
           {
             "ty": {
               "address": "0x000000000000000000000000000000000000000000000001",
+              "module": "M",
+              "name": "T",
+              "ty_args": [],
+              "layout": [
+                "U8"
+              ]
+            },
+            "op": {
+              "type": "SetValue",
+              "values": [
+                10
+              ]
+            }
+          }
+        ])
+    );
+}
+
+#[test]
+fn test_run_with_non_default_dfinance_dialect() {
+    let module_source_text = r"
+address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+    module M {
+        resource struct T { value: u8 }
+        public fun get_t(v: u8) {
+            move_to_sender<T>(T { value: v })
+        }
+    }
+}
+    ";
+    let script_text = r"
+script {
+    fun main() {
+        wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(10);
+    }
+}
+    ";
+
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &[(
+            leaked_fpath(get_modules_path().join("m.move")),
+            module_source_text.to_string(),
+        )],
+        "dfinance",
+        "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
+        serde_json::json!([]),
+    )
+    .unwrap();
+
+    assert_eq!(
+        changes,
+        serde_json::json!([
+          {
+            "ty": {
+              "address": "0xde5f86ce8ad7944f272d693cb4625a955b61015000000000",
               "module": "M",
               "name": "T",
               "ty_args": [],

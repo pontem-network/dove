@@ -36,7 +36,8 @@ pub fn compile_and_run(
     sender: String,
     genesis_write_set: WriteSet,
 ) -> Result<Vec<ResourceChange>> {
-    let sender = AccountAddress::from_hex_literal(&sender).expect("Checked in validation above");
+    let sender =
+        AccountAddress::from_hex_literal(&sender).expect("Should be validated in the caller");
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =

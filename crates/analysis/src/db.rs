@@ -120,7 +120,7 @@ impl RootDatabase {
     }
 
     fn is_fpath_for_a_module(&self, fpath: FilePath) -> bool {
-        for module_folder in self.config.module_folders.iter() {
+        for module_folder in self.config.modules_folders.iter() {
             if fpath.starts_with(module_folder.to_str().unwrap()) {
                 return true;
             }

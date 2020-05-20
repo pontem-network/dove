@@ -14,19 +14,16 @@ fn range(start: (u64, u64), end: (u64, u64)) -> Range {
 }
 
 fn diagnostics(text: &str) -> Vec<Diagnostic> {
-    let loc_ds = diagnostics_with_config(text, Config::default());
-    loc_ds
-        .iter()
-        .map(|d| d.diagnostic.clone().unwrap())
-        .collect()
+    diagnostics_with_config(text, Config::default())
 }
 
-fn diagnostics_with_config(text: &str, config: Config) -> Vec<FileDiagnostic> {
-    diagnostics_with_config_and_filename(
+fn diagnostics_with_config(text: &str, config: Config) -> Vec<Diagnostic> {
+    let loc_ds = diagnostics_with_config_and_filename(
         text,
         config,
         leaked_fpath(get_resources_dir().join("some_script.move")),
-    )
+    );
+    loc_ds.into_iter().filter_map(|d| d.diagnostic).collect()
 }
 
 fn diagnostics_with_config_and_filename(
@@ -39,7 +36,7 @@ fn diagnostics_with_config_and_filename(
     let mut analysis_host = world_state.analysis_host;
 
     let mut change = AnalysisChange::new();
-    for folder in world_state.config.module_folders {
+    for folder in world_state.config.modules_folders {
         for (fpath, text) in read_move_files(folder) {
             change.add_file(fpath, text);
         }
@@ -50,6 +47,15 @@ fn diagnostics_with_config_and_filename(
     analysis_host
         .analysis()
         .check_with_libra_compiler(fpath, text)
+}
+
+macro_rules! config {
+    ($json:tt) => {{
+        let config_json = serde_json::json!($json);
+        let mut config = Config::default();
+        config.update(&config_json);
+        config
+    }};
 }
 
 #[cfg(test)]
@@ -210,11 +216,8 @@ module MyModule {
     }
 }
     ";
-        let config = Config {
-            stdlib_folder: Some(get_stdlib_path()),
-            ..Config::default()
-        };
-        let errors = diagnostics_with_config(source_text, config);
+        let errors =
+            diagnostics_with_config(source_text, config!({ "stdlib_folder": get_stdlib_path() }));
         assert!(errors.is_empty());
     }
 
@@ -223,20 +226,20 @@ module MyModule {
         // hardcoded sender address
         let script_source_text = r"
 script {
-use 0x8572f83cee01047effd6e7d0b5c19743::CovidTracker;
-fun main() {
-    CovidTracker::how_many(5);
-}
+    use 0x8572f83cee01047effd6e7d0b5c19743::CovidTracker;
+    fun main() {
+        CovidTracker::how_many(5);
+    }
 }
     ";
-        let config = Config {
-            sender_address: "0x8572f83cee01047effd6e7d0b5c19743".to_string(),
-            stdlib_folder: Some(get_stdlib_path()),
-            module_folders: vec![get_modules_path()],
-            ..Config::default()
-        };
+        let config = config!({
+            "dialect": "libra",
+            "sender_address": "0x8572f83cee01047effd6e7d0b5c19743",
+            "stdlib_folder": get_stdlib_path(),
+            "modules_folders": [get_modules_path()],
+        });
         let errors = diagnostics_with_config(script_source_text, config);
-        assert!(errors.is_empty());
+        assert!(errors.is_empty(), "{:#?}", errors);
     }
 
     #[test]
@@ -265,11 +268,10 @@ module CovidTracker {
 	}
 }
     ";
-        let config = Config {
-            stdlib_folder: Some(get_stdlib_path()),
-            module_folders: vec![get_modules_path()],
-            ..Config::default()
-        };
+        let config = config!({
+            "stdlib_folder": get_stdlib_path(),
+            "modules_folders": [get_modules_path()],
+        });
         let covid_tracker_module = leaked_fpath(
             get_modules_path()
                 .join("covid_tracker.move")
@@ -287,7 +289,6 @@ module CovidTracker {
     #[test]
     fn test_compile_with_sender_address_specified() {
         // hardcoded sender address
-        let sender_address = "0x11111111111111111111111111111111".to_string();
         let script_source_text = r"
 script {
     use 0x11111111111111111111111111111111::CovidTracker;
@@ -297,14 +298,13 @@ script {
     }
 }
     ";
-        let config = Config {
-            stdlib_folder: Some(get_stdlib_path()),
-            module_folders: vec![get_modules_path()],
-            sender_address,
-            ..Config::default()
-        };
+        let config = config!({
+            "stdlib_folder": get_stdlib_path(),
+            "modules_folders": [get_modules_path()],
+            "sender_address": "0x11111111111111111111111111111111",
+        });
         let errors = diagnostics_with_config(script_source_text, config);
-        assert!(errors.is_empty());
+        assert!(errors.is_empty(), "{:?}", errors);
     }
 
     #[test]
@@ -319,24 +319,18 @@ script {
     }
 }
     ";
-        let config = Config {
-            stdlib_folder: Some(get_stdlib_path()),
-            module_folders: vec![get_modules_path()],
-            ..Config::default()
-        };
+        let config = config!({
+            "stdlib_folder": get_stdlib_path(),
+            "modules_folders": [get_modules_path()]
+        });
         let errors = diagnostics_with_config(source_text, config);
         assert_eq!(errors.len(), 1);
-
-        let error = errors[0].diagnostic.as_ref().unwrap();
-        assert_eq!(error.related_information.as_ref().unwrap().len(), 2);
+        assert_eq!(errors[0].related_information.as_ref().unwrap().len(), 2);
     }
 
     #[test]
     fn test_syntax_error_in_dependency() {
-        let config = Config {
-            module_folders: vec![get_modules_path()],
-            ..Config::default()
-        };
+        let config = config!({ "modules_folders": [get_modules_path()] });
 
         let mut files = FilesSourceText::new();
         let dep_module_fpath =
@@ -380,10 +374,9 @@ address 0x0 {
     }
 }
     ";
-        let config = Config {
-            stdlib_folder: Some(get_stdlib_path()),
-            ..Config::default()
-        };
+        let config = config!({
+            "stdlib_folder": get_stdlib_path(),
+        });
         let errors = diagnostics_with_config_and_filename(
             source_text,
             config,
@@ -401,7 +394,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     }
 }
     ";
-        let errors = diagnostics(source_text);
+        let errors = diagnostics_with_config(source_text, config!({"dialect": "dfinance"}));
         assert!(errors.is_empty());
 
         let invalid_source_text = r"
@@ -411,7 +404,8 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     }
 }
     ";
-        let errors = diagnostics(invalid_source_text);
+        let errors =
+            diagnostics_with_config(invalid_source_text, config!({"dialect": "dfinance"}));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unexpected \'pubic\'");
         assert_eq!(errors[0].range, range((3, 8), (3, 13)))
@@ -428,7 +422,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     }
 }
     ";
-        let errors = diagnostics(source_text);
+        let errors = diagnostics_with_config(source_text, config!({"dialect": "dfinance"}));
         assert!(errors.is_empty(), "{:?}", errors);
 
         let invalid_source_text = r"
@@ -440,7 +434,8 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     }
 }
     ";
-        let errors = diagnostics(invalid_source_text);
+        let errors =
+            diagnostics_with_config(invalid_source_text, config!({"dialect": "dfinance"}));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unused assignment or binding for local 'addr'. Consider removing or replacing it with '_'");
         assert_eq!(errors[0].range, range((4, 16), (4, 20)));
@@ -456,7 +451,8 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     }
 }
     ";
-        let errors = diagnostics(invalid_source_text);
+        let errors =
+            diagnostics_with_config(invalid_source_text, config!({"dialect": "dfinance"}));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unbound type 'u10' in current scope");
         assert_eq!(errors[0].range, range((6, 19), (6, 22)));
@@ -471,10 +467,10 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     }
 }
     ";
-        let mut config = Config::default();
-        config.update(&serde_json::json!({
+        let config = config!({
+            "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
-        }));
+        });
         assert_eq!(
             config.sender_address,
             "0xde5f86ce8ad7944f272d693cb4625a955b61015000000000"

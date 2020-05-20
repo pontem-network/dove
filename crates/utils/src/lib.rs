@@ -5,6 +5,8 @@ pub mod io;
 pub mod tests;
 
 pub type FilePath = &'static str;
+pub type File = (FilePath, String);
+
 pub type FilesSourceText = HashMap<&'static str, String>;
 
 pub fn leaked_fpath<P: AsRef<Path>>(path: P) -> FilePath {

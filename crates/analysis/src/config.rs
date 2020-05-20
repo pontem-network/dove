@@ -1,25 +1,18 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use dialects::{DFinanceDialect, Dialect, MoveDialect};
+use dialects::{Dialect, DialectName};
 
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;
 use utils::io;
 
-#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum DialectName {
-    Libra,
-    DFinance,
-}
-
 #[derive(Clone)]
 pub struct Config {
     pub dialect_name: DialectName,
     pub stdlib_folder: Option<PathBuf>,
-    pub module_folders: Vec<PathBuf>,
+    pub modules_folders: Vec<PathBuf>,
     pub sender_address: String,
 }
 
@@ -28,7 +21,7 @@ impl Debug for Config {
         f.debug_struct("Config")
             .field("dialect", &self.dialect_name)
             .field("stdlib_folder", &self.stdlib_folder)
-            .field("module_folders", &self.module_folders)
+            .field("module_folders", &self.modules_folders)
             .field("sender_address", &self.sender_address)
             .finish()
     }
@@ -37,9 +30,9 @@ impl Debug for Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            dialect_name: DialectName::DFinance,
+            dialect_name: DialectName::Libra,
             stdlib_folder: None,
-            module_folders: vec![],
+            modules_folders: vec![],
             sender_address: "0x0".to_string(),
         }
     }
@@ -51,33 +44,61 @@ impl Config {
             .stdlib_folder
             .as_ref()
             .map(io::iter_over_move_files)
-            .unwrap_or_else(|| vec![]);
+            .unwrap_or_else(Vec::new);
         log::info!(
             "available stdlib modules (from {:?}) = {:#?}",
             self.stdlib_folder,
             stdlib_modules
         );
 
-        for folder in &self.module_folders {
+        for folder in &self.modules_folders {
             let files = io::iter_over_move_files(folder);
             log::info!("third party modules (from {:?}) = {:#?}", folder, files);
         }
     }
 
     pub fn dialect(&self) -> Box<dyn Dialect> {
-        match self.dialect_name {
-            DialectName::Libra => Box::new(MoveDialect::default()),
-            DialectName::DFinance => Box::new(DFinanceDialect::default()),
-        }
+        self.dialect_name.get_dialect()
     }
 
     pub fn update(&mut self, value: &serde_json::Value) {
         log::info!("Passed configuration = {:#}", value);
 
         set(value, "/dialect", &mut self.dialect_name);
-        set(value, "/stdlib_folder", &mut self.stdlib_folder);
-        set(value, "/modules_folders", &mut self.module_folders);
-
+        self.stdlib_folder = match get::<PathBuf>(value, "/stdlib_folder") {
+            None => {
+                log::error!("\"stdlib_folder\" not specified or invalid, standard library won't be loaded");
+                None
+            }
+            Some(folder) => {
+                if !folder.exists() {
+                    log::error!(
+                        "Invalid configuration: {:?}  does not exist, standard library won't be loaded", 
+                        folder.into_os_string()
+                    );
+                    None
+                } else {
+                    Some(folder)
+                }
+            }
+        };
+        self.modules_folders = match get::<Vec<PathBuf>>(value, "/modules_folders") {
+            None => vec![],
+            Some(folders) => folders
+                .into_iter()
+                .filter(|folder| {
+                    if !folder.exists() {
+                        log::error!(
+                            "Modules folder {:?} does not exist, skipping it",
+                            folder.to_str().unwrap()
+                        );
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .collect(),
+        };
         self.sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x0");

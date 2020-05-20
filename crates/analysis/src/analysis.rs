@@ -90,6 +90,6 @@ impl Analysis {
             .stdlib_folder
             .as_ref()
             .map(|folder| io::read_move_files(folder.as_path()))
-            .unwrap_or_else(|| vec![])
+            .unwrap_or_else(Vec::new)
     }
 }
