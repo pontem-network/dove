@@ -81,24 +81,6 @@ fn main() -> Result<()> {
         sender_address,
         genesis_json_contents,
     );
-
-    // let script_source_text = fs::read_to_string()
-    // let options: Options = Options::from_args();
-
-    // let script_text = fs::read_to_string(&options.script)?;
-    // let deps = io::load_move_module_files(options.modules.unwrap_or_default())?;
-    //
-    // let genesis_changes = parse_genesis_json(options.genesis)?;
-    // let dialect = options.dialect.get_dialect();
-    // let sender_address = dialect.preprocess_and_validate_account_address(&options.sender)?;
-    //
-    // let script_fpath = leaked_fpath(options.script);
-    // let res = dialect.compile_and_run(
-    //     (script_fpath, script_text.clone()),
-    //     &deps,
-    //     sender_address,
-    //     genesis_changes,
-    // );
     match res {
         Ok(changes) => {
             let out =
