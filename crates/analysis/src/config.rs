@@ -44,7 +44,7 @@ impl Config {
             .stdlib_folder
             .as_ref()
             .map(io::iter_over_move_files)
-            .unwrap_or_else(|| vec![]);
+            .unwrap_or_else(Vec::new);
         log::info!(
             "available stdlib modules (from {:?}) = {:#?}",
             self.stdlib_folder,

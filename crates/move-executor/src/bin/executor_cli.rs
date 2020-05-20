@@ -1,35 +1,18 @@
 use std::fs;
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 use dialects::DialectName;
 
 use clap::{App, Arg};
+use move_executor::compile_and_execute_script;
 use shared::errors::ExecCompilerError;
-use shared::results::{ExecutionError, ResourceChange};
+use shared::results::ExecutionError;
 use std::str::FromStr;
-use utils::{io, leaked_fpath, File, FilePath, FilesSourceText};
+use utils::{io, leaked_fpath, FilePath, FilesSourceText};
 
-type ChainStateChanges = serde_json::Value;
-
-pub fn compile_and_execute_script(
-    script: File,
-    deps: &[File],
-    dialect: String,
-    sender: String,
-    genesis_json_contents: ChainStateChanges,
-) -> Result<ChainStateChanges> {
-    let dialect = DialectName::from_str(&dialect)?.get_dialect();
-    let initial_chain_state =
-        serde_json::from_value::<Vec<ResourceChange>>(genesis_json_contents)
-            .with_context(|| "Genesis contains invalid data")?;
-
-    let execution_changes = dialect.compile_and_run(script, deps, sender, initial_chain_state)?;
-    Ok(serde_json::to_value(execution_changes).unwrap())
-}
-
-fn get_file_sources_mapping(
+fn get_files_for_error_reporting(
     script: (FilePath, String),
     deps: Vec<(FilePath, String)>,
 ) -> FilesSourceText {
@@ -89,12 +72,12 @@ fn main() -> Result<()> {
     };
 
     let dialect = cli_arguments.value_of("dialect").unwrap();
-    let sender_address = cli_arguments.value_of("sender").unwrap().to_string();
+    let sender_address = cli_arguments.value_of("sender").unwrap();
 
     let res = compile_and_execute_script(
         (script_fpath, script_source_text.clone()),
         &deps,
-        dialect.to_string(),
+        dialect,
         sender_address,
         genesis_json_contents,
     );
@@ -127,7 +110,7 @@ fn main() -> Result<()> {
             let error = match error.downcast::<ExecCompilerError>() {
                 Ok(compiler_error) => {
                     let files_mapping =
-                        get_file_sources_mapping((script_fpath, script_source_text), deps);
+                        get_files_for_error_reporting((script_fpath, script_source_text), deps);
                     let dialect = DialectName::from_str(&dialect).unwrap().get_dialect();
                     dialect.print_compiler_errors_and_exit(
                         files_mapping,

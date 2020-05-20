@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 
 # RustFMT
 # install: rustup component add rustfmt --toolchain stable
