@@ -2057,12 +2057,11 @@ name = "move-executor"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "clap",
  "dialects",
  "serde",
- "serde_derive",
  "serde_json",
  "shared",
- "structopt",
  "utils",
 ]
 
