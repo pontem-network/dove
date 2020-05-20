@@ -35,6 +35,7 @@ use shared::errors::{
     CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap, ProjectOffsetsMap,
 };
 use shared::results::{ExecResult, ExecutionError};
+use std::path::PathBuf;
 use utils::FilePath;
 
 pub mod executor;
@@ -91,6 +92,11 @@ pub fn into_exec_compiler_error(
     ExecCompilerError(compiler_errors, offsets_map)
 }
 
+fn is_inside_libra_directory() -> bool {
+    let path = PathBuf::from(file!());
+    path.parent().unwrap().to_str().unwrap().ends_with("libra")
+}
+
 fn parse_file(
     fname: FilePath,
     text: &str,
@@ -102,8 +108,12 @@ fn parse_file(
                 ProjectOffsetsMap::with_file_map(fname, OffsetsMap::new()),
             )
         })?;
-    let (bech32_converted_source, offsets_map) =
-        bech32::replace_bech32_addresses(&no_comments_source);
+    let (bech32_converted_source, offsets_map) = if !is_inside_libra_directory() {
+        bech32::replace_bech32_addresses(&no_comments_source)
+    } else {
+        (no_comments_source, OffsetsMap::default())
+    };
+
     let (defs, _) = syntax::parse_file_string(fname, &bech32_converted_source, comment_map)
         .map_err(|errors| {
             into_exec_compiler_error(
