@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use structopt::StructOpt;
 
-use dialects::{DFinanceDialect, Dialect};
+use dialects::DialectName;
 
 use shared::errors::ExecCompilerError;
 use shared::results::{ExecutionError, ResourceChange};
@@ -15,6 +15,9 @@ struct Options {
     // required positional
     #[structopt()]
     script: PathBuf,
+
+    #[structopt(short, long)]
+    dialect: DialectName,
 
     #[structopt(short, long)]
     sender: String,
@@ -57,7 +60,7 @@ fn main() -> Result<()> {
     let deps = io::load_move_module_files(options.modules.unwrap_or_default())?;
 
     let genesis_changes = parse_genesis_json(options.genesis)?;
-    let dialect = DFinanceDialect::default();
+    let dialect = options.dialect.get_dialect();
     let sender_address = dialect.preprocess_and_validate_account_address(&options.sender)?;
 
     let script_fpath = leaked_fpath(options.script);

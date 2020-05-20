@@ -1,19 +1,12 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use dialects::{DFinanceDialect, Dialect, MoveDialect};
+use dialects::{Dialect, DialectName};
 
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;
 use utils::io;
-
-#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum DialectName {
-    Libra,
-    DFinance,
-}
 
 #[derive(Clone)]
 pub struct Config {
@@ -65,10 +58,7 @@ impl Config {
     }
 
     pub fn dialect(&self) -> Box<dyn Dialect> {
-        match self.dialect_name {
-            DialectName::Libra => Box::new(MoveDialect::default()),
-            DialectName::DFinance => Box::new(DFinanceDialect::default()),
-        }
+        self.dialect_name.get_dialect()
     }
 
     pub fn update(&mut self, value: &serde_json::Value) {

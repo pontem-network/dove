@@ -6,7 +6,37 @@ use shared::errors::CompilerError;
 use shared::results::ResourceChange;
 
 use shared::bech32::bech32_into_libra;
+
+use std::str::FromStr;
 use utils::{FilePath, FilesSourceText};
+
+#[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum DialectName {
+    Libra,
+    DFinance,
+}
+
+impl DialectName {
+    pub fn get_dialect(&self) -> Box<dyn Dialect> {
+        match self {
+            DialectName::Libra => Box::new(MoveDialect::default()),
+            DialectName::DFinance => Box::new(DFinanceDialect::default()),
+        }
+    }
+}
+
+impl FromStr for DialectName {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "libra" => Ok(DialectName::Libra),
+            "dfinance" => Ok(DialectName::DFinance),
+            _ => Err(anyhow::format_err!("Invalid dialect {:?}", s)),
+        }
+    }
+}
 
 pub trait Dialect {
     fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String>;
