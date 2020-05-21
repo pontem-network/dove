@@ -99,6 +99,11 @@ fn is_inside_libra_directory() -> bool {
 
 /// replace {{sender}} and {{ sender }} inside source code
 fn replace_sender_placeholder(s: String, sender: &str, offsets_map: &mut OffsetsMap) -> String {
+    assert!(
+        sender.len() > 12,
+        "Sender address length is too short: {}",
+        sender.len()
+    );
     let mut new_s = s;
     for pattern in &["{{sender}}", "{{ sender }}"] {
         while let Some(pos) = new_s.find(pattern) {
@@ -141,13 +146,20 @@ fn parse_file(
 pub fn parse_files(
     current: (FilePath, String),
     deps: &[(FilePath, String)],
-    sender: &str,
+    sender: String,
 ) -> Result<(Vec<Definition>, Vec<Definition>, ProjectOffsetsMap), ExecCompilerError> {
+    let mut sender = sender;
+    if sender.len() < 12 {
+        // short form libra address
+        let as_address = AccountAddress::from_hex_literal(&sender).unwrap();
+        sender = format!("0x{}", as_address);
+    }
+
     let (s_fpath, s_text) = current;
     let mut exec_compiler_error = ExecCompilerError::default();
 
     let mut project_offsets_map = ProjectOffsetsMap::default();
-    let script_defs = match parse_file(s_fpath, &s_text, sender) {
+    let script_defs = match parse_file(s_fpath, &s_text, &sender) {
         Ok((defs, offsets_map)) => {
             project_offsets_map.0.insert(s_fpath, offsets_map);
             defs
@@ -160,7 +172,7 @@ pub fn parse_files(
 
     let mut dep_defs = vec![];
     for (fpath, text) in deps.iter() {
-        let defs = match parse_file(fpath, text, sender) {
+        let defs = match parse_file(fpath, text, &sender) {
             Ok((defs, offsets_map)) => {
                 project_offsets_map.0.insert(fpath, offsets_map);
                 defs
@@ -185,7 +197,7 @@ pub fn check_and_generate_bytecode(
     sender: AccountAddress,
 ) -> Result<(CompiledScript, Vec<CompiledModule>), ExecCompilerError> {
     let (mut script_defs, modules_defs, project_offsets_map) =
-        parse_files((fname, text.to_owned()), deps, &format!("0x{}", sender))?;
+        parse_files((fname, text.to_owned()), deps, format!("0x{}", sender))?;
     script_defs.extend(modules_defs);
 
     let sender = Address::new(sender.into());
@@ -297,8 +309,8 @@ pub fn check_with_compiler(
     deps: Vec<(FilePath, String)>,
     sender: &str,
 ) -> Result<(), Vec<CompilerError>> {
-    let (script_defs, dep_defs, offsets_map) =
-        parse_files(current, &deps, sender).map_err(|errors| errors.apply_offsets())?;
+    let (script_defs, dep_defs, offsets_map) = parse_files(current, &deps, sender.to_string())
+        .map_err(|errors| errors.apply_offsets())?;
 
     let sender_address = parse_address(sender).expect("Checked before");
     match check_defs(script_defs, dep_defs, sender_address) {
