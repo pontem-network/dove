@@ -65,6 +65,7 @@ script {
             &[],
             "0x111111111111111111111111".to_string(),
             vec![],
+            vec![],
         )
         .unwrap_err()
         .downcast::<ExecCompilerError>()
@@ -94,6 +95,7 @@ script {
             &deps,
             get_sender(),
             vec![],
+            vec![],
         )
         .unwrap();
 }
@@ -118,6 +120,7 @@ script {
             (get_script_path(), script_text.to_string()),
             &deps,
             get_sender(),
+            vec![],
             vec![],
         )
         .unwrap();
@@ -171,6 +174,7 @@ script {
             &deps,
             get_sender(),
             genesis_changes,
+            vec![],
         )
         .unwrap();
     assert_eq!(changes.len(), 1);
@@ -221,6 +225,7 @@ script {
             (get_script_path(), script_text.to_string()),
             &deps,
             sender,
+            vec![],
             vec![],
         )
         .unwrap();
@@ -277,6 +282,7 @@ script {
         "dfinance",
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
         serde_json::json!([]),
+        vec![],
     )
     .unwrap();
 
@@ -297,6 +303,65 @@ script {
               "type": "SetValue",
               "values": [
                 10
+              ]
+            }
+          }
+        ])
+    );
+}
+
+#[test]
+fn test_pass_arguments_to_script() {
+    let module_source_text = r"
+address 0x1 {
+    module Module {
+        resource struct T { value: bool }
+        public fun create_t(v: bool) {
+            move_to_sender<T>(T { value: v })
+        }
+    }
+}
+    ";
+    let script_text = r"
+script {
+    use 0x1::Module;
+
+    fun main(val: bool) {
+        Module::create_t(val);
+    }
+}
+    ";
+
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &[(
+            leaked_fpath(get_modules_path().join("m.move")),
+            module_source_text.to_string(),
+        )],
+        "libra",
+        "0x1",
+        serde_json::json!([]),
+        vec![String::from("true")],
+    )
+    .unwrap();
+
+    assert_eq!(
+        changes,
+        serde_json::json!([
+          {
+            "ty": {
+              "address": "0x00000000000000000000000000000001",
+              "module": "Module",
+              "name": "T",
+              "ty_args": [],
+              "layout": [
+                "Bool"
+              ]
+            },
+            "op": {
+              "type": "SetValue",
+              "values": [
+                1
               ]
             }
           }

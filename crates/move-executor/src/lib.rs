@@ -14,6 +14,7 @@ pub fn compile_and_execute_script(
     dialect: &str,
     sender: &str,
     genesis_json_contents: ChainStateChanges,
+    args: Vec<String>,
 ) -> Result<ChainStateChanges> {
     let dialect = DialectName::from_str(dialect)?.get_dialect();
     let initial_chain_state =
@@ -21,6 +22,7 @@ pub fn compile_and_execute_script(
             .with_context(|| "Genesis contains invalid data")?;
     let sender = dialect.preprocess_and_validate_account_address(sender)?;
 
-    let execution_changes = dialect.compile_and_run(script, deps, sender, initial_chain_state)?;
+    let execution_changes =
+        dialect.compile_and_run(script, deps, sender, initial_chain_state, args)?;
     Ok(serde_json::to_value(execution_changes).unwrap())
 }

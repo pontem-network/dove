@@ -80,6 +80,7 @@ fn main() -> Result<()> {
         dialect,
         sender_address,
         genesis_json_contents,
+        vec![],
     );
     match res {
         Ok(changes) => {
