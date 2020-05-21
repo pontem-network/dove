@@ -2,14 +2,14 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 use codespan::ByteIndex;
-use language_e2e_tests::data_store::FakeDataStore;
-use libra_types::{
+use orig_language_e2e_tests::data_store::FakeDataStore;
+use orig_libra_types::{
     access_path::AccessPath, account_address::AccountAddress, vm_error::VMStatus,
     write_set::WriteSet,
 };
-use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-use move_ir_types::location::Loc;
-use move_lang::{
+use orig_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
+use orig_move_ir_types::location::Loc;
+use orig_move_lang::{
     cfgir,
     compiled_unit::CompiledUnit,
     errors::{Error, FilesSourceText},
@@ -19,16 +19,16 @@ use move_lang::{
     shared::Address,
     strip_comments_and_verify, to_bytecode,
 };
-use move_vm_runtime::MoveVM;
-use move_vm_state::execution_context::SystemExecutionContext;
-use move_vm_types::{
+use orig_move_vm_runtime::MoveVM;
+use orig_move_vm_state::execution_context::SystemExecutionContext;
+use orig_move_vm_types::{
     gas_schedule::zero_cost_schedule,
     loaded_data::types::FatStructType,
     transaction_metadata::TransactionMetadata,
     values::{GlobalValue, Value},
 };
-use vm::file_format::CompiledScript;
-use vm::CompiledModule;
+use orig_vm::file_format::CompiledScript;
+use orig_vm::CompiledModule;
 
 use shared::bech32;
 use shared::errors::{
@@ -63,7 +63,7 @@ fn from_compiler_error(comp_error: CompilerError) -> Error {
 
 pub fn report_errors(files: FilesSourceText, errors: Vec<CompilerError>) -> ! {
     let errors = errors.into_iter().map(from_compiler_error).collect();
-    move_lang::errors::report_errors(files, errors)
+    orig_move_lang::errors::report_errors(files, errors)
 }
 
 fn into_compiler_error(error: Error) -> CompilerError {
@@ -248,7 +248,7 @@ pub fn check_defs(
         source_definitions,
         lib_definitions,
     };
-    move_lang::check_program(Ok(ast_program), Some(sender))
+    orig_move_lang::check_program(Ok(ast_program), Some(sender))
 }
 
 pub fn generate_bytecode(

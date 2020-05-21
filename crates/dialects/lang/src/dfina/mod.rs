@@ -2,14 +2,14 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 use codespan::ByteIndex;
-use dfinance_language_e2e_tests::data_store::FakeDataStore;
-use dfinance_libra_types::{
+use dfin_language_e2e_tests::data_store::FakeDataStore;
+use dfin_libra_types::{
     access_path::AccessPath, account_address::AccountAddress, vm_error::VMStatus,
     write_set::WriteSet,
 };
-use dfinance_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-use dfinance_move_ir_types::location::Loc;
-use dfinance_move_lang::{
+use dfin_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
+use dfin_move_ir_types::location::Loc;
+use dfin_move_lang::{
     cfgir,
     compiled_unit::CompiledUnit,
     errors::{Error, FilesSourceText},
@@ -19,16 +19,16 @@ use dfinance_move_lang::{
     shared::Address,
     strip_comments_and_verify, to_bytecode,
 };
-use dfinance_move_vm_runtime::MoveVM;
-use dfinance_move_vm_state::execution_context::SystemExecutionContext;
-use dfinance_move_vm_types::{
+use dfin_move_vm_runtime::MoveVM;
+use dfin_move_vm_state::execution_context::SystemExecutionContext;
+use dfin_move_vm_types::{
     gas_schedule::zero_cost_schedule,
     loaded_data::types::FatStructType,
     transaction_metadata::TransactionMetadata,
     values::{GlobalValue, Value},
 };
-use dfinance_vm::file_format::CompiledScript;
-use dfinance_vm::CompiledModule;
+use dfin_vm::file_format::CompiledScript;
+use dfin_vm::CompiledModule;
 
 use shared::bech32;
 use shared::errors::{
@@ -63,7 +63,7 @@ fn from_compiler_error(comp_error: CompilerError) -> Error {
 
 pub fn report_errors(files: FilesSourceText, errors: Vec<CompilerError>) -> ! {
     let errors = errors.into_iter().map(from_compiler_error).collect();
-    dfinance_move_lang::errors::report_errors(files, errors)
+    dfin_move_lang::errors::report_errors(files, errors)
 }
 
 fn into_compiler_error(error: Error) -> CompilerError {
@@ -248,7 +248,7 @@ pub fn check_defs(
         source_definitions,
         lib_definitions,
     };
-    dfinance_move_lang::check_program(Ok(ast_program), Some(sender))
+    dfin_move_lang::check_program(Ok(ast_program), Some(sender))
 }
 
 pub fn generate_bytecode(

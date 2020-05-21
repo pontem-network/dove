@@ -1,11 +1,13 @@
 use anyhow::Result;
-use dfinance_libra_types::{
+use dfin_libra_types::{
+    transaction::{parse_as_transaction_argument, TransactionArgument},
     vm_error::StatusCode,
     write_set::{WriteOp, WriteSet},
 };
-use dfinance_move_core_types::account_address::AccountAddress;
-use dfinance_move_vm_types::{loaded_data::types::FatStructType, values::GlobalValue};
-use dfinance_vm::errors::{vm_error, Location, VMResult};
+use dfin_move_core_types::account_address::AccountAddress;
+use dfin_move_vm_types::loaded_data::types::FatStructType;
+use dfin_move_vm_types::{values::GlobalValue, values::Value};
+use dfin_vm::errors::{vm_error, Location, VMResult};
 
 use shared::results::ResourceChange;
 use utils::FilePath;
@@ -30,11 +32,22 @@ fn convert_set_value(struct_type: FatStructType, val: GlobalValue) -> VMResult<R
     Ok(change)
 }
 
+/// Convert the transaction arguments into move values.
+fn convert_txn_arg(arg: TransactionArgument) -> Value {
+    match arg {
+        TransactionArgument::U64(i) => Value::u64(i),
+        TransactionArgument::Address(a) => Value::address(a),
+        TransactionArgument::Bool(b) => Value::bool(b),
+        TransactionArgument::U8Vector(v) => Value::vector_u8(v),
+    }
+}
+
 pub fn compile_and_run(
     script: (FilePath, String),
     deps: &[(FilePath, String)],
     sender: String,
     genesis_write_set: WriteSet,
+    args: Vec<String>,
 ) -> Result<Vec<ResourceChange>> {
     let sender =
         AccountAddress::from_hex_literal(&sender).expect("Should be validated in the caller");
@@ -47,8 +60,15 @@ pub fn compile_and_run(
         crate::dfina::prepare_fake_network_state(compiled_modules, genesis_write_set);
 
     let serialized_script = crate::dfina::serialize_script(compiled_script)?;
+
+    let mut script_args = Vec::with_capacity(args.len());
+    for passed_arg in args {
+        let transaction_argument = parse_as_transaction_argument(&passed_arg)?;
+        let script_arg = convert_txn_arg(transaction_argument);
+        script_args.push(script_arg);
+    }
     let changed_resources =
-        crate::dfina::execute_script(sender, &network_state, serialized_script, vec![])?;
+        crate::dfina::execute_script(sender, &network_state, serialized_script, script_args)?;
 
     let mut changes = vec![];
     for (_, global_val) in changed_resources {
