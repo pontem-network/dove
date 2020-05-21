@@ -1,12 +1,13 @@
 use anyhow::Result;
-use libra_types::{
+use orig_libra_types::{
     transaction::{parse_as_transaction_argument, TransactionArgument},
     vm_error::StatusCode,
     write_set::{WriteOp, WriteSet},
 };
-use move_core_types::account_address::AccountAddress;
-use move_vm_types::{loaded_data::types::FatStructType, values::GlobalValue, values::Value};
-use vm::errors::{vm_error, Location, VMResult};
+use orig_move_core_types::account_address::AccountAddress;
+use orig_move_vm_types::loaded_data::types::FatStructType;
+use orig_move_vm_types::{values::GlobalValue, values::Value};
+use orig_vm::errors::{vm_error, Location, VMResult};
 
 use shared::results::ResourceChange;
 use utils::FilePath;

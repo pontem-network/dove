@@ -3,23 +3,23 @@ use std::fs;
 
 fn build_replacement_table() -> HashMap<&'static str, &'static str> {
     let mut table = HashMap::new();
-    table.insert("move_core_types::", "dfinance_move_core_types::");
-    table.insert("move_lang::", "dfinance_move_lang::");
-    table.insert("move_ir_types::", "dfinance_move_ir_types::");
+    table.insert("orig_move_core_types::", "dfin_move_core_types::");
+    table.insert("orig_move_lang::", "dfin_move_lang::");
+    table.insert("orig_move_ir_types::", "dfin_move_ir_types::");
 
-    table.insert("move_vm_runtime::", "dfinance_move_vm_runtime::");
-    table.insert("move_vm_state::", "dfinance_move_vm_state::");
-    table.insert("move_vm_types::", "dfinance_move_vm_types::");
-    table.insert("vm::", "dfinance_vm::");
+    table.insert("orig_move_vm_runtime::", "dfin_move_vm_runtime::");
+    table.insert("orig_move_vm_state::", "dfin_move_vm_state::");
+    table.insert("orig_move_vm_types::", "dfin_move_vm_types::");
+    table.insert("orig_vm::", "dfin_vm::");
 
-    table.insert("libra_state_view::", "dfinance_libra_state_view::");
-    table.insert("libra_types::", "dfinance_libra_types::");
+    table.insert("orig_libra_state_view::", "dfin_libra_state_view::");
+    table.insert("orig_libra_types::", "dfin_libra_types::");
     table.insert(
-        "libra_canonical_serialization::",
-        "dfinance_libra_canonical_serialization::",
+        "orig_libra_canonical_serialization::",
+        "dfin_libra_canonical_serialization::",
     );
-    table.insert("libra_crypto::", "dfinance_libra_crypto::");
-    table.insert("language_e2e_tests::", "dfinance_language_e2e_tests::");
+    table.insert("orig_libra_crypto::", "dfin_libra_crypto::");
+    table.insert("orig_language_e2e_tests::", "dfin_language_e2e_tests::");
 
     table.insert("crate::libra", "crate::dfina");
     table

@@ -1,12 +1,13 @@
 use anyhow::Result;
-use dfinance_libra_types::{
+use dfin_libra_types::{
     transaction::{parse_as_transaction_argument, TransactionArgument},
     vm_error::StatusCode,
     write_set::{WriteOp, WriteSet},
 };
-use dfinance_move_core_types::account_address::AccountAddress;
-use dfinance_move_vm_types::{loaded_data::types::FatStructType, values::GlobalValue, values::Value};
-use dfinance_vm::errors::{vm_error, Location, VMResult};
+use dfin_move_core_types::account_address::AccountAddress;
+use dfin_move_vm_types::loaded_data::types::FatStructType;
+use dfin_move_vm_types::{values::GlobalValue, values::Value};
+use dfin_vm::errors::{vm_error, Location, VMResult};
 
 use shared::results::ResourceChange;
 use utils::FilePath;

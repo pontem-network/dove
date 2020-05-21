@@ -1,11 +1,11 @@
 use anyhow::Result;
-use dfinance_libra_types::{
+use dfin_libra_types::{
     access_path::AccessPath,
     language_storage::ResourceKey,
     write_set::{WriteOp, WriteSet, WriteSetMut},
 };
-use dfinance_move_core_types::{account_address::AccountAddress, identifier::Identifier};
-use dfinance_move_vm_types::loaded_data::types::{FatStructType, FatType};
+use dfin_move_core_types::{account_address::AccountAddress, identifier::Identifier};
+use dfin_move_vm_types::loaded_data::types::{FatStructType, FatType};
 
 use shared::results::{ResourceChange, ResourceChangeOp, ResourceType};
 
