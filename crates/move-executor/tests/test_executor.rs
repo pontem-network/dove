@@ -1,12 +1,12 @@
-use dialects::{DFinanceDialect, Dialect};
 use move_executor::compile_and_execute_script;
 use shared::errors::ExecCompilerError;
+
 use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
 use utils::{io, leaked_fpath, FilePath};
 
 fn get_record_module_dep() -> (FilePath, String) {
     let text = r"
-address 0x111111111111111111111111 {
+address 0x1111111111111111 {
     module Record {
         use 0x0::Transaction;
 
@@ -37,16 +37,8 @@ address 0x111111111111111111111111 {
     (fpath, text)
 }
 
-fn get_sender() -> String {
-    "0x111111111111111111111111".to_string()
-}
-
 fn get_script_path() -> FilePath {
     leaked_fpath(get_modules_path().join("script.move"))
-}
-
-fn get_dfinance_dialect() -> DFinanceDialect {
-    DFinanceDialect::default()
 }
 
 #[test]
@@ -59,18 +51,18 @@ script {
         let _ = Transaction::sender();
     }
 }";
-    let errors = get_dfinance_dialect()
-        .compile_and_run(
-            (get_script_path(), text.to_string()),
-            &[],
-            "0x111111111111111111111111".to_string(),
-            vec![],
-            vec![],
-        )
-        .unwrap_err()
-        .downcast::<ExecCompilerError>()
-        .unwrap()
-        .0;
+    let errors = compile_and_execute_script(
+        (get_script_path(), text.to_string()),
+        &[],
+        "libra",
+        "0x1111111111111111",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap_err()
+    .downcast::<ExecCompilerError>()
+    .unwrap()
+    .0;
     assert_eq!(errors.len(), 1);
     assert_eq!(
         errors[0].parts[0].message,
@@ -89,15 +81,15 @@ script {
     }
 }";
     let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
-    get_dfinance_dialect()
-        .compile_and_run(
-            (existing_file_abspath(), text.to_string()),
-            &deps,
-            get_sender(),
-            vec![],
-            vec![],
-        )
-        .unwrap();
+    compile_and_execute_script(
+        (existing_file_abspath(), text.to_string()),
+        &deps,
+        "libra",
+        "0x1111111111111111",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
 }
 
 #[test]
@@ -107,7 +99,7 @@ fn test_execute_script_and_record_resource_changes() {
 
     let script_text = r"
 script {
-    use 0x111111111111111111111111::Record;
+    use 0x1111111111111111::Record;
 
     fun main() {
         let record = Record::create(10);
@@ -115,41 +107,38 @@ script {
     }
 }";
 
-    let changes = get_dfinance_dialect()
-        .compile_and_run(
-            (get_script_path(), script_text.to_string()),
-            &deps,
-            get_sender(),
-            vec![],
-            vec![],
-        )
-        .unwrap();
-    assert_eq!(changes.len(), 1);
-
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &deps,
+        "libra",
+        "0x1111111111111111",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
     assert_eq!(
-        serde_json::to_value(&changes[0]).unwrap(),
-        serde_json::json!({
+        changes,
+        serde_json::json!([{
             "ty": {
-                "address": "0x000000000000000000000000111111111111111111111111",
+                "address": "0x00000000000000001111111111111111",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
                 "layout": ["U8", "U8"]
             },
             "op": {"type": "SetValue", "values": [10, 20]}
-        })
+        }])
     );
 }
 
 #[test]
 fn test_execute_script_with_genesis_state_provided() {
-    let _sender = get_sender();
     let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
     deps.push(get_record_module_dep());
 
     let script_text = r"
 script {
-    use 0x111111111111111111111111::Record;
+    use 0x1111111111111111::Record;
 
     fun main() {
         let record = Record::with_incremented_age();
@@ -157,9 +146,9 @@ script {
     }
 }";
 
-    let genesis = serde_json::json!([{
+    let initial_chain_state = serde_json::json!([{
         "ty": {
-            "address": "0x000000000000000000000000111111111111111111111111",
+            "address": "0x00000000000000001111111111111111",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -167,29 +156,27 @@ script {
         },
         "op": {"type": "SetValue", "values": [10, 20]}
     }]);
-    let genesis_changes = serde_json::from_value(genesis).unwrap();
-    let changes = get_dfinance_dialect()
-        .compile_and_run(
-            (get_script_path(), script_text.to_string()),
-            &deps,
-            get_sender(),
-            genesis_changes,
-            vec![],
-        )
-        .unwrap();
-    assert_eq!(changes.len(), 1);
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &deps,
+        "libra",
+        "0x1111111111111111",
+        initial_chain_state,
+        vec![],
+    )
+    .unwrap();
     assert_eq!(
-        serde_json::to_value(&changes[0]).unwrap(),
-        serde_json::json!({
+        changes,
+        serde_json::json!([{
             "ty": {
-                "address": "0x000000000000000000000000111111111111111111111111",
+                "address": "0x00000000000000001111111111111111",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
                 "layout": ["U8", "U8"]
             },
             "op": {"type": "SetValue", "values": [11, 20]}
-        })
+        }])
     );
 }
 
@@ -219,22 +206,21 @@ script {
         module_text.to_string(),
     ));
 
-    let sender = "0x1".to_string();
-    let changes = get_dfinance_dialect()
-        .compile_and_run(
-            (get_script_path(), script_text.to_string()),
-            &deps,
-            sender,
-            vec![],
-            vec![],
-        )
-        .unwrap();
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &deps,
+        "libra",
+        "0x1",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
     assert_eq!(
         serde_json::to_value(changes).unwrap(),
         serde_json::json!([
           {
             "ty": {
-              "address": "0x000000000000000000000000000000000000000000000001",
+              "address": "0x00000000000000000000000000000001",
               "module": "M",
               "name": "T",
               "ty_args": [],
@@ -242,12 +228,7 @@ script {
                 "U8"
               ]
             },
-            "op": {
-              "type": "SetValue",
-              "values": [
-                10
-              ]
-            }
+            "op": {"type": "SetValue", "values": [10]}
           }
         ])
     );
@@ -299,12 +280,7 @@ script {
                 "U8"
               ]
             },
-            "op": {
-              "type": "SetValue",
-              "values": [
-                10
-              ]
-            }
+            "op": {"type": "SetValue", "values": [10]}
           }
         ])
     );
@@ -358,12 +334,7 @@ script {
                 "Bool"
               ]
             },
-            "op": {
-              "type": "SetValue",
-              "values": [
-                1
-              ]
-            }
+            "op": {"type": "SetValue", "values": [1]}
           }
         ])
     );
