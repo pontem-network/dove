@@ -69,7 +69,7 @@ impl RootDatabase {
         }
     }
 
-    fn comp_location_to_range(&self, loc: &shared::errors::Location) -> Result<Range> {
+    fn error_location_to_range(&self, loc: &shared::errors::Location) -> Result<Range> {
         let file = loc.fpath;
         let text = match self.available_files.get(file) {
             Some(text) => text.clone(),
@@ -95,7 +95,7 @@ impl RootDatabase {
             message,
         } = error.parts[0].to_owned();
         let mut diagnostic = {
-            let range = self.comp_location_to_range(&prim_location)?;
+            let range = self.error_location_to_range(&prim_location)?;
             Diagnostic::new_simple(range, message)
         };
 
@@ -103,7 +103,7 @@ impl RootDatabase {
         if error.parts.len() > 1 {
             let mut related_info = vec![];
             for CompilerErrorPart { location, message } in error.parts[1..].iter() {
-                let range = self.comp_location_to_range(location)?;
+                let range = self.error_location_to_range(location)?;
                 let related_fpath = location.fpath;
                 let file_uri = Url::from_file_path(related_fpath)
                     .unwrap_or_else(|_| panic!("Cannot build Url from path {:?}", related_fpath));

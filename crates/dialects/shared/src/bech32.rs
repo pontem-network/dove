@@ -35,11 +35,8 @@ pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
     Ok(bech32::encode(&HRP, data)?)
 }
 
-pub fn replace_bech32_addresses(source: &str) -> (String, OffsetsMap) {
+pub fn replace_bech32_addresses(source: &str, offsets_map: &mut OffsetsMap) -> String {
     let mut transformed_source = source.to_string();
-    let mut offsets_map = OffsetsMap::new();
-    let mut last_interval_pos = 0;
-    let mut overall_offset = 0;
 
     for mat in BECH32_REGEX.captures_iter(source).into_iter() {
         let item = mat.get(1).unwrap();
@@ -50,19 +47,9 @@ pub fn replace_bech32_addresses(source: &str) -> (String, OffsetsMap) {
             continue;
         }
         if let Ok(libra_address) = bech32_into_libra(address) {
-            let end = item.end() + overall_offset;
-            offsets_map.insert((last_interval_pos, end), overall_offset);
-            last_interval_pos = end;
-
+            offsets_map.insert_offset(item.end(), libra_address.len() - address.len());
             transformed_source = transformed_source.replace(address, &libra_address);
-
-            let len_diff = libra_address.len() - address.len();
-            overall_offset += len_diff;
         }
     }
-    offsets_map.insert(
-        (last_interval_pos, source.len() + overall_offset),
-        overall_offset,
-    );
-    (transformed_source, offsets_map)
+    transformed_source
 }
