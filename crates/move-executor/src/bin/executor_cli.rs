@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use dialects::DialectName;
 
@@ -54,7 +54,8 @@ fn main() -> Result<()> {
         .get_matches();
 
     let script_fpath = leaked_fpath(cli_arguments.value_of("SCRIPT").unwrap());
-    let script_source_text = fs::read_to_string(script_fpath)?;
+    let script_source_text = fs::read_to_string(script_fpath)
+        .with_context(|| format!("Cannot open {:?}", script_fpath))?;
 
     let modules_fpaths = cli_arguments
         .values_of("modules")
