@@ -4,18 +4,19 @@ use anyhow::{Context, Result};
 use dfin_language_e2e_tests::data_store::FakeDataStore;
 use dfin_libra_types::access_path::AccessPath;
 use dfin_libra_types::{
-    transaction::{parse_as_transaction_argument, TransactionArgument},
+    transaction::{parse_transaction_argument, TransactionArgument},
     vm_error::{StatusCode, VMStatus},
     write_set::{WriteOp, WriteSet},
 };
 use dfin_move_core_types::account_address::AccountAddress;
 use dfin_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use dfin_move_lang::{compiled_unit::CompiledUnit, errors::Error, shared::Address, to_bytecode};
-use dfin_move_vm_runtime::MoveVM;
-use dfin_move_vm_state::execution_context::SystemExecutionContext;
+use dfin_move_vm_runtime::{data_cache::TransactionDataCache, move_vm::MoveVM};
+// use dfin_move_vm_state::execution_context::SystemExecutionContext;
 use dfin_move_vm_types::loaded_data::types::FatStructType;
 use dfin_move_vm_types::{
-    gas_schedule::zero_cost_schedule, transaction_metadata::TransactionMetadata,
+    gas_schedule::{zero_cost_schedule, CostStrategy},
+    transaction_metadata::TransactionMetadata,
 };
 use dfin_move_vm_types::{values::GlobalValue, values::Value};
 use dfin_vm::errors::{vm_error, Location, VMResult};
@@ -104,21 +105,25 @@ pub fn execute_script(
     script: Vec<u8>,
     args: Vec<Value>,
 ) -> ExecResult<ResourcesBTreeMap> {
-    let mut exec_context = SystemExecutionContext::new(data_store, GasUnits::new(1_000_000));
+    let mut data_cache = TransactionDataCache::new(data_store);
+
     let zero_cost_table = zero_cost_schedule();
+    let mut cost_strategy = CostStrategy::system(&zero_cost_table, GasUnits::new(1_000_000));
+
     let txn_metadata = get_transaction_metadata(sender_address);
 
     let vm = MoveVM::new();
     vm.execute_script(
         script,
-        &zero_cost_table,
-        &mut exec_context,
-        &txn_metadata,
         vec![],
         args,
+        &mut cost_strategy,
+        &mut data_cache,
+        &txn_metadata,
     )
     .map_err(vm_status_into_exec_status)?;
-    Ok(exec_context.data_map())
+
+    Ok(data_cache.data_map)
 }
 
 fn convert_set_value(struct_type: FatStructType, val: GlobalValue) -> VMResult<ResourceChange> {
@@ -145,6 +150,7 @@ fn convert_txn_arg(arg: TransactionArgument) -> Value {
         TransactionArgument::Address(a) => Value::address(a),
         TransactionArgument::Bool(b) => Value::bool(b),
         TransactionArgument::U8Vector(v) => Value::vector_u8(v),
+        _ => unimplemented!(),
     }
 }
 
@@ -169,7 +175,7 @@ pub fn compile_and_run(
 
     let mut script_args = Vec::with_capacity(args.len());
     for passed_arg in args {
-        let transaction_argument = parse_as_transaction_argument(&passed_arg)?;
+        let transaction_argument = parse_transaction_argument(&passed_arg)?;
         let script_arg = convert_txn_arg(transaction_argument);
         script_args.push(script_arg);
     }

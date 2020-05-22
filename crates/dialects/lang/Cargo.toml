@@ -15,31 +15,42 @@ serde_derive = "1.0.106"
 serde_json = "1.0.52"
 codespan = "0.8.0"
 
-dfin-move-vm-runtime = { package = "move-vm-runtime", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-move-vm-state = { package = "move-vm-state", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-move-vm-types = { package = "move-vm-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-libra-state-view = { package = "libra-state-view", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-language-e2e-tests = { package = "language-e2e-tests", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-vm = { package = "vm", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-libra-types = { package = "libra-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-move-lang = { package = "move-lang", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-libra-canonical-serialization = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-libra-crypto = { package = "libra-crypto", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
-dfin-move-ir-types = { package = "move-ir-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
+dfin-move-vm-runtime = { package = "move-vm-runtime", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-move-vm-types = { package = "move-vm-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-libra-state-view = { package = "libra-state-view", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-language-e2e-tests = { package = "language-e2e-tests", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-vm = { package = "vm", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-libra-types = { package = "libra-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-move-lang = { package = "move-lang", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-libra-canonical-serialization = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-libra-crypto = { package = "libra-crypto", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
+dfin-move-ir-types = { package = "move-ir-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020" }
 
-orig-move-vm-runtime = { package = "move-vm-runtime", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-move-vm-state = { package = "move-vm-state", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-move-vm-types = { package = "move-vm-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-libra-state-view = { package = "libra-state-view", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-language-e2e-tests = { package = "language-e2e-tests", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-vm = { package = "vm", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-libra-types = { package = "libra-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-move-lang = { package = "move-lang", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-libra-canonical-serialization = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-libra-crypto = { package = "libra-crypto", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
-orig-move-ir-types = { package = "move-ir-types", git = "https://github.com/dfinance/libra.git", branch = "12.05.2020.original" }
+orig-move-vm-runtime = { package = "move-vm-runtime", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-move-vm-types = { package = "move-vm-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-libra-state-view = { package = "libra-state-view", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-language-e2e-tests = { package = "language-e2e-tests", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-vm = { package = "vm", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-libra-types = { package = "libra-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-move-lang = { package = "move-lang", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-libra-canonical-serialization = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-libra-crypto = { package = "libra-crypto", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+orig-move-ir-types = { package = "move-ir-types", git = "https://github.com/dfinance/libra.git", branch = "22.05.2020.original" }
+
+#orig-move-vm-runtime = { package = "move-vm-runtime", path = "../../../../dvm-libra/language/move-vm/runtime" }
+##orig-move-vm-state = { package = "move-vm-state", path = "../../../../dvm-libra/language/move-vm/state" }
+#orig-move-vm-types = { package = "move-vm-types", path = "../../../../dvm-libra/language/move-vm/types" }
+#orig-libra-state-view = { package = "libra-state-view", path = "../../../../dvm-libra/storage/state-view" }
+#orig-language-e2e-tests = { package = "language-e2e-tests", path = "../../../../dvm-libra/language/e2e-tests" }
+#orig-move-core-types = { package = "move-core-types", path = "../../../../dvm-libra/language/move-core/types" }
+#orig-vm = { package = "vm", path = "../../../../dvm-libra/language/vm" }
+#orig-libra-types = { package = "libra-types", path = "../../../../dvm-libra/types" }
+#orig-move-lang = { package = "move-lang", path = "../../../../dvm-libra/language/move-lang" }
+#orig-libra-canonical-serialization = { package = "libra-canonical-serialization", path = "../../../../dvm-libra/common/lcs" }
+#orig-libra-crypto = { package = "libra-crypto", path = "../../../../dvm-libra/crypto/crypto" }
+#orig-move-ir-types = { package = "move-ir-types", path = "../../../../dvm-libra/language/move-ir/types" }
 
 #move-vm-runtime = { path = "../../../dvm-libra/language/move-vm/runtime" }
 #move-vm-state = { path = "../../../dvm-libra/language/move-vm/state" }

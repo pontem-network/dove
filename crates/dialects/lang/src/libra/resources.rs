@@ -1,10 +1,11 @@
 use anyhow::{Context, Result};
 use orig_libra_types::{
     access_path::AccessPath,
-    language_storage::ResourceKey,
     write_set::{WriteOp, WriteSet, WriteSetMut},
 };
-use orig_move_core_types::{account_address::AccountAddress, identifier::Identifier};
+use orig_move_core_types::{
+    account_address::AccountAddress, identifier::Identifier, language_storage::ResourceKey,
+};
 use orig_move_vm_types::loaded_data::types::{FatStructType, FatType};
 
 use shared::results::{ResourceChange, ResourceChangeOp, ResourceType};

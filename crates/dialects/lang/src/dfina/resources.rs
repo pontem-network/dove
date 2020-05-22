@@ -1,10 +1,11 @@
 use anyhow::{Context, Result};
 use dfin_libra_types::{
     access_path::AccessPath,
-    language_storage::ResourceKey,
     write_set::{WriteOp, WriteSet, WriteSetMut},
 };
-use dfin_move_core_types::{account_address::AccountAddress, identifier::Identifier};
+use dfin_move_core_types::{
+    account_address::AccountAddress, identifier::Identifier, language_storage::ResourceKey,
+};
 use dfin_move_vm_types::loaded_data::types::{FatStructType, FatType};
 
 use shared::results::{ResourceChange, ResourceChangeOp, ResourceType};
