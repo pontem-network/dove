@@ -1,41 +1,23 @@
-use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use anyhow::Result;
 use codespan::ByteIndex;
-use orig_language_e2e_tests::data_store::FakeDataStore;
-use orig_libra_types::{
-    access_path::AccessPath, account_address::AccountAddress, vm_error::VMStatus,
-    write_set::WriteSet,
-};
-use orig_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
+use orig_libra_types::account_address::AccountAddress;
 use orig_move_ir_types::location::Loc;
 use orig_move_lang::{
     cfgir,
-    compiled_unit::CompiledUnit,
     errors::{Error, FilesSourceText},
     parser,
     parser::ast::Definition,
     parser::syntax,
     shared::Address,
-    strip_comments_and_verify, to_bytecode,
+    strip_comments_and_verify,
 };
-use orig_move_vm_runtime::MoveVM;
-use orig_move_vm_state::execution_context::SystemExecutionContext;
-use orig_move_vm_types::{
-    gas_schedule::zero_cost_schedule,
-    loaded_data::types::FatStructType,
-    transaction_metadata::TransactionMetadata,
-    values::{GlobalValue, Value},
-};
-use orig_vm::file_format::CompiledScript;
-use orig_vm::CompiledModule;
 
 use shared::bech32;
 use shared::errors::{
     CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap, ProjectOffsetsMap,
 };
-use shared::results::{ExecResult, ExecutionError};
-use std::path::PathBuf;
 use utils::FilePath;
 
 pub mod executor;
@@ -190,80 +172,6 @@ pub fn parse_files(
     Ok((script_defs, dep_defs, project_offsets_map))
 }
 
-pub fn check_and_generate_bytecode(
-    fname: FilePath,
-    text: &str,
-    deps: &[(FilePath, String)],
-    sender: AccountAddress,
-) -> Result<(CompiledScript, Vec<CompiledModule>), ExecCompilerError> {
-    let (mut script_defs, modules_defs, project_offsets_map) =
-        parse_files((fname, text.to_owned()), deps, format!("0x{}", sender))?;
-    script_defs.extend(modules_defs);
-
-    let sender = Address::new(sender.into());
-    let program = check_defs(script_defs, vec![], sender)
-        .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map.clone()))?;
-    generate_bytecode(program)
-        .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map))
-}
-
-pub fn serialize_script(script: CompiledScript) -> Result<Vec<u8>> {
-    let mut serialized = vec![];
-    script.serialize(&mut serialized)?;
-    Ok(serialized)
-}
-
-pub fn prepare_fake_network_state(
-    modules: Vec<CompiledModule>,
-    genesis_write_set: WriteSet,
-) -> FakeDataStore {
-    let mut network_state = FakeDataStore::default();
-    for module in modules {
-        network_state.add_module(&module.self_id(), &module);
-    }
-    network_state.add_write_set(&genesis_write_set);
-    network_state
-}
-
-fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetadata {
-    let mut metadata = TransactionMetadata::default();
-    metadata.sender = sender_address;
-    metadata
-}
-
-type ChangedMoveResources = BTreeMap<AccessPath, Option<(FatStructType, GlobalValue)>>;
-
-fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecutionError {
-    ExecutionError {
-        status: format!("{:?}", vm_status.major_status),
-        sub_status: vm_status.sub_status,
-        message: vm_status.message,
-    }
-}
-
-pub fn execute_script(
-    sender_address: AccountAddress,
-    data_store: &FakeDataStore,
-    script: Vec<u8>,
-    args: Vec<Value>,
-) -> ExecResult<ChangedMoveResources> {
-    let mut exec_context = SystemExecutionContext::new(data_store, GasUnits::new(1_000_000));
-    let zero_cost_table = zero_cost_schedule();
-    let txn_metadata = get_transaction_metadata(sender_address);
-
-    let vm = MoveVM::new();
-    vm.execute_script(
-        script,
-        &zero_cost_table,
-        &mut exec_context,
-        &txn_metadata,
-        vec![],
-        args,
-    )
-    .map_err(vm_status_into_exec_status)?;
-    Ok(exec_context.data_map())
-}
-
 type PreBytecodeProgram = cfgir::ast::Program;
 
 pub fn check_defs(
@@ -276,24 +184,6 @@ pub fn check_defs(
         lib_definitions,
     };
     orig_move_lang::check_program(Ok(ast_program), Some(sender))
-}
-
-pub fn generate_bytecode(
-    program: PreBytecodeProgram,
-) -> Result<(CompiledScript, Vec<CompiledModule>), Vec<Error>> {
-    let mut units = to_bytecode::translate::program(program)?;
-    let script = match units.remove(units.len() - 1) {
-        CompiledUnit::Script { script, .. } => script,
-        CompiledUnit::Module { .. } => unreachable!(),
-    };
-    let modules = units
-        .into_iter()
-        .map(|unit| match unit {
-            CompiledUnit::Module { module, .. } => module,
-            CompiledUnit::Script { .. } => unreachable!(),
-        })
-        .collect();
-    Ok((script, modules))
 }
 
 pub fn parse_account_address(s: &str) -> Result<AccountAddress> {
