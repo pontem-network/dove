@@ -111,7 +111,7 @@ fn main() -> Result<()> {
                 }
                 Err(error) => error,
             };
-            Err(error)
+            Err(error.context("Runtime error occurred"))
         }
     }
     // Ok(())

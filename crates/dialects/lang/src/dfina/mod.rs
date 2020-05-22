@@ -101,7 +101,7 @@ fn is_inside_libra_directory() -> bool {
 fn replace_sender_placeholder(s: String, sender: &str, offsets_map: &mut OffsetsMap) -> String {
     assert!(
         sender.len() > 12,
-        "Sender address length is {}",
+        "Sender address length is too short: {}",
         sender.len()
     );
     let mut new_s = s;
