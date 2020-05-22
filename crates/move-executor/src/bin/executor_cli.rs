@@ -51,6 +51,11 @@ fn main() -> Result<()> {
             Arg::from_usage("--genesis [GENESIS_JSON_FILE]")
                 .help("Path to .json file to use as pre-loaded chain state"),
         )
+        .arg(
+            Arg::from_usage("--args [SCRIPT_ARGS]")
+                .multiple(true)
+                .help("Number of script main() function arguments"),
+        )
         .get_matches();
 
     let script_fpath = leaked_fpath(cli_arguments.value_of("SCRIPT").unwrap());
@@ -74,6 +79,12 @@ fn main() -> Result<()> {
 
     let dialect = cli_arguments.value_of("dialect").unwrap();
     let sender_address = cli_arguments.value_of("sender").unwrap();
+    let args: Vec<String> = cli_arguments
+        .value_of("args")
+        .unwrap_or_default()
+        .split_ascii_whitespace()
+        .map(String::from)
+        .collect();
 
     let res = compile_and_execute_script(
         (script_fpath, script_source_text.clone()),
@@ -81,7 +92,7 @@ fn main() -> Result<()> {
         dialect,
         sender_address,
         genesis_json_contents,
-        vec![],
+        args,
     );
     match res {
         Ok(changes) => {
