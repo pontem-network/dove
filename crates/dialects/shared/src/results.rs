@@ -9,13 +9,19 @@ pub enum ResourceChangeOp {
     Delete,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct ResourceType {
     pub address: String,
     pub module: String,
     pub name: String,
     pub ty_args: Vec<String>,
     pub layout: Vec<String>,
+}
+
+impl Display for ResourceType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}::{}::{}", self.address, self.module, self.name)
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

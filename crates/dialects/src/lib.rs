@@ -95,7 +95,8 @@ impl Dialect for MoveDialect {
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<Vec<ResourceChange>> {
-        let genesis_write_set = libra::resources::changes_into_writeset(genesis_changes)?;
+        let genesis_write_set = libra::resources::changes_into_writeset(genesis_changes)
+            .context("Invalid genesis")?;
         libra::executor::compile_and_run(script, deps, sender_address, genesis_write_set, args)
     }
 

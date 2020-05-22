@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use dfin_libra_types::{
     access_path::AccessPath,
     language_storage::ResourceKey,
@@ -96,7 +96,12 @@ pub fn into_write_op(op: ResourceChangeOp) -> WriteOp {
 pub fn changes_into_writeset(changes: Vec<ResourceChange>) -> Result<WriteSet> {
     let mut write_set = WriteSetMut::default();
     for change in changes {
-        let access_path = resource_into_access_path(change.ty)?;
+        let access_path = resource_into_access_path(change.ty.clone()).with_context(|| {
+            format!(
+                "Resource {} does not correspond to any valid struct in the chain",
+                &change.ty
+            )
+        })?;
         let op = into_write_op(change.op);
         write_set.push((access_path, op));
     }
