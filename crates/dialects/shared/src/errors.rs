@@ -9,8 +9,45 @@ fn is_inside_interval(pos: usize, interval: (usize, usize)) -> bool {
     pos >= interval.0 && pos <= interval.1
 }
 
-// needs to be sorted
-pub type OffsetsMap = BTreeMap<(usize, usize), usize>;
+#[derive(Debug, Clone)]
+pub struct OffsetsMap {
+    // needs to be sorted
+    inner: BTreeMap<(usize, usize), usize>,
+}
+
+impl OffsetsMap {
+    pub fn new(file_length: usize) -> OffsetsMap {
+        let mut inner = BTreeMap::new();
+        inner.insert((0, file_length), 0);
+        OffsetsMap { inner }
+    }
+
+    pub fn inner(&self) -> &BTreeMap<(usize, usize), usize> {
+        &self.inner
+    }
+
+    /// if start point is inside existing interval, split it into (existing_start, start) => existing_offset
+    /// and (start, existing_end + offset) => existing offset + offset
+    /// if start point is before the interval, (existing_start, existing_end) => existing_offset + offset
+    pub fn insert_offset(&mut self, pos_start: usize, offset: usize) {
+        let mut new_inner = BTreeMap::new();
+        for ((mut existing_start, existing_end), existing_offset) in self.inner.clone() {
+            if existing_end < pos_start {
+                new_inner.insert((existing_start, existing_end), existing_offset);
+                continue;
+            }
+            if existing_start < pos_start {
+                new_inner.insert((existing_start, pos_start), existing_offset);
+                existing_start = pos_start;
+            }
+            new_inner.insert(
+                (existing_start, existing_end + offset),
+                existing_offset + offset,
+            );
+        }
+        self.inner = new_inner;
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct ProjectOffsetsMap(pub HashMap<FilePath, OffsetsMap>);
@@ -27,7 +64,7 @@ impl ProjectOffsetsMap {
     }
 
     fn translate_pos(&self, pos: usize, fpath: FilePath) -> usize {
-        for (interval, offset) in &self.0[fpath] {
+        for (interval, offset) in self.0[fpath].inner() {
             if is_inside_interval(pos, *interval) {
                 return pos - *offset;
             }

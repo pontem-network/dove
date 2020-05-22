@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use lang::{dfina, libra};
 
@@ -39,7 +39,9 @@ impl FromStr for DialectName {
 }
 
 pub trait Dialect {
-    fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String>;
+    fn name(&self) -> &str;
+
+    fn preprocess_and_validate_account_address(&self, addr: &str) -> Result<String>;
 
     fn check_with_compiler(
         &self,
@@ -68,8 +70,12 @@ pub trait Dialect {
 pub struct MoveDialect;
 
 impl Dialect for MoveDialect {
-    fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String> {
-        libra::parse_account_address(&s).map(|address| format!("0x{}", address))
+    fn name(&self) -> &str {
+        "libra"
+    }
+
+    fn preprocess_and_validate_account_address(&self, addr: &str) -> Result<String> {
+        libra::parse_account_address(&addr).map(|address| format!("0x{}", address))
     }
 
     fn check_with_compiler(
@@ -89,7 +95,8 @@ impl Dialect for MoveDialect {
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<Vec<ResourceChange>> {
-        let genesis_write_set = libra::resources::changes_into_writeset(genesis_changes)?;
+        let genesis_write_set = libra::resources::changes_into_writeset(genesis_changes)
+            .context("Invalid genesis")?;
         libra::executor::compile_and_run(script, deps, sender_address, genesis_write_set, args)
     }
 
@@ -106,8 +113,14 @@ impl Dialect for MoveDialect {
 pub struct DFinanceDialect;
 
 impl Dialect for DFinanceDialect {
-    fn preprocess_and_validate_account_address(&self, s: &str) -> Result<String> {
-        let s = bech32_into_libra(s)?;
+    fn name(&self) -> &str {
+        "dfinance"
+    }
+
+    fn preprocess_and_validate_account_address(&self, addr: &str) -> Result<String> {
+        let s = bech32_into_libra(addr).with_context(|| {
+            format!("Address {:?} is not a valid wallet1 bech32 address", addr)
+        })?;
         dfina::parse_account_address(&s).map(|address| format!("0x{}", address))
     }
 

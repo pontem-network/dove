@@ -479,4 +479,114 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
         let errors = diagnostics_with_config(source_text, config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
+
+    #[test]
+    fn test_substitude_sender_as_template_syntax() {
+        let source_text = r"
+address {{sender}} {
+    module Debug {
+        public fun main() {
+            let _ = {{sender}};
+        }
+    }
+}";
+        let config = config!({
+            "dialect": "libra",
+            "sender_address": "0x1111111111111111"
+        });
+        let errors = diagnostics_with_config(source_text, config);
+        assert!(errors.is_empty(), "{:?}", errors);
+
+        let source_text = r"
+address {{ sender }} {
+    module Debug {
+        public fun main() {
+            let _ = {{ sender }};
+        }
+    }
+}";
+        let config = config!({
+            "dialect": "libra",
+            "sender_address": "0x1111111111111111"
+        });
+        let errors = diagnostics_with_config(source_text, config);
+        assert!(errors.is_empty(), "{:?}", errors);
+    }
+
+    #[test]
+    fn test_sender_substitution_with_errors() {
+        let source_text = r"
+address {{sender}} {
+    module Debug {
+        use 0x0::Unknown;
+        public fun debug() {
+            let _ = Unknown::unknown();
+        }
+    }
+}";
+        let config = config!({
+            "dialect": "libra",
+            "sender_address": "0x1111111111111111"
+        });
+        let errors = diagnostics_with_config(source_text, config);
+        assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
+        assert_eq!(errors[0].range, range((5, 20), (5, 36)));
+
+        let source_text = r"
+address {{sender}} {
+    module Debug {
+        use 0x0::Unknown;
+        public fun debug() {
+            let _ = {{sender}};
+            let _ = Unknown::unknown();
+        }
+    }
+}";
+        let config = config!({
+            "dialect": "libra",
+            "sender_address": "0x1111111111111111"
+        });
+        let errors = diagnostics_with_config(source_text, config);
+        assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
+        assert_eq!(errors[0].range, range((6, 20), (6, 36)));
+    }
+
+    #[test]
+    fn test_bech32_and_sender_substitution_with_errors() {
+        let source_text = r"
+address {{ sender }} {
+    module Debug {
+        public fun main() {
+            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let _ = {{ sender }};
+            // errors out
+            0x0::Unknown::unknown();
+        }
+    }
+}";
+        let config = config!({
+            "dialect": "dfinance",
+            "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
+        });
+        let errors = diagnostics_with_config(source_text, config);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
+        assert_eq!(errors[0].range, range((7, 12), (7, 33)));
+    }
+
+    #[test]
+    fn test_replace_with_longer_form_if_sender_shorter_than_template_string() {
+        let source_text = r"
+address {{sender}} {
+    module Debug {
+        public fun main() {}
+    }
+}";
+        let config = config!({
+            "dialect": "libra",
+            "sender_address": "0x1"
+        });
+        let errors = diagnostics_with_config(source_text, config);
+        assert!(errors.is_empty(), "{:?}", errors);
+    }
 }

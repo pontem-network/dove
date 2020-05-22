@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use dfin_libra_types::{
     transaction::{parse_as_transaction_argument, TransactionArgument},
     vm_error::StatusCode,
@@ -54,12 +54,13 @@ pub fn compile_and_run(
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
-        crate::dfina::check_and_generate_bytecode(fname, &script_text, deps, sender.into())?;
+        crate::dfina::check_and_generate_bytecode(fname, &script_text, deps, sender)?;
 
     let network_state =
         crate::dfina::prepare_fake_network_state(compiled_modules, genesis_write_set);
 
-    let serialized_script = crate::dfina::serialize_script(compiled_script)?;
+    let serialized_script =
+        crate::dfina::serialize_script(compiled_script).context("Script serialization error")?;
 
     let mut script_args = Vec::with_capacity(args.len());
     for passed_arg in args {
@@ -78,9 +79,10 @@ pub fn compile_and_run(
                 continue;
             }
             Some((struct_type, global_val)) => {
-                if !global_val.is_clean().map_err(vm_status_into_exec_status)? {
+                if !global_val.is_clean().unwrap() {
                     let change = convert_set_value(struct_type, global_val)
-                        .map_err(vm_status_into_exec_status)?;
+                        .map_err(vm_status_into_exec_status)
+                        .context("Changeset serialization error")?;
                     changes.push(change);
                 }
             }
