@@ -414,17 +414,7 @@ address 0x0 {
     }
 
     #[test]
-    fn error_in_presence_of_bech32_address() {
-        let source_text = r"
-address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
-    module Debug {
-        public fun main() {}
-    }
-}
-    ";
-        let errors = diagnostics_with_config(source_text, config!({"dialect": "dfinance"}));
-        assert!(errors.is_empty());
-
+    fn invalid_valid_in_precense_of_bech32_address() {
         let invalid_source_text = r"
 address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     module Debug {
@@ -501,7 +491,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
         });
         assert_eq!(
             config.sender_address,
-            "0xde5f86ce8ad7944f272d693cb4625a955b61015000000000"
+            "0xde5f86ce8ad7944f272d693cb4625a955b610150"
         );
 
         let errors = diagnostics_with_config(source_text, config);

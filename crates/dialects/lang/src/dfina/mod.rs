@@ -16,7 +16,8 @@ use dfin_move_lang::{
 
 use shared::bech32;
 use shared::errors::{
-    CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap, ProjectOffsetsMap,
+    len_difference, CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap,
+    ProjectOffsetsMap,
 };
 use utils::FilePath;
 
@@ -87,10 +88,10 @@ fn replace_sender_placeholder(s: String, sender: &str, offsets_map: &mut Offsets
         sender.len()
     );
     let mut new_s = s;
-    for pattern in &["{{sender}}", "{{ sender }}"] {
-        while let Some(pos) = new_s.find(pattern) {
-            new_s.replace_range(pos..pos + pattern.len(), sender);
-            offsets_map.insert_offset(pos + sender.len(), sender.len() - pattern.len());
+    for template in &["{{sender}}", "{{ sender }}"] {
+        while let Some(pos) = new_s.find(template) {
+            new_s.replace_range(pos..pos + template.len(), sender);
+            offsets_map.insert_layer(pos + sender.len(), len_difference(template, sender));
         }
     }
     new_s
@@ -105,11 +106,11 @@ fn parse_file(
         strip_comments_and_verify(fname, source_text).map_err(|errors| {
             into_exec_compiler_error(
                 errors,
-                ProjectOffsetsMap::with_file_map(fname, OffsetsMap::new(source_text.len())),
+                ProjectOffsetsMap::with_file_map(fname, OffsetsMap::default()),
             )
         })?;
 
-    let mut offsets_map = OffsetsMap::new(source_text.len());
+    let mut offsets_map = OffsetsMap::default();
     source_text = replace_sender_placeholder(source_text, sender, &mut offsets_map);
     if !is_inside_libra_directory() {
         source_text = bech32::replace_bech32_addresses(&source_text, &mut offsets_map);
