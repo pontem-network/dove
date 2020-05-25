@@ -518,9 +518,8 @@ address {{ sender }} {
         let source_text = r"
 address {{sender}} {
     module Debug {
-        use 0x0::Unknown;
         public fun debug() {
-            let _ = Unknown::unknown();
+            let _ = 0x0::Unknown::unknown();
         }
     }
 }";
@@ -530,15 +529,14 @@ address {{sender}} {
         });
         let errors = diagnostics_with_config(source_text, config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
-        assert_eq!(errors[0].range, range((5, 20), (5, 36)));
+        assert_eq!(errors[0].range, range((4, 20), (4, 41)));
 
         let source_text = r"
 address {{sender}} {
     module Debug {
-        use 0x0::Unknown;
         public fun debug() {
             let _ = {{sender}};
-            let _ = Unknown::unknown();
+            let _ = 0x0::Unknown::unknown();
         }
     }
 }";
@@ -548,7 +546,7 @@ address {{sender}} {
         });
         let errors = diagnostics_with_config(source_text, config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
-        assert_eq!(errors[0].range, range((6, 20), (6, 36)));
+        assert_eq!(errors[0].range, range((5, 20), (5, 41)));
     }
 
     #[test]

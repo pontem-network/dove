@@ -47,7 +47,6 @@ fn main() {
 
             let transformed_s = convert_contents_into_dialect(&original_s);
             if old_transformed_s != transformed_s {
-                dbg!("writing file");
                 fs::write(dfinance_file_path, transformed_s).unwrap();
             }
         }

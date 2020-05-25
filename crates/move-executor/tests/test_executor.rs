@@ -45,10 +45,8 @@ fn get_script_path() -> FilePath {
 fn test_show_compilation_errors() {
     let text = r"
 script {
-    use 0x0::Transaction;
-
     fun main() {
-        let _ = Transaction::sender();
+        let _ = 0x0::Transaction::sender();
     }
 }";
     let errors = compile_and_execute_script(
@@ -63,6 +61,7 @@ script {
     .downcast::<ExecCompilerError>()
     .unwrap()
     .0;
+    dbg!(&errors);
     assert_eq!(errors.len(), 1);
     assert_eq!(
         errors[0].parts[0].message,
