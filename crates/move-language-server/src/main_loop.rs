@@ -300,12 +300,16 @@ fn on_notification(
             let fpath = uri
                 .to_file_path()
                 .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
-            let text = params
+            let new_text = params
                 .content_changes
                 .pop()
                 .ok_or_else(|| anyhow::anyhow!("empty changes".to_string()))?
                 .text;
-            world_state.vfs.change_file_overlay(fpath.as_path(), text);
+            world_state
+                .vfs
+                .change_file_overlay(fpath.as_path(), |text| {
+                    *text = new_text;
+                });
             loop_state
                 .opened_files
                 .add(leaked_fpath(fpath.to_str().unwrap()));
@@ -352,7 +356,6 @@ fn on_notification(
     if not.method.starts_with("$/") {
         return Ok(());
     }
-    // log::error!("unhandled notification: {:?}", notif);
     Ok(())
 }
 
