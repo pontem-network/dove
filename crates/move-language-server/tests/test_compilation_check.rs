@@ -7,7 +7,7 @@ use analysis::db::FileDiagnostic;
 use move_language_server::world::WorldState;
 use utils::io::read_move_files;
 use utils::tests::{get_modules_path, get_resources_dir, get_stdlib_path};
-use utils::{leaked_fpath, FilePath};
+use utils::{leaked_fpath, File, FilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
@@ -49,6 +49,33 @@ fn diagnostics_with_config_and_filename(
         .check_with_libra_compiler(fpath, text)
 }
 
+fn diagnostics_with_deps(
+    script_file: File,
+    deps: Vec<File>,
+    config: Config,
+) -> Vec<FileDiagnostic> {
+    let (script_fpath, script_text) = script_file;
+    let mut config = config;
+    config.update(&serde_json::json!({
+        "modules_folders": [get_modules_path()]
+    }));
+
+    let ws_root = std::env::current_dir().unwrap();
+    let world_state = WorldState::new(ws_root, config);
+    let mut analysis_host = world_state.analysis_host;
+
+    let mut change = AnalysisChange::new();
+    for (fpath, text) in deps.into_iter() {
+        change.add_file(fpath, text);
+    }
+    change.add_file(script_fpath, script_text.clone());
+    analysis_host.apply_change(change);
+
+    analysis_host
+        .analysis()
+        .check_with_libra_compiler(script_fpath, &script_text)
+}
+
 macro_rules! config {
     ($json:tt) => {{
         let config_json = serde_json::json!($json);
@@ -63,6 +90,7 @@ mod tests {
     use super::*;
     use analysis::db::RootDatabase;
 
+    use utils::tests::get_script_path;
     use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
@@ -496,7 +524,10 @@ address {{sender}} {
         });
         let errors = diagnostics_with_config(source_text, config);
         assert!(errors.is_empty(), "{:?}", errors);
+    }
 
+    #[test]
+    fn test_substitude_sender_as_template_syntax_with_spaces() {
         let source_text = r"
 address {{ sender }} {
     module Debug {
@@ -530,7 +561,10 @@ address {{sender}} {
         let errors = diagnostics_with_config(source_text, config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
         assert_eq!(errors[0].range, range((4, 20), (4, 41)));
+    }
 
+    #[test]
+    fn test_multiple_substitutions_with_sender() {
         let source_text = r"
 address {{sender}} {
     module Debug {
@@ -586,5 +620,38 @@ address {{sender}} {
         });
         let errors = diagnostics_with_config(source_text, config);
         assert!(errors.is_empty(), "{:?}", errors);
+    }
+
+    #[test]
+    fn test_sender_replacement_in_script() {
+        let module_text = r"
+address {{sender}} {
+    module Debug {
+        public fun debug(): u8 {
+            1
+        }
+    }
+}";
+        let source_text = r"
+script {
+    fun main() {
+        let _ = {{sender}}::Debug::debug();
+    }
+}
+        ";
+
+        let config = config!({
+            "dialect": "libra",
+            "sender_address": "0x1",
+        });
+        let diagnostics = diagnostics_with_deps(
+            (get_script_path(), source_text.to_string()),
+            vec![(
+                leaked_fpath(get_modules_path().join("debug.move")),
+                module_text.to_string(),
+            )],
+            config,
+        );
+        assert!(diagnostics.is_empty(), "{:#?}", diagnostics);
     }
 }

@@ -1,6 +1,10 @@
 use crate::{leaked_fpath, FilePath};
 use std::path::PathBuf;
 
+pub fn get_script_path() -> FilePath {
+    leaked_fpath(get_modules_path().join("script.move"))
+}
+
 // just need some valid fname
 pub fn existing_file_abspath() -> FilePath {
     let abspath = std::env::current_dir()
