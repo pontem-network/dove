@@ -1,51 +1,50 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use serde::export::Formatter;
 use std::fmt;
 
 use utils::FilePath;
 
-fn is_inside_interval(pos: usize, interval: (usize, usize)) -> bool {
-    pos >= interval.0 && pos <= interval.1
+fn translate(pos: usize, offset: isize) -> usize {
+    (pos as isize + offset) as usize
+}
+
+pub fn len_difference(orig: &str, replacement: &str) -> isize {
+    orig.len() as isize - replacement.len() as isize
 }
 
 #[derive(Debug, Clone)]
+pub struct Layer {
+    pub pos: usize,
+    pub offset: isize,
+}
+
+impl Layer {
+    pub fn translate(&self, pos: usize) -> usize {
+        if pos < self.pos {
+            pos
+        } else {
+            translate(pos, self.offset)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct OffsetsMap {
-    // needs to be sorted
-    inner: BTreeMap<(usize, usize), usize>,
+    layers: Vec<Layer>,
 }
 
 impl OffsetsMap {
-    pub fn new(file_length: usize) -> OffsetsMap {
-        let mut inner = BTreeMap::new();
-        inner.insert((0, file_length), 0);
-        OffsetsMap { inner }
+    pub fn insert_layer(&mut self, pos: usize, offset: isize) {
+        self.layers.push(Layer { pos, offset });
     }
 
-    pub fn inner(&self) -> &BTreeMap<(usize, usize), usize> {
-        &self.inner
-    }
-
-    /// if start point is inside existing interval, split it into (existing_start, start) => existing_offset
-    /// and (start, existing_end + offset) => existing offset + offset
-    /// if start point is before the interval, (existing_start, existing_end) => existing_offset + offset
-    pub fn insert_offset(&mut self, pos_start: usize, offset: usize) {
-        let mut new_inner = BTreeMap::new();
-        for ((mut existing_start, existing_end), existing_offset) in self.inner.clone() {
-            if existing_end < pos_start {
-                new_inner.insert((existing_start, existing_end), existing_offset);
-                continue;
-            }
-            if existing_start < pos_start {
-                new_inner.insert((existing_start, pos_start), existing_offset);
-                existing_start = pos_start;
-            }
-            new_inner.insert(
-                (existing_start, existing_end + offset),
-                existing_offset + offset,
-            );
+    pub fn translate_pos(&self, pos: usize) -> usize {
+        let mut real_pos = pos;
+        for layer in self.layers.iter().rev() {
+            real_pos = layer.translate(real_pos);
         }
-        self.inner = new_inner;
+        real_pos
     }
 }
 
@@ -64,12 +63,7 @@ impl ProjectOffsetsMap {
     }
 
     fn translate_pos(&self, pos: usize, fpath: FilePath) -> usize {
-        for (interval, offset) in self.0[fpath].inner() {
-            if is_inside_interval(pos, *interval) {
-                return pos - *offset;
-            }
-        }
-        pos
+        self.0[fpath].translate_pos(pos)
     }
 
     pub fn apply_offsets_to_error(&self, error: CompilerError) -> CompilerError {

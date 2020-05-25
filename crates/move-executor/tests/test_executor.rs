@@ -266,7 +266,7 @@ script {
         serde_json::json!([
           {
             "ty": {
-              "address": "0xde5f86ce8ad7944f272d693cb4625a955b61015000000000",
+              "address": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
               "module": "M",
               "name": "T",
               "ty_args": [],
