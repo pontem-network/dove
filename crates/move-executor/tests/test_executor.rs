@@ -1,7 +1,7 @@
 use move_executor::compile_and_execute_script;
 use shared::errors::ExecCompilerError;
 
-use utils::tests::{existing_file_abspath, get_modules_path, get_stdlib_path};
+use utils::tests::{existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path};
 use utils::{io, leaked_fpath, FilePath};
 
 fn get_record_module_dep() -> (FilePath, String) {
@@ -37,10 +37,6 @@ address 0x1111111111111111 {
     (fpath, text)
 }
 
-fn get_script_path() -> FilePath {
-    leaked_fpath(get_modules_path().join("script.move"))
-}
-
 #[test]
 fn test_show_compilation_errors() {
     let text = r"
@@ -61,7 +57,6 @@ script {
     .downcast::<ExecCompilerError>()
     .unwrap()
     .0;
-    dbg!(&errors);
     assert_eq!(errors.len(), 1);
     assert_eq!(
         errors[0].parts[0].message,

@@ -4,13 +4,39 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
+use serde::export::fmt::Debug;
+use serde::export::Formatter;
 use shared::errors::{CompilerError, CompilerErrorPart};
+use std::fmt;
 use utils::{FilePath, FilesSourceText};
 
-#[derive(Debug)]
 pub struct FileDiagnostic {
     pub fpath: FilePath,
     pub diagnostic: Option<Diagnostic>,
+}
+
+impl Debug for FileDiagnostic {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut debug_struct = f.debug_struct("FileDiagnostic");
+
+        debug_struct.field("fpath", &self.fpath.to_string());
+        if self.diagnostic.is_some() {
+            let Diagnostic { range, message, .. } = self.diagnostic.as_ref().unwrap();
+            debug_struct
+                .field(
+                    "range",
+                    &format!(
+                        "({}, {}) -> ({}, {})",
+                        range.start.line,
+                        range.start.character,
+                        range.end.line,
+                        range.end.character,
+                    ),
+                )
+                .field("message", message);
+        }
+        debug_struct.finish()
+    }
 }
 
 impl FileDiagnostic {
