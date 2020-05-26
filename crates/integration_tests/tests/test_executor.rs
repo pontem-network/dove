@@ -28,6 +28,10 @@ address 0x1111111111111111 {
             move_to_sender<T>(record);
         }
 
+        public fun destroy_record() acquires T {
+            let T { age: _ } = move_from<T>(Transaction::sender());
+        }
+
         public fun with_doubled_age(): T acquires T {
             let record: T;
             record = move_from<T>(Transaction::sender());
@@ -366,4 +370,54 @@ script {
     )
     .unwrap();
     assert_eq!(changes, serde_json::json!([]));
+}
+
+#[test]
+fn test_resource_move_from_sender() {
+    let script_text = r"
+script {
+    use 0x1111111111111111::Record;
+
+    fun main() {
+        Record::destroy_record();
+    }
+}";
+    let deps = vec![
+        stdlib_transaction_mod(),
+        io::load_move_file(get_stdlib_path().join("debug.move")).unwrap(),
+        record_mod(),
+    ];
+
+    let initial_chain_state = serde_json::json!([{
+        "ty": {
+            "address": "0x1111111111111111",
+            "module": "Record",
+            "name": "T",
+            "ty_args": [],
+            "layout": ["U8"]
+        },
+        "op": {"type": "SetValue", "values": [10]}
+    }]);
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &deps,
+        "libra",
+        "0x1111111111111111",
+        initial_chain_state,
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(
+        changes,
+        serde_json::json!([{
+            "ty": {
+                "address": "0x00000000000000001111111111111111",
+                "module": "Record",
+                "name": "T",
+                "ty_args": [],
+                "layout": ["U8"]
+            },
+            "op": {"type": "Delete"}
+        }])
+    );
 }

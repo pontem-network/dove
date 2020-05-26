@@ -21,6 +21,7 @@ use shared::errors::{
 };
 use utils::MoveFilePath;
 
+pub mod data_cache;
 pub mod executor;
 pub mod resources;
 
