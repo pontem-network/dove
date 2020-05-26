@@ -1,7 +1,9 @@
 use move_executor::compile_and_execute_script;
 use shared::errors::ExecCompilerError;
 
-use utils::tests::{existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path};
+use integration_tests::{
+    existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path,
+};
 use utils::{io, leaked_fpath, MoveFile};
 
 fn stdlib_transaction_mod() -> MoveFile {

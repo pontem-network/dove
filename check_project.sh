@@ -18,4 +18,4 @@ fi
 # clippy available in stable channel only
 cargo +stable clippy --tests --workspace -- -Dwarnings
 
-cargo test --tests
+cargo test --package integration_tests

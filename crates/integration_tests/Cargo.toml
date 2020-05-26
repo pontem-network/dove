@@ -1,0 +1,22 @@
+[package]
+name = "integration_tests"
+version = "0.1.0"
+authors = ["Maksim Kurnikov <maxim.kurnikov@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+env_logger = "0.7.1"
+
+anyhow = "1.0.27"
+lsp-types = {version = "0.74.0", features = ["proposed"]}
+serde_json = "1.0.52"
+
+shared = { path = "../dialects/shared" }
+dialects = { path = "../dialects" }
+utils = { path = "../utils" }
+analysis = { path = "../analysis" }
+move-executor = { path = "../move-executor" }
+move-language-server = { path = "../move-language-server" }

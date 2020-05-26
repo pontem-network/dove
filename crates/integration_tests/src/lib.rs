@@ -1,5 +1,5 @@
-use crate::{leaked_fpath, MoveFilePath};
 use std::path::PathBuf;
+use utils::{leaked_fpath, MoveFilePath};
 
 pub fn get_script_path() -> MoveFilePath {
     leaked_fpath(get_modules_path().join("script.move"))

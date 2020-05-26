@@ -4,9 +4,9 @@ use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
 use analysis::db::FileDiagnostic;
+use integration_tests::{get_modules_path, get_resources_dir};
 use move_language_server::world::WorldState;
 use utils::io::read_move_files;
-use utils::tests::{get_modules_path, get_resources_dir, get_stdlib_path};
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -90,7 +90,7 @@ mod tests {
     use super::*;
     use analysis::db::RootDatabase;
 
-    use utils::tests::get_script_path;
+    use integration_tests::{get_modules_path, get_script_path, get_stdlib_path};
     use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
