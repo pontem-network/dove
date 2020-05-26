@@ -18,21 +18,24 @@ address 0x1111111111111111 {
 
         resource struct T {
             age: u8,
-            doubled_age: u8
         }
 
         public fun create(age: u8): T {
-            T { age, doubled_age: age * 2 }
+            T { age }
         }
 
         public fun save(record: T) {
             move_to_sender<T>(record);
         }
 
-        public fun with_incremented_age(): T acquires T {
+        public fun destroy_record() acquires T {
+            let T { age: _ } = move_from<T>(Transaction::sender());
+        }
+
+        public fun with_doubled_age(): T acquires T {
             let record: T;
             record = move_from<T>(Transaction::sender());
-            record.age = record.age + 1;
+            record.age = record.age * 2;
             record
         }
     }
@@ -122,9 +125,9 @@ script {
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
-                "layout": ["U8", "U8"]
+                "layout": ["U8"]
             },
-            "op": {"type": "SetValue", "values": [10, 20]}
+            "op": {"type": "SetValue", "values": [10]}
         }])
     );
 }
@@ -136,7 +139,7 @@ script {
     use 0x1111111111111111::Record;
 
     fun main() {
-        let record = Record::with_incremented_age();
+        let record = Record::with_doubled_age();
         Record::save(record);
     }
 }";
@@ -148,9 +151,9 @@ script {
             "module": "Record",
             "name": "T",
             "ty_args": [],
-            "layout": ["U8", "U8"]
+            "layout": ["U8"]
         },
-        "op": {"type": "SetValue", "values": [10, 20]}
+        "op": {"type": "SetValue", "values": [10]}
     }]);
     let changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
@@ -169,9 +172,9 @@ script {
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
-                "layout": ["U8", "U8"]
+                "layout": ["U8"]
             },
-            "op": {"type": "SetValue", "values": [11, 20]}
+            "op": {"type": "SetValue", "values": [20]}
         }])
     );
 }
@@ -367,4 +370,54 @@ script {
     )
     .unwrap();
     assert_eq!(changes, serde_json::json!([]));
+}
+
+#[test]
+fn test_resource_move_from_sender() {
+    let script_text = r"
+script {
+    use 0x1111111111111111::Record;
+
+    fun main() {
+        Record::destroy_record();
+    }
+}";
+    let deps = vec![
+        stdlib_transaction_mod(),
+        io::load_move_file(get_stdlib_path().join("debug.move")).unwrap(),
+        record_mod(),
+    ];
+
+    let initial_chain_state = serde_json::json!([{
+        "ty": {
+            "address": "0x1111111111111111",
+            "module": "Record",
+            "name": "T",
+            "ty_args": [],
+            "layout": ["U8"]
+        },
+        "op": {"type": "SetValue", "values": [10]}
+    }]);
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &deps,
+        "libra",
+        "0x1111111111111111",
+        initial_chain_state,
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(
+        changes,
+        serde_json::json!([{
+            "ty": {
+                "address": "0x00000000000000001111111111111111",
+                "module": "Record",
+                "name": "T",
+                "ty_args": [],
+                "layout": ["U8"]
+            },
+            "op": {"type": "Delete"}
+        }])
+    );
 }

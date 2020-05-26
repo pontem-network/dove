@@ -43,7 +43,9 @@ fn main() {
         let dfinance_file_path = dfinance_dir.join(entry.file_name());
         if entry.file_type().is_file() {
             let original_s = fs::read_to_string(entry.path()).unwrap();
-            let old_transformed_s = fs::read_to_string(&dfinance_file_path).unwrap();
+
+            let old_transformed_s =
+                fs::read_to_string(&dfinance_file_path).unwrap_or(String::from(""));
 
             let transformed_s = convert_contents_into_dialect(&original_s);
             if old_transformed_s != transformed_s {

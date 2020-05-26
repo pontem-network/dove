@@ -1,8 +1,5 @@
-use std::collections::BTreeMap;
-
 use anyhow::{Context, Result};
 use orig_language_e2e_tests::data_store::FakeDataStore;
-use orig_libra_types::access_path::AccessPath;
 use orig_libra_types::{
     transaction::{parse_transaction_argument, TransactionArgument},
     vm_error::{StatusCode, VMStatus},
@@ -11,7 +8,7 @@ use orig_libra_types::{
 use orig_move_core_types::account_address::AccountAddress;
 use orig_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use orig_move_lang::{compiled_unit::CompiledUnit, errors::Error, shared::Address, to_bytecode};
-use orig_move_vm_runtime::{data_cache::TransactionDataCache, move_vm::MoveVM};
+use orig_move_vm_runtime::move_vm::MoveVM;
 // use orig_move_vm_state::execution_context::SystemExecutionContext;
 use orig_move_vm_types::loaded_data::types::FatStructType;
 use orig_move_vm_types::{
@@ -28,9 +25,9 @@ use shared::results::{ExecResult, ExecutionError, ResourceChange};
 use utils::MoveFilePath;
 
 use crate::libra::resources::{ResourceStructType, ResourceWriteOp};
-use crate::libra::{check_defs, into_exec_compiler_error, parse_files, PreBytecodeProgram};
-
-type ResourcesBTreeMap = BTreeMap<AccessPath, Option<(FatStructType, GlobalValue)>>;
+use crate::libra::{
+    check_defs, data_cache, into_exec_compiler_error, parse_files, PreBytecodeProgram,
+};
 
 fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecutionError {
     ExecutionError {
@@ -104,8 +101,8 @@ pub fn execute_script(
     data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
-) -> ExecResult<ResourcesBTreeMap> {
-    let mut data_cache = TransactionDataCache::new(data_store);
+) -> ExecResult<Vec<(FatStructType, Option<GlobalValue>)>> {
+    let mut data_cache = data_cache::DataCache::new(data_store);
 
     let zero_cost_table = zero_cost_schedule();
     let mut cost_strategy = CostStrategy::system(&zero_cost_table, GasUnits::new(1_000_000));
@@ -123,7 +120,7 @@ pub fn execute_script(
     )
     .map_err(vm_status_into_exec_status)?;
 
-    Ok(data_cache.data_map)
+    Ok(data_cache.resource_changes())
 }
 
 fn convert_set_value(struct_type: FatStructType, val: GlobalValue) -> VMResult<ResourceChange> {
@@ -183,13 +180,16 @@ pub fn compile_and_run(
         execute_script(sender, &network_state, serialized_script, script_args)?;
 
     let mut changes = vec![];
-    for (_, global_val) in changed_resources {
+    for (struct_type, global_val) in changed_resources {
         match global_val {
             None => {
-                // deletion is not yet supported
-                continue;
+                let change = ResourceChange::new(
+                    ResourceStructType(struct_type),
+                    ResourceWriteOp(WriteOp::Deletion),
+                );
+                changes.push(change);
             }
-            Some((struct_type, global_val)) => {
+            Some(global_val) => {
                 if !global_val.is_clean().unwrap() {
                     let change = convert_set_value(struct_type, global_val)
                         .map_err(vm_status_into_exec_status)
