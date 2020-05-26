@@ -3760,6 +3760,7 @@ dependencies = [
  "anyhow",
  "env_logger",
  "log",
+ "ra_vfs",
  "walkdir",
 ]
 
