@@ -8,7 +8,7 @@ use shared::results::ResourceChange;
 use shared::bech32::bech32_into_libra;
 
 use std::str::FromStr;
-use utils::{FilePath, FilesSourceText};
+use utils::{FilesSourceText, MoveFilePath};
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -45,15 +45,15 @@ pub trait Dialect {
 
     fn check_with_compiler(
         &self,
-        current: (FilePath, String),
-        deps: Vec<(FilePath, String)>,
+        current: (MoveFilePath, String),
+        deps: Vec<(MoveFilePath, String)>,
         sender: &str,
     ) -> Result<(), Vec<CompilerError>>;
 
     fn compile_and_run(
         &self,
-        script: (FilePath, String),
-        deps: &[(FilePath, String)],
+        script: (MoveFilePath, String),
+        deps: &[(MoveFilePath, String)],
         sender_address: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
@@ -80,8 +80,8 @@ impl Dialect for MoveDialect {
 
     fn check_with_compiler(
         &self,
-        current: (FilePath, String),
-        deps: Vec<(FilePath, String)>,
+        current: (MoveFilePath, String),
+        deps: Vec<(MoveFilePath, String)>,
         sender: &str,
     ) -> Result<(), Vec<CompilerError>> {
         libra::check_with_compiler(current, deps, sender)
@@ -89,8 +89,8 @@ impl Dialect for MoveDialect {
 
     fn compile_and_run(
         &self,
-        script: (FilePath, String),
-        deps: &[(FilePath, String)],
+        script: (MoveFilePath, String),
+        deps: &[(MoveFilePath, String)],
         sender_address: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
@@ -126,8 +126,8 @@ impl Dialect for DFinanceDialect {
 
     fn check_with_compiler(
         &self,
-        current: (FilePath, String),
-        deps: Vec<(FilePath, String)>,
+        current: (MoveFilePath, String),
+        deps: Vec<(MoveFilePath, String)>,
         sender: &str,
     ) -> Result<(), Vec<CompilerError>> {
         dfina::check_with_compiler(current, deps, sender)
@@ -135,8 +135,8 @@ impl Dialect for DFinanceDialect {
 
     fn compile_and_run(
         &self,
-        script: (FilePath, String),
-        deps: &[(FilePath, String)],
+        script: (MoveFilePath, String),
+        deps: &[(MoveFilePath, String)],
         sender_address: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,

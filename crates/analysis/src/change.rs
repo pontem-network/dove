@@ -1,11 +1,11 @@
 use crate::config::Config;
-use utils::FilePath;
+use utils::MoveFilePath;
 
 #[derive(Debug)]
 pub enum RootChange {
-    AddFile(FilePath, String),
-    ChangeFile(FilePath, String),
-    RemoveFile(FilePath),
+    AddFile(MoveFilePath, String),
+    ChangeFile(MoveFilePath, String),
+    RemoveFile(MoveFilePath),
 }
 
 #[derive(Default, Debug)]
@@ -19,17 +19,17 @@ impl AnalysisChange {
         AnalysisChange::default()
     }
 
-    pub fn add_file(&mut self, fname: FilePath, text: String) {
+    pub fn add_file(&mut self, fname: MoveFilePath, text: String) {
         self.tracked_files_changed
             .push(RootChange::AddFile(fname, text));
     }
 
-    pub fn update_file(&mut self, fname: FilePath, text: String) {
+    pub fn update_file(&mut self, fname: MoveFilePath, text: String) {
         self.tracked_files_changed
             .push(RootChange::ChangeFile(fname, text));
     }
 
-    pub fn remove_file(&mut self, fname: FilePath) {
+    pub fn remove_file(&mut self, fname: MoveFilePath) {
         self.tracked_files_changed
             .push(RootChange::RemoveFile(fname))
     }

@@ -19,7 +19,7 @@ use shared::errors::{
     len_difference, CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap,
     ProjectOffsetsMap,
 };
-use utils::FilePath;
+use utils::MoveFilePath;
 
 pub mod executor;
 pub mod resources;
@@ -98,7 +98,7 @@ fn replace_sender_placeholder(s: String, sender: &str, offsets_map: &mut Offsets
 }
 
 fn parse_file(
-    fname: FilePath,
+    fname: MoveFilePath,
     source_text: &str,
     sender: &str,
 ) -> Result<(Vec<Definition>, OffsetsMap), ExecCompilerError> {
@@ -127,8 +127,8 @@ fn parse_file(
 }
 
 pub fn parse_files(
-    current: (FilePath, String),
-    deps: &[(FilePath, String)],
+    current: (MoveFilePath, String),
+    deps: &[(MoveFilePath, String)],
     sender: String,
 ) -> Result<(Vec<Definition>, Vec<Definition>, ProjectOffsetsMap), ExecCompilerError> {
     let mut sender = sender;
@@ -196,8 +196,8 @@ pub fn parse_address(s: &str) -> Result<Address> {
 }
 
 pub fn check_with_compiler(
-    current: (FilePath, String),
-    deps: Vec<(FilePath, String)>,
+    current: (MoveFilePath, String),
+    deps: Vec<(MoveFilePath, String)>,
     sender: &str,
 ) -> Result<(), Vec<CompilerError>> {
     let (script_defs, dep_defs, offsets_map) = parse_files(current, &deps, sender.to_string())

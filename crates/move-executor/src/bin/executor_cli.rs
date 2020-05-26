@@ -10,11 +10,11 @@ use move_executor::compile_and_execute_script;
 use shared::errors::ExecCompilerError;
 use shared::results::ExecutionError;
 use std::str::FromStr;
-use utils::{io, leaked_fpath, FilePath, FilesSourceText};
+use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
 
 fn get_files_for_error_reporting(
-    script: (FilePath, String),
-    deps: Vec<(FilePath, String)>,
+    script: (MoveFilePath, String),
+    deps: Vec<(MoveFilePath, String)>,
 ) -> FilesSourceText {
     let mut mapping = FilesSourceText::with_capacity(deps.len() + 1);
     for (fpath, text) in vec![script].into_iter().chain(deps.into_iter()) {

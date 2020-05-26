@@ -7,7 +7,7 @@ use analysis::db::FileDiagnostic;
 use move_language_server::world::WorldState;
 use utils::io::read_move_files;
 use utils::tests::{get_modules_path, get_resources_dir, get_stdlib_path};
-use utils::{leaked_fpath, File, FilePath};
+use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
@@ -29,7 +29,7 @@ fn diagnostics_with_config(text: &str, config: Config) -> Vec<Diagnostic> {
 fn diagnostics_with_config_and_filename(
     text: &str,
     config: Config,
-    fpath: FilePath,
+    fpath: MoveFilePath,
 ) -> Vec<FileDiagnostic> {
     let ws_root = std::env::current_dir().unwrap();
     let world_state = WorldState::new(ws_root, config);
@@ -50,8 +50,8 @@ fn diagnostics_with_config_and_filename(
 }
 
 fn diagnostics_with_deps(
-    script_file: File,
-    deps: Vec<File>,
+    script_file: MoveFile,
+    deps: Vec<MoveFile>,
     config: Config,
 ) -> Vec<FileDiagnostic> {
     let (script_fpath, script_text) = script_file;
