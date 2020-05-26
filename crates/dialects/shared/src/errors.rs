@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::export::Formatter;
 use std::fmt;
 
-use utils::FilePath;
+use utils::MoveFilePath;
 
 fn translate(pos: usize, offset: isize) -> usize {
     (pos as isize + offset) as usize
@@ -49,20 +49,20 @@ impl OffsetsMap {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct ProjectOffsetsMap(pub HashMap<FilePath, OffsetsMap>);
+pub struct ProjectOffsetsMap(pub HashMap<MoveFilePath, OffsetsMap>);
 
 impl ProjectOffsetsMap {
-    pub fn with_file_map(fpath: FilePath, map: OffsetsMap) -> ProjectOffsetsMap {
+    pub fn with_file_map(fpath: MoveFilePath, map: OffsetsMap) -> ProjectOffsetsMap {
         let mut project_map = ProjectOffsetsMap::default();
         project_map.0.insert(fpath, map);
         project_map
     }
 
-    pub fn insert(&mut self, fpath: FilePath, map: OffsetsMap) {
+    pub fn insert(&mut self, fpath: MoveFilePath, map: OffsetsMap) {
         self.0.insert(fpath, map);
     }
 
-    fn translate_pos(&self, pos: usize, fpath: FilePath) -> usize {
+    fn translate_pos(&self, pos: usize, fpath: MoveFilePath) -> usize {
         self.0[fpath].translate_pos(pos)
     }
 
@@ -86,7 +86,7 @@ impl ProjectOffsetsMap {
 
 #[derive(Debug, Clone)]
 pub struct Location {
-    pub fpath: FilePath,
+    pub fpath: MoveFilePath,
     pub span: (usize, usize),
 }
 

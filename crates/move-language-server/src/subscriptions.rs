@@ -2,21 +2,21 @@
 //! which we want to publish diagnostics, syntax highlighting, etc.
 
 use std::collections::HashSet;
-use utils::FilePath;
+use utils::MoveFilePath;
 
 #[derive(Debug, Default, Clone)]
 pub struct OpenedFiles {
-    files: HashSet<FilePath>,
+    files: HashSet<MoveFilePath>,
 }
 
 impl OpenedFiles {
-    pub fn add(&mut self, fpath: FilePath) {
+    pub fn add(&mut self, fpath: MoveFilePath) {
         self.files.insert(fpath);
     }
-    pub fn remove(&mut self, fpath: FilePath) {
+    pub fn remove(&mut self, fpath: MoveFilePath) {
         self.files.remove(&fpath);
     }
-    pub fn files(&self) -> Vec<FilePath> {
+    pub fn files(&self) -> Vec<MoveFilePath> {
         self.files.iter().copied().collect()
     }
 }

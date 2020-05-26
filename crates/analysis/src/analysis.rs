@@ -3,7 +3,7 @@ use lsp_types::CompletionItem;
 use crate::change::AnalysisChange;
 use crate::completion;
 use crate::db::{FileDiagnostic, RootDatabase};
-use utils::{io, FilePath};
+use utils::{io, MoveFilePath};
 
 #[derive(Debug, Default)]
 pub struct AnalysisHost {
@@ -45,7 +45,11 @@ impl Analysis {
         completions
     }
 
-    pub fn check_with_libra_compiler(&self, fpath: FilePath, text: &str) -> Vec<FileDiagnostic> {
+    pub fn check_with_libra_compiler(
+        &self,
+        fpath: MoveFilePath,
+        text: &str,
+    ) -> Vec<FileDiagnostic> {
         match self.check_with_libra_compiler_inner(fpath, text) {
             Ok(_) => vec![],
             Err(ds) => ds,
@@ -55,10 +59,10 @@ impl Analysis {
     #[inline]
     fn check_with_libra_compiler_inner(
         &self,
-        current_fpath: FilePath,
+        current_fpath: MoveFilePath,
         current_text: &str,
     ) -> Result<(), Vec<FileDiagnostic>> {
-        let deps: Vec<(FilePath, String)> = self
+        let deps: Vec<(MoveFilePath, String)> = self
             .read_stdlib_files()
             .into_iter()
             .chain(self.db.module_files().into_iter())
@@ -84,7 +88,7 @@ impl Analysis {
             })
     }
 
-    fn read_stdlib_files(&self) -> Vec<(FilePath, String)> {
+    fn read_stdlib_files(&self) -> Vec<(MoveFilePath, String)> {
         self.db
             .config
             .stdlib_folder

@@ -1114,6 +1114,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "integration_tests"
+version = "0.1.0"
+dependencies = [
+ "analysis",
+ "anyhow",
+ "dialects",
+ "env_logger",
+ "log",
+ "lsp-types",
+ "move-executor",
+ "move-language-server",
+ "serde_json",
+ "shared",
+ "utils",
+]
+
+[[package]]
 name = "iovec"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3743,6 +3760,7 @@ dependencies = [
  "anyhow",
  "env_logger",
  "log",
+ "ra_vfs",
  "walkdir",
 ]
 

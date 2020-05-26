@@ -8,10 +8,10 @@ use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use shared::errors::{CompilerError, CompilerErrorPart};
 use std::fmt;
-use utils::{FilePath, FilesSourceText};
+use utils::{FilesSourceText, MoveFilePath};
 
 pub struct FileDiagnostic {
-    pub fpath: FilePath,
+    pub fpath: MoveFilePath,
     pub diagnostic: Option<Diagnostic>,
 }
 
@@ -40,14 +40,14 @@ impl Debug for FileDiagnostic {
 }
 
 impl FileDiagnostic {
-    pub fn new(fpath: FilePath, diagnostic: Diagnostic) -> FileDiagnostic {
+    pub fn new(fpath: MoveFilePath, diagnostic: Diagnostic) -> FileDiagnostic {
         FileDiagnostic {
             fpath,
             diagnostic: Some(diagnostic),
         }
     }
 
-    pub fn new_empty(fpath: FilePath) -> FileDiagnostic {
+    pub fn new_empty(fpath: MoveFilePath) -> FileDiagnostic {
         FileDiagnostic {
             fpath,
             diagnostic: None,
@@ -145,7 +145,7 @@ impl RootDatabase {
         Ok(FileDiagnostic::new(prim_location.fpath, diagnostic))
     }
 
-    fn is_fpath_for_a_module(&self, fpath: FilePath) -> bool {
+    fn is_fpath_for_a_module(&self, fpath: MoveFilePath) -> bool {
         for module_folder in self.config.modules_folders.iter() {
             if fpath.starts_with(module_folder.to_str().unwrap()) {
                 return true;

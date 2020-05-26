@@ -25,7 +25,7 @@ use orig_vm::CompiledModule;
 
 use shared::errors::ExecCompilerError;
 use shared::results::{ExecResult, ExecutionError, ResourceChange};
-use utils::FilePath;
+use utils::MoveFilePath;
 
 use crate::libra::resources::{ResourceStructType, ResourceWriteOp};
 use crate::libra::{check_defs, into_exec_compiler_error, parse_files, PreBytecodeProgram};
@@ -59,9 +59,9 @@ pub fn generate_bytecode(
 }
 
 pub fn check_and_generate_bytecode(
-    fname: FilePath,
+    fname: MoveFilePath,
     text: &str,
-    deps: &[(FilePath, String)],
+    deps: &[(MoveFilePath, String)],
     sender: AccountAddress,
 ) -> Result<(CompiledScript, Vec<CompiledModule>), ExecCompilerError> {
     let (mut script_defs, modules_defs, project_offsets_map) =
@@ -155,8 +155,8 @@ fn convert_txn_arg(arg: TransactionArgument) -> Value {
 }
 
 pub fn compile_and_run(
-    script: (FilePath, String),
-    deps: &[(FilePath, String)],
+    script: (MoveFilePath, String),
+    deps: &[(MoveFilePath, String)],
     sender: String,
     genesis_write_set: WriteSet,
     args: Vec<String>,

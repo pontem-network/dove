@@ -29,7 +29,7 @@ use crate::req;
 use crate::subscriptions::OpenedFiles;
 use crate::world::WorldState;
 use analysis::db::FileDiagnostic;
-use utils::{leaked_fpath, FilePath};
+use utils::{leaked_fpath, MoveFilePath};
 
 #[derive(Debug)]
 pub struct LspError {
@@ -363,7 +363,7 @@ fn update_file_notifications_on_threadpool(
     pool: &ThreadPool,
     analysis: Analysis,
     task_sender: Sender<Task>,
-    files: Vec<FilePath>,
+    files: Vec<MoveFilePath>,
 ) {
     pool.execute(move || {
         log::info!("Computing diagnostics for files: {:#?}", files);

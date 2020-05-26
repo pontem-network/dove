@@ -7,4 +7,5 @@ members = [
     "crates/dialects/shared",
     "crates/dialects/lang",
     "crates/utils",
+    "crates/integration_tests",
 ]

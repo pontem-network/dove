@@ -4,13 +4,13 @@ use dialects::DialectName;
 
 use shared::results::ResourceChange;
 use std::str::FromStr;
-use utils::File;
+use utils::MoveFile;
 
 type ChainStateChanges = serde_json::Value;
 
 pub fn compile_and_execute_script(
-    script: File,
-    deps: &[File],
+    script: MoveFile,
+    deps: &[MoveFile],
     dialect: &str,
     sender: &str,
     genesis_json_contents: ChainStateChanges,

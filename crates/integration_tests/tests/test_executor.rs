@@ -1,10 +1,16 @@
 use move_executor::compile_and_execute_script;
 use shared::errors::ExecCompilerError;
 
-use utils::tests::{existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path};
-use utils::{io, leaked_fpath, FilePath};
+use integration_tests::{
+    existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path,
+};
+use utils::{io, leaked_fpath, MoveFile};
 
-fn get_record_module_dep() -> (FilePath, String) {
+fn stdlib_transaction_mod() -> MoveFile {
+    io::load_move_file(get_stdlib_path().join("transaction.move")).unwrap()
+}
+
+fn record_mod() -> MoveFile {
     let text = r"
 address 0x1111111111111111 {
     module Record {
@@ -74,7 +80,7 @@ script {
         let _ = Transaction::sender();
     }
 }";
-    let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
+    let deps = vec![stdlib_transaction_mod()];
     compile_and_execute_script(
         (existing_file_abspath(), text.to_string()),
         &deps,
@@ -88,9 +94,6 @@ script {
 
 #[test]
 fn test_execute_script_and_record_resource_changes() {
-    let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
-    deps.push(get_record_module_dep());
-
     let script_text = r"
 script {
     use 0x1111111111111111::Record;
@@ -100,6 +103,7 @@ script {
         Record::save(record);
     }
 }";
+    let deps = vec![stdlib_transaction_mod(), record_mod()];
 
     let changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
@@ -127,9 +131,6 @@ script {
 
 #[test]
 fn test_execute_script_with_genesis_state_provided() {
-    let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
-    deps.push(get_record_module_dep());
-
     let script_text = r"
 script {
     use 0x1111111111111111::Record;
@@ -139,6 +140,7 @@ script {
         Record::save(record);
     }
 }";
+    let deps = vec![stdlib_transaction_mod(), record_mod()];
 
     let initial_chain_state = serde_json::json!([{
         "ty": {
@@ -194,7 +196,7 @@ script {
     }
 }
         ";
-    let mut deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
+    let mut deps = vec![];
     deps.push((
         leaked_fpath(get_modules_path().join("m.move")),
         module_text.to_string(),
