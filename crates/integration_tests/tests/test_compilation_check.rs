@@ -629,7 +629,6 @@ script {
     }
 }
         ";
-
         let config = config!({
             "dialect": "libra",
             "sender_address": "0x1",
@@ -643,5 +642,23 @@ script {
             config,
         );
         assert!(diagnostics.is_empty(), "{:#?}", diagnostics);
+    }
+
+    #[test]
+    fn test_unbound_module_with_bech32_address() {
+        let text = r"
+script {
+    fun main() {
+        let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Unknown::unknown();
+    }
+}
+        ";
+        let config = config!({"dialect": "dfinance"});
+        let errors = diagnostics_with_config(text, config);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].message,
+            "Unbound module \'wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Unknown\'"
+        )
     }
 }

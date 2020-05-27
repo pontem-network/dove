@@ -109,7 +109,7 @@ fn main() -> Result<()> {
                     let dialect = DialectName::from_str(&dialect).unwrap().get_dialect();
                     dialect.print_compiler_errors_and_exit(
                         files_mapping,
-                        compiler_error.apply_offsets(),
+                        compiler_error.transform_with_source_map(),
                     );
                 }
                 Err(error) => error,

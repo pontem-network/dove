@@ -16,8 +16,8 @@ use orig_move_lang::{
 
 use shared::bech32;
 use shared::errors::{
-    len_difference, CompilerError, CompilerErrorPart, ExecCompilerError, Location, OffsetsMap,
-    ProjectOffsetsMap,
+    len_difference, CompilerError, CompilerErrorPart, ExecCompilerError, FileSourceMap, Location,
+    ProjectSourceMap,
 };
 use utils::MoveFilePath;
 
@@ -67,7 +67,7 @@ fn into_compiler_error(error: Error) -> CompilerError {
 
 pub fn into_exec_compiler_error(
     errors: Vec<Error>,
-    offsets_map: ProjectOffsetsMap,
+    offsets_map: ProjectSourceMap,
 ) -> ExecCompilerError {
     let mut compiler_errors = vec![];
     for error in errors {
@@ -82,7 +82,11 @@ fn is_inside_libra_directory() -> bool {
 }
 
 /// replace {{sender}} and {{ sender }} inside source code
-fn replace_sender_placeholder(s: String, sender: &str, offsets_map: &mut OffsetsMap) -> String {
+fn replace_sender_placeholder(
+    s: String,
+    sender: &str,
+    file_source_map: &mut FileSourceMap,
+) -> String {
     assert!(
         sender.len() > 12,
         "Sender address length is too short: {}",
@@ -92,7 +96,7 @@ fn replace_sender_placeholder(s: String, sender: &str, offsets_map: &mut Offsets
     for template in &["{{sender}}", "{{ sender }}"] {
         while let Some(pos) = new_s.find(template) {
             new_s.replace_range(pos..pos + template.len(), sender);
-            offsets_map.insert_layer(pos + sender.len(), len_difference(template, sender));
+            file_source_map.insert_layer(pos + sender.len(), len_difference(template, sender));
         }
     }
     new_s
@@ -102,16 +106,16 @@ fn parse_file(
     fname: MoveFilePath,
     source_text: &str,
     sender: &str,
-) -> Result<(Vec<Definition>, OffsetsMap), ExecCompilerError> {
+) -> Result<(Vec<Definition>, FileSourceMap), ExecCompilerError> {
     let (mut source_text, comment_map) =
         strip_comments_and_verify(fname, source_text).map_err(|errors| {
             into_exec_compiler_error(
                 errors,
-                ProjectOffsetsMap::with_file_map(fname, OffsetsMap::default()),
+                ProjectSourceMap::with_file_map(fname, FileSourceMap::default()),
             )
         })?;
 
-    let mut offsets_map = OffsetsMap::default();
+    let mut offsets_map = FileSourceMap::default();
     source_text = replace_sender_placeholder(source_text, sender, &mut offsets_map);
     if !is_inside_libra_directory() {
         source_text = bech32::replace_bech32_addresses(&source_text, &mut offsets_map);
@@ -121,7 +125,7 @@ fn parse_file(
         syntax::parse_file_string(fname, &source_text, comment_map).map_err(|errors| {
             into_exec_compiler_error(
                 errors,
-                ProjectOffsetsMap::with_file_map(fname, offsets_map.clone()),
+                ProjectSourceMap::with_file_map(fname, offsets_map.clone()),
             )
         })?;
     Ok((defs, offsets_map))
@@ -131,7 +135,7 @@ pub fn parse_files(
     current: (MoveFilePath, String),
     deps: &[(MoveFilePath, String)],
     sender: String,
-) -> Result<(Vec<Definition>, Vec<Definition>, ProjectOffsetsMap), ExecCompilerError> {
+) -> Result<(Vec<Definition>, Vec<Definition>, ProjectSourceMap), ExecCompilerError> {
     let mut sender = sender;
     if sender.len() < 12 {
         // short form libra address
@@ -142,7 +146,7 @@ pub fn parse_files(
     let (s_fpath, s_text) = current;
     let mut exec_compiler_error = ExecCompilerError::default();
 
-    let mut project_offsets_map = ProjectOffsetsMap::default();
+    let mut project_offsets_map = ProjectSourceMap::default();
     let script_defs = match parse_file(s_fpath, &s_text, &sender) {
         Ok((defs, offsets_map)) => {
             project_offsets_map.0.insert(s_fpath, offsets_map);
@@ -202,11 +206,13 @@ pub fn check_with_compiler(
     sender: &str,
 ) -> Result<(), Vec<CompilerError>> {
     let (script_defs, dep_defs, offsets_map) = parse_files(current, &deps, sender.to_string())
-        .map_err(|errors| errors.apply_offsets())?;
+        .map_err(|errors| errors.transform_with_source_map())?;
 
     let sender_address = parse_address(sender).expect("Checked before");
     match check_defs(script_defs, dep_defs, sender_address) {
         Ok(_) => Ok(()),
-        Err(errors) => Err(into_exec_compiler_error(errors, offsets_map).apply_offsets()),
+        Err(errors) => {
+            Err(into_exec_compiler_error(errors, offsets_map).transform_with_source_map())
+        }
     }
 }
