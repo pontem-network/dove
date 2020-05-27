@@ -2,34 +2,32 @@ use anyhow::{Context, Result};
 use dfin_language_e2e_tests::data_store::FakeDataStore;
 use dfin_libra_types::{
     transaction::{parse_transaction_argument, TransactionArgument},
-    vm_error::{StatusCode, VMStatus},
-    write_set::{WriteOp, WriteSet},
+    vm_error::VMStatus,
+    write_set::WriteSet,
 };
 use dfin_move_core_types::account_address::AccountAddress;
 use dfin_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use dfin_move_lang::{compiled_unit::CompiledUnit, errors::Error, shared::Address, to_bytecode};
 use dfin_move_vm_runtime::move_vm::MoveVM;
-// use dfin_move_vm_state::execution_context::SystemExecutionContext;
-use dfin_move_vm_types::loaded_data::types::FatStructType;
+
+use dfin_move_vm_types::values::Value;
 use dfin_move_vm_types::{
     gas_schedule::{zero_cost_schedule, CostStrategy},
     transaction_metadata::TransactionMetadata,
 };
-use dfin_move_vm_types::{values::GlobalValue, values::Value};
-use dfin_vm::errors::{vm_error, Location, VMResult};
+
 use dfin_vm::file_format::CompiledScript;
 use dfin_vm::CompiledModule;
 
 use shared::errors::ExecCompilerError;
-use shared::results::{ExecResult, ExecutionError, ResourceChange};
+use shared::results::{ExecutionError, ResourceChange};
 use utils::MoveFilePath;
 
-use crate::dfina::resources::{ResourceStructType, ResourceWriteOp};
 use crate::dfina::{
     check_defs, data_cache, into_exec_compiler_error, parse_files, PreBytecodeProgram,
 };
 
-fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecutionError {
+pub fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecutionError {
     ExecutionError {
         status: format!("{:?}", vm_status.major_status),
         sub_status: vm_status.sub_status,
@@ -101,7 +99,7 @@ pub fn execute_script(
     data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
-) -> ExecResult<Vec<(FatStructType, Option<GlobalValue>)>> {
+) -> Result<Vec<ResourceChange>> {
     let mut data_cache = data_cache::DataCache::new(data_store);
 
     let zero_cost_table = zero_cost_schedule();
@@ -118,26 +116,13 @@ pub fn execute_script(
         &mut data_cache,
         &txn_metadata,
     )
-    .map_err(vm_status_into_exec_status)?;
+    .map_err(vm_status_into_exec_status)
+    .with_context(|| "Script execution error")?;
 
-    Ok(data_cache.resource_changes())
-}
-
-fn convert_set_value(struct_type: FatStructType, val: GlobalValue) -> VMResult<ResourceChange> {
-    // into_owned_struct will check if all references are properly released at the end of a transaction
-    let data = val.into_owned_struct()?;
-    let val = match data.simple_serialize(&struct_type) {
-        Some(blob) => blob,
-        None => {
-            let vm_status = vm_error(Location::new(), StatusCode::VALUE_SERIALIZATION_ERROR);
-            return Err(vm_status);
-        }
-    };
-    let change = ResourceChange::new(
-        ResourceStructType(struct_type),
-        ResourceWriteOp(WriteOp::Value(val)),
-    );
-    Ok(change)
+    data_cache
+        .resource_changes()
+        .map_err(vm_status_into_exec_status)
+        .with_context(|| "Changeset serialization error")
 }
 
 /// Convert the transaction arguments into move values.
@@ -176,28 +161,6 @@ pub fn compile_and_run(
         let script_arg = convert_txn_arg(transaction_argument);
         script_args.push(script_arg);
     }
-    let changed_resources =
-        execute_script(sender, &network_state, serialized_script, script_args)?;
 
-    let mut changes = vec![];
-    for (struct_type, global_val) in changed_resources {
-        match global_val {
-            None => {
-                let change = ResourceChange::new(
-                    ResourceStructType(struct_type),
-                    ResourceWriteOp(WriteOp::Deletion),
-                );
-                changes.push(change);
-            }
-            Some(global_val) => {
-                if !global_val.is_clean().unwrap() {
-                    let change = convert_set_value(struct_type, global_val)
-                        .map_err(vm_status_into_exec_status)
-                        .context("Changeset serialization error")?;
-                    changes.push(change);
-                }
-            }
-        }
-    }
-    Ok(changes)
+    execute_script(sender, &network_state, serialized_script, script_args)
 }

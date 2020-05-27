@@ -28,6 +28,10 @@ address 0x1111111111111111 {
             move_to_sender<T>(record);
         }
 
+        public fun remove_record(user: address): T acquires T {
+            move_from<T>(user)
+        }
+
         public fun destroy_record() acquires T {
             let T { age: _ } = move_from<T>(Transaction::sender());
         }
@@ -120,6 +124,7 @@ script {
     assert_eq!(
         changes,
         serde_json::json!([{
+            "account": "0x00000000000000001111111111111111",
             "ty": {
                 "address": "0x00000000000000001111111111111111",
                 "module": "Record",
@@ -146,6 +151,7 @@ script {
     let deps = vec![stdlib_transaction_mod(), record_mod()];
 
     let initial_chain_state = serde_json::json!([{
+        "account": "0x00000000000000001111111111111111",
         "ty": {
             "address": "0x00000000000000001111111111111111",
             "module": "Record",
@@ -167,6 +173,7 @@ script {
     assert_eq!(
         changes,
         serde_json::json!([{
+            "account": "0x00000000000000001111111111111111",
             "ty": {
                 "address": "0x00000000000000001111111111111111",
                 "module": "Record",
@@ -218,6 +225,7 @@ script {
         serde_json::to_value(changes).unwrap(),
         serde_json::json!([
           {
+            "account": "0x00000000000000000000000000000001",
             "ty": {
               "address": "0x00000000000000000000000000000001",
               "module": "M",
@@ -270,6 +278,7 @@ script {
         changes,
         serde_json::json!([
           {
+            "account": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
             "ty": {
               "address": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
               "module": "M",
@@ -324,6 +333,7 @@ script {
         changes,
         serde_json::json!([
           {
+            "account": "0x00000000000000000000000000000001",
             "ty": {
               "address": "0x00000000000000000000000000000001",
               "module": "Module",
@@ -382,13 +392,10 @@ script {
         Record::destroy_record();
     }
 }";
-    let deps = vec![
-        stdlib_transaction_mod(),
-        io::load_move_file(get_stdlib_path().join("debug.move")).unwrap(),
-        record_mod(),
-    ];
+    let deps = vec![stdlib_transaction_mod(), record_mod()];
 
     let initial_chain_state = serde_json::json!([{
+        "account": "0x1111111111111111",
         "ty": {
             "address": "0x1111111111111111",
             "module": "Record",
@@ -410,6 +417,7 @@ script {
     assert_eq!(
         changes,
         serde_json::json!([{
+            "account": "0x00000000000000001111111111111111",
             "ty": {
                 "address": "0x00000000000000001111111111111111",
                 "module": "Record",
@@ -419,5 +427,68 @@ script {
             },
             "op": {"type": "Delete"}
         }])
+    );
+}
+
+#[test]
+fn move_resource_from_another_user_to_sender() {
+    let script_text = r"
+script {
+    use 0x1111111111111111::Record;
+
+    fun main() {
+        let record = Record::remove_record(0x1111111111111111);
+        Record::save(record);
+    }
+}";
+    let deps = vec![stdlib_transaction_mod(), record_mod()];
+
+    let initial_chain_state = serde_json::json!([{
+        "account": "0x00000000000000001111111111111111",
+        "ty": {
+            "address": "0x00000000000000001111111111111111",
+            "module": "Record",
+            "name": "T",
+            "ty_args": [],
+            "layout": ["U8"]
+        },
+        "op": {"type": "SetValue", "values": [10]}
+    }]);
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &deps,
+        "libra",
+        "0x2222222222222222",
+        initial_chain_state,
+        vec![],
+    )
+    .unwrap();
+
+    assert_eq!(
+        changes,
+        serde_json::json!([
+            {
+                "account": "0x00000000000000001111111111111111",
+                "ty": {
+                    "address": "0x00000000000000001111111111111111",
+                    "module": "Record",
+                    "name": "T",
+                    "ty_args": [],
+                    "layout": ["U8"]
+                },
+                "op": {"type": "Delete"},
+            },
+            {
+                "account": "0x00000000000000002222222222222222",
+                "ty": {
+                    "address": "0x00000000000000001111111111111111",
+                    "module": "Record",
+                    "name": "T",
+                    "ty_args": [],
+                    "layout": ["U8"]
+                },
+                "op": {"type": "SetValue", "values": [10]},
+            }
+        ])
     );
 }
