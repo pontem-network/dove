@@ -7,7 +7,7 @@ use dfin_libra_types::{
 };
 use dfin_move_core_types::account_address::AccountAddress;
 use dfin_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-use dfin_move_lang::{compiled_unit::CompiledUnit, errors::Error, shared::Address, to_bytecode};
+use dfin_move_lang::{compiled_unit::CompiledUnit, errors::Error, to_bytecode};
 use dfin_move_vm_runtime::move_vm::MoveVM;
 
 use dfin_move_vm_types::values::Value;
@@ -24,7 +24,8 @@ use shared::results::{ExecutionError, ResourceChange};
 use utils::MoveFilePath;
 
 use crate::dfina::{
-    check_defs, data_cache, into_exec_compiler_error, parse_files, PreBytecodeProgram,
+    check_defs, data_cache, into_exec_compiler_error, parse_account_address, parse_address,
+    parse_files, PreBytecodeProgram,
 };
 
 pub fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecutionError {
@@ -57,14 +58,15 @@ pub fn check_and_generate_bytecode(
     fname: MoveFilePath,
     text: &str,
     deps: &[(MoveFilePath, String)],
-    sender: AccountAddress,
+    raw_sender_string: String,
 ) -> Result<(CompiledScript, Vec<CompiledModule>), ExecCompilerError> {
     let (mut script_defs, modules_defs, project_offsets_map) =
-        parse_files((fname, text.to_owned()), deps, format!("0x{}", sender))?;
+        parse_files((fname, text.to_owned()), deps, raw_sender_string.clone())?;
     script_defs.extend(modules_defs);
 
-    let sender = Address::new(sender.into());
-    let program = check_defs(script_defs, vec![], sender)
+    let sender_address = parse_address(&raw_sender_string).expect("Checked before");
+
+    let program = check_defs(script_defs, vec![], sender_address)
         .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map.clone()))?;
     generate_bytecode(program)
         .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map))
@@ -139,16 +141,14 @@ fn convert_txn_arg(arg: TransactionArgument) -> Value {
 pub fn compile_and_run(
     script: (MoveFilePath, String),
     deps: &[(MoveFilePath, String)],
-    sender: String,
+    raw_sender_string: String,
     genesis_write_set: WriteSet,
     args: Vec<String>,
 ) -> Result<Vec<ResourceChange>> {
-    let sender =
-        AccountAddress::from_hex_literal(&sender).expect("Should be validated in the caller");
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =
-        check_and_generate_bytecode(fname, &script_text, deps, sender)?;
+        check_and_generate_bytecode(fname, &script_text, deps, raw_sender_string.clone())?;
 
     let network_state = prepare_fake_network_state(compiled_modules, genesis_write_set);
 
@@ -162,5 +162,13 @@ pub fn compile_and_run(
         script_args.push(script_arg);
     }
 
-    execute_script(sender, &network_state, serialized_script, script_args)
+    let sender_account_address =
+        parse_account_address(&raw_sender_string).expect("Validated before");
+
+    execute_script(
+        sender_account_address,
+        &network_state,
+        serialized_script,
+        script_args,
+    )
 }

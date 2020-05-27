@@ -17,7 +17,8 @@ lazy_static! {
 pub fn bech32_into_libra(address: &str) -> Result<String> {
     let (_, data_bytes) = bech32::decode(address)?;
     let data = bech32::convert_bits(&data_bytes, 5, 8, true)?;
-    Ok(format!("0x{}", hex::encode(&data)))
+    let libra_address_hex = hex::encode(&data).trim_start_matches('0').to_string();
+    Ok(format!("0x{}", libra_address_hex))
 }
 
 pub fn libra_into_bech32(libra_address: &str) -> Result<String> {

@@ -490,8 +490,8 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
         assert_eq!(
-            config.sender_address,
-            "0xde5f86ce8ad7944f272d693cb4625a955b610150"
+            config.raw_sender_address,
+            "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         );
 
         let errors = diagnostics_with_config(source_text, config);
@@ -645,7 +645,7 @@ script {
     }
 
     #[test]
-    fn test_unbound_module_with_bech32_address() {
+    fn test_error_message_for_unbound_module_with_bech32_address() {
         let text = r"
 script {
     fun main() {
@@ -656,6 +656,28 @@ script {
         let config = config!({"dialect": "dfinance"});
         let errors = diagnostics_with_config(text, config);
         assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].message,
+            "Unbound module \'wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Unknown\'"
+        )
+    }
+
+    #[test]
+    fn test_error_message_unbound_module_with_bech32_address_and_sender() {
+        let text = r"
+script {
+    fun main() {
+        let _ = {{sender}}::Unknown::unknown();
+    }
+}
+        ";
+        let config = config!({
+            "dialect": "dfinance",
+            "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
+        });
+        let errors = diagnostics_with_config(text, config);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].range, range((3, 16), (3, 44)));
         assert_eq!(
             errors[0].message,
             "Unbound module \'wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Unknown\'"
