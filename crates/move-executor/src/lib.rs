@@ -20,17 +20,15 @@ pub fn compile_and_execute_script(
     let initial_chain_state =
         serde_json::from_value::<Vec<ResourceChange>>(genesis_json_contents)
             .with_context(|| "Genesis contains invalid data")?;
-    let sender = dialect
-        .preprocess_and_validate_account_address(sender)
-        .with_context(|| {
-            format!(
-                "Specified --sender is not a valid {:?} address: {:?}",
-                dialect.name(),
-                sender
-            )
-        })?;
+    let raw_sender_string = dialect.normalize_account_address(sender).with_context(|| {
+        format!(
+            "Specified --sender is not a valid {:?} address: {:?}",
+            dialect.name(),
+            sender
+        )
+    })?;
 
     let execution_changes =
-        dialect.compile_and_run(script, deps, sender, initial_chain_state, args)?;
+        dialect.compile_and_run(script, deps, raw_sender_string, initial_chain_state, args)?;
     Ok(serde_json::to_value(execution_changes).unwrap())
 }

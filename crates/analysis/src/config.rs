@@ -13,7 +13,7 @@ pub struct Config {
     pub dialect_name: DialectName,
     pub stdlib_folder: Option<PathBuf>,
     pub modules_folders: Vec<PathBuf>,
-    pub sender_address: String,
+    pub raw_sender_address: String,
 }
 
 impl Debug for Config {
@@ -22,7 +22,7 @@ impl Debug for Config {
             .field("dialect", &self.dialect_name)
             .field("stdlib_folder", &self.stdlib_folder)
             .field("module_folders", &self.modules_folders)
-            .field("sender_address", &self.sender_address)
+            .field("sender_address", &self.raw_sender_address)
             .finish()
     }
 }
@@ -33,7 +33,7 @@ impl Default for Config {
             dialect_name: DialectName::Libra,
             stdlib_folder: None,
             modules_folders: vec![],
-            sender_address: "0x0".to_string(),
+            raw_sender_address: "0x0".to_string(),
         }
     }
 }
@@ -59,6 +59,16 @@ impl Config {
 
     pub fn dialect(&self) -> Box<dyn Dialect> {
         self.dialect_name.get_dialect()
+    }
+
+    pub fn raw_sender_address(&self) -> String {
+        if &self.raw_sender_address == "0x0" {
+            self.dialect().zero_address().to_string()
+        } else {
+            self.dialect()
+                .normalize_account_address(&self.raw_sender_address)
+                .unwrap()
+        }
     }
 
     pub fn update(&mut self, value: &serde_json::Value) {
@@ -99,15 +109,12 @@ impl Config {
                 })
                 .collect(),
         };
-        self.sender_address = match get(value, "/sender_address") {
+        self.raw_sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x0");
                 "0x0".to_string()
             }
-            Some(address) => match self
-                .dialect()
-                .preprocess_and_validate_account_address(address)
-            {
+            Some(address) => match self.dialect().normalize_account_address(address) {
                 Ok(parsed_address) => parsed_address,
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);

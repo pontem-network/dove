@@ -41,20 +41,22 @@ impl FromStr for DialectName {
 pub trait Dialect {
     fn name(&self) -> &str;
 
-    fn preprocess_and_validate_account_address(&self, addr: &str) -> Result<String>;
+    fn zero_address(&self) -> &str;
+
+    fn normalize_account_address(&self, addr: &str) -> Result<String>;
 
     fn check_with_compiler(
         &self,
         current: (MoveFilePath, String),
         deps: Vec<(MoveFilePath, String)>,
-        sender: &str,
+        raw_sender_string: &str,
     ) -> Result<(), Vec<CompilerError>>;
 
     fn compile_and_run(
         &self,
         script: (MoveFilePath, String),
         deps: &[(MoveFilePath, String)],
-        sender_address: String,
+        raw_sender_string: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<Vec<ResourceChange>>;
@@ -74,7 +76,11 @@ impl Dialect for MoveDialect {
         "libra"
     }
 
-    fn preprocess_and_validate_account_address(&self, addr: &str) -> Result<String> {
+    fn zero_address(&self) -> &str {
+        "0x0000000000000000"
+    }
+
+    fn normalize_account_address(&self, addr: &str) -> Result<String> {
         libra::parse_account_address(&addr).map(|address| format!("0x{}", address))
     }
 
@@ -82,22 +88,22 @@ impl Dialect for MoveDialect {
         &self,
         current: (MoveFilePath, String),
         deps: Vec<(MoveFilePath, String)>,
-        sender: &str,
+        raw_sender_string: &str,
     ) -> Result<(), Vec<CompilerError>> {
-        libra::check_with_compiler(current, deps, sender)
+        libra::check_with_compiler(current, deps, raw_sender_string.to_string())
     }
 
     fn compile_and_run(
         &self,
         script: (MoveFilePath, String),
         deps: &[(MoveFilePath, String)],
-        sender_address: String,
+        raw_sender_string: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<Vec<ResourceChange>> {
         let genesis_write_set = libra::resources::changes_into_writeset(genesis_changes)
             .context("Invalid genesis")?;
-        libra::executor::compile_and_run(script, deps, sender_address, genesis_write_set, args)
+        libra::executor::compile_and_run(script, deps, raw_sender_string, genesis_write_set, args)
     }
 
     fn print_compiler_errors_and_exit(
@@ -117,32 +123,36 @@ impl Dialect for DFinanceDialect {
         "dfinance"
     }
 
-    fn preprocess_and_validate_account_address(&self, addr: &str) -> Result<String> {
-        let s = bech32_into_libra(addr).with_context(|| {
+    fn zero_address(&self) -> &str {
+        "0x00000000000000000000"
+    }
+
+    fn normalize_account_address(&self, addr: &str) -> Result<String> {
+        bech32_into_libra(addr).with_context(|| {
             format!("Address {:?} is not a valid wallet1 bech32 address", addr)
         })?;
-        dfina::parse_account_address(&s).map(|address| format!("0x{}", address))
+        Ok(addr.to_string())
     }
 
     fn check_with_compiler(
         &self,
         current: (MoveFilePath, String),
         deps: Vec<(MoveFilePath, String)>,
-        sender: &str,
+        raw_sender_string: &str,
     ) -> Result<(), Vec<CompilerError>> {
-        dfina::check_with_compiler(current, deps, sender)
+        dfina::check_with_compiler(current, deps, raw_sender_string.to_string())
     }
 
     fn compile_and_run(
         &self,
         script: (MoveFilePath, String),
         deps: &[(MoveFilePath, String)],
-        sender_address: String,
+        raw_sender_string: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<Vec<ResourceChange>> {
         let genesis_write_set = dfina::resources::changes_into_writeset(genesis_changes)?;
-        dfina::executor::compile_and_run(script, deps, sender_address, genesis_write_set, args)
+        dfina::executor::compile_and_run(script, deps, raw_sender_string, genesis_write_set, args)
     }
 
     fn print_compiler_errors_and_exit(

@@ -492,3 +492,32 @@ script {
         ])
     );
 }
+
+#[test]
+fn test_bech32_address_and_sender_in_compiler_error() {
+    let text = r"
+script {
+    fun main() {
+        let _ = {{sender}}::Unknown::unknown();
+    }
+}
+        ";
+    let exec_error = compile_and_execute_script(
+        (get_script_path(), text.to_string()),
+        &[],
+        "dfinance",
+        "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap_err()
+    .downcast::<ExecCompilerError>()
+    .unwrap();
+
+    let errors = exec_error.transform_with_source_map();
+    assert_eq!(errors.len(), 1);
+    assert_eq!(
+        errors[0].parts[0].message,
+        "Unbound module \'wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8::Unknown\'"
+    );
+}

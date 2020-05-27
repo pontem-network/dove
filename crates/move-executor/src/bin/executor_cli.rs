@@ -107,10 +107,8 @@ fn main() -> Result<()> {
                     let files_mapping =
                         get_files_for_error_reporting((script_fpath, script_source_text), deps);
                     let dialect = DialectName::from_str(&dialect).unwrap().get_dialect();
-                    dialect.print_compiler_errors_and_exit(
-                        files_mapping,
-                        compiler_error.apply_offsets(),
-                    );
+                    let transformed_errors = compiler_error.transform_with_source_map();
+                    dialect.print_compiler_errors_and_exit(files_mapping, transformed_errors);
                 }
                 Err(error) => error,
             };

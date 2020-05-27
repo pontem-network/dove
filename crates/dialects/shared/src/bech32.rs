@@ -2,7 +2,7 @@ use anyhow::{ensure, Result};
 use bech32::u5;
 use lazy_static::lazy_static;
 
-use crate::errors::{len_difference, OffsetsMap};
+use crate::errors::{len_difference, FileSourceMap};
 use regex::Regex;
 
 pub static HRP: &str = "wallet";
@@ -17,7 +17,8 @@ lazy_static! {
 pub fn bech32_into_libra(address: &str) -> Result<String> {
     let (_, data_bytes) = bech32::decode(address)?;
     let data = bech32::convert_bits(&data_bytes, 5, 8, true)?;
-    Ok(format!("0x{}", hex::encode(&data)))
+    let libra_address_hex = hex::encode(&data).trim_start_matches('0').to_string();
+    Ok(format!("0x{}", libra_address_hex))
 }
 
 pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
@@ -35,7 +36,7 @@ pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
     Ok(bech32::encode(&HRP, data)?)
 }
 
-pub fn replace_bech32_addresses(source: &str, offsets_map: &mut OffsetsMap) -> String {
+pub fn replace_bech32_addresses(source: &str, file_source_map: &mut FileSourceMap) -> String {
     let mut transformed_source = source.to_string();
 
     for mat in BECH32_REGEX.captures_iter(source).into_iter() {
@@ -47,7 +48,11 @@ pub fn replace_bech32_addresses(source: &str, offsets_map: &mut OffsetsMap) -> S
             continue;
         }
         if let Ok(libra_address) = bech32_into_libra(orig_address) {
-            offsets_map.insert_layer(item.end(), len_difference(orig_address, &libra_address));
+            file_source_map
+                .insert_layer(item.end(), len_difference(orig_address, &libra_address));
+            file_source_map
+                .insert_address_replacement(orig_address.to_string(), libra_address.clone());
+
             transformed_source = transformed_source.replace(orig_address, &libra_address);
         }
     }
