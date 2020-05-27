@@ -1,5 +1,7 @@
 use dfin_libra_types::access_path::AccessPath;
 use dfin_libra_types::contract_event::ContractEvent;
+use dfin_libra_types::vm_error::StatusCode;
+use dfin_libra_types::write_set::WriteOp;
 
 use dfin_move_core_types::language_storage::ModuleId;
 
@@ -8,9 +10,24 @@ use dfin_move_vm_runtime::data_cache::{RemoteCache, TransactionDataCache};
 use dfin_move_vm_types::data_store::DataStore;
 use dfin_move_vm_types::loaded_data::types::FatStructType;
 
+use crate::dfina::resources::{ResourceStructType, ResourceWriteOp};
+
 use dfin_move_vm_types::values::GlobalValue;
-use dfin_vm::errors::VMResult;
+use dfin_vm::errors::{vm_error, Location, VMResult};
+use shared::results::ResourceChange;
 use std::collections::HashMap;
+
+fn convert_set_value(struct_type: &FatStructType, val: GlobalValue) -> VMResult<Vec<u8>> {
+    // into_owned_struct will check if all references are properly released at the end of a transaction
+    let data = val.into_owned_struct()?;
+    match data.simple_serialize(struct_type) {
+        Some(blob) => Ok(blob),
+        None => Err(vm_error(
+            Location::new(),
+            StatusCode::VALUE_SERIALIZATION_ERROR,
+        )),
+    }
+}
 
 pub struct DataCache<'txn> {
     inner: TransactionDataCache<'txn>,
@@ -25,22 +42,34 @@ impl<'txn> DataCache<'txn> {
         }
     }
 
-    pub fn resource_changes(self) -> Vec<(FatStructType, Option<GlobalValue>)> {
+    pub fn resource_changes(self) -> VMResult<Vec<ResourceChange>> {
         let mut resources = vec![];
         for (ap, change) in self.inner.data_map {
+            let account_address = format!("0x{}", ap.address);
             match change {
                 None => {
                     let ty = self
                         .ap_to_struct_type.get(&ap)
                         .expect("AccessPath should have been added to the mapping in move_resource_from() at execution time");
-                    resources.push((ty.to_owned(), None));
+                    resources.push(ResourceChange::new(
+                        account_address,
+                        ResourceStructType(ty.to_owned()),
+                        ResourceWriteOp(WriteOp::Deletion),
+                    ));
                 }
                 Some((ty, val)) => {
-                    resources.push((ty, Some(val)));
+                    if !val.is_clean().unwrap() {
+                        let val = convert_set_value(&ty, val)?;
+                        resources.push(ResourceChange::new(
+                            account_address,
+                            ResourceStructType(ty),
+                            ResourceWriteOp(WriteOp::Value(val)),
+                        ));
+                    }
                 }
             }
         }
-        resources
+        Ok(resources)
     }
 }
 

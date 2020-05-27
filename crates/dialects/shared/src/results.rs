@@ -26,13 +26,19 @@ impl Display for ResourceType {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ResourceChange {
+    pub account: String,
     pub ty: ResourceType,
     pub op: ResourceChangeOp,
 }
 
 impl ResourceChange {
-    pub fn new(ty: impl Into<ResourceType>, op: impl Into<ResourceChangeOp>) -> ResourceChange {
+    pub fn new(
+        account: String,
+        ty: impl Into<ResourceType>,
+        op: impl Into<ResourceChangeOp>,
+    ) -> ResourceChange {
         ResourceChange {
+            account,
             ty: ty.into(),
             op: op.into(),
         }
