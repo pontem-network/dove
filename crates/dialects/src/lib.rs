@@ -102,7 +102,7 @@ impl Dialect for MoveDialect {
         args: Vec<String>,
     ) -> Result<Vec<ResourceChange>> {
         let genesis_write_set = libra::resources::changes_into_writeset(genesis_changes)
-            .context("Invalid genesis")?;
+            .with_context(|| "Provided genesis serialization error")?;
         libra::executor::compile_and_run(script, deps, raw_sender_string, genesis_write_set, args)
     }
 
@@ -151,7 +151,8 @@ impl Dialect for DFinanceDialect {
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<Vec<ResourceChange>> {
-        let genesis_write_set = dfina::resources::changes_into_writeset(genesis_changes)?;
+        let genesis_write_set = dfina::resources::changes_into_writeset(genesis_changes)
+            .with_context(|| "Provided genesis serialization error")?;
         dfina::executor::compile_and_run(script, deps, raw_sender_string, genesis_write_set, args)
     }
 

@@ -45,7 +45,7 @@ impl<'txn> DataCache<'txn> {
     pub fn resource_changes(self) -> VMResult<Vec<ResourceChange>> {
         let mut resources = vec![];
         for (ap, change) in self.inner.data_map {
-            let account_address = format!("0x{}", ap.address);
+            let account_address = format!("0x{}", ap.address.to_string().trim_start_matches('0'));
             match change {
                 None => {
                     let ty = self

@@ -48,7 +48,10 @@ impl Into<ResourceType> for ResourceStructType {
     }
 }
 
-pub fn resource_into_access_path(ty: ResourceType) -> Result<AccessPath> {
+pub fn resource_into_access_path(
+    account_address: AccountAddress,
+    ty: ResourceType,
+) -> Result<AccessPath> {
     let mut ty_args = Vec::with_capacity(ty.ty_args.len());
     for ty_arg_s in ty.ty_args {
         let quoted = format!(r#""{}""#, ty_arg_s);
@@ -72,7 +75,7 @@ pub fn resource_into_access_path(ty: ResourceType) -> Result<AccessPath> {
         layout,
     };
     let struct_tag = struct_type.struct_tag()?;
-    let resource_key = ResourceKey::new(struct_type.address, struct_tag);
+    let resource_key = ResourceKey::new(account_address, struct_tag);
     Ok(AccessPath::resource_access_path(&resource_key))
 }
 
@@ -96,15 +99,23 @@ pub fn into_write_op(op: ResourceChangeOp) -> WriteOp {
 
 pub fn changes_into_writeset(changes: Vec<ResourceChange>) -> Result<WriteSet> {
     let mut write_set = WriteSetMut::default();
-    for change in changes {
-        let access_path = resource_into_access_path(change.ty.clone()).with_context(|| {
-            format!(
-                "Resource {} does not correspond to any valid struct in the chain",
-                &change.ty
-            )
-        })?;
-        let op = into_write_op(change.op);
-        write_set.push((access_path, op));
+    for ResourceChange {
+        account: account_address,
+        ty: resource_type,
+        op: change_op,
+    } in changes
+    {
+        // account_address here is already in Libra 0x format and validated, even for dfinance case
+        let account_address = AccountAddress::from_hex_literal(&account_address)?;
+        let access_path = resource_into_access_path(account_address, resource_type.clone())
+            .with_context(|| {
+                format!(
+                    "Cannot form a valid resource AccessPath from a string {:?}",
+                    &resource_type.to_string()
+                )
+            })?;
+        let write_op = into_write_op(change_op);
+        write_set.push((access_path, write_op));
     }
     Ok(write_set
         .freeze()
