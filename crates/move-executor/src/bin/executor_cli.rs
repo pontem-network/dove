@@ -45,16 +45,13 @@ fn main() -> Result<()> {
         .arg(
             Arg::from_usage("-m --modules [MODULE_PATHS]")
                 .multiple(true)
-                .help("Number of paths to module files / folders to use as dependencies"),
+                .number_of_values(1)
+                .help("Path to module file / modules folder to use as dependency. \nCould be used more than once: '-m ./stdlib -m ./modules'"),
         )
-        .arg(
-            Arg::from_usage("--genesis [GENESIS_JSON_FILE]")
-                .help("Path to .json file to use as pre-loaded chain state"),
-        )
+        .arg(Arg::from_usage("--genesis [GENESIS_CONTENTS]").help("JSON-based genesis contents"))
         .arg(
             Arg::from_usage("--args [SCRIPT_ARGS]")
-                .multiple(true)
-                .help("Number of script main() function arguments"),
+                .help(r#"Number of script main() function arguments in quotes, e.g. "10 20 30""#),
         )
         .get_matches();
 
@@ -70,9 +67,8 @@ fn main() -> Result<()> {
     let deps = io::load_move_module_files(modules_fpaths)?;
 
     let genesis_json_contents = match cli_arguments.value_of("genesis") {
-        Some(fpath) => {
-            let contents = fs::read_to_string(fpath)?;
-            serde_json::to_value(contents)?
+        Some(contents) => {
+            serde_json::from_str(contents).context("JSON passed to --genesis is invalid")?
         }
         None => serde_json::json!([]),
     };
@@ -124,5 +120,4 @@ fn main() -> Result<()> {
             Err(error)
         }
     }
-    // Ok(())
 }
