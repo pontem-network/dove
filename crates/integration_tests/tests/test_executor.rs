@@ -124,7 +124,7 @@ script {
     assert_eq!(
         changes,
         serde_json::json!([{
-            "account": "0x00000000000000001111111111111111",
+            "account": "0x1111111111111111",
             "ty": {
                 "address": "0x00000000000000001111111111111111",
                 "module": "Record",
@@ -151,7 +151,7 @@ script {
     let deps = vec![stdlib_transaction_mod(), record_mod()];
 
     let initial_chain_state = serde_json::json!([{
-        "account": "0x00000000000000001111111111111111",
+        "account": "0x1111111111111111",
         "ty": {
             "address": "0x00000000000000001111111111111111",
             "module": "Record",
@@ -173,7 +173,7 @@ script {
     assert_eq!(
         changes,
         serde_json::json!([{
-            "account": "0x00000000000000001111111111111111",
+            "account": "0x1111111111111111",
             "ty": {
                 "address": "0x00000000000000001111111111111111",
                 "module": "Record",
@@ -225,7 +225,7 @@ script {
         serde_json::to_value(changes).unwrap(),
         serde_json::json!([
           {
-            "account": "0x00000000000000000000000000000001",
+            "account": "0x1",
             "ty": {
               "address": "0x00000000000000000000000000000001",
               "module": "M",
@@ -278,9 +278,9 @@ script {
         changes,
         serde_json::json!([
           {
-            "account": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
+            "account": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
             "ty": {
-              "address": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
+              "address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
               "module": "M",
               "name": "T",
               "ty_args": [],
@@ -333,7 +333,7 @@ script {
         changes,
         serde_json::json!([
           {
-            "account": "0x00000000000000000000000000000001",
+            "account": "0x1",
             "ty": {
               "address": "0x00000000000000000000000000000001",
               "module": "Module",
@@ -397,7 +397,7 @@ script {
     let initial_chain_state = serde_json::json!([{
         "account": "0x1111111111111111",
         "ty": {
-            "address": "0x1111111111111111",
+            "address": "0x00000000000000001111111111111111",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -417,7 +417,7 @@ script {
     assert_eq!(
         changes,
         serde_json::json!([{
-            "account": "0x00000000000000001111111111111111",
+            "account": "0x1111111111111111",
             "ty": {
                 "address": "0x00000000000000001111111111111111",
                 "module": "Record",
@@ -444,7 +444,7 @@ script {
     let deps = vec![stdlib_transaction_mod(), record_mod()];
 
     let initial_chain_state = serde_json::json!([{
-        "account": "0x00000000000000001111111111111111",
+        "account": "0x1111111111111111",
         "ty": {
             "address": "0x00000000000000001111111111111111",
             "module": "Record",
@@ -468,7 +468,7 @@ script {
         changes,
         serde_json::json!([
             {
-                "account": "0x00000000000000001111111111111111",
+                "account": "0x1111111111111111",
                 "ty": {
                     "address": "0x00000000000000001111111111111111",
                     "module": "Record",
@@ -479,7 +479,7 @@ script {
                 "op": {"type": "Delete"},
             },
             {
-                "account": "0x00000000000000002222222222222222",
+                "account": "0x2222222222222222",
                 "ty": {
                     "address": "0x00000000000000001111111111111111",
                     "module": "Record",
@@ -519,5 +519,54 @@ script {
     assert_eq!(
         errors[0].parts[0].message,
         "Unbound module \'wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8::Unknown\'"
+    );
+}
+
+#[test]
+fn test_bech32_in_genesis_json() {
+    let script_text = r"
+script {
+    use 0x1111111111111111::Record;
+
+    fun main() {
+        let record = Record::with_doubled_age();
+        Record::save(record);
+    }
+}";
+    let deps = vec![stdlib_transaction_mod(), record_mod()];
+    let initial_chain_state = serde_json::json!([{
+        "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
+        "ty": {
+            "address": "0x0000000000000000000000001111111111111111",
+            "module": "Record",
+            "name": "T",
+            "ty_args": [],
+            "layout": ["U8"]
+        },
+        "op": {"type": "SetValue", "values": [10]}
+    }]);
+
+    let changes = compile_and_execute_script(
+        (get_script_path(), script_text.to_string()),
+        &deps,
+        "dfinance",
+        "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
+        initial_chain_state,
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(
+        changes,
+        serde_json::json!([{
+            "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
+            "ty": {
+                "address": "0x0000000000000000000000001111111111111111",
+                "module": "Record",
+                "name": "T",
+                "ty_args": [],
+                "layout": ["U8"]
+            },
+            "op": {"type": "SetValue", "values": [20]}
+        }])
     );
 }

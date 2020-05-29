@@ -1,6 +1,6 @@
 use core::fmt;
 use serde::export::Formatter;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
@@ -45,7 +45,7 @@ impl ResourceChange {
     }
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(serde::Serialize)]
 pub struct ExecutionError {
     /// String representation of StatusCode enum.
     pub status: String,
@@ -57,11 +57,26 @@ pub struct ExecutionError {
     pub message: Option<String>,
 }
 
+impl Debug for ExecutionError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut formatted_struct = f.debug_struct("ExecutionError");
+        formatted_struct.field("status", &self.status);
+
+        if let Some(sub_status) = self.sub_status {
+            formatted_struct.field("sub_status", &sub_status);
+        }
+        if let Some(message) = &self.message {
+            formatted_struct.field("message", &message);
+        }
+        formatted_struct.finish()
+    }
+}
+
 pub type ExecResult<T> = Result<T, ExecutionError>;
 
 impl Display for ExecutionError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        f.write_str(&format!("{:#?}", self))
     }
 }
 
