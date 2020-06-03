@@ -10,11 +10,8 @@ use orig_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use orig_move_lang::{compiled_unit::CompiledUnit, errors::Error, to_bytecode};
 use orig_move_vm_runtime::move_vm::MoveVM;
 
+use orig_move_vm_types::gas_schedule::{zero_cost_schedule, CostStrategy};
 use orig_move_vm_types::values::Value;
-use orig_move_vm_types::{
-    gas_schedule::{zero_cost_schedule, CostStrategy},
-    transaction_metadata::TransactionMetadata,
-};
 
 use orig_vm::file_format::CompiledScript;
 use orig_vm::CompiledModule;
@@ -90,12 +87,6 @@ pub fn prepare_fake_network_state(
     network_state
 }
 
-fn get_transaction_metadata(sender_address: AccountAddress) -> TransactionMetadata {
-    let mut metadata = TransactionMetadata::default();
-    metadata.sender = sender_address;
-    metadata
-}
-
 pub fn execute_script(
     sender_address: AccountAddress,
     data_store: &FakeDataStore,
@@ -107,16 +98,14 @@ pub fn execute_script(
     let zero_cost_table = zero_cost_schedule();
     let mut cost_strategy = CostStrategy::system(&zero_cost_table, GasUnits::new(1_000_000));
 
-    let txn_metadata = get_transaction_metadata(sender_address);
-
     let vm = MoveVM::new();
     vm.execute_script(
         script,
         vec![],
         args,
-        &mut cost_strategy,
+        sender_address,
         &mut data_cache,
-        &txn_metadata,
+        &mut cost_strategy,
     )
     .map_err(vm_status_into_exec_status)
     .with_context(|| "Script execution error")?;
