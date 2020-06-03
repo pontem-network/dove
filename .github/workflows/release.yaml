@@ -4,10 +4,10 @@ on:
     types: [published]
 
 env:
-  CARGO_INCREMENTAL: 0
-  CARGO_NET_RETRY: 10
   RUSTFLAGS: -D warnings
+  CARGO_INCREMENTAL: 0
   RUSTUP_MAX_RETRIES: 10
+  CARGO_NET_RETRY: 10
 
 jobs:
   create-binary:
@@ -44,7 +44,7 @@ jobs:
         components: rustfmt
 
     - name: Build with --release
-      run: cargo build --release
+      run: cargo build -v --release
 
     - name: Language Server - upload binary as Release Asset (ubuntu, macos)
       if: matrix.os != 'windows-latest'
