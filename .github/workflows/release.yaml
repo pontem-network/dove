@@ -79,7 +79,7 @@ jobs:
         asset_name: move-executor-${{ matrix.platform }}
         asset_content_type: application/octet-stream
 
-    - name: Language Server - upload binary as Release Asset (windows)
+    - name: Executor - upload binary as Release Asset (windows)
       if: matrix.os == 'windows-latest'
       uses: actions/upload-release-asset@v1
       env:

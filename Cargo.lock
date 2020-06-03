@@ -2957,9 +2957,9 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "serde"
-version = "1.0.110"
+version = "1.0.111"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99e7b308464d16b56eba9964e4972a3eee817760ab60d88c3f86e1fecb08204c"
+checksum = "c9124df5b40cbd380080b2cc6ab894c040a3070d995f5c9dc77e18c34a8ae37d"
 dependencies = [
  "serde_derive",
 ]
@@ -2975,9 +2975,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.110"
+version = "1.0.111"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "818fbf6bfa9a42d3bfcaca148547aa00c7b915bec71d1757aa2d44ca68771984"
+checksum = "3f2c3ac8e6ca1e9c80b8be1023940162bf81ae3cffbb1809474152f2ce1eb250"
 dependencies = [
  "proc-macro2 1.0.17",
  "quote 1.0.6",
@@ -3224,6 +3224,14 @@ dependencies = [
  "quote 1.0.6",
  "syn 1.0.24",
  "unicode-xid 0.2.0",
+]
+
+[[package]]
+name = "syntax"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "tree-sitter",
 ]
 
 [[package]]
@@ -3675,6 +3683,16 @@ dependencies = [
  "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=22.05.2020.original)",
  "stdlib 0.1.0 (git+https://github.com/dfinance/libra.git?branch=22.05.2020.original)",
  "vm 0.1.0 (git+https://github.com/dfinance/libra.git?branch=22.05.2020.original)",
+]
+
+[[package]]
+name = "tree-sitter"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02eca2a556ed0fc50fdfa0610f2ff8564414c76e572653ad2ad746f5ed6cbd2f"
+dependencies = [
+ "cc",
+ "regex",
 ]
 
 [[package]]
