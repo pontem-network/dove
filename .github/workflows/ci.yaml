@@ -13,7 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [
+          ubuntu-latest,
+#          windows-latest,
+          macos-latest
+        ]
 
     env:
       RUSTFLAGS: -D warnings
@@ -62,7 +66,7 @@ jobs:
 #        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('Cargo.lock') }}
 
     - name: Build
-      run: cargo test --no-run
+      run: cargo build
 
     - name: Check formatting
       run: cargo fmt -- --check
@@ -72,3 +76,4 @@ jobs:
 
     - name: Test
       run: cargo test --tests
+
