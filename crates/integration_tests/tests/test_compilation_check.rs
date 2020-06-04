@@ -4,9 +4,9 @@ use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
 use analysis::db::FileDiagnostic;
-use integration_tests::{get_modules_path, get_resources_dir};
+use integration_tests::{get_modules_path, get_resources_dir, test_world_snapshot};
 use move_language_server::world::WorldState;
-use utils::io::read_move_files;
+
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -31,21 +31,9 @@ fn diagnostics_with_config_and_filename(
     config: Config,
     fpath: MoveFilePath,
 ) -> Vec<FileDiagnostic> {
-    let ws_root = std::env::current_dir().unwrap();
-    let world_state = WorldState::new(ws_root, config);
-    let mut analysis_host = world_state.analysis_host;
-
-    let mut change = AnalysisChange::new();
-    for folder in world_state.config.modules_folders {
-        for (fpath, text) in read_move_files(folder) {
-            change.add_file(fpath, text);
-        }
-    }
-    change.update_file(fpath, text.to_string());
-    analysis_host.apply_change(change);
-
-    analysis_host
-        .analysis()
+    let world_snapshot = test_world_snapshot((fpath, text.to_string()), config, vec![]);
+    world_snapshot
+        .analysis
         .check_with_libra_compiler(fpath, text)
 }
 
@@ -76,21 +64,12 @@ fn diagnostics_with_deps(
         .check_with_libra_compiler(script_fpath, &script_text)
 }
 
-macro_rules! config {
-    ($json:tt) => {{
-        let config_json = serde_json::json!($json);
-        let mut config = Config::default();
-        config.update(&config_json);
-        config
-    }};
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use analysis::db::RootDatabase;
 
-    use integration_tests::{get_modules_path, get_script_path, get_stdlib_path};
+    use integration_tests::{config, get_modules_path, get_script_path, get_stdlib_path};
     use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
