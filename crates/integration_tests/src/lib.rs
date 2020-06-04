@@ -10,7 +10,7 @@ pub fn existing_file_abspath() -> MoveFilePath {
     let abspath = std::env::current_dir()
         .unwrap()
         .join("resources")
-        .join("modules.rs")
+        .join("modules")
         .join("covid_tracker.move")
         .into_os_string()
         .into_string()
@@ -26,6 +26,7 @@ pub fn get_resources_dir() -> PathBuf {
         .parent() // project root
         .unwrap()
         .join("resources")
+        .join("tests")
 }
 
 pub fn get_stdlib_path() -> PathBuf {

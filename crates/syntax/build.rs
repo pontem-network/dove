@@ -1,11 +1,19 @@
 fn main() {
-    let resources_dir = std::env::current_dir().unwrap().join("resources");
-    let move_parser_file = resources_dir.join("parser.c");
+    let project_root_dir = std::env::current_dir()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_owned()
+        .parent()
+        .unwrap()
+        .to_owned();
+    let grammar_dir = project_root_dir.join("resources").join("grammar");
+    let move_parser_file = grammar_dir.join("parser.c");
 
-    println!("cargo:rerun-if-changed={}", resources_dir.to_str().unwrap()); // <1>
+    println!("cargo:rerun-if-changed={}", grammar_dir.to_str().unwrap()); // <1>
 
     cc::Build::new()
         .file(move_parser_file)
-        .include(&resources_dir)
+        .include(&grammar_dir)
         .compile("tree-sitter-move");
 }
