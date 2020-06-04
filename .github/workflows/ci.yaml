@@ -13,7 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [
+          ubuntu-latest,
+#          windows-latest,
+          macos-latest
+        ]
 
     env:
       RUSTFLAGS: -D warnings
