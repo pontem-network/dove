@@ -45,7 +45,7 @@ fn main() {
             let original_s = fs::read_to_string(entry.path()).unwrap();
 
             let old_transformed_s =
-                fs::read_to_string(&dfinance_file_path).unwrap_or(String::from(""));
+                fs::read_to_string(&dfinance_file_path).unwrap_or_else(|_| String::default());
 
             let transformed_s = convert_contents_into_dialect(&original_s);
             if old_transformed_s != transformed_s {
