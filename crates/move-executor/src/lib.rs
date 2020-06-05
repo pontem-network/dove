@@ -54,15 +54,15 @@ pub fn compile_and_execute_script(
         account_address_replacements.insert(libra_sender_address, raw_sender_string.clone());
     }
 
-    let execution_changes =
+    let chain_state =
         dialect.compile_and_run(script, deps, raw_sender_string, normalized_changes, args)?;
 
-    let mut normalized_changes = Vec::with_capacity(execution_changes.len());
+    let mut normalized_changes = Vec::with_capacity(chain_state.resource_changes.len());
     for ResourceChange {
         mut account,
         mut ty,
         op,
-    } in execution_changes
+    } in chain_state.resource_changes
     {
         if let Some(bech32_address) = account_address_replacements.get(&account) {
             account = bech32_address.to_owned();
@@ -72,5 +72,8 @@ pub fn compile_and_execute_script(
         }
         normalized_changes.push(ResourceChange { account, ty, op });
     }
-    Ok(serde_json::to_value(normalized_changes).unwrap())
+    Ok(serde_json::json!({
+        "changes": serde_json::to_value(normalized_changes).unwrap(),
+        "gas_spent": chain_state.gas_spent
+    }))
 }

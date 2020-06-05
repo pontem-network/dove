@@ -24,6 +24,7 @@ use utils::MoveFilePath;
 
 pub mod data_cache;
 pub mod executor;
+pub mod gas;
 pub mod resources;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {

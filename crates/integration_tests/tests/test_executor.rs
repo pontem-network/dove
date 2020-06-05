@@ -112,7 +112,7 @@ script {
 }";
     let deps = vec![stdlib_transaction_mod(), record_mod()];
 
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -122,7 +122,7 @@ script {
     )
     .unwrap();
     assert_eq!(
-        changes,
+        state_changes["changes"],
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
@@ -161,7 +161,7 @@ script {
         },
         "op": {"type": "SetValue", "values": [10]}
     }]);
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -171,7 +171,7 @@ script {
     )
     .unwrap();
     assert_eq!(
-        changes,
+        state_changes["changes"],
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
@@ -212,7 +212,7 @@ script {
         module_text.to_string(),
     ));
 
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -222,7 +222,7 @@ script {
     )
     .unwrap();
     assert_eq!(
-        serde_json::to_value(changes).unwrap(),
+        state_changes["changes"],
         serde_json::json!([
           {
             "account": "0x1",
@@ -261,7 +261,7 @@ script {
 }
     ";
 
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("m.move")),
@@ -275,7 +275,7 @@ script {
     .unwrap();
 
     assert_eq!(
-        changes,
+        state_changes["changes"],
         serde_json::json!([
           {
             "account": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
@@ -316,7 +316,7 @@ script {
 }
     ";
 
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("m.move")),
@@ -330,7 +330,7 @@ script {
     .unwrap();
 
     assert_eq!(
-        changes,
+        state_changes["changes"],
         serde_json::json!([
           {
             "account": "0x1",
@@ -367,7 +367,7 @@ script {
     }
 }
         ";
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), source_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("debug.move")),
@@ -379,7 +379,7 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(changes, serde_json::json!([]));
+    assert_eq!(state_changes["changes"], serde_json::json!([]));
 }
 
 #[test]
@@ -405,7 +405,7 @@ script {
         },
         "op": {"type": "SetValue", "values": [10]}
     }]);
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -415,7 +415,7 @@ script {
     )
     .unwrap();
     assert_eq!(
-        changes,
+        state_changes["changes"],
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
@@ -454,7 +454,7 @@ script {
         },
         "op": {"type": "SetValue", "values": [10]}
     }]);
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -465,7 +465,7 @@ script {
     .unwrap();
 
     assert_eq!(
-        changes,
+        state_changes["changes"],
         serde_json::json!([
             {
                 "account": "0x1111111111111111",
@@ -546,7 +546,7 @@ script {
         "op": {"type": "SetValue", "values": [10]}
     }]);
 
-    let changes = compile_and_execute_script(
+    let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "dfinance",
@@ -556,7 +556,7 @@ script {
     )
     .unwrap();
     assert_eq!(
-        changes,
+        state_changes["changes"],
         serde_json::json!([{
             "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
             "ty": {
@@ -569,4 +569,27 @@ script {
             "op": {"type": "SetValue", "values": [20]}
         }])
     );
+}
+
+#[test]
+fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
+    let text = r"
+script {
+    use 0x0::Transaction;
+
+    fun main() {
+        let _ = Transaction::sender();
+    }
+}";
+    let deps = vec![stdlib_transaction_mod()];
+    let chain_state = compile_and_execute_script(
+        (existing_file_abspath(), text.to_string()),
+        &deps,
+        "libra",
+        "0x1111111111111111",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(chain_state["gas_spent"], 88);
 }

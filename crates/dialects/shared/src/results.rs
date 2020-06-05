@@ -24,6 +24,11 @@ impl Display for ResourceType {
     }
 }
 
+pub struct ChainStateChanges {
+    pub resource_changes: Vec<ResourceChange>,
+    pub gas_spent: u64,
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ResourceChange {
     pub account: String,

@@ -39,6 +39,8 @@ orig-libra-canonical-serialization = { package = "libra-canonical-serialization"
 orig-libra-crypto = { package = "libra-crypto", git = "https://github.com/dfinance/libra.git", branch = "03.06.2020.original" }
 orig-move-ir-types = { package = "move-ir-types", git = "https://github.com/dfinance/libra.git", branch = "03.06.2020.original" }
 
+libra-vm-genesis = { package = "vm-genesis", git = "https://github.com/dfinance/libra.git", branch = "03.06.2020.original" }
+
 #orig-move-vm-runtime = { package = "move-vm-runtime", path = "../../../../dvm-libra/language/move-vm/runtime" }
 ##orig-move-vm-state = { package = "move-vm-state", path = "../../../../dvm-libra/language/move-vm/state" }
 #orig-move-vm-types = { package = "move-vm-types", path = "../../../../dvm-libra/language/move-vm/types" }
