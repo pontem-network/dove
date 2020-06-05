@@ -7,7 +7,10 @@ fn main() {
         .parent()
         .unwrap()
         .to_owned();
-    let grammar_dir = project_root_dir.join("resources").join("grammar");
+    let grammar_dir = project_root_dir
+        .join("resources")
+        .join("grammar")
+        .join("src");
     let move_parser_file = grammar_dir.join("parser.c");
 
     println!("cargo:rerun-if-changed={}", grammar_dir.to_str().unwrap()); // <1>
