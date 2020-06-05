@@ -20,7 +20,7 @@ pub enum DialectName {
 impl DialectName {
     pub fn get_dialect(&self) -> Box<dyn Dialect> {
         match self {
-            DialectName::Libra => Box::new(MoveDialect::default()),
+            DialectName::Libra => Box::new(LibraDialect::default()),
             DialectName::DFinance => Box::new(DFinanceDialect::default()),
         }
     }
@@ -69,9 +69,9 @@ pub trait Dialect {
 }
 
 #[derive(Default)]
-pub struct MoveDialect;
+pub struct LibraDialect;
 
-impl Dialect for MoveDialect {
+impl Dialect for LibraDialect {
     fn name(&self) -> &str {
         "libra"
     }
