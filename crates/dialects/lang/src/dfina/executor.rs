@@ -10,16 +10,17 @@ use dfin_move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 use dfin_move_lang::{compiled_unit::CompiledUnit, errors::Error, to_bytecode};
 use dfin_move_vm_runtime::move_vm::MoveVM;
 
-use dfin_move_vm_types::gas_schedule::{zero_cost_schedule, CostStrategy};
+use dfin_move_vm_types::gas_schedule::CostStrategy;
 use dfin_move_vm_types::values::Value;
 
 use dfin_vm::file_format::CompiledScript;
 use dfin_vm::CompiledModule;
 
 use shared::errors::ExecCompilerError;
-use shared::results::{ExecutionError, ResourceChange};
+use shared::results::{ChainStateChanges, ExecutionError};
 use utils::MoveFilePath;
 
+use crate::dfina::gas::fetch_cost_table;
 use crate::dfina::{
     check_defs, data_cache, into_exec_compiler_error, parse_account_address, parse_address,
     parse_files, PreBytecodeProgram,
@@ -92,11 +93,12 @@ pub fn execute_script(
     data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
-) -> Result<Vec<ResourceChange>> {
+) -> Result<ChainStateChanges> {
     let mut data_cache = data_cache::DataCache::new(data_store);
 
-    let zero_cost_table = zero_cost_schedule();
-    let mut cost_strategy = CostStrategy::system(&zero_cost_table, GasUnits::new(1_000_000));
+    let cost_table = fetch_cost_table();
+    let total_gas = 1_000_000;
+    let mut cost_strategy = CostStrategy::transaction(&cost_table, GasUnits::new(total_gas));
 
     let vm = MoveVM::new();
     vm.execute_script(
@@ -110,10 +112,15 @@ pub fn execute_script(
     .map_err(vm_status_into_exec_status)
     .with_context(|| "Script execution error")?;
 
-    data_cache
+    let resource_changes = data_cache
         .resource_changes()
         .map_err(vm_status_into_exec_status)
-        .with_context(|| "Changeset serialization error")
+        .with_context(|| "Changeset serialization error")?;
+    let gas_spent = total_gas - cost_strategy.remaining_gas().get();
+    Ok(ChainStateChanges {
+        resource_changes,
+        gas_spent,
+    })
 }
 
 /// Convert the transaction arguments into move values.
@@ -133,7 +140,7 @@ pub fn compile_and_run(
     raw_sender_string: String,
     genesis_write_set: WriteSet,
     args: Vec<String>,
-) -> Result<Vec<ResourceChange>> {
+) -> Result<ChainStateChanges> {
     let (fname, script_text) = script;
 
     let (compiled_script, compiled_modules) =

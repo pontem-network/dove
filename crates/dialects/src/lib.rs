@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use lang::{dfina, libra};
 
 use shared::errors::CompilerError;
-use shared::results::ResourceChange;
+use shared::results::{ChainStateChanges, ResourceChange};
 
 use shared::bech32::bech32_into_libra;
 
@@ -59,7 +59,7 @@ pub trait Dialect {
         raw_sender_string: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
-    ) -> Result<Vec<ResourceChange>>;
+    ) -> Result<ChainStateChanges>;
 
     fn print_compiler_errors_and_exit(
         &self,
@@ -100,7 +100,7 @@ impl Dialect for LibraDialect {
         raw_sender_string: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
-    ) -> Result<Vec<ResourceChange>> {
+    ) -> Result<ChainStateChanges> {
         let genesis_write_set = libra::resources::changes_into_writeset(genesis_changes)
             .with_context(|| "Provided genesis serialization error")?;
         libra::executor::compile_and_run(script, deps, raw_sender_string, genesis_write_set, args)
@@ -150,7 +150,7 @@ impl Dialect for DFinanceDialect {
         raw_sender_string: String,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
-    ) -> Result<Vec<ResourceChange>> {
+    ) -> Result<ChainStateChanges> {
         let genesis_write_set = dfina::resources::changes_into_writeset(genesis_changes)
             .with_context(|| "Provided genesis serialization error")?;
         dfina::executor::compile_and_run(script, deps, raw_sender_string, genesis_write_set, args)

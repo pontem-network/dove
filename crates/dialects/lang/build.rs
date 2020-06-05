@@ -40,6 +40,10 @@ fn main() {
 
     for file in walkdir::WalkDir::new(libra_dir).max_depth(1) {
         let entry = file.unwrap();
+        if entry.file_name() == "gas.rs" {
+            continue;
+        }
+
         let dfinance_file_path = dfinance_dir.join(entry.file_name());
         if entry.file_type().is_file() {
             let original_s = fs::read_to_string(entry.path()).unwrap();
