@@ -2,7 +2,7 @@ use lsp_types::CompletionItem;
 
 use crate::change::AnalysisChange;
 use crate::completion;
-use crate::db::{FileDiagnostic, RootDatabase};
+use crate::db::{FileDiagnostic, FilePosition, RootDatabase};
 use utils::{io, MoveFilePath};
 
 #[derive(Debug, Default)]
@@ -38,11 +38,8 @@ impl Analysis {
         &self.db
     }
 
-    pub fn completions(&self) -> Vec<CompletionItem> {
-        let mut completions = vec![];
-        completions.extend(completion::get_keywords());
-        completions.extend(completion::get_builtins());
-        completions
+    pub fn completions(&self, position: FilePosition) -> Vec<CompletionItem> {
+        completion::completions(self.db(), position)
     }
 
     pub fn check_with_libra_compiler(

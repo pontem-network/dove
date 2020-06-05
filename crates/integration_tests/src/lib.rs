@@ -1,5 +1,9 @@
+use analysis::change::AnalysisChange;
+use analysis::config::Config;
+use move_language_server::world::{WorldSnapshot, WorldState};
 use std::path::PathBuf;
-use utils::{leaked_fpath, MoveFilePath};
+use utils::io::read_move_files;
+use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 pub fn get_script_path() -> MoveFilePath {
     leaked_fpath(get_modules_path().join("script.move"))
@@ -44,4 +48,39 @@ pub fn setup_test_logging() {
         .is_test(true)
         .try_init()
         .unwrap_or_default();
+}
+
+pub fn test_world_snapshot(
+    file: MoveFile,
+    config: Config,
+    additional_files: Vec<MoveFile>,
+) -> WorldSnapshot {
+    let ws_root = std::env::current_dir().unwrap();
+    let mut world_state = WorldState::new(ws_root, config);
+    let mut change = AnalysisChange::new();
+
+    for folder in &world_state.config.modules_folders {
+        for (fpath, text) in read_move_files(folder) {
+            change.add_file(fpath, text);
+        }
+    }
+
+    for (fpath, text) in additional_files {
+        change.add_file(fpath, text);
+    }
+
+    change.update_file(file.0, file.1);
+
+    world_state.analysis_host.apply_change(change);
+    world_state.snapshot()
+}
+
+#[macro_export]
+macro_rules! config {
+    ($json: tt) => {{
+        let config_json = serde_json::json!($json);
+        let mut config = analysis::config::Config::default();
+        config.update(&config_json);
+        config
+    }};
 }

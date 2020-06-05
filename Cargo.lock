@@ -82,6 +82,8 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
+ "syntax",
+ "tree-sitter",
  "utils",
 ]
 

@@ -1,18 +1,40 @@
 use core::fmt;
 
 use tree_sitter::Node;
+//
+// pub trait AstNode {
+//     fn can_cast(kind: &str) -> bool
+//     where
+//         Self: Sized;
+//
+//     fn cast(node: tree_sitter::Node) -> Option<Self>
+//     where
+//         Self: Sized,
+//     {
+//
+//     }
+//
+//     fn node(&self) -> &tree_sitter::Node;
+// }
 
 macro_rules! define_ast_node {
     ($struct_ident: ident, [$($field_name: ident),*]) => {
         #[allow(dead_code)]
         pub struct $struct_ident<'a> {
             source: &'a str,
-            node: Node<'a>,
+            pub node: Node<'a>,
         }
 
         impl<'a> fmt::Debug for $struct_ident<'a> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                let start_pos = self.node.start_position();
+                let end_pos = self.node.end_position();
+                let span = format!(
+                    "[({}, {}), ({}, {})]",
+                    start_pos.row, start_pos.column, end_pos.row, end_pos.column
+                );
                 f.debug_struct(stringify!($struct_ident))
+                    .field("span", &span)
                     $(
                         .field(stringify!($field_name), &self.$field_name())
                     )*
@@ -23,6 +45,12 @@ macro_rules! define_ast_node {
         impl<'a> $struct_ident<'a> {
             pub fn new(source: &'a str, node: Node<'a>) -> Self {
                 Self { source, node }
+            }
+
+            pub fn is_position_inside(&self, pos: (usize, usize)) -> bool {
+                let point = tree_sitter::Point::new(pos.0, pos.1);
+                let node_range = self.node.range();
+                point > node_range.start_point && point < node_range.end_point
             }
         }
     };
@@ -78,16 +106,6 @@ macro_rules! define_field_from_first_child {
     };
 }
 
-// macro_rules! define_field_from_last_child {
-//     ($field_name: ident, $ast_type: ident) => {
-//         pub fn $field_name(&self) -> Option<$ast_type> {
-//             self.node
-//                 .named_child(self.named_child_count() - 1)
-//                 .map(|node| $ast_type::new(self.source, node))
-//         }
-//     };
-// }
-
 macro_rules! define_proxy_array_named_field {
     ($field_name: ident, $ast_type: ident) => {
         pub fn $field_name(&self) -> Option<Vec<$ast_type>> {
@@ -135,40 +153,84 @@ macro_rules! define_enum {
     }
 }
 
-define_ast_node!(SourceFile, [definition]);
+#[derive(Clone)]
+pub struct SourceFile {
+    source: String,
+    pub tree: tree_sitter::Tree,
+}
 
-impl<'a> SourceFile<'a> {
+impl fmt::Debug for SourceFile {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let start_pos = self.tree.root_node().start_position();
+        let end_pos = self.tree.root_node().end_position();
+        let span = format!(
+            "[({}, {}), ({}, {})]",
+            start_pos.row, start_pos.column, end_pos.row, end_pos.column
+        );
+        f.debug_struct("SourceFile")
+            .field("span", &span)
+            .field("definition", &self.definition())
+            .finish()
+    }
+}
+impl SourceFile {
+    pub fn new(source: String) -> Self {
+        let tree = crate::parser().parse(&source, None).unwrap();
+        Self { tree, source }
+    }
+
     pub fn definition(&self) -> Option<Definition> {
-        self.node
+        self.tree
+            .root_node()
             .named_child(0)
-            .map(|node| Definition::new(self.source, node))
+            .filter(|node| node.kind() != "ERROR")
+            .map(|node| Definition::new(&self.source, node))
     }
 }
 
 #[derive(Debug)]
 pub enum Definition<'a> {
-    Script(ScriptBlock<'a>),
-    Module(Module<'a>),
-    ModuleAtAddress(AddressBlock<'a>),
+    ScriptBlock(ScriptBlock<'a>),
+    ModuleBlock(Module<'a>),
+    AddressBlock(AddressBlock<'a>),
 }
 
 impl<'a> Definition<'a> {
     pub fn new(source: &'a str, node: Node<'a>) -> Self {
         match node.kind() {
-            "module_definition" => Definition::Module(Module::new(source, node)),
-            "script_block" => Definition::Script(ScriptBlock::new(source, node)),
+            "script_block" => Definition::ScriptBlock(ScriptBlock::new(source, node)),
+            "module_definition" => Definition::ModuleBlock(Module::new(source, node)),
+            "address_block" => Definition::AddressBlock(AddressBlock::new(source, node)),
             _ => unreachable!(),
         }
     }
 }
 
-define_ast_node!(ScriptBlock, [func_def]);
+define_ast_node!(ScriptBlock, [main_function]);
 
 impl<'a> ScriptBlock<'a> {
-    define_field_from_first_child!(func_def, FuncDef);
+    pub fn main_function(&self) -> Option<FuncDef> {
+        self.node
+            .named_children(&mut self.node.walk())
+            .find(|&node| node.kind() == "usual_function_definition")
+            .map(|node| FuncDef::new(self.source, node))
+    }
 }
 
-define_ast_node!(AddressBlock, []);
+define_ast_node!(AddressBlock, [address, modules]);
+
+impl<'a> AddressBlock<'a> {
+    define_named_ident_literal!(address);
+
+    pub fn modules(&self) -> Vec<Module> {
+        let mut cursor = self.node.walk();
+        self.node
+            .named_children(&mut cursor)
+            .filter(|&node| node.kind() == "module_definition")
+            .map(|node| Module::new(self.source, node))
+            .collect()
+    }
+}
 
 define_ast_node!(Module, [name, body]);
 
