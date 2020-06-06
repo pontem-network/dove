@@ -70,9 +70,7 @@ jobs:
 
     - if: ${{ steps.cargo-build.outputs.cache-hit != 'true' }}
       name: Build with --lib
-      run: |
-        cargo build --lib
-        rm ./target/debug/deps/*.d
+      run: cargo build --lib
 
     - name: Build
       run: cargo build
