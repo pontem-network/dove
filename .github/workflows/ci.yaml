@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: [
           ubuntu-latest,
-#          windows-latest,
+          windows-latest,
           macos-latest
         ]
 
@@ -50,20 +50,27 @@ jobs:
 
     - id: cargo-deps
       name: (load cache) Download dependencies
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
-        path: ~/.cargo/registry/cache
-        key: cargo-deps-${{ hashFiles('Cargo.lock') }}
+        path: |
+          ~/.cargo/registry/cache
+          ~/.cargo/git
+        key: cargo-deps-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
 
     - if: ${{ steps.cargo-deps.outputs.cache-hit != 'true' }}
       name: Download dependencies
       run: cargo fetch --locked
-#
-#    - name: (load cache) Build
-#      uses: actions/cache@v1
-#      with:
-#        path: target
-#        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('Cargo.lock') }}
+
+    - id: cargo-build
+      name: (load cache) Build with --lib
+      uses: actions/cache@v2
+      with:
+        path: ./target
+        key: cargo-build-lib-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+
+    - if: ${{ steps.cargo-build.outputs.cache-hit != 'true' }}
+      name: Build with --lib
+      run: cargo build --lib
 
     - name: Build
       run: cargo build

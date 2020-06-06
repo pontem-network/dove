@@ -13,7 +13,7 @@ pub fn handle_completion(
         text_document,
         position,
     } = params.text_document_position;
-    let fpath = leaked_fpath(text_document.uri.path());
+    let fpath = leaked_fpath(text_document.uri.to_file_path().unwrap());
     let pos = (position.line, position.character);
     let file_position = FilePosition {
         fpath,
