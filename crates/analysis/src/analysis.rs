@@ -70,7 +70,7 @@ impl Analysis {
         self.db
             .config
             .dialect()
-            .check_with_compiler(current_file, deps, &self.db.config.raw_sender_address())
+            .check_with_compiler(current_file, deps, self.db.config.sender())
             .map_err(|errors| {
                 errors
                     .into_iter()

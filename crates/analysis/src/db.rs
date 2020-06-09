@@ -4,9 +4,9 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
 use crate::utils::location::File;
+use dialects::shared::errors::{CompilerError, CompilerErrorPart};
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
-use shared::errors::{CompilerError, CompilerErrorPart};
 use std::fmt;
 use syntax::ast::SourceFile;
 use utils::{FilesSourceText, MoveFilePath};
@@ -109,7 +109,7 @@ impl RootDatabase {
         }
     }
 
-    fn error_location_to_range(&self, loc: &shared::errors::Location) -> Result<Range> {
+    fn error_location_to_range(&self, loc: &dialects::shared::errors::Location) -> Result<Range> {
         let file = loc.fpath;
         let text = match self.available_files.get(file) {
             Some(text) => text.clone(),

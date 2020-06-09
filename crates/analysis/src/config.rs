@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use dialects::{Dialect, DialectName};
 
+use dialects::base::Dialect;
+use dialects::shared::ProvidedAccountAddress;
+use dialects::DialectName;
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use serde::Deserialize;
@@ -13,7 +15,7 @@ pub struct Config {
     pub dialect_name: DialectName,
     pub stdlib_folder: Option<PathBuf>,
     pub modules_folders: Vec<PathBuf>,
-    pub raw_sender_address: String,
+    pub sender_address: ProvidedAccountAddress,
 }
 
 impl Debug for Config {
@@ -22,7 +24,7 @@ impl Debug for Config {
             .field("dialect", &self.dialect_name)
             .field("stdlib_folder", &self.stdlib_folder)
             .field("module_folders", &self.modules_folders)
-            .field("sender_address", &self.raw_sender_address)
+            .field("sender_address", &self.sender_address)
             .finish()
     }
 }
@@ -33,7 +35,10 @@ impl Default for Config {
             dialect_name: DialectName::Libra,
             stdlib_folder: None,
             modules_folders: vec![],
-            raw_sender_address: "0x0".to_string(),
+            sender_address: DialectName::Libra
+                .get_dialect()
+                .normalize_account_address("0x0")
+                .unwrap(),
         }
     }
 }
@@ -61,14 +66,16 @@ impl Config {
         self.dialect_name.get_dialect()
     }
 
-    pub fn raw_sender_address(&self) -> String {
-        if &self.raw_sender_address == "0x0" {
-            self.dialect().zero_address().to_string()
-        } else {
-            self.dialect()
-                .normalize_account_address(&self.raw_sender_address)
-                .unwrap()
-        }
+    pub fn sender(&self) -> &ProvidedAccountAddress {
+        &self.sender_address
+        // if &self.sender_address == "0x0" {
+        //     ProvidedAccountAddress::default()
+        // } else {
+        //     self.dialect()
+        //         .normalize_account_address(&self.sender_address)
+        //         .unwrap()
+        //         .0
+        // }
     }
 
     pub fn update(&mut self, value: &serde_json::Value) {
@@ -109,17 +116,17 @@ impl Config {
                 })
                 .collect(),
         };
-        self.raw_sender_address = match get(value, "/sender_address") {
+        self.sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x0");
-                "0x0".to_string()
+                ProvidedAccountAddress::default()
             }
             Some(address) => match self.dialect().normalize_account_address(address) {
-                Ok(parsed_address) => parsed_address,
+                Ok(provided_address) => provided_address,
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);
                     log::info!("Using default account address 0x0");
-                    "0x0".to_string()
+                    ProvidedAccountAddress::default()
                 }
             },
         };

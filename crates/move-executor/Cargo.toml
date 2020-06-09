@@ -12,6 +12,5 @@ serde = "1.0.106"
 serde_json = "1.0.52"
 clap = "2.33.1"
 
-shared = { path = "../dialects/shared" }
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }

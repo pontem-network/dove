@@ -2,7 +2,7 @@ use anyhow::{ensure, Result};
 use bech32::u5;
 use lazy_static::lazy_static;
 
-use crate::errors::{len_difference, FileSourceMap};
+use crate::shared::errors::FileSourceMap;
 use regex::Regex;
 
 pub static HRP: &str = "wallet";
@@ -48,10 +48,15 @@ pub fn replace_bech32_addresses(source: &str, file_source_map: &mut FileSourceMa
             continue;
         }
         if let Ok(libra_address) = bech32_into_libra(orig_address) {
-            file_source_map
-                .insert_layer(item.end(), len_difference(orig_address, &libra_address));
-            file_source_map
-                .insert_address_replacement(orig_address.to_string(), libra_address.clone());
+            file_source_map.insert_address_layer(
+                item.end(),
+                orig_address.to_owned(),
+                libra_address.clone(),
+            );
+            // file_source_map
+            //     .insert_layer(item.end(), len_difference(orig_address, &libra_address));
+            // file_source_map
+            //     .insert_address_replacement(orig_address.to_string(), libra_address.clone());
 
             transformed_source = transformed_source.replace(orig_address, &libra_address);
         }

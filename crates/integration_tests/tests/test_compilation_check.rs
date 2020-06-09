@@ -69,7 +69,9 @@ mod tests {
     use super::*;
     use analysis::db::RootDatabase;
 
-    use integration_tests::{config, get_modules_path, get_script_path, get_stdlib_path};
+    use integration_tests::{
+        config, get_modules_path, get_script_path, get_stdlib_path, setup_test_logging,
+    };
     use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
@@ -184,35 +186,6 @@ module M {
     }
 
     #[test]
-    fn test_check_unreachable_code_in_loop() {
-        let source_text = r"
-module M {
-    fun t() {
-        let x = 0;
-        let t = 1;
-
-        if (x >= 0) {
-            loop {
-                let my_local = 0;
-                if (my_local >= 0) { break; };
-            };
-            x = 1
-        };
-        t;
-        x;
-    }
-}
-    ";
-        let errors = diagnostics(source_text);
-        assert_eq!(errors.len(), 1);
-        assert_eq!(
-            errors[0].message,
-            "Unreachable code. This statement (and any following statements) will not be executed. \
-            In some cases, this will result in unused resource values."
-        );
-    }
-
-    #[test]
     fn test_stdlib_modules_are_available_if_loaded() {
         let source_text = r"
 module MyModule {
@@ -231,6 +204,7 @@ module MyModule {
     #[test]
     fn test_compile_check_script_with_additional_dependencies() {
         // hardcoded sender address
+        setup_test_logging();
         let script_source_text = r"
 script {
     use 0x8572f83cee01047effd6e7d0b5c19743::CovidTracker;
@@ -306,6 +280,7 @@ script {
 }
     ";
         let config = config!({
+            "dialect": "libra",
             "stdlib_folder": get_stdlib_path(),
             "modules_folders": [get_modules_path()],
             "sender_address": "0x11111111111111111111111111111111",
@@ -468,11 +443,6 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        assert_eq!(
-            config.raw_sender_address,
-            "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
-        );
-
         let errors = diagnostics_with_config(source_text, config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
