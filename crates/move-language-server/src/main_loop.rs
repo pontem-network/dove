@@ -27,7 +27,7 @@ use crate::dispatcher::PoolDispatcher;
 use crate::handlers;
 use crate::req;
 use crate::subscriptions::OpenedFiles;
-use crate::world::WorldState;
+use crate::global_state::GlobalState;
 use analysis::db::FileDiagnostic;
 use utils::{leaked_fpath, MoveFilePath};
 
@@ -95,7 +95,7 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
     log::info!("starting example main loop");
 
     let mut loop_state = LoopState::default();
-    let mut world_state = WorldState::new(ws_root, config);
+    let mut global_state = GlobalState::new(ws_root, config);
 
     let pool = ThreadPool::new(1);
     let (task_sender, task_receiver) = unbounded::<Task>();
@@ -108,7 +108,7 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
                 Err(_) => bail!("client exited without shutdown"),
             },
             recv(&task_receiver) -> task => Event::Task(task.unwrap()),
-            recv(&world_state.fs_events_receiver) -> task => match task {
+            recv(&global_state.fs_events_receiver) -> task => match task {
                 Ok(task) => Event::Vfs(task),
                 Err(_) => bail!("vfs died"),
             }
@@ -122,7 +122,7 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
             &pool,
             &task_sender,
             &connection,
-            &mut world_state,
+            &mut global_state,
             &mut loop_state,
             event,
         )?;
@@ -155,7 +155,7 @@ pub fn loop_turn(
     pool: &ThreadPool,
     task_sender: &Sender<Task>,
     connection: &Connection,
-    world_state: &mut WorldState,
+    global_state: &mut GlobalState,
     loop_state: &mut LoopState,
     event: Event,
 ) -> Result<()> {
@@ -164,13 +164,13 @@ pub fn loop_turn(
     }
     match event {
         Event::Task(task) => on_task(task, &connection.sender),
-        Event::Vfs(vfs_task) => world_state.vfs.handle_task(vfs_task),
+        Event::Vfs(vfs_task) => global_state.vfs.handle_task(vfs_task),
         Event::Msg(message) => match message {
             Message::Request(req) => {
-                on_request(world_state, pool, task_sender, &connection.sender, req)?;
+                on_request(global_state, pool, task_sender, &connection.sender, req)?;
             }
             Message::Notification(not) => {
-                on_notification(&connection.sender, world_state, loop_state, not)?;
+                on_notification(&connection.sender, global_state, loop_state, not)?;
             }
             Message::Response(resp) => {
                 if Some(&resp.id) == loop_state.configuration_request_id.as_ref() {
@@ -186,8 +186,8 @@ pub fn loop_turn(
                             if let Some(new_config) = configs.get(0) {
                                 let mut config = Config::default();
                                 config.update(new_config);
-                                *world_state =
-                                    WorldState::new(world_state.ws_root.clone(), config);
+                                *global_state =
+                                    GlobalState::new(global_state.ws_root.clone(), config);
                             }
                         }
                         (None, None) => {
@@ -198,12 +198,12 @@ pub fn loop_turn(
             }
         },
     }
-    let fs_state_changed = world_state.load_fs_changes();
+    let fs_state_changed = global_state.load_fs_changes();
     if fs_state_changed {
         log::info!("fs_state_changed = true, reextract diagnostics");
         update_file_notifications_on_threadpool(
             pool,
-            world_state.analysis_host.analysis(),
+            global_state.analysis_host.analysis(),
             task_sender.clone(),
             loop_state.opened_files.files(),
         );
@@ -212,14 +212,14 @@ pub fn loop_turn(
 }
 
 fn on_request(
-    world_state: &mut WorldState,
+    global_state: &mut GlobalState,
     pool: &ThreadPool,
     task_sender: &Sender<Task>,
     msg_sender: &Sender<Message>,
     req: Request,
 ) -> Result<()> {
     let mut pool_dispatcher =
-        PoolDispatcher::new(req, pool, world_state, msg_sender, task_sender);
+        PoolDispatcher::new(req, pool, global_state, msg_sender, task_sender);
     pool_dispatcher
         .on::<req::Completion>(handlers::handle_completion)?
         .finish();
@@ -269,7 +269,7 @@ pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
 
 fn on_notification(
     msg_sender: &Sender<Message>,
-    world_state: &mut WorldState,
+    global_state: &mut GlobalState,
     loop_state: &mut LoopState,
     not: Notification,
 ) -> Result<()> {
@@ -279,7 +279,7 @@ fn on_notification(
             let fpath = uri
                 .to_file_path()
                 .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
-            let overlay = world_state
+            let overlay = global_state
                 .vfs
                 .add_file_overlay(fpath.as_path(), params.text_document.text);
             assert!(
@@ -305,7 +305,7 @@ fn on_notification(
                 .pop()
                 .ok_or_else(|| anyhow::anyhow!("empty changes".to_string()))?
                 .text;
-            world_state
+            global_state
                 .vfs
                 .change_file_overlay(fpath.as_path(), |text| {
                     *text = new_text;

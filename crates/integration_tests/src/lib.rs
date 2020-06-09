@@ -1,6 +1,6 @@
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
-use move_language_server::world::{WorldSnapshot, WorldState};
+use move_language_server::global_state::{GlobalStateSnapshot, GlobalState};
 use std::path::PathBuf;
 use utils::io::read_move_files;
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
@@ -50,16 +50,16 @@ pub fn setup_test_logging() {
         .unwrap_or_default();
 }
 
-pub fn test_world_snapshot(
+pub fn global_state_snapshot(
     file: MoveFile,
     config: Config,
     additional_files: Vec<MoveFile>,
-) -> WorldSnapshot {
+) -> GlobalStateSnapshot {
     let ws_root = std::env::current_dir().unwrap();
-    let mut world_state = WorldState::new(ws_root, config);
+    let mut global_state = GlobalState::new(ws_root, config);
     let mut change = AnalysisChange::new();
 
-    for folder in &world_state.config.modules_folders {
+    for folder in &global_state.config.modules_folders {
         for (fpath, text) in read_move_files(folder) {
             change.add_file(fpath, text);
         }
@@ -71,8 +71,8 @@ pub fn test_world_snapshot(
 
     change.update_file(file.0, file.1);
 
-    world_state.analysis_host.apply_change(change);
-    world_state.snapshot()
+    global_state.analysis_host.apply_change(change);
+    global_state.snapshot()
 }
 
 #[macro_export]

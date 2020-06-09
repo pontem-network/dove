@@ -1,12 +1,12 @@
 use anyhow::Result;
 
 use crate::req;
-use crate::world::WorldSnapshot;
+use crate::global_state::GlobalStateSnapshot;
 use analysis::db::FilePosition;
 use utils::leaked_fpath;
 
 pub fn handle_completion(
-    world_snapshot: WorldSnapshot,
+    state_snapshot: GlobalStateSnapshot,
     params: req::CompletionParams,
 ) -> Result<Option<req::CompletionResponse>> {
     let req::TextDocumentPositionParams {
@@ -20,6 +20,6 @@ pub fn handle_completion(
         pos: (pos.0 as usize, pos.1 as usize),
     };
 
-    let completions = world_snapshot.analysis.completions(file_position);
+    let completions = state_snapshot.analysis.completions(file_position);
     Ok(Some(completions.into()))
 }

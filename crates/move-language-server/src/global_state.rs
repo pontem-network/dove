@@ -21,13 +21,13 @@ impl Filter for MoveFilesFilter {
     }
 }
 
-pub struct WorldSnapshot {
+pub struct GlobalStateSnapshot {
     pub config: Config,
     pub analysis: Analysis,
 }
 
 #[derive(Debug)]
-pub struct WorldState {
+pub struct GlobalState {
     pub ws_root: PathBuf,
     pub config: Config,
     pub analysis_host: AnalysisHost,
@@ -35,8 +35,8 @@ pub struct WorldState {
     pub fs_events_receiver: Receiver<VfsTask>,
 }
 
-impl WorldState {
-    pub fn new(ws_root: PathBuf, config: Config) -> WorldState {
+impl GlobalState {
+    pub fn new(ws_root: PathBuf, config: Config) -> GlobalState {
         let mut analysis_host = AnalysisHost::default();
 
         let mut change = AnalysisChange::new();
@@ -52,7 +52,7 @@ impl WorldState {
         )
         .0;
 
-        WorldState {
+        GlobalState {
             ws_root,
             config,
             analysis_host,
@@ -94,8 +94,8 @@ impl WorldState {
         true
     }
 
-    pub fn snapshot(&self) -> WorldSnapshot {
-        WorldSnapshot {
+    pub fn snapshot(&self) -> GlobalStateSnapshot {
+        GlobalStateSnapshot {
             config: self.config.clone(),
             analysis: self.analysis_host.analysis(),
         }

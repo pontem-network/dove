@@ -9,7 +9,7 @@ use threadpool::ThreadPool;
 
 use crate::main_loop::{on_task, LspError, Task};
 use crate::req;
-use crate::world::{WorldSnapshot, WorldState};
+use crate::global_state::{GlobalStateSnapshot, GlobalState};
 
 fn result_to_task<R>(id: RequestId, result: Result<R::Result>) -> Task
 where
@@ -38,7 +38,7 @@ pub struct PoolDispatcher<'a> {
     // will be None after first matched on_* method
     req: Option<Request>,
     pool: &'a ThreadPool,
-    world_state: &'a mut WorldState,
+    global_state: &'a mut GlobalState,
     msg_sender: &'a Sender<Message>,
     task_sender: &'a Sender<Task>,
 }
@@ -47,14 +47,14 @@ impl<'a> PoolDispatcher<'a> {
     pub fn new(
         req: Request,
         pool: &'a ThreadPool,
-        world_state: &'a mut WorldState,
+        global_state: &'a mut GlobalState,
         msg_sender: &'a Sender<Message>,
         task_sender: &'a Sender<Task>,
     ) -> PoolDispatcher<'a> {
         PoolDispatcher {
             req: Some(req),
             pool,
-            world_state,
+            global_state,
             msg_sender,
             task_sender,
         }
@@ -62,7 +62,7 @@ impl<'a> PoolDispatcher<'a> {
     /// Dispatches the request onto the current thread
     pub fn on_sync<R>(
         &mut self,
-        f: fn(&mut WorldState, R::Params) -> Result<R::Result>,
+        f: fn(&mut GlobalState, R::Params) -> Result<R::Result>,
     ) -> Result<&mut Self>
     where
         R: req::Request + 'static,
@@ -75,9 +75,9 @@ impl<'a> PoolDispatcher<'a> {
                 return Ok(self);
             }
         };
-        let world_state = panic::AssertUnwindSafe(&mut *self.world_state);
+        let global_state = panic::AssertUnwindSafe(&mut *self.global_state);
         let task = panic::catch_unwind(move || {
-            let result = f(world_state.0, params);
+            let result = f(global_state.0, params);
             result_to_task::<R>(id, result)
         })
         .map_err(|_| anyhow::anyhow!("sync task {:?} panicked", R::METHOD))?;
@@ -89,7 +89,7 @@ impl<'a> PoolDispatcher<'a> {
     /// Dispatches the request onto thread pool
     pub fn on<R>(
         &mut self,
-        f: fn(WorldSnapshot, R::Params) -> Result<R::Result>,
+        f: fn(GlobalStateSnapshot, R::Params) -> Result<R::Result>,
     ) -> Result<&mut Self>
     where
         R: req::Request + 'static,
@@ -104,10 +104,10 @@ impl<'a> PoolDispatcher<'a> {
         };
 
         self.pool.execute({
-            let world = self.world_state.snapshot();
+            let state_snapshot = self.global_state.snapshot();
             let sender = self.task_sender.clone();
             move || {
-                let result = f(world, params);
+                let result = f(state_snapshot, params);
                 let task = result_to_task::<R>(id, result);
                 sender.send(task).unwrap();
             }
