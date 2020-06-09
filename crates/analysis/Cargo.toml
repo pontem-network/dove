@@ -24,7 +24,6 @@ hex = "0.4.2"
 
 tree-sitter = "0.16.1"
 
-shared = { path = "../dialects/shared" }
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }
 syntax = { path = "../syntax" }

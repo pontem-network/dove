@@ -6,9 +6,9 @@ use anyhow::{Context, Result};
 use dialects::DialectName;
 
 use clap::{App, Arg};
+use dialects::shared::errors::ExecCompilerError;
+use dialects::shared::results::ExecutionError;
 use move_executor::compile_and_execute_script;
-use shared::errors::ExecCompilerError;
-use shared::results::ExecutionError;
 use std::str::FromStr;
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
 

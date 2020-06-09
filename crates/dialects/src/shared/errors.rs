@@ -40,6 +40,17 @@ impl FileSourceMap {
         self.layers.push(Layer { pos, offset });
     }
 
+    pub fn insert_address_layer(
+        &mut self,
+        original_end_pos: usize,
+        original: String,
+        replacement: String,
+    ) {
+        let len_diff = len_difference(&original, &replacement);
+        self.insert_layer(original_end_pos, len_diff);
+        self.insert_address_replacement(original, replacement);
+    }
+
     pub fn insert_address_replacement(&mut self, original: String, replacement: String) {
         self.address_replacements.push((original, replacement))
     }

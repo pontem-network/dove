@@ -1,5 +1,7 @@
+use crate::shared::ProvidedAccountAddress;
 use core::fmt;
 use serde::export::Formatter;
+use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -27,6 +29,37 @@ impl Display for ResourceType {
 pub struct ChainStateChanges {
     pub resource_changes: Vec<ResourceChange>,
     pub gas_spent: u64,
+    pub events: Vec<serde_json::Value>,
+}
+
+#[derive(Default, Debug)]
+pub struct AddressMap {
+    provided_addresses: Vec<ProvidedAccountAddress>,
+}
+
+impl AddressMap {
+    pub fn insert(&mut self, address: ProvidedAccountAddress) {
+        self.provided_addresses.push(address);
+    }
+
+    pub fn forward(&self) -> HashMap<String, String> {
+        self.provided_addresses
+            .clone()
+            .into_iter()
+            .map(|addresses| {
+                let lowered = addresses.lowered();
+                (addresses.original, lowered)
+            })
+            .collect()
+    }
+
+    pub fn reversed(&self) -> HashMap<String, String> {
+        self.provided_addresses
+            .clone()
+            .into_iter()
+            .map(|addresses| (addresses.lowered(), addresses.original))
+            .collect()
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -46,6 +79,28 @@ impl ResourceChange {
             account,
             ty: ty.into(),
             op: op.into(),
+        }
+    }
+
+    pub fn with_replaced_addresses(
+        self,
+        address_map: &HashMap<String, String>,
+    ) -> ResourceChange {
+        let ResourceChange { account, ty, op } = self;
+
+        let account = address_map.get(&account).unwrap_or(&account).to_owned();
+        let ty_address = address_map
+            .get(&ty.address)
+            .unwrap_or(&ty.address)
+            .to_owned();
+
+        ResourceChange {
+            account,
+            ty: ResourceType {
+                address: ty_address,
+                ..ty
+            },
+            op,
         }
     }
 }

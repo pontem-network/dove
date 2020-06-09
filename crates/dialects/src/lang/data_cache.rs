@@ -1,21 +1,22 @@
-use dfin_libra_types::access_path::AccessPath;
-use dfin_libra_types::contract_event::ContractEvent;
-use dfin_libra_types::vm_error::StatusCode;
-use dfin_libra_types::write_set::WriteOp;
+use libra_types::access_path::AccessPath;
+use libra_types::contract_event::ContractEvent;
+use libra_types::vm_error::StatusCode;
+use libra_types::write_set::WriteOp;
 
-use dfin_move_core_types::language_storage::ModuleId;
+use move_core_types::language_storage::ModuleId;
 
-use dfin_move_vm_runtime::data_cache::{RemoteCache, TransactionDataCache};
+use move_vm_runtime::data_cache::{RemoteCache, TransactionDataCache};
 
-use dfin_move_vm_types::data_store::DataStore;
-use dfin_move_vm_types::loaded_data::types::FatStructType;
+use move_vm_types::data_store::DataStore;
+use move_vm_types::loaded_data::types::FatStructType;
 
-use crate::dfina::resources::{ResourceStructType, ResourceWriteOp};
+use crate::lang::resources::{ResourceStructType, ResourceWriteOp};
 
-use dfin_move_vm_types::values::GlobalValue;
-use dfin_vm::errors::{vm_error, Location, VMResult};
-use shared::results::ResourceChange;
+use crate::shared::results::ResourceChange;
+use move_vm_types::values::GlobalValue;
 use std::collections::HashMap;
+use std::ops::Deref;
+use vm::errors::{vm_error, Location, VMResult};
 
 fn convert_set_value(struct_type: &FatStructType, val: GlobalValue) -> VMResult<Vec<u8>> {
     // into_owned_struct will check if all references are properly released at the end of a transaction
@@ -45,7 +46,7 @@ impl<'txn> DataCache<'txn> {
     pub fn resource_changes(self) -> VMResult<Vec<ResourceChange>> {
         let mut resources = vec![];
         for (ap, change) in self.inner.data_map {
-            let account_address = format!("0x{}", ap.address.to_string().trim_start_matches('0'));
+            let account_address = format!("0x{}", ap.address.to_string());
             match change {
                 None => {
                     let ty = self
@@ -70,6 +71,14 @@ impl<'txn> DataCache<'txn> {
             }
         }
         Ok(resources)
+    }
+
+    pub fn events(&self) -> Vec<serde_json::Value> {
+        self.inner
+            .event_data()
+            .iter()
+            .map(|event| serde_json::to_value(event.deref()).unwrap())
+            .collect()
     }
 }
 

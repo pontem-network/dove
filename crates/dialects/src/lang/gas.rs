@@ -1,6 +1,6 @@
-use dfin_move_core_types::gas_schedule::{CostTable, GasCost};
-use dfin_move_vm_types::gas_schedule::new_from_instructions;
-use dfin_vm::{
+use move_core_types::gas_schedule::{CostTable, GasConstants, GasCost};
+use move_vm_types::gas_schedule::new_from_instructions;
+use vm::{
     file_format::{
         ConstantPoolIndex, FieldHandleIndex, FieldInstantiationIndex, FunctionHandleIndex,
         FunctionInstantiationIndex, StructDefInstantiationIndex, StructDefinitionIndex,
@@ -9,8 +9,28 @@ use dfin_vm::{
     file_format_common::instruction_key,
 };
 
-pub fn fetch_cost_table() -> CostTable {
-    use dfin_vm::file_format::Bytecode::*;
+pub fn libra_cost_table() -> CostTable {
+    let instructions_table_bytes = vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
+        .0
+        .clone();
+    let instruction_table: Vec<GasCost> =
+        libra_canonical_serialization::from_bytes(&instructions_table_bytes).unwrap();
+
+    let native_table_bytes = vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
+        .1
+        .clone();
+    let native_table: Vec<GasCost> =
+        libra_canonical_serialization::from_bytes(&native_table_bytes).unwrap();
+
+    CostTable {
+        instruction_table,
+        native_table,
+        gas_constants: GasConstants::default(),
+    }
+}
+
+pub fn dfinance_cost_table() -> CostTable {
+    use vm::file_format::Bytecode::*;
 
     let mut instrs = vec![
         (
@@ -143,31 +163,3 @@ pub fn fetch_cost_table() -> CostTable {
 
     new_from_instructions(instrs, native_table)
 }
-
-//
-// pub fn executor_gas_cost(dvm_gas_cost: DvmGasCost) -> GasCost {
-//     GasCost::new(
-//         dvm_gas_cost.instruction_gas.get(),
-//         dvm_gas_cost.memory_gas.get(),
-//     )
-// }
-//
-// pub fn fetch_cost_table() -> CostTable {
-//     let DvmCostTable {
-//         instruction_table,
-//         native_table,
-//         ..
-//     } = dvm_runtime::gas_schedule::cost_table();
-//
-//     let executor_instruction_table = instruction_table
-//         .into_iter()
-//         .map(executor_gas_cost)
-//         .collect();
-//     let executor_native_table = native_table.into_iter().map(executor_gas_cost).collect();
-//
-//     CostTable {
-//         instruction_table: executor_instruction_table,
-//         native_table: executor_native_table,
-//         gas_constants: GasConstants::default(),
-//     }
-// }

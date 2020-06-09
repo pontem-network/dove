@@ -1,13 +1,17 @@
+use dialects::shared::errors::ExecCompilerError;
 use move_executor::compile_and_execute_script;
-use shared::errors::ExecCompilerError;
 
 use integration_tests::{
     existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path,
 };
 use utils::{io, leaked_fpath, MoveFile};
 
+fn stdlib_mod(name: &str) -> MoveFile {
+    io::load_move_file(get_stdlib_path().join(name)).unwrap()
+}
+
 fn stdlib_transaction_mod() -> MoveFile {
-    io::load_move_file(get_stdlib_path().join("transaction.move")).unwrap()
+    stdlib_mod("Transaction.move")
 }
 
 fn record_mod() -> MoveFile {
@@ -126,7 +130,7 @@ script {
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
-                "address": "0x00000000000000001111111111111111",
+                "address": "0x1111111111111111",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -153,7 +157,7 @@ script {
     let initial_chain_state = serde_json::json!([{
         "account": "0x1111111111111111",
         "ty": {
-            "address": "0x00000000000000001111111111111111",
+            "address": "0x1111111111111111",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -175,7 +179,7 @@ script {
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
-                "address": "0x00000000000000001111111111111111",
+                "address": "0x1111111111111111",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -227,7 +231,7 @@ script {
           {
             "account": "0x1",
             "ty": {
-              "address": "0x00000000000000000000000000000001",
+              "address": "0x1",
               "module": "M",
               "name": "T",
               "ty_args": [],
@@ -335,7 +339,7 @@ script {
           {
             "account": "0x1",
             "ty": {
-              "address": "0x00000000000000000000000000000001",
+              "address": "0x1",
               "module": "Module",
               "name": "T",
               "ty_args": [],
@@ -397,7 +401,7 @@ script {
     let initial_chain_state = serde_json::json!([{
         "account": "0x1111111111111111",
         "ty": {
-            "address": "0x00000000000000001111111111111111",
+            "address": "0x1111111111111111",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -419,7 +423,7 @@ script {
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
-                "address": "0x00000000000000001111111111111111",
+                "address": "0x1111111111111111",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -446,7 +450,7 @@ script {
     let initial_chain_state = serde_json::json!([{
         "account": "0x1111111111111111",
         "ty": {
-            "address": "0x00000000000000001111111111111111",
+            "address": "0x1111111111111111",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -470,7 +474,7 @@ script {
             {
                 "account": "0x1111111111111111",
                 "ty": {
-                    "address": "0x00000000000000001111111111111111",
+                    "address": "0x1111111111111111",
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
@@ -481,7 +485,7 @@ script {
             {
                 "account": "0x2222222222222222",
                 "ty": {
-                    "address": "0x00000000000000001111111111111111",
+                    "address": "0x1111111111111111",
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
@@ -592,4 +596,71 @@ script {
     )
     .unwrap();
     assert_eq!(chain_state["gas_spent"], 88);
+}
+
+#[test]
+fn test_show_events() {
+    let payment_events = r"
+address 0x0 {
+    module Payments {
+        use 0x0::Event;
+
+        struct PaymentEvent {
+            value: u64
+        }
+
+        public fun send_payment_event(s: &signer) {
+            Event::publish_generator(s);
+            let sent_events = Event::new_event_handle<PaymentEvent>(s);
+
+
+            let payment_event = PaymentEvent { value: 10 };
+            Event::emit_event<PaymentEvent>(&mut sent_events, payment_event);
+
+            Event::destroy_handle<PaymentEvent>(sent_events);
+        }
+    }
+}
+    ";
+    let text = r"
+script {
+    use 0x0::Payments;
+
+    fun main(s: &signer) {
+        Payments::send_payment_event(s);
+    }
+}";
+    let script = (get_script_path(), text.to_string());
+    let deps = vec![
+        stdlib_transaction_mod(),
+        stdlib_mod("LCS.move"),
+        stdlib_mod("Signer.move"),
+        stdlib_mod("Vector.move"),
+        stdlib_mod("Event.move"),
+        (
+            leaked_fpath(get_modules_path().join("payments.move")),
+            payment_events.to_string(),
+        ),
+    ];
+    let chain_state = compile_and_execute_script(
+        script,
+        &deps,
+        "libra",
+        "0x1111111111111111",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+    let events = chain_state["events"].as_array().unwrap();
+    assert_eq!(events.len(), 1);
+    assert_eq!(
+        events[0]["type_tag"],
+        serde_json::json!({
+        "Struct": {
+            "address": "0000000000000000000000000000000000000000",
+            "module": "Payments",
+            "name": "PaymentEvent",
+            "type_params": []
+        }})
+    );
 }
