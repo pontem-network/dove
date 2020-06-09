@@ -24,10 +24,10 @@ use analysis::analysis::Analysis;
 use analysis::config::Config;
 
 use crate::dispatcher::PoolDispatcher;
+use crate::global_state::GlobalState;
 use crate::handlers;
 use crate::req;
 use crate::subscriptions::OpenedFiles;
-use crate::global_state::GlobalState;
 use analysis::db::FileDiagnostic;
 use utils::{leaked_fpath, MoveFilePath};
 

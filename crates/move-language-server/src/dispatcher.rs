@@ -7,9 +7,9 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use threadpool::ThreadPool;
 
+use crate::global_state::{GlobalState, GlobalStateSnapshot};
 use crate::main_loop::{on_task, LspError, Task};
 use crate::req;
-use crate::global_state::{GlobalStateSnapshot, GlobalState};
 
 fn result_to_task<R>(id: RequestId, result: Result<R::Result>) -> Task
 where

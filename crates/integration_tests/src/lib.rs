@@ -1,6 +1,6 @@
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
-use move_language_server::global_state::{GlobalStateSnapshot, GlobalState};
+use move_language_server::global_state::{GlobalState, GlobalStateSnapshot};
 use std::path::PathBuf;
 use utils::io::read_move_files;
 use utils::{leaked_fpath, MoveFile, MoveFilePath};

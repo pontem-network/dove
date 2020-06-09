@@ -1,7 +1,7 @@
 use anyhow::Result;
 
-use crate::req;
 use crate::global_state::GlobalStateSnapshot;
+use crate::req;
 use analysis::db::FilePosition;
 use utils::leaked_fpath;
 
