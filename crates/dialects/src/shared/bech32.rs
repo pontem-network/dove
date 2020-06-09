@@ -53,11 +53,6 @@ pub fn replace_bech32_addresses(source: &str, file_source_map: &mut FileSourceMa
                 orig_address.to_owned(),
                 libra_address.clone(),
             );
-            // file_source_map
-            //     .insert_layer(item.end(), len_difference(orig_address, &libra_address));
-            // file_source_map
-            //     .insert_address_replacement(orig_address.to_string(), libra_address.clone());
-
             transformed_source = transformed_source.replace(orig_address, &libra_address);
         }
     }

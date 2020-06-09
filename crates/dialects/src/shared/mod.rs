@@ -10,7 +10,7 @@ pub mod results;
 pub struct ProvidedAccountAddress {
     pub original: String,
     pub normalized_original: String,
-    _lowered: String,
+    lowered: String,
 }
 
 impl ProvidedAccountAddress {
@@ -18,12 +18,12 @@ impl ProvidedAccountAddress {
         ProvidedAccountAddress {
             original,
             normalized_original: normalized,
-            _lowered: lowered,
+            lowered,
         }
     }
 
     pub fn lowered(&self) -> String {
-        let lowered_bits = self._lowered[2..].to_owned();
+        let lowered_bits = self.lowered[2..].to_owned();
         format!("0x{:0>40}", lowered_bits)
     }
 
@@ -32,7 +32,7 @@ impl ProvidedAccountAddress {
     }
 
     pub fn as_account_address(&self) -> AccountAddress {
-        AccountAddress::from_hex_literal(&self._lowered).unwrap()
+        AccountAddress::from_hex_literal(&self.lowered).unwrap()
     }
 }
 
@@ -41,7 +41,7 @@ impl Default for ProvidedAccountAddress {
         ProvidedAccountAddress {
             original: "0x0".to_string(),
             normalized_original: "0x00000000000000000000000000000000".to_string(),
-            _lowered: "0x0000000000000000000000000000000000000000".to_string(),
+            lowered: "0x0000000000000000000000000000000000000000".to_string(),
         }
     }
 }

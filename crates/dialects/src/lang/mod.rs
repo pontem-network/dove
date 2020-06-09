@@ -71,11 +71,6 @@ pub fn into_exec_compiler_error(
     ExecCompilerError(compiler_errors, offsets_map)
 }
 
-// fn is_inside_libra_directory() -> bool {
-//     let path = PathBuf::from(file!());
-//     path.parent().unwrap().to_str().unwrap().ends_with("libra")
-// }
-
 /// replace {{sender}} and {{ sender }} inside source code
 pub fn replace_sender_placeholder(
     s: String,
@@ -97,43 +92,6 @@ pub fn replace_sender_placeholder(
     new_s
 }
 
-// fn parse_file<F>(
-//     fname: MoveFilePath,
-//     source_text: &str,
-//     sender: &ProvidedAccountAddress,
-//     replace_addresses: F,
-// ) -> Result<(Vec<Definition>, FileSourceMap), ExecCompilerError>
-// where
-//     F: Fn(&str, FileSourceMap) -> String,
-// {
-//     let (mut source_text, comment_map) =
-//         strip_comments_and_verify(fname, source_text).map_err(|errors| {
-//             into_exec_compiler_error(
-//                 errors,
-//                 ProjectSourceMap::with_file_map(fname, FileSourceMap::default()),
-//             )
-//         })?;
-//
-//     let mut file_source_map = FileSourceMap::default();
-//     source_text = replace_sender_placeholder(
-//         source_text,
-//         &sender.normalized_original,
-//         &mut file_source_map,
-//     );
-//     if !is_inside_libra_directory() {
-//         source_text = bech32::replace_bech32_addresses(&source_text, &mut file_source_map);
-//     }
-//
-//     let (defs, _) =
-//         syntax::parse_file_string(fname, &source_text, comment_map).map_err(|errors| {
-//             into_exec_compiler_error(
-//                 errors,
-//                 ProjectSourceMap::with_file_map(fname, file_source_map.clone()),
-//             )
-//         })?;
-//     Ok((defs, file_source_map))
-// }
-
 type PreBytecodeProgram = cfgir::ast::Program;
 
 pub fn check_defs(
@@ -147,19 +105,3 @@ pub fn check_defs(
     };
     move_lang::check_program(Ok(ast_program), Some(sender))
 }
-
-// pub fn check_with_compiler(
-//     current: (MoveFilePath, String),
-//     deps: Vec<(MoveFilePath, String)>,
-//     sender: &ProvidedAccountAddress,
-// ) -> Result<(), Vec<CompilerError>> {
-//     let (script_defs, dep_defs, offsets_map) = parse_files(current, &deps, sender)
-//         .map_err(|errors| errors.transform_with_source_map())?;
-//
-//     match check_defs(script_defs, dep_defs, sender.as_address()) {
-//         Ok(_) => Ok(()),
-//         Err(errors) => {
-//             Err(into_exec_compiler_error(errors, offsets_map).transform_with_source_map())
-//         }
-//     }
-// }

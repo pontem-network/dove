@@ -68,14 +68,6 @@ impl Config {
 
     pub fn sender(&self) -> &ProvidedAccountAddress {
         &self.sender_address
-        // if &self.sender_address == "0x0" {
-        //     ProvidedAccountAddress::default()
-        // } else {
-        //     self.dialect()
-        //         .normalize_account_address(&self.sender_address)
-        //         .unwrap()
-        //         .0
-        // }
     }
 
     pub fn update(&mut self, value: &serde_json::Value) {

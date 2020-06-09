@@ -67,7 +67,6 @@ pub trait Dialect {
         deps: &[MoveFile],
         sender: &ProvidedAccountAddress,
     ) -> Result<(Vec<Definition>, Vec<Definition>, ProjectSourceMap), ExecCompilerError> {
-        // let (s_fpath, s_text) = current_file;
         let mut exec_compiler_error = ExecCompilerError::default();
 
         let mut project_offsets_map = ProjectSourceMap::default();
@@ -169,15 +168,6 @@ pub trait Dialect {
             script_args,
             self.cost_table(),
         )
-
-        // lang::executor::compile_and_run(
-        //     script,
-        //     deps,
-        //     sender,
-        //     genesis_write_set,
-        //     args,
-        //     self.cost_table(),
-        // )
     }
 
     fn print_compiler_errors_and_exit(

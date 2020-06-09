@@ -41,22 +41,6 @@ pub fn generate_bytecode(
     Ok((script, modules))
 }
 
-// pub fn check_and_generate_bytecode(
-//     fname: MoveFilePath,
-//     text: &str,
-//     deps: &[(MoveFilePath, String)],
-//     sender: ProvidedAccountAddress,
-// ) -> Result<(CompiledScript, Vec<CompiledModule>), ExecCompilerError> {
-//     let (mut script_defs, modules_defs, project_offsets_map) =
-//         parse_files((fname, text.to_owned()), deps, &sender)?;
-//     script_defs.extend(modules_defs);
-//
-//     let program = check_defs(script_defs, vec![], sender.as_address())
-//         .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map.clone()))?;
-//     generate_bytecode(program)
-//         .map_err(|errors| into_exec_compiler_error(errors, project_offsets_map))
-// }
-
 pub fn serialize_script(script: CompiledScript) -> Result<Vec<u8>> {
     let mut serialized = vec![];
     script.serialize(&mut serialized)?;
@@ -122,37 +106,3 @@ pub fn convert_txn_arg(arg: TransactionArgument) -> Value {
         _ => unimplemented!(),
     }
 }
-
-// pub fn compile_and_run(
-//     script: (MoveFilePath, String),
-//     deps: &[(MoveFilePath, String)],
-//     sender: ProvidedAccountAddress,
-//     genesis_write_set: WriteSet,
-//     args: Vec<String>,
-//     cost_table: CostTable,
-// ) -> Result<ChainStateChanges> {
-//     let (fname, script_text) = script;
-//
-//     let (compiled_script, compiled_modules) =
-//         check_and_generate_bytecode(fname, &script_text, deps, sender.clone())?;
-//
-//     let network_state = prepare_fake_network_state(compiled_modules, genesis_write_set);
-//
-//     let serialized_script =
-//         serialize_script(compiled_script).context("Script serialization error")?;
-//
-//     let mut script_args = Vec::with_capacity(args.len());
-//     for passed_arg in args {
-//         let transaction_argument = parse_transaction_argument(&passed_arg)?;
-//         let script_arg = convert_txn_arg(transaction_argument);
-//         script_args.push(script_arg);
-//     }
-//
-//     execute_script(
-//         sender.as_account_address(),
-//         &network_state,
-//         serialized_script,
-//         script_args,
-//         cost_table,
-//     )
-// }
