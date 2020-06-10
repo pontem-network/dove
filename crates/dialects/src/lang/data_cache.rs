@@ -112,6 +112,10 @@ impl<'txn> DataStore for DataCache<'txn> {
         self.inner.load_module(module)
     }
 
+    fn raw_load(&self, path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
+        self.inner.raw_load(path)
+    }
+
     fn publish_module(&mut self, module_id: ModuleId, module: Vec<u8>) -> VMResult<()> {
         self.inner.publish_module(module_id, module)
     }
