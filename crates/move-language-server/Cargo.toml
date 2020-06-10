@@ -3,10 +3,15 @@ name = "move-language-server"
 version = "0.4.0"
 authors = ["Maxim Kurnikov <maxim.kurnikov@gmail.com>"]
 edition = "2018"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build-dependencies]
+build-info-build = "0.0.18"
 
 [dependencies]
+build-info = "0.0.18"
+
 log = "0.4"
 env_logger = "0.7.1"
 
