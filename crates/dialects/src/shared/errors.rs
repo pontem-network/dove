@@ -5,10 +5,6 @@ use std::fmt;
 
 use utils::MoveFilePath;
 
-fn translate(pos: usize, offset: isize) -> usize {
-    (pos as isize + offset) as usize
-}
-
 pub fn len_difference(orig: &str, replacement: &str) -> isize {
     orig.len() as isize - replacement.len() as isize
 }
@@ -24,7 +20,7 @@ impl Layer {
         if pos < self.pos {
             pos
         } else {
-            translate(pos, self.offset)
+            (pos as isize + self.offset) as usize
         }
     }
 }
@@ -60,20 +56,25 @@ impl FileSourceMap {
             location:
                 Location {
                     fpath,
-                    span: (loc_start, loc_end),
+                    span: loc_span,
                 },
             message,
         } = error_part;
-        let loc_start = self.translate_pos(loc_start);
-        let loc_end = self.translate_pos(loc_end);
+        let loc_span = self.translate_span(loc_span);
         let message = self.translate_error_message(message);
         CompilerErrorPart {
             location: Location {
                 fpath,
-                span: (loc_start, loc_end),
+                span: loc_span,
             },
             message,
         }
+    }
+
+    pub fn translate_span(&self, (start, end): (usize, usize)) -> (usize, usize) {
+        let start = self.translate_pos(start);
+        let end = self.translate_pos(end);
+        (start, end)
     }
 
     fn translate_pos(&self, pos: usize) -> usize {

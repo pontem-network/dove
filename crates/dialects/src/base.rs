@@ -34,14 +34,7 @@ pub trait Dialect {
         file: MoveFile,
         sender: &ProvidedAccountAddress,
     ) -> Result<(Vec<Definition>, FileSourceMap), ExecCompilerError> {
-        let (fname, source_text) = file;
-        let (mut source_text, comment_map) = strip_comments_and_verify(fname, &source_text)
-            .map_err(|errors| {
-                into_exec_compiler_error(
-                    errors,
-                    ProjectSourceMap::with_file_map(fname, FileSourceMap::default()),
-                )
-            })?;
+        let (fname, mut source_text) = file;
 
         let mut file_source_map = FileSourceMap::default();
         source_text = replace_sender_placeholder(
@@ -50,6 +43,14 @@ pub trait Dialect {
             &mut file_source_map,
         );
         source_text = self.replace_addresses(&source_text, &mut file_source_map);
+
+        let (source_text, comment_map) =
+            strip_comments_and_verify(fname, &source_text).map_err(|errors| {
+                into_exec_compiler_error(
+                    errors,
+                    ProjectSourceMap::with_file_map(fname, FileSourceMap::default()),
+                )
+            })?;
 
         let (defs, _) =
             syntax::parse_file_string(fname, &source_text, comment_map).map_err(|errors| {
