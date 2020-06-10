@@ -69,10 +69,5 @@ module Event {
     public fun destroy_handle<T: copyable>(handle: EventHandle<T>) {
         EventHandle<T> { counter: _, guid: _ } = handle;
     }
-
-    public fun destroy_generator(generator: EventHandleGenerator) {
-        EventHandleGenerator { counter: _, addr: _ } = generator;
-    }
 }
-
 }
