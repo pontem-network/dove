@@ -1,5 +1,5 @@
 use analysis::config::Config;
-use integration_tests::test_world_snapshot;
+use integration_tests::global_state_snapshot;
 use lsp_types::{
     CompletionItem, Position, TextDocumentIdentifier, TextDocumentPositionParams, Url,
 };
@@ -15,7 +15,7 @@ fn position_params(pos: (u64, u64), fpath: MoveFilePath) -> req::TextDocumentPos
 }
 
 fn completions(file: MoveFile, config: Config, pos: (u64, u64)) -> Vec<CompletionItem> {
-    let snapshot = test_world_snapshot(file.clone(), config, vec![file.clone()]);
+    let snapshot = global_state_snapshot(file.clone(), config, vec![file.clone()]);
     let comp_params = req::CompletionParams {
         text_document_position: position_params(pos, file.0),
         work_done_progress_params: req::WorkDoneProgressParams::default(),

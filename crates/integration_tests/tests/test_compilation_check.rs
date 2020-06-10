@@ -4,8 +4,8 @@ use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
 use analysis::db::FileDiagnostic;
-use integration_tests::{get_modules_path, get_resources_dir, test_world_snapshot};
-use move_language_server::world::WorldState;
+use integration_tests::{get_modules_path, get_resources_dir, global_state_snapshot};
+use move_language_server::global_state::GlobalState;
 
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
@@ -31,8 +31,8 @@ fn diagnostics_with_config_and_filename(
     config: Config,
     fpath: MoveFilePath,
 ) -> Vec<FileDiagnostic> {
-    let world_snapshot = test_world_snapshot((fpath, text.to_string()), config, vec![]);
-    world_snapshot
+    let state_snapshot = global_state_snapshot((fpath, text.to_string()), config, vec![]);
+    state_snapshot
         .analysis
         .check_with_libra_compiler(fpath, text)
 }
@@ -49,8 +49,8 @@ fn diagnostics_with_deps(
     }));
 
     let ws_root = std::env::current_dir().unwrap();
-    let world_state = WorldState::new(ws_root, config);
-    let mut analysis_host = world_state.analysis_host;
+    let global_state = GlobalState::new(ws_root, config);
+    let mut analysis_host = global_state.analysis_host;
 
     let mut change = AnalysisChange::new();
     for (fpath, text) in deps.into_iter() {

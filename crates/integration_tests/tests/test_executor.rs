@@ -664,3 +664,30 @@ script {
         }})
     );
 }
+
+#[test]
+fn test_dfinance_executor_allows_0x0() {
+    let text = r"
+script {
+    fun main() {}
+}";
+    compile_and_execute_script(
+        (existing_file_abspath(), text.to_string()),
+        &[],
+        "dfinance",
+        "0x0",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+
+    compile_and_execute_script(
+        (existing_file_abspath(), text.to_string()),
+        &[],
+        "dfinance",
+        "0x1",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+}
