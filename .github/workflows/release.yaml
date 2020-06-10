@@ -20,8 +20,8 @@ jobs:
             platform: linux
           - os: macos-latest
             platform: darwin
-#          - os: windows-latest
-#            platform: win32
+          - os: windows-latest
+            platform: win32
 
     steps:
     - name: Checkout repository
