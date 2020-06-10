@@ -1,6 +1,7 @@
 use dialects::shared::errors::ExecCompilerError;
 use move_executor::compile_and_execute_script;
 
+use dialects::shared::results::ExecutionError;
 use integration_tests::{
     existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path,
 };
@@ -690,4 +691,37 @@ script {
         vec![],
     )
     .unwrap();
+}
+
+#[test]
+fn test_oracle_native_function() {
+    let script_text = r"
+script {
+    use 0x0::Oracle;
+    use 0x0::Event;
+    use 0x0::Coins;
+
+    fun main(account: &signer) {
+        let price = Oracle::get_price<Coins::ETH, Coins::USDT>();
+        let event_handle = Event::new_event_handle<u64>(account);
+        Event::emit_event(&mut event_handle, price);
+        Event::destroy_handle(event_handle);
+    }
+}
+    ";
+    let script = (get_script_path(), script_text.to_string());
+    let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
+    let chain_state = compile_and_execute_script(
+        script,
+        &deps,
+        "dfinance",
+        "0x0",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap_err();
+    assert_eq!(
+        chain_state.downcast::<ExecutionError>().unwrap().status,
+        "STORAGE_ERROR"
+    );
 }
