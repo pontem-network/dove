@@ -632,4 +632,17 @@ script {
             "Unbound module \'wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Unknown\'"
         )
     }
+
+    #[test]
+    fn test_dfinance_documentation_issue_should_not_crash_with_span_overflow() {
+        let dfi_module_text = r"
+address 0x0 {
+/// docs
+module DFI {
+    struct T {}
+}
+}";
+        let errors = diagnostics(dfi_module_text);
+        assert_eq!(errors.len(), 0);
+    }
 }
