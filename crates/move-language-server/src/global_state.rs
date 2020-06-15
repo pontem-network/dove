@@ -1,25 +1,13 @@
 use std::path::PathBuf;
 
 use crossbeam_channel::{unbounded, Receiver};
-use ra_vfs::{Filter, RelativePath, RootEntry, Vfs, VfsChange, VfsTask, Watch};
+use ra_vfs::{Vfs, VfsChange, VfsTask};
 
+use crate::fs::ws_root_vfs;
 use analysis::analysis::{Analysis, AnalysisHost};
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
 use utils::leaked_fpath;
-
-#[derive(Default)]
-struct MoveFilesFilter;
-
-impl Filter for MoveFilesFilter {
-    fn include_dir(&self, _: &RelativePath) -> bool {
-        true
-    }
-
-    fn include_file(&self, file_path: &RelativePath) -> bool {
-        file_path.extension() == Some("move")
-    }
-}
 
 pub struct GlobalStateSnapshot {
     pub config: Config,
@@ -36,21 +24,17 @@ pub struct GlobalState {
 }
 
 impl GlobalState {
-    pub fn new(ws_root: PathBuf, config: Config) -> GlobalState {
+    pub fn new(
+        ws_root: PathBuf,
+        config: Config,
+        vfs: Vfs,
+        fs_events_receiver: Receiver<VfsTask>,
+    ) -> GlobalState {
         let mut analysis_host = AnalysisHost::default();
 
         let mut change = AnalysisChange::new();
         change.change_config(config.clone());
         analysis_host.apply_change(change);
-
-        let (fs_events_sender, fs_events_receiver) = unbounded::<VfsTask>();
-        let modules_root = RootEntry::new(ws_root.clone(), Box::new(MoveFilesFilter::default()));
-        let vfs = Vfs::new(
-            vec![modules_root],
-            Box::new(move |task| fs_events_sender.send(task).unwrap()),
-            Watch(true),
-        )
-        .0;
 
         GlobalState {
             ws_root,
@@ -100,4 +84,10 @@ impl GlobalState {
             analysis: self.analysis_host.analysis(),
         }
     }
+}
+
+pub fn initialize_new_global_state(ws_root: PathBuf, config: Config) -> GlobalState {
+    let (fs_events_sender, fs_events_receiver) = unbounded::<VfsTask>();
+    let vfs = ws_root_vfs(ws_root.clone(), fs_events_sender);
+    GlobalState::new(ws_root, config, vfs, fs_events_receiver)
 }

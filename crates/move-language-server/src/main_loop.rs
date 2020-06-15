@@ -1,6 +1,5 @@
 use std::error::Error;
 use std::fmt;
-use std::path::PathBuf;
 
 use anyhow::bail;
 use anyhow::Result;
@@ -24,7 +23,7 @@ use analysis::analysis::Analysis;
 use analysis::config::Config;
 
 use crate::dispatcher::PoolDispatcher;
-use crate::global_state::GlobalState;
+use crate::global_state::{initialize_new_global_state, GlobalState};
 use crate::handlers;
 use crate::req;
 use crate::subscriptions::OpenedFiles;
@@ -91,14 +90,13 @@ impl fmt::Debug for Event {
     }
 }
 
-pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> Result<()> {
+pub fn main_loop(global_state: &mut GlobalState, connection: &Connection) -> Result<()> {
     log::info!("starting example main loop");
-
-    let mut loop_state = LoopState::default();
-    let mut global_state = GlobalState::new(ws_root, config);
 
     let pool = ThreadPool::new(1);
     let (task_sender, task_receiver) = unbounded::<Task>();
+
+    let mut loop_state = LoopState::default();
 
     log::info!("server initialized, serving requests");
     loop {
@@ -108,7 +106,7 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
                 Err(_) => bail!("client exited without shutdown"),
             },
             recv(&task_receiver) -> task => Event::Task(task.unwrap()),
-            recv(&global_state.fs_events_receiver) -> task => match task {
+            recv(global_state.fs_events_receiver) -> task => match task {
                 Ok(task) => Event::Vfs(task),
                 Err(_) => bail!("vfs died"),
             }
@@ -122,7 +120,7 @@ pub fn main_loop(ws_root: PathBuf, config: Config, connection: &Connection) -> R
             &pool,
             &task_sender,
             &connection,
-            &mut global_state,
+            global_state,
             &mut loop_state,
             event,
         )?;
@@ -186,8 +184,10 @@ pub fn loop_turn(
                             if let Some(new_config) = configs.get(0) {
                                 let mut config = Config::default();
                                 config.update(new_config);
-                                *global_state =
-                                    GlobalState::new(global_state.ws_root.clone(), config);
+                                *global_state = initialize_new_global_state(
+                                    global_state.ws_root.clone(),
+                                    config,
+                                );
                             }
                         }
                         (None, None) => {
