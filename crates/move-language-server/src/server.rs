@@ -9,11 +9,8 @@ use serde::de::DeserializeOwned;
 
 use analysis::config::Config;
 
+use crate::global_state::initialize_new_global_state;
 use crate::main_loop;
-
-pub fn get_default_server_capabilities() -> serde_json::Value {
-    serde_json::to_value(&ServerCapabilities::default()).unwrap()
-}
 
 pub fn initialize_server(connection: &Connection) -> Result<serde_json::Value, ProtocolError> {
     let server_capabilities = ServerCapabilities {
@@ -48,17 +45,13 @@ pub fn parse_initialize_params(init_params: serde_json::Value) -> Result<(PathBu
     Ok((root, config))
 }
 
-pub fn run_server() -> Result<()> {
-    let (connection, io_threads) = Connection::stdio();
-    log::info!("Transport is created, stdin and stdout are connected");
-
-    let init_params = initialize_server(&connection)?;
+pub fn run_server(connection: &Connection) -> Result<()> {
+    let init_params = initialize_server(connection)?;
     let (ws_root, config) = parse_initialize_params(init_params)?;
     log::info!("Initialization is finished");
 
-    main_loop::main_loop(ws_root, config, &connection)?;
-    io_threads.join()?;
-    Ok(())
+    let mut global_state = initialize_new_global_state(ws_root, config);
+    main_loop::main_loop(&mut global_state, connection)
 }
 
 pub fn from_json<T: DeserializeOwned>(what: &'static str, json: serde_json::Value) -> Result<T> {

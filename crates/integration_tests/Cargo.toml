@@ -13,6 +13,10 @@ env_logger = "0.7.1"
 anyhow = "1.0.27"
 lsp-types = {version = "0.74.0", features = ["proposed"]}
 serde_json = "1.0.52"
+lsp-server = "0.3.2"
+
+crossbeam-channel = "0.4.2"
+ra_vfs = { git = "https://github.com/mkurnikov/ra_vfs.git", branch = "public-task-result"}
 
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }

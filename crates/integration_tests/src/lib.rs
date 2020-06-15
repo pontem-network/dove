@@ -1,6 +1,6 @@
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
-use move_language_server::global_state::{GlobalState, GlobalStateSnapshot};
+use move_language_server::global_state::{initialize_new_global_state, GlobalStateSnapshot};
 use std::path::PathBuf;
 use utils::io::read_move_files;
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
@@ -56,7 +56,7 @@ pub fn global_state_snapshot(
     additional_files: Vec<MoveFile>,
 ) -> GlobalStateSnapshot {
     let ws_root = std::env::current_dir().unwrap();
-    let mut global_state = GlobalState::new(ws_root, config);
+    let mut global_state = initialize_new_global_state(ws_root, config);
     let mut change = AnalysisChange::new();
 
     for folder in &global_state.config.modules_folders {
@@ -77,6 +77,9 @@ pub fn global_state_snapshot(
 
 #[macro_export]
 macro_rules! config {
+    () => {{
+        analysis::config::Config::default()
+    }};
     ($json: tt) => {{
         let config_json = serde_json::json!($json);
         let mut config = analysis::config::Config::default();

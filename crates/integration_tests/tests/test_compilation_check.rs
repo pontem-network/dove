@@ -5,7 +5,7 @@ use analysis::change::AnalysisChange;
 use analysis::config::Config;
 use analysis::db::FileDiagnostic;
 use integration_tests::{get_modules_path, get_resources_dir, global_state_snapshot};
-use move_language_server::global_state::GlobalState;
+use move_language_server::global_state::initialize_new_global_state;
 
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
@@ -49,7 +49,7 @@ fn diagnostics_with_deps(
     }));
 
     let ws_root = std::env::current_dir().unwrap();
-    let global_state = GlobalState::new(ws_root, config);
+    let global_state = initialize_new_global_state(ws_root, config);
     let mut analysis_host = global_state.analysis_host;
 
     let mut change = AnalysisChange::new();

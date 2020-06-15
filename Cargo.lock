@@ -1229,12 +1229,15 @@ version = "0.1.0"
 dependencies = [
  "analysis",
  "anyhow",
+ "crossbeam-channel",
  "dialects",
  "env_logger",
  "log 0.4.8",
+ "lsp-server",
  "lsp-types",
  "move-executor",
  "move-language-server",
+ "ra_vfs",
  "serde_json",
  "utils",
 ]
@@ -2616,8 +2619,7 @@ dependencies = [
 [[package]]
 name = "ra_vfs"
 version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf31a173fc77ec59c27cf39af6baa137b40f4dbd45a8b3eccb1b2e4cfc922c1"
+source = "git+https://github.com/mkurnikov/ra_vfs.git?branch=public-task-result#0bdd8c4e436a835c933adbf768f5c8ca1cbde25a"
 dependencies = [
  "crossbeam-channel",
  "jod-thread",

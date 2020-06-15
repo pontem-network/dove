@@ -10,4 +10,5 @@ edition = "2018"
 anyhow = "1.0.30"
 log = "0.4"
 walkdir = "2.3.1"
-ra_vfs = "0.6.1"
+
+ra_vfs = { git = "https://github.com/mkurnikov/ra_vfs.git", branch = "public-task-result"}

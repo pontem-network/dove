@@ -1,5 +1,6 @@
 use anyhow::Result;
 
+use lsp_server::Connection;
 use move_language_server::server;
 
 build_info::build_info!(fn crate_build_info);
@@ -15,8 +16,12 @@ pub fn main() -> Result<()> {
         build_info.version_control.as_ref().unwrap().git().unwrap()
     );
 
-    server::run_server()?;
+    let (connection, io_threads) = Connection::stdio();
+    log::info!("Transport is created, stdin and stdout are connected");
 
+    server::run_server(&connection)?;
+
+    io_threads.join()?;
     log::info!("Shutting down server");
     Ok(())
 }
