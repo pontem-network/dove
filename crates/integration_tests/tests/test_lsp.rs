@@ -168,6 +168,7 @@ fn test_fs_events() {
     let (client_conn, server_conn) = Connection::memory();
     let (mut global_state, _fs_events_sender) = global_state(config!());
 
+    // fs_events_sender.try_send(VfsTask(TaskResult))
     send_messages(&client_conn, vec![]);
 
     main_loop(&mut global_state, &server_conn).unwrap();
