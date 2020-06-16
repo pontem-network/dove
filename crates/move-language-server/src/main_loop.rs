@@ -201,13 +201,13 @@ pub fn loop_turn(
     let fs_state_changed = global_state.load_fs_changes();
     if fs_state_changed {
         log::info!("fs_state_changed = true, reextract diagnostics");
-        let files = loop_state.opened_files.files();
-        compute_file_diagnostics(
-            pool,
-            global_state.analysis_host.analysis(),
-            task_sender.clone(),
-            files,
-        );
+        let analysis = global_state.analysis_host.analysis();
+
+        let mut files = vec![];
+        files.extend(loop_state.opened_files.files());
+        files.extend(analysis.db().module_files().keys());
+
+        compute_file_diagnostics(pool, analysis, task_sender.clone(), files);
     }
     Ok(())
 }
