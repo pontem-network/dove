@@ -201,11 +201,12 @@ pub fn loop_turn(
     let fs_state_changed = global_state.load_fs_changes();
     if fs_state_changed {
         log::info!("fs_state_changed = true, reextract diagnostics");
-        update_file_notifications_on_threadpool(
+        let files = loop_state.opened_files.files();
+        compute_file_diagnostics(
             pool,
             global_state.analysis_host.analysis(),
             task_sender.clone(),
-            loop_state.opened_files.files(),
+            files,
         );
     }
     Ok(())
@@ -242,17 +243,17 @@ pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
         Task::Respond(response) => {
             msg_sender.send(response.into()).unwrap();
         }
-        Task::Diagnostic(loc_ds) => {
-            for loc_d in loc_ds {
-                let uri = Url::from_file_path(loc_d.fpath).unwrap();
+        Task::Diagnostic(file_diags) => {
+            for file_diag in file_diags {
+                let uri = Url::from_file_path(file_diag.fpath).unwrap();
 
                 let mut diagnostics = vec![];
-                if loc_d.diagnostic.is_some() {
-                    diagnostics.push(loc_d.diagnostic.unwrap());
+                if file_diag.diagnostic.is_some() {
+                    diagnostics.push(file_diag.diagnostic.unwrap());
                 }
                 log::info!(
                     "Send diagnostic for file {:?}: {:#?}",
-                    loc_d.fpath,
+                    file_diag.fpath,
                     diagnostics
                         .iter()
                         .map(diagnostic_as_string)
@@ -260,8 +261,8 @@ pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
                 );
 
                 let params = PublishDiagnosticsParams::new(uri, diagnostics, None);
-                let not = notification_new::<PublishDiagnostics>(params);
-                msg_sender.send(not.into()).unwrap();
+                let notif = notification_new::<PublishDiagnostics>(params);
+                msg_sender.send(notif.into()).unwrap();
             }
         }
     }
@@ -359,7 +360,7 @@ fn on_notification(
     Ok(())
 }
 
-fn update_file_notifications_on_threadpool(
+pub fn compute_file_diagnostics(
     pool: &ThreadPool,
     analysis: Analysis,
     task_sender: Sender<Task>,
@@ -379,8 +380,11 @@ fn update_file_notifications_on_threadpool(
                     continue;
                 }
             };
-            let from_file_compile_check = analysis.check_with_libra_compiler(fpath, text);
-            diagnostics.extend(from_file_compile_check);
+            // let from_file_compile_check = analysis.check_file_with_compiler(fpath, text);
+            if let Some(d) = analysis.check_file_with_compiler(fpath, text) {
+                diagnostics.push(d);
+            }
+            // diagnostics.extend(from_file_compile_check);
         }
         task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
     })

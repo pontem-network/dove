@@ -1240,6 +1240,7 @@ dependencies = [
  "move-language-server",
  "ra_vfs",
  "serde_json",
+ "threadpool",
  "utils",
 ]
 
