@@ -7,6 +7,9 @@ use analysis::db::FileDiagnostic;
 use integration_tests::{get_modules_path, get_resources_dir, global_state_snapshot};
 use move_language_server::global_state::initialize_new_global_state;
 
+use crossbeam_channel::unbounded;
+use move_language_server::main_loop::{compute_file_diagnostics, Task};
+use threadpool::ThreadPool;
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -32,16 +35,27 @@ fn diagnostics_with_config_and_filename(
     fpath: MoveFilePath,
 ) -> Vec<FileDiagnostic> {
     let state_snapshot = global_state_snapshot((fpath, text.to_string()), config, vec![]);
-    state_snapshot
-        .analysis
-        .check_with_libra_compiler(fpath, text)
+    let pool = ThreadPool::new(1);
+    let (task_sender, task_receiver) = unbounded::<Task>();
+
+    compute_file_diagnostics(&pool, state_snapshot.analysis, task_sender, vec![fpath]);
+    pool.join();
+
+    let task = task_receiver.try_recv().unwrap();
+    let mut ds = match task {
+        Task::Diagnostic(ds) => ds,
+        _ => panic!(),
+    };
+    let empty = ds.remove(0);
+    assert!(empty.diagnostic.is_none());
+    ds
 }
 
 fn diagnostics_with_deps(
     script_file: MoveFile,
     deps: Vec<MoveFile>,
     config: Config,
-) -> Vec<FileDiagnostic> {
+) -> Option<FileDiagnostic> {
     let (script_fpath, script_text) = script_file;
     let mut config = config;
     config.update(&serde_json::json!({
@@ -61,7 +75,7 @@ fn diagnostics_with_deps(
 
     analysis_host
         .analysis()
-        .check_with_libra_compiler(script_fpath, &script_text)
+        .check_file_with_compiler(script_fpath, &script_text)
 }
 
 #[cfg(test)]
@@ -336,11 +350,12 @@ script {
             available_files: files,
         };
         let analysis = Analysis::new(db);
-        let errors = analysis.check_with_libra_compiler(main_fpath, source_text);
-        assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].fpath, dep_module_fpath);
+        let error = analysis
+            .check_file_with_compiler(main_fpath, source_text)
+            .unwrap();
+        assert_eq!(error.fpath, dep_module_fpath);
         assert_eq!(
-            errors[0].diagnostic.as_ref().unwrap().message,
+            error.diagnostic.as_ref().unwrap().message,
             "Unexpected 'modules'"
         );
     }
@@ -582,7 +597,7 @@ script {
             "dialect": "libra",
             "sender_address": "0x1",
         });
-        let diagnostics = diagnostics_with_deps(
+        let error = diagnostics_with_deps(
             (get_script_path(), source_text.to_string()),
             vec![(
                 leaked_fpath(get_modules_path().join("debug.move")),
@@ -590,7 +605,7 @@ script {
             )],
             config,
         );
-        assert!(diagnostics.is_empty(), "{:#?}", diagnostics);
+        assert!(error.is_none(), "{:#?}", error);
     }
 
     #[test]
@@ -644,5 +659,23 @@ module DFI {
 }";
         let errors = diagnostics(dfi_module_text);
         assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_when_module_resolution_fails_error_should_be_at_use_site() {
+        setup_test_logging();
+
+        let script_text = r"script {
+            use 0x0::UnknownPayments;
+            fun main(s: &signer) {
+                UnknownPayments::send_payment_event();
+            }
+        }";
+        let errors = diagnostics(script_text);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].message,
+            "Invalid \'use\'. Unbound module: \'0x0::UnknownPayments\'"
+        );
     }
 }

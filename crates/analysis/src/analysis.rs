@@ -42,19 +42,19 @@ impl Analysis {
         completion::completions(self.db(), position)
     }
 
-    pub fn check_with_libra_compiler(
+    pub fn check_file_with_compiler(
         &self,
         fpath: MoveFilePath,
         text: &str,
-    ) -> Vec<FileDiagnostic> {
-        match self.check_with_libra_compiler_inner(fpath, text) {
-            Ok(_) => vec![],
-            Err(ds) => ds,
+    ) -> Option<FileDiagnostic> {
+        match self.check_file_with_compiler_inner(fpath, text) {
+            Ok(_) => None,
+            Err(mut ds) => Some(ds.remove(0)),
         }
     }
 
     #[inline]
-    fn check_with_libra_compiler_inner(
+    fn check_file_with_compiler_inner(
         &self,
         current_fpath: MoveFilePath,
         current_text: &str,
