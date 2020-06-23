@@ -4,7 +4,7 @@ use analysis::analysis::Analysis;
 use analysis::change::AnalysisChange;
 use analysis::config::Config;
 use analysis::db::FileDiagnostic;
-use integration_tests::{get_modules_path, get_resources_dir, global_state_snapshot};
+use integration_tests::{get_modules_path, get_test_resources_dir, global_state_snapshot};
 use move_language_server::global_state::initialize_new_global_state;
 
 use crossbeam_channel::unbounded;
@@ -23,7 +23,7 @@ fn diagnostics_with_config(text: &str, config: Config) -> Vec<Diagnostic> {
     let loc_ds = diagnostics_with_config_and_filename(
         text,
         config,
-        leaked_fpath(get_resources_dir().join("some_script.move")),
+        leaked_fpath(get_test_resources_dir().join("some_script.move")),
     );
     loc_ds.into_iter().filter_map(|d| d.diagnostic).collect()
 }
@@ -80,9 +80,7 @@ mod tests {
     use super::*;
     use analysis::db::RootDatabase;
 
-    use integration_tests::{
-        config, get_modules_path, get_script_path, get_stdlib_path, setup_test_logging,
-    };
+    use integration_tests::{config, get_modules_path, get_script_path, get_stdlib_path, modules_mod};
     use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
@@ -200,10 +198,10 @@ module M {
     fn test_stdlib_modules_are_available_if_loaded() {
         let source_text = r"
 module MyModule {
-    use 0x0::Transaction;
+    use 0x1::Signer;
 
-    public fun how_main(_country: u8) {
-        let _ = Transaction::sender();
+    public fun how_main(s: &signer) {
+        let _ = Signer::address_of(s);
     }
 }
     ";
@@ -215,12 +213,15 @@ module MyModule {
     #[test]
     fn test_compile_check_script_with_additional_dependencies() {
         // hardcoded sender address
-        setup_test_logging();
         let script_source_text = r"
 script {
-    use 0x8572f83cee01047effd6e7d0b5c19743::CovidTracker;
-    fun main() {
-        CovidTracker::how_many(5);
+    use 0x1::Signer;
+    use 0x2::Record;
+
+    fun main(s: &signer) {
+        let signer_address = Signer::address_of(s);
+        let record = Record::get_record(signer_address);
+        Record::save(record);
     }
 }
     ";
@@ -236,44 +237,16 @@ script {
 
     #[test]
     fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
-        let module_source_text = r"
-module CovidTracker {
-    use 0x0::Vector;
-    use 0x0::Transaction;
-	struct NewsReport {
-		news_source_id: u64,
-		infected_count: u64,
-	}
-	resource struct CovidSituation {
-		country_id: u8,
-		reports: vector<NewsReport>
-	}
-	public fun how_many(_country: u8): u64 acquires CovidSituation {
-        let case = borrow_global<CovidSituation>(Transaction::sender());
-        let len  = Vector::length(&case.reports);
-        let sum  = 0u64;
-        let i    = 0;
-        while (i < len) {
-            sum = sum + Vector::borrow(&case.reports, i).infected_count;
-        };
-        sum
-	}
-}
-    ";
+        let (record_module_fpath, record_module_text) = modules_mod("record.move");
         let config = config!({
             "stdlib_folder": get_stdlib_path(),
             "modules_folders": [get_modules_path()],
         });
-        let covid_tracker_module = leaked_fpath(
-            get_modules_path()
-                .join("covid_tracker.move")
-                .to_str()
-                .unwrap(),
-        );
+
         let errors = diagnostics_with_config_and_filename(
-            module_source_text,
+            &record_module_text,
             config,
-            covid_tracker_module,
+            record_module_fpath,
         );
         assert!(errors.is_empty());
     }
@@ -283,10 +256,13 @@ module CovidTracker {
         // hardcoded sender address
         let script_source_text = r"
 script {
-    use 0x11111111111111111111111111111111::CovidTracker;
+    use 0x1::Signer;
+    use 0x2::Record;
 
-    fun main() {
-        CovidTracker::how_many(5);
+    fun main(s: &signer) {
+        let signer_address = Signer::address_of(s);
+        let record = Record::get_record(signer_address);
+        Record::save(record);
     }
 }
     ";
@@ -294,24 +270,25 @@ script {
             "dialect": "libra",
             "stdlib_folder": get_stdlib_path(),
             "modules_folders": [get_modules_path()],
-            "sender_address": "0x11111111111111111111111111111111",
+            "sender_address": "0x1",
         });
         let errors = diagnostics_with_config(script_source_text, config);
-        assert!(errors.is_empty(), "{:?}", errors);
+        assert!(errors.is_empty(), "{:#?}", errors);
     }
 
     #[test]
     fn test_compiler_out_of_bounds_multimessage_diagnostic() {
         let source_text = r"
 script {
-    use 0x0::CovidTracker;
+    use 0x1::Signer;
+    use 0x2::Record;
 
-    fun main() {
-        let how_many: u8;
-        how_many = CovidTracker::how_many(10);
+    fun main(s: &signer) {
+        let signer_address = Signer::address_of(s);
+        let record: u8;
+        record = Record::get_record(signer_address);
     }
-}
-    ";
+}    ";
         let config = config!({
             "stdlib_folder": get_stdlib_path(),
             "modules_folders": [get_modules_path()]
@@ -660,8 +637,6 @@ module DFI {
 
     #[test]
     fn test_when_module_resolution_fails_error_should_be_at_use_site() {
-        setup_test_logging();
-
         let script_text = r"script {
             use 0x0::UnknownPayments;
             fun main(s: &signer) {

@@ -37,7 +37,7 @@ impl Default for Config {
             modules_folders: vec![],
             sender_address: DialectName::Libra
                 .get_dialect()
-                .normalize_account_address("0x0")
+                .normalize_account_address("0x1")
                 .unwrap(),
         }
     }

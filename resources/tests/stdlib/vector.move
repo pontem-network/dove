@@ -1,7 +1,8 @@
-address 0x0 {
+address 0x1 {
 
 // A variable-sized container that can hold both unrestricted types and resources.
 module Vector {
+
     native public fun empty<Element>(): vector<Element>;
 
     // Return the length of the vector.
@@ -24,13 +25,6 @@ module Vector {
 
     // Swaps the elements at the i'th and j'th indices in the vector.
     native public fun swap<Element>(v: &mut vector<Element>, i: u64, j: u64);
-
-    // Return an vector of size one containing `e`
-    public fun singleton<Element>(e: Element): vector<Element> {
-        let v = empty();
-        push_back(&mut v, e);
-        v
-    }
 
     // Reverses the order of the elements in the vector in place.
     public fun reverse<Element>(v: &mut vector<Element>) {
@@ -69,19 +63,6 @@ module Vector {
         false
     }
 
-    // Return (true, i) if `e` is in the vector `v` at index `i`.
-    // Otherwise returns (false, 0).
-    public fun index_of<Element>(v: &vector<Element>, e: &Element): (bool, u64) {
-        let i = 0;
-        let len = length(v);
-        while (i < len) {
-            if (borrow(v, i) == e) return (true, i);
-            i = i + 1;
-        };
-        (false, 0)
-    }
-
-
     // Remove the `i`th element E of the vector, shifting all subsequent elements
     // It is O(n) and preserves ordering
     public fun remove<Element>(v: &mut vector<Element>, i: u64): Element {
@@ -102,38 +83,5 @@ module Vector {
         swap(v, i, last_idx);
         pop_back(v)
     }
-
-    // ------------------------------------------------------------------------
-    // Specification
-    // ------------------------------------------------------------------------
-
-    spec fun reverse {
-        pragma intrinsic = true;
-    }
-
-    spec fun append {
-        pragma intrinsic = true;
-    }
-
-    spec fun is_empty {
-        pragma intrinsic = true;
-    }
-
-    spec fun contains {
-        pragma intrinsic = true;
-    }
-
-    spec fun index_of {
-        pragma intrinsic = true;
-    }
-
-    spec fun remove {
-        pragma intrinsic = true;
-    }
-
-    spec fun swap_remove {
-        pragma intrinsic = true;
-    }
 }
-
 }

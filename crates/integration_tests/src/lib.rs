@@ -3,26 +3,26 @@ use analysis::config::Config;
 use move_language_server::global_state::{initialize_new_global_state, GlobalStateSnapshot};
 use std::path::PathBuf;
 use utils::io::read_move_files;
-use utils::{leaked_fpath, MoveFile, MoveFilePath};
+use utils::{leaked_fpath, MoveFile, MoveFilePath, io};
 
 pub fn get_script_path() -> MoveFilePath {
     leaked_fpath(get_modules_path().join("script.move"))
 }
 
 // just need some valid fname
-pub fn existing_file_abspath() -> MoveFilePath {
+pub fn existing_module_file_abspath() -> MoveFilePath {
     let abspath = std::env::current_dir()
         .unwrap()
         .join("resources")
         .join("modules")
-        .join("covid_tracker.move")
+        .join("record.move")
         .into_os_string()
         .into_string()
         .unwrap();
     leaked_fpath(&abspath)
 }
 
-pub fn get_resources_dir() -> PathBuf {
+pub fn get_test_resources_dir() -> PathBuf {
     std::env::current_dir()
         .unwrap()
         .parent() // crates/
@@ -34,11 +34,11 @@ pub fn get_resources_dir() -> PathBuf {
 }
 
 pub fn get_stdlib_path() -> PathBuf {
-    get_resources_dir().join("stdlib")
+    get_test_resources_dir().join("stdlib")
 }
 
 pub fn get_modules_path() -> PathBuf {
-    get_resources_dir().join("modules")
+    get_test_resources_dir().join("modules")
 }
 
 pub fn setup_test_logging() {
@@ -86,4 +86,21 @@ macro_rules! config {
         config.update(&config_json);
         config
     }};
+}
+
+
+pub fn stdlib_mod(name: &str) -> MoveFile {
+    io::load_move_file(get_stdlib_path().join(name)).unwrap()
+}
+
+pub fn modules_mod(name: &str) -> MoveFile {
+    io::load_move_file(get_modules_path().join(name)).unwrap()
+}
+
+pub fn stdlib_transaction_mod() -> MoveFile {
+    stdlib_mod("Transaction.move")
+}
+
+pub fn record_mod() -> MoveFile {
+    io::load_move_file(get_modules_path().join("record.move")).unwrap()
 }

@@ -2,58 +2,8 @@ use dialects::shared::errors::ExecCompilerError;
 use move_executor::compile_and_execute_script;
 
 use dialects::shared::results::ExecutionError;
-use integration_tests::{
-    existing_file_abspath, get_modules_path, get_script_path, get_stdlib_path,
-};
+use integration_tests::{existing_module_file_abspath, get_modules_path, get_script_path, get_stdlib_path, stdlib_transaction_mod, record_mod, stdlib_mod};
 use utils::{io, leaked_fpath, MoveFile};
-
-fn stdlib_mod(name: &str) -> MoveFile {
-    io::load_move_file(get_stdlib_path().join(name)).unwrap()
-}
-
-fn stdlib_transaction_mod() -> MoveFile {
-    stdlib_mod("Transaction.move")
-}
-
-fn record_mod() -> MoveFile {
-    let text = r"
-address 0x1111111111111111 {
-    module Record {
-        use 0x0::Transaction;
-
-        resource struct T {
-            age: u8,
-        }
-
-        public fun create(age: u8): T {
-            T { age }
-        }
-
-        public fun save(record: T) {
-            move_to_sender<T>(record);
-        }
-
-        public fun remove_record(user: address): T acquires T {
-            move_from<T>(user)
-        }
-
-        public fun destroy_record() acquires T {
-            let T { age: _ } = move_from<T>(Transaction::sender());
-        }
-
-        public fun with_doubled_age(): T acquires T {
-            let record: T;
-            record = move_from<T>(Transaction::sender());
-            record.age = record.age * 2;
-            record
-        }
-    }
-}
-        "
-    .to_string();
-    let fpath = leaked_fpath(get_modules_path().join("record.move"));
-    (fpath, text)
-}
 
 #[test]
 fn test_show_compilation_errors() {
@@ -94,7 +44,7 @@ script {
 }";
     let deps = vec![stdlib_transaction_mod()];
     compile_and_execute_script(
-        (existing_file_abspath(), text.to_string()),
+        (existing_module_file_abspath(), text.to_string()),
         &deps,
         "libra",
         "0x1111111111111111",
@@ -439,19 +389,23 @@ script {
 fn move_resource_from_another_user_to_sender() {
     let script_text = r"
 script {
-    use 0x1111111111111111::Record;
+    use 0x2::Record;
 
     fun main() {
-        let record = Record::remove_record(0x1111111111111111);
+        let original_record_owner = 0x1;
+        let record = Record::get_record(original_record_owner);
         Record::save(record);
     }
 }";
-    let deps = vec![stdlib_transaction_mod(), record_mod()];
+    let deps = vec![
+        stdlib_mod("signer.move"),
+        stdlib_mod("record.move")
+    ];
 
     let initial_chain_state = serde_json::json!([{
-        "account": "0x1111111111111111",
+        "account": "0x1",
         "ty": {
-            "address": "0x1111111111111111",
+            "address": "0x1",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -463,7 +417,7 @@ script {
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
-        "0x2222222222222222",
+        "0x2",
         initial_chain_state,
         vec![],
     )
@@ -473,9 +427,9 @@ script {
         state_changes["changes"],
         serde_json::json!([
             {
-                "account": "0x1111111111111111",
+                "account": "0x1",
                 "ty": {
-                    "address": "0x1111111111111111",
+                    "address": "0x1",
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
@@ -484,9 +438,9 @@ script {
                 "op": {"type": "Delete"},
             },
             {
-                "account": "0x2222222222222222",
+                "account": "0x2",
                 "ty": {
-                    "address": "0x1111111111111111",
+                    "address": "0x2",
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
@@ -588,7 +542,7 @@ script {
 }";
     let deps = vec![stdlib_transaction_mod()];
     let chain_state = compile_and_execute_script(
-        (existing_file_abspath(), text.to_string()),
+        (existing_module_file_abspath(), text.to_string()),
         &deps,
         "libra",
         "0x1111111111111111",
@@ -673,7 +627,7 @@ script {
     fun main() {}
 }";
     compile_and_execute_script(
-        (existing_file_abspath(), text.to_string()),
+        (existing_module_file_abspath(), text.to_string()),
         &[],
         "dfinance",
         "0x0",
@@ -683,7 +637,7 @@ script {
     .unwrap();
 
     compile_and_execute_script(
-        (existing_file_abspath(), text.to_string()),
+        (existing_module_file_abspath(), text.to_string()),
         &[],
         "dfinance",
         "0x1",
