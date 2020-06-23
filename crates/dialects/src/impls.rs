@@ -21,7 +21,7 @@ impl Dialect for LibraDialect {
     fn normalize_account_address(&self, addr: &str) -> Result<ProvidedAccountAddress> {
         let address = LibraAccountAddress::from_hex_literal(&addr)?;
         let normalized_address = format!("0x{}", address);
-        let lowered = format!("{}00000000", normalized_address);
+        let lowered = format!("0x00000000{}", address);
         Ok(ProvidedAccountAddress::new(
             addr.to_string(),
             normalized_address,

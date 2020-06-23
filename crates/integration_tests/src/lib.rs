@@ -3,7 +3,7 @@ use analysis::config::Config;
 use move_language_server::global_state::{initialize_new_global_state, GlobalStateSnapshot};
 use std::path::PathBuf;
 use utils::io::read_move_files;
-use utils::{leaked_fpath, MoveFile, MoveFilePath, io};
+use utils::{io, leaked_fpath, MoveFile, MoveFilePath};
 
 pub fn get_script_path() -> MoveFilePath {
     leaked_fpath(get_modules_path().join("script.move"))
@@ -87,7 +87,6 @@ macro_rules! config {
         config
     }};
 }
-
 
 pub fn stdlib_mod(name: &str) -> MoveFile {
     io::load_move_file(get_stdlib_path().join(name)).unwrap()

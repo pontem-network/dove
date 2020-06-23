@@ -16,7 +16,7 @@ pub fn replace_16_bytes_libra(source: &str, file_source_map: &mut FileSourceMap)
 
         let orig_address = item.as_str();
         let account_address = LibraAccountAddress::from_hex_literal(orig_address).unwrap();
-        let repl_address = format!("0x{}00000000", account_address);
+        let repl_address = format!("0x00000000{}", account_address);
 
         file_source_map.insert_address_layer(
             item.end(),
@@ -67,12 +67,12 @@ mod tests {
         assert_eq!(
             replaced,
             r"use 0x0000000000000000000000000000000000000000;
-        use 0x0000000000000000000000000000000100000000;
-        use 0x0000000000000000000000000000001100000000;
-        use 0x0000000000000000000000000000111100000000;
-        use 0x0000000000000000000000001111111100000000;
-        use 0x0000000000000000111111111111111100000000;
-        use 0x0000000000000000111111111111111100000000;"
+        use 0x0000000000000000000000000000000000000001;
+        use 0x0000000000000000000000000000000000000011;
+        use 0x0000000000000000000000000000000000001111;
+        use 0x0000000000000000000000000000000011111111;
+        use 0x0000000000000000000000001111111111111111;
+        use 0x0000000000000000000000001111111111111111;"
         )
     }
 }

@@ -1,9 +1,10 @@
 use dialects::shared::errors::ExecCompilerError;
 use move_executor::compile_and_execute_script;
 
-use dialects::shared::results::ExecutionError;
-use integration_tests::{existing_module_file_abspath, get_modules_path, get_script_path, get_stdlib_path, stdlib_transaction_mod, record_mod, stdlib_mod};
-use utils::{io, leaked_fpath, MoveFile};
+use integration_tests::{
+    existing_module_file_abspath, get_modules_path, get_script_path, modules_mod, stdlib_mod,
+};
+use utils::leaked_fpath;
 
 #[test]
 fn test_show_compilation_errors() {
@@ -36,13 +37,13 @@ script {
 fn test_execute_custom_script_with_stdlib_module() {
     let text = r"
 script {
-    use 0x0::Transaction;
+    use 0x1::Signer;
 
-    fun main() {
-        let _ = Transaction::sender();
+    fun main(s: &signer) {
+        let _ = Signer::address_of(s);
     }
 }";
-    let deps = vec![stdlib_transaction_mod()];
+    let deps = vec![stdlib_mod("signer.move")];
     compile_and_execute_script(
         (existing_module_file_abspath(), text.to_string()),
         &deps,
@@ -58,14 +59,14 @@ script {
 fn test_execute_script_and_record_resource_changes() {
     let script_text = r"
 script {
-    use 0x1111111111111111::Record;
+    use 0x2::Record;
 
     fun main() {
         let record = Record::create(10);
         Record::save(record);
     }
 }";
-    let deps = vec![stdlib_transaction_mod(), record_mod()];
+    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
 
     let state_changes = compile_and_execute_script(
         (get_script_path(), script_text.to_string()),
@@ -81,7 +82,7 @@ script {
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
-                "address": "0x1111111111111111",
+                "address": "0x0000000000000000000000000000000000000002",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -96,19 +97,19 @@ script {
 fn test_execute_script_with_genesis_state_provided() {
     let script_text = r"
 script {
-    use 0x1111111111111111::Record;
+    use 0x2::Record;
 
-    fun main() {
-        let record = Record::with_doubled_age();
+    fun main(s: &signer) {
+        let record = Record::with_doubled_age(s);
         Record::save(record);
     }
 }";
-    let deps = vec![stdlib_transaction_mod(), record_mod()];
+    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
 
     let initial_chain_state = serde_json::json!([{
         "account": "0x1111111111111111",
         "ty": {
-            "address": "0x1111111111111111",
+            "address": "0x2",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -130,7 +131,7 @@ script {
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
-                "address": "0x1111111111111111",
+                "address": "0x0000000000000000000000000000000000000002",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -341,18 +342,18 @@ script {
 fn test_resource_move_from_sender() {
     let script_text = r"
 script {
-    use 0x1111111111111111::Record;
+    use 0x2::Record;
 
-    fun main() {
-        Record::destroy_record();
+    fun main(s: &signer) {
+        Record::destroy_record(s);
     }
 }";
-    let deps = vec![stdlib_transaction_mod(), record_mod()];
+    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
 
     let initial_chain_state = serde_json::json!([{
         "account": "0x1111111111111111",
         "ty": {
-            "address": "0x1111111111111111",
+            "address": "0x2",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -374,7 +375,7 @@ script {
         serde_json::json!([{
             "account": "0x1111111111111111",
             "ty": {
-                "address": "0x1111111111111111",
+                "address": "0x0000000000000000000000000000000000000002",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -397,15 +398,12 @@ script {
         Record::save(record);
     }
 }";
-    let deps = vec![
-        stdlib_mod("signer.move"),
-        stdlib_mod("record.move")
-    ];
+    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
 
     let initial_chain_state = serde_json::json!([{
         "account": "0x1",
         "ty": {
-            "address": "0x1",
+            "address": "0x2",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -417,7 +415,7 @@ script {
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
-        "0x2",
+        "0x3",
         initial_chain_state,
         vec![],
     )
@@ -429,7 +427,7 @@ script {
             {
                 "account": "0x1",
                 "ty": {
-                    "address": "0x1",
+                    "address": "0x0000000000000000000000000000000000000002",
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
@@ -438,9 +436,9 @@ script {
                 "op": {"type": "Delete"},
             },
             {
-                "account": "0x2",
+                "account": "0x3",
                 "ty": {
-                    "address": "0x2",
+                    "address": "0x0000000000000000000000000000000000000002",
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
@@ -485,18 +483,18 @@ script {
 fn test_bech32_in_genesis_json() {
     let script_text = r"
 script {
-    use 0x1111111111111111::Record;
+    use 0x2::Record;
 
-    fun main() {
-        let record = Record::with_doubled_age();
+    fun main(s: &signer) {
+        let record = Record::with_doubled_age(s);
         Record::save(record);
     }
 }";
-    let deps = vec![stdlib_transaction_mod(), record_mod()];
+    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
     let initial_chain_state = serde_json::json!([{
         "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
         "ty": {
-            "address": "0x0000000000000000000000001111111111111111",
+            "address": "0x0000000000000000000000000000000000000002",
             "module": "Record",
             "name": "T",
             "ty_args": [],
@@ -519,7 +517,7 @@ script {
         serde_json::json!([{
             "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
             "ty": {
-                "address": "0x0000000000000000000000001111111111111111",
+                "address": "0x0000000000000000000000000000000000000002",
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
@@ -534,13 +532,13 @@ script {
 fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
     let text = r"
 script {
-    use 0x0::Transaction;
+    use 0x1::Signer;
 
-    fun main() {
-        let _ = Transaction::sender();
+    fun main(s: &signer) {
+        let _ = Signer::address_of(s);
     }
 }";
-    let deps = vec![stdlib_transaction_mod()];
+    let deps = vec![stdlib_mod("signer.move")];
     let chain_state = compile_and_execute_script(
         (existing_module_file_abspath(), text.to_string()),
         &deps,
@@ -550,74 +548,7 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(chain_state["gas_spent"], 88);
-}
-
-#[test]
-fn test_show_events() {
-    let payment_events = r"
-address 0x0 {
-    module Payments {
-        use 0x0::Event;
-
-        struct PaymentEvent {
-            value: u64
-        }
-
-        public fun send_payment_event(s: &signer) {
-            Event::publish_generator(s);
-            let sent_events = Event::new_event_handle<PaymentEvent>(s);
-
-
-            let payment_event = PaymentEvent { value: 10 };
-            Event::emit_event<PaymentEvent>(&mut sent_events, payment_event);
-
-            Event::destroy_handle<PaymentEvent>(sent_events);
-        }
-    }
-}
-    ";
-    let text = r"
-script {
-    use 0x0::Payments;
-
-    fun main(s: &signer) {
-        Payments::send_payment_event(s);
-    }
-}";
-    let script = (get_script_path(), text.to_string());
-    let deps = vec![
-        stdlib_transaction_mod(),
-        stdlib_mod("LCS.move"),
-        stdlib_mod("Signer.move"),
-        stdlib_mod("Vector.move"),
-        stdlib_mod("Event.move"),
-        (
-            leaked_fpath(get_modules_path().join("payments.move")),
-            payment_events.to_string(),
-        ),
-    ];
-    let chain_state = compile_and_execute_script(
-        script,
-        &deps,
-        "libra",
-        "0x1111111111111111",
-        serde_json::json!([]),
-        vec![],
-    )
-    .unwrap();
-    let events = chain_state["events"].as_array().unwrap();
-    assert_eq!(events.len(), 1);
-    assert_eq!(
-        events[0]["type_tag"],
-        serde_json::json!({
-        "Struct": {
-            "address": "0000000000000000000000000000000000000000",
-            "module": "Payments",
-            "name": "PaymentEvent",
-            "type_params": []
-        }})
-    );
+    assert_eq!(chain_state["gas_spent"], 1606);
 }
 
 #[test]
@@ -645,37 +576,4 @@ script {
         vec![],
     )
     .unwrap();
-}
-
-#[test]
-fn test_oracle_native_function() {
-    let script_text = r"
-script {
-    use 0x0::Oracle;
-    use 0x0::Event;
-    use 0x0::Coins;
-
-    fun main(account: &signer) {
-        let price = Oracle::get_price<Coins::ETH, Coins::USDT>();
-        let event_handle = Event::new_event_handle<u64>(account);
-        Event::emit_event(&mut event_handle, price);
-        Event::destroy_handle(event_handle);
-    }
-}
-    ";
-    let script = (get_script_path(), script_text.to_string());
-    let deps = io::load_move_module_files(vec![get_stdlib_path()]).unwrap();
-    let chain_state = compile_and_execute_script(
-        script,
-        &deps,
-        "dfinance",
-        "0x0",
-        serde_json::json!([]),
-        vec![],
-    )
-    .unwrap_err();
-    assert_eq!(
-        chain_state.downcast::<ExecutionError>().unwrap().status,
-        "STORAGE_ERROR"
-    );
 }

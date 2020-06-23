@@ -34,4 +34,17 @@ libra-crypto = { git = "https://github.com/dfinance/libra.git", branch = "16.06.
 move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "16.06.2020" }
 vm-genesis = { git = "https://github.com/dfinance/libra.git", branch = "16.06.2020" }
 
+#move-vm-runtime = { path = "../../../dvm-libra/language/move-vm/runtime" }
+#move-vm-types = { path = "../../../dvm-libra/language/move-vm/types" }
+#libra-state-view = { path = "../../../dvm-libra/storage/state-view" }
+#language-e2e-tests = { path = "../../../dvm-libra/language/e2e-tests" }
+#move-core-types = { path = "../../../dvm-libra/language/move-core/types" }
+#vm = { path = "../../../dvm-libra/language/vm" }
+#libra-types = { path = "../../../dvm-libra/types" }
+#move-lang = { path = "../../../dvm-libra/language/move-lang" }
+#libra-canonical-serialization = { path = "../../../dvm-libra/common/lcs" }
+#libra-crypto = { path = "../../../dvm-libra/crypto/crypto" }
+#move-ir-types = { path = "../../../dvm-libra/language/move-ir/types" }
+#vm-genesis = { path = "../../../dvm-libra/language/tools/vm-genesis" }
+
 libra-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "master" }
