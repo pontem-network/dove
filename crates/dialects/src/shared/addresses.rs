@@ -36,7 +36,7 @@ mod tests {
     fn replace_libra_16_byte_address() {
         let source = "use 0x00000000000000001111111111111111;";
         let replaced = replace_16_bytes_libra(source, &mut FileSourceMap::default());
-        assert_eq!(replaced, "use 0x0000000000000000111111111111111100000000;");
+        assert_eq!(replaced, "use 0x0000000000000000000000001111111111111111;");
     }
 
     #[test]
@@ -44,14 +44,14 @@ mod tests {
         let source =
             "use 0x00000000000000001111111111111111; \n use 0x00000000000000001111111111111112;";
         let replaced = replace_16_bytes_libra(source, &mut FileSourceMap::default());
-        assert_eq!(replaced, "use 0x0000000000000000111111111111111100000000; \n use 0x0000000000000000111111111111111200000000;");
+        assert_eq!(replaced, "use 0x0000000000000000000000001111111111111111; \n use 0x0000000000000000000000001111111111111112;");
     }
 
     #[test]
     fn dont_replace_20_bytes_address() {
-        let source = "use 0x0000000000000000111111111111111100000000;";
+        let source = "use 0x0000000000000000000000001111111111111111;";
         let replaced = replace_16_bytes_libra(source, &mut FileSourceMap::default());
-        assert_eq!(replaced, "use 0x0000000000000000111111111111111100000000;");
+        assert_eq!(replaced, "use 0x0000000000000000000000001111111111111111;");
     }
 
     #[test]
