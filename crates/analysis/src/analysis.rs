@@ -74,13 +74,16 @@ impl Analysis {
             .map_err(|errors| {
                 errors
                     .into_iter()
-                    .filter_map(|err| match self.db.compiler_error_into_diagnostic(err) {
-                        Ok(d) => Some(d),
-                        Err(err) => {
-                            log::error!("{}", err);
-                            None
-                        }
-                    })
+                    .map(
+                        |err| match self.db.compiler_error_into_diagnostic(err.clone()) {
+                            Ok(d) => d,
+                            Err(error) => panic!(
+                                "While converting {:#?} into Diagnostic, error occurred: {:?}",
+                                err,
+                                error.to_string()
+                            ),
+                        },
+                    )
                     .collect()
             })
     }

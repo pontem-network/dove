@@ -9,7 +9,6 @@ use move_language_server::global_state::initialize_new_global_state;
 
 use crossbeam_channel::unbounded;
 use move_language_server::main_loop::{compute_file_diagnostics, Task};
-use threadpool::ThreadPool;
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -35,11 +34,9 @@ fn diagnostics_with_config_and_filename(
     fpath: MoveFilePath,
 ) -> Vec<FileDiagnostic> {
     let state_snapshot = global_state_snapshot((fpath, text.to_string()), config, vec![]);
-    let pool = ThreadPool::new(1);
     let (task_sender, task_receiver) = unbounded::<Task>();
 
-    compute_file_diagnostics(&pool, state_snapshot.analysis, task_sender, vec![fpath]);
-    pool.join();
+    compute_file_diagnostics(state_snapshot.analysis, task_sender, vec![fpath]);
 
     let task = task_receiver.try_recv().unwrap();
     let mut ds = match task {

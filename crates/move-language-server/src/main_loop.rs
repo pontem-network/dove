@@ -207,7 +207,9 @@ pub fn loop_turn(
         files.extend(loop_state.opened_files.files());
         files.extend(analysis.db().module_files().keys());
 
-        compute_file_diagnostics(pool, analysis, task_sender.clone(), files);
+        let cloned_task_sender = task_sender.clone();
+        pool.execute(move || compute_file_diagnostics(analysis, cloned_task_sender, files));
+        // compute_file_diagnostics(pool, analysis, task_sender.clone(), files);
     }
     Ok(())
 }
@@ -361,33 +363,28 @@ fn on_notification(
 }
 
 pub fn compute_file_diagnostics(
-    pool: &ThreadPool,
     analysis: Analysis,
     task_sender: Sender<Task>,
     files: Vec<MoveFilePath>,
 ) {
-    pool.execute(move || {
-        log::info!("Computing diagnostics for files: {:#?}", files);
-        let mut diagnostics = vec![];
-        for fpath in files {
-            // clear previous diagnostics for file
-            diagnostics.push(FileDiagnostic::new_empty(fpath));
+    log::info!("Computing diagnostics for files: {:#?}", files);
+    let mut diagnostics = vec![];
+    for fpath in files {
+        // clear previous diagnostics for file
+        diagnostics.push(FileDiagnostic::new_empty(fpath));
 
-            let text = match analysis.db().available_files.get(fpath) {
-                Some(text) => text,
-                None => {
-                    log::warn!("Trying to check untracked file: {:?}", fpath);
-                    continue;
-                }
-            };
-            // let from_file_compile_check = analysis.check_file_with_compiler(fpath, text);
-            if let Some(d) = analysis.check_file_with_compiler(fpath, text) {
-                diagnostics.push(d);
+        let text = match analysis.db().available_files.get(fpath) {
+            Some(text) => text,
+            None => {
+                log::warn!("Trying to check untracked file: {:?}", fpath);
+                continue;
             }
-            // diagnostics.extend(from_file_compile_check);
+        };
+        if let Some(d) = analysis.check_file_with_compiler(fpath, text) {
+            diagnostics.push(d);
         }
-        task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
-    })
+    }
+    task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
 }
 
 pub fn notification_cast<N>(notification: Notification) -> Result<N::Params, Notification>
