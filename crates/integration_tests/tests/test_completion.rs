@@ -37,11 +37,10 @@ mod tests {
     #[test]
     fn test_top_level_completion() {
         let source_text = "script { fun main() {} }";
-        let completions = completions(
+        completions(
             (get_script_path(), source_text.to_string()),
             config!({}),
             (0, 0),
         );
-        dbg!(completions);
     }
 }

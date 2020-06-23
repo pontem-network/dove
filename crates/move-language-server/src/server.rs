@@ -2,9 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use lsp_server::{Connection, ProtocolError};
-use lsp_types::{
-    CompletionOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
-};
+use lsp_types::{ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind};
 use serde::de::DeserializeOwned;
 
 use analysis::config::Config;
@@ -12,13 +10,15 @@ use analysis::config::Config;
 use crate::global_state::initialize_new_global_state;
 use crate::main_loop;
 
-pub fn initialize_server(connection: &Connection) -> Result<serde_json::Value, ProtocolError> {
-    let server_capabilities = ServerCapabilities {
+fn move_language_server_capabilities() -> ServerCapabilities {
+    ServerCapabilities {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::Full)),
-        completion_provider: Some(CompletionOptions::default()),
         ..ServerCapabilities::default()
-    };
-    connection.initialize(serde_json::to_value(server_capabilities).unwrap())
+    }
+}
+
+pub fn initialize_server(connection: &Connection) -> Result<serde_json::Value, ProtocolError> {
+    connection.initialize(serde_json::to_value(move_language_server_capabilities()).unwrap())
 }
 
 pub fn parse_initialize_params(init_params: serde_json::Value) -> Result<(PathBuf, Config)> {
