@@ -1,14 +1,14 @@
 use lsp_types::{Diagnostic, Position, Range};
 
 use analysis::analysis::Analysis;
-use analysis::change::AnalysisChange;
+
 use analysis::config::Config;
 use analysis::db::FileDiagnostic;
 use integration_tests::{get_modules_path, get_test_resources_dir, global_state_snapshot};
-use move_language_server::global_state::initialize_new_global_state;
+use move_language_server::global_state::GlobalState;
 
 use crossbeam_channel::unbounded;
-use move_language_server::main_loop::{compute_file_diagnostics, Task};
+use move_language_server::main_loop::{compute_file_diagnostics, FileSystemEvent, ResponseEvent};
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -34,13 +34,13 @@ fn diagnostics_with_config_and_filename(
     fpath: MoveFilePath,
 ) -> Vec<FileDiagnostic> {
     let state_snapshot = global_state_snapshot((fpath, text.to_string()), config, vec![]);
-    let (task_sender, task_receiver) = unbounded::<Task>();
+    let (task_sender, task_receiver) = unbounded::<ResponseEvent>();
 
     compute_file_diagnostics(state_snapshot.analysis, task_sender, vec![fpath]);
 
     let task = task_receiver.try_recv().unwrap();
     let mut ds = match task {
-        Task::Diagnostic(ds) => ds,
+        ResponseEvent::Diagnostic(ds) => ds,
         _ => panic!(),
     };
     let empty = ds.remove(0);
@@ -53,26 +53,18 @@ fn diagnostics_with_deps(
     deps: Vec<MoveFile>,
     config: Config,
 ) -> Option<FileDiagnostic> {
-    let (script_fpath, script_text) = script_file;
     let mut config = config;
     config.update(&serde_json::json!({
         "modules_folders": [get_modules_path()]
     }));
 
-    let ws_root = std::env::current_dir().unwrap();
-    let global_state = initialize_new_global_state(ws_root, config);
-    let mut analysis_host = global_state.analysis_host;
+    let mut fs_events: Vec<_> = deps.into_iter().map(FileSystemEvent::AddFile).collect();
+    fs_events.push(FileSystemEvent::AddFile(script_file.clone()));
 
-    let mut change = AnalysisChange::new();
-    for (fpath, text) in deps.into_iter() {
-        change.add_file(fpath, text);
-    }
-    change.add_file(script_fpath, script_text.clone());
-    analysis_host.apply_change(change);
-
-    analysis_host
+    let global_state = GlobalState::new(config, fs_events);
+    global_state
         .analysis()
-        .check_file_with_compiler(script_fpath, &script_text)
+        .check_file_with_compiler(script_file.0, &script_file.1)
 }
 
 #[cfg(test)]

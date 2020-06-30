@@ -56,7 +56,7 @@ pub fn load_move_file<P: AsRef<Path>>(path: P) -> io::Result<MoveFile> {
     Ok((fpath, text))
 }
 
-pub fn load_move_module_files(module_paths: Vec<PathBuf>) -> Result<Vec<MoveFile>> {
+pub fn load_move_files(module_paths: Vec<PathBuf>) -> Result<Vec<MoveFile>> {
     let mut module_files = vec![];
     for module_path in module_paths {
         anyhow::ensure!(

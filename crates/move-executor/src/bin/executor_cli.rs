@@ -64,7 +64,7 @@ fn main() -> Result<()> {
         .unwrap_or_default()
         .map(|path| path.into())
         .collect::<Vec<PathBuf>>();
-    let deps = io::load_move_module_files(modules_fpaths)?;
+    let deps = io::load_move_files(modules_fpaths)?;
 
     let genesis_json_contents = match cli_arguments.value_of("genesis") {
         Some(contents) => {

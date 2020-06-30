@@ -1,28 +1,8 @@
 use lsp_types::CompletionItem;
 
-use crate::change::AnalysisChange;
 use crate::completion;
 use crate::db::{FileDiagnostic, FilePosition, RootDatabase};
-use utils::{io, MoveFilePath};
-
-#[derive(Debug, Default)]
-pub struct AnalysisHost {
-    db: RootDatabase,
-}
-
-impl AnalysisHost {
-    pub fn db(&self) -> &RootDatabase {
-        &self.db
-    }
-
-    pub fn analysis(&self) -> Analysis {
-        Analysis::new(self.db.clone())
-    }
-
-    pub fn apply_change(&mut self, change: AnalysisChange) {
-        self.db.apply_change(change);
-    }
-}
+use utils::{io, MoveFile, MoveFilePath};
 
 #[derive(Debug)]
 pub struct Analysis {
@@ -59,7 +39,7 @@ impl Analysis {
         current_fpath: MoveFilePath,
         current_text: &str,
     ) -> Result<(), Vec<FileDiagnostic>> {
-        let deps: Vec<(MoveFilePath, String)> = self
+        let deps: Vec<MoveFile> = self
             .read_stdlib_files()
             .into_iter()
             .chain(self.db.module_files().into_iter())

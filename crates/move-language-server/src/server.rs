@@ -47,10 +47,11 @@ pub fn parse_initialize_params(init_params: serde_json::Value) -> Result<(PathBu
 
 pub fn run_server(connection: &Connection) -> Result<()> {
     let init_params = initialize_server(connection)?;
-    let (ws_root, config) = parse_initialize_params(init_params)?;
+    let (_, config) = parse_initialize_params(init_params)?;
     log::info!("Initialization is finished");
 
-    let mut global_state = initialize_new_global_state(ws_root, config);
+    let mut global_state = initialize_new_global_state(config);
+    dbg!(&global_state.config());
     main_loop::main_loop(&mut global_state, connection)
 }
 

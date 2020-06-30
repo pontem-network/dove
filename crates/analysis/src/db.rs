@@ -68,6 +68,13 @@ pub struct RootDatabase {
 }
 
 impl RootDatabase {
+    pub fn new(config: Config) -> RootDatabase {
+        RootDatabase {
+            config,
+            available_files: FilesSourceText::default(),
+        }
+    }
+
     pub fn module_files(&self) -> FilesSourceText {
         self.available_files
             .clone()
@@ -91,18 +98,15 @@ impl RootDatabase {
         for root_change in change.tracked_files_changed {
             match root_change {
                 RootChange::AddFile(fpath, text) => {
-                    log::info!("AddFile: {:?}", fpath);
                     self.available_files.insert(fpath, text);
                 }
                 RootChange::ChangeFile(fpath, text) => {
-                    log::info!("ChangeFile: {:?}", fpath);
                     self.available_files.insert(fpath, text);
                 }
                 RootChange::RemoveFile(fpath) => {
                     if !self.available_files.contains_key(fpath) {
                         log::warn!("RemoveFile: file {:?} does not exist", fpath);
                     }
-                    log::info!("RemoveFile: {:?}", fpath);
                     self.available_files.remove(fpath);
                 }
             }
@@ -165,6 +169,7 @@ impl RootDatabase {
                 return true;
             }
         }
+        log::info!("{:?} is not a module file (not relative to any module folder), skipping from dependencies", fpath);
         false
     }
 }
