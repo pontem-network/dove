@@ -8,10 +8,10 @@ use serde::Serialize;
 use threadpool::ThreadPool;
 
 use crate::global_state::{GlobalState, GlobalStateSnapshot};
-use crate::main_loop::{on_task, LspError, Task};
+use crate::main_loop::{on_task, LspError, ResponseEvent};
 use crate::req;
 
-fn result_to_task<R>(id: RequestId, result: Result<R::Result>) -> Task
+fn result_to_task<R>(id: RequestId, result: Result<R::Result>) -> ResponseEvent
 where
     R: req::Request + 'static,
     R::Params: DeserializeOwned + 'static,
@@ -31,7 +31,7 @@ where
             Err(e) => Response::new_err(id, ErrorCode::InternalError as i32, e.to_string()),
         },
     };
-    Task::Respond(response)
+    ResponseEvent::Respond(response)
 }
 
 pub struct PoolDispatcher<'a> {
@@ -40,7 +40,7 @@ pub struct PoolDispatcher<'a> {
     pool: &'a ThreadPool,
     global_state: &'a mut GlobalState,
     msg_sender: &'a Sender<Message>,
-    task_sender: &'a Sender<Task>,
+    task_sender: &'a Sender<ResponseEvent>,
 }
 
 impl<'a> PoolDispatcher<'a> {
@@ -49,7 +49,7 @@ impl<'a> PoolDispatcher<'a> {
         pool: &'a ThreadPool,
         global_state: &'a mut GlobalState,
         msg_sender: &'a Sender<Message>,
-        task_sender: &'a Sender<Task>,
+        task_sender: &'a Sender<ResponseEvent>,
     ) -> PoolDispatcher<'a> {
         PoolDispatcher {
             req: Some(req),

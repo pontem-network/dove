@@ -17,7 +17,6 @@ lsp-server = "0.3.2"
 
 crossbeam-channel = "0.4.2"
 threadpool = "1.8.1"
-ra_vfs = "0.6.1"
 
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }

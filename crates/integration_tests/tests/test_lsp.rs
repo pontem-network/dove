@@ -5,17 +5,16 @@ use lsp_types::{
 };
 
 use analysis::config::Config;
-use crossbeam_channel::{unbounded, Sender};
+
 use dialects::DialectName;
 
 use integration_tests::config;
-use integration_tests::get_test_resources_dir;
+
 use lsp_types::notification::{DidChangeConfiguration, Initialized};
-use move_language_server::fs::ws_root_vfs;
-use move_language_server::global_state::GlobalState;
+
+use move_language_server::global_state::{initialize_new_global_state, GlobalState};
 use move_language_server::main_loop::{main_loop, notification_new, request_new};
 use move_language_server::server::run_server;
-use ra_vfs::VfsTask;
 
 const SHUTDOWN_REQ_ID: u64 = 10;
 
@@ -95,12 +94,8 @@ fn send_shutdown(client_conn: &Connection) {
         .unwrap();
 }
 
-fn global_state(config: Config) -> (GlobalState, Sender<VfsTask>) {
-    let ws_root = get_test_resources_dir();
-    let (fs_events_sender, fs_events_receiver) = unbounded::<VfsTask>();
-    let vfs = ws_root_vfs(ws_root.clone(), fs_events_sender.clone());
-    let global_state = GlobalState::new(ws_root, config, vfs, fs_events_receiver);
-    (global_state, fs_events_sender)
+fn global_state(config: Config) -> GlobalState {
+    initialize_new_global_state(config)
 }
 
 #[test]
@@ -146,8 +141,8 @@ fn test_server_config_change() {
         vec![didchange_notification, updated_settings_response],
     );
 
-    let (mut global_state, _) = global_state(config!());
-    assert_eq!(global_state.config.dialect_name, DialectName::Libra);
+    let mut global_state = global_state(config!());
+    assert_eq!(global_state.config().dialect_name, DialectName::Libra);
 
     main_loop(&mut global_state, &server_conn).unwrap();
 
@@ -160,5 +155,5 @@ fn test_server_config_change() {
             .method,
         "workspace/configuration"
     );
-    assert_eq!(global_state.config.dialect_name, DialectName::DFinance);
+    assert_eq!(global_state.config().dialect_name, DialectName::DFinance);
 }

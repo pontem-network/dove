@@ -14,7 +14,7 @@ use lsp_types::{
     ConfigurationItem, ConfigurationParams, Diagnostic, MessageType, PublishDiagnosticsParams,
     ShowMessageParams, Url,
 };
-use ra_vfs::VfsTask;
+
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use threadpool::ThreadPool;
@@ -28,7 +28,8 @@ use crate::handlers;
 use crate::req;
 use crate::subscriptions::OpenedFiles;
 use analysis::db::FileDiagnostic;
-use utils::{leaked_fpath, MoveFilePath};
+use std::collections::HashSet;
+use utils::{leaked_fpath, MoveFile, MoveFilePath};
 
 #[derive(Debug)]
 pub struct LspError {
@@ -57,20 +58,27 @@ impl fmt::Display for LspError {
 impl Error for LspError {}
 
 #[derive(Debug)]
-pub enum Task {
+pub enum ResponseEvent {
     Respond(Response),
     Diagnostic(Vec<FileDiagnostic>),
 }
 
+#[derive(Debug)]
+pub enum FileSystemEvent {
+    AddFile(MoveFile),
+    RemoveFile(MoveFilePath),
+    ChangeFile(MoveFile),
+}
+
 pub enum Event {
-    Task(Task),
-    Vfs(VfsTask),
-    Msg(Message),
+    Response(ResponseEvent),
+    FileSystem(FileSystemEvent),
+    Lsp(Message),
 }
 
 impl fmt::Debug for Event {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Event::Msg(Message::Notification(not)) = self {
+        if let Event::Lsp(Message::Notification(not)) = self {
             if notification_is::<DidOpenTextDocument>(not)
                 || notification_is::<DidChangeTextDocument>(not)
             {
@@ -83,9 +91,9 @@ impl fmt::Debug for Event {
             }
         }
         match self {
-            Event::Msg(it) => fmt::Debug::fmt(it, f),
-            Event::Vfs(it) => fmt::Debug::fmt(it, f),
-            Event::Task(it) => fmt::Debug::fmt(it, f),
+            Event::Lsp(it) => fmt::Debug::fmt(it, f),
+            Event::FileSystem(it) => fmt::Debug::fmt(it, f),
+            Event::Response(it) => fmt::Debug::fmt(it, f),
         }
     }
 }
@@ -94,7 +102,8 @@ pub fn main_loop(global_state: &mut GlobalState, connection: &Connection) -> Res
     log::info!("starting example main loop");
 
     let pool = ThreadPool::new(1);
-    let (task_sender, task_receiver) = unbounded::<Task>();
+    let (resp_events_sender, resp_events_receiver) = unbounded::<ResponseEvent>();
+    let (fs_events_sender, fs_events_receiver) = unbounded::<FileSystemEvent>();
 
     let mut loop_state = LoopState::default();
 
@@ -102,23 +111,21 @@ pub fn main_loop(global_state: &mut GlobalState, connection: &Connection) -> Res
     loop {
         let event = crossbeam_channel::select! {
             recv(&connection.receiver) -> message => match message {
-                Ok(message) => Event::Msg(message),
+                Ok(message) => Event::Lsp(message),
                 Err(_) => bail!("client exited without shutdown"),
             },
-            recv(&task_receiver) -> task => Event::Task(task.unwrap()),
-            recv(global_state.fs_events_receiver) -> task => match task {
-                Ok(task) => Event::Vfs(task),
-                Err(_) => bail!("vfs died"),
-            }
+            recv(&resp_events_receiver) -> event => Event::Response(event.unwrap()),
+            recv(fs_events_receiver) -> fs_event => Event::FileSystem(fs_event.unwrap()),
         };
-        if let Event::Msg(Message::Request(req)) = &event {
+        if let Event::Lsp(Message::Request(req)) = &event {
             if connection.handle_shutdown(&req)? {
                 break;
             }
         }
         loop_turn(
             &pool,
-            &task_sender,
+            &resp_events_sender,
+            &fs_events_sender,
             &connection,
             global_state,
             &mut loop_state,
@@ -151,65 +158,83 @@ impl LoopState {
 
 pub fn loop_turn(
     pool: &ThreadPool,
-    task_sender: &Sender<Task>,
+    resp_events_sender: &Sender<ResponseEvent>,
+    fs_events_sender: &Sender<FileSystemEvent>,
     connection: &Connection,
     global_state: &mut GlobalState,
     loop_state: &mut LoopState,
     event: Event,
 ) -> Result<()> {
-    if matches!(event, Event::Msg(_)) {
+    if matches!(event, Event::Lsp(_)) {
         log::info!("loop turn = {:#?}", &event);
     }
-    match event {
-        Event::Task(task) => on_task(task, &connection.sender),
-        Event::Vfs(vfs_task) => global_state.vfs.handle_task(vfs_task),
-        Event::Msg(message) => match message {
-            Message::Request(req) => {
-                on_request(global_state, pool, task_sender, &connection.sender, req)?;
-            }
-            Message::Notification(not) => {
-                on_notification(&connection.sender, global_state, loop_state, not)?;
-            }
-            Message::Response(resp) => {
-                if Some(&resp.id) == loop_state.configuration_request_id.as_ref() {
-                    loop_state.configuration_request_id = None;
-                    log::info!("config update response: '{:?}", resp);
-                    let Response { error, result, .. } = resp;
+    let fs_changed = match event {
+        Event::Response(task) => {
+            on_task(task, &connection.sender);
+            false
+        }
+        Event::FileSystem(fs_event) => {
+            global_state.update_from_events(vec![fs_event]);
+            true
+        }
+        Event::Lsp(message) => {
+            match message {
+                Message::Request(req) => {
+                    on_request(
+                        global_state,
+                        pool,
+                        resp_events_sender,
+                        &connection.sender,
+                        req,
+                    )?;
+                }
+                Message::Notification(not) => {
+                    on_notification(&connection.sender, fs_events_sender, loop_state, not)?;
+                }
+                Message::Response(resp) => {
+                    if Some(&resp.id) == loop_state.configuration_request_id.as_ref() {
+                        loop_state.configuration_request_id = None;
+                        log::info!("config update response: '{:?}", resp);
+                        let Response { error, result, .. } = resp;
 
-                    match (error, result) {
-                        (Some(err), _) => {
-                            log::error!("failed to fetch the server settings: {:?}", err)
-                        }
-                        (None, Some(configs)) => {
-                            if let Some(new_config) = configs.get(0) {
-                                let mut config = Config::default();
-                                config.update(new_config);
-                                *global_state = initialize_new_global_state(
-                                    global_state.ws_root.clone(),
-                                    config,
-                                );
+                        match (error, result) {
+                            (Some(err), _) => {
+                                log::error!("failed to fetch the server settings: {:?}", err)
                             }
-                        }
-                        (None, None) => {
-                            log::error!("received empty server settings response from the client")
+                            (None, Some(configs)) => {
+                                if let Some(new_config) = configs.get(0) {
+                                    let mut config = Config::default();
+                                    config.update(new_config);
+                                    *global_state = initialize_new_global_state(config);
+                                }
+                            }
+                            (None, None) => log::error!(
+                                "received empty server settings response from the client"
+                            ),
                         }
                     }
                 }
-            }
-        },
-    }
-    let fs_state_changed = global_state.load_fs_changes();
-    if fs_state_changed {
-        log::info!("fs_state_changed = true, reextract diagnostics");
-        let analysis = global_state.analysis_host.analysis();
+            };
+            false
+        }
+    };
+    if fs_changed {
+        log::info!("fs_state_changed = true, recompute diagnostics");
+        let analysis = global_state.analysis();
 
         let mut files = vec![];
         files.extend(loop_state.opened_files.files());
         files.extend(analysis.db().module_files().keys());
 
-        let cloned_task_sender = task_sender.clone();
+        // filter duplicates
+        let files = files
+            .into_iter()
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
+
+        let cloned_task_sender = resp_events_sender.clone();
         pool.execute(move || compute_file_diagnostics(analysis, cloned_task_sender, files));
-        // compute_file_diagnostics(pool, analysis, task_sender.clone(), files);
     }
     Ok(())
 }
@@ -217,7 +242,7 @@ pub fn loop_turn(
 fn on_request(
     global_state: &mut GlobalState,
     pool: &ThreadPool,
-    task_sender: &Sender<Task>,
+    task_sender: &Sender<ResponseEvent>,
     msg_sender: &Sender<Message>,
     req: Request,
 ) -> Result<()> {
@@ -240,12 +265,12 @@ fn diagnostic_as_string(d: &Diagnostic) -> String {
     )
 }
 
-pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
+pub fn on_task(task: ResponseEvent, msg_sender: &Sender<Message>) {
     match task {
-        Task::Respond(response) => {
+        ResponseEvent::Respond(response) => {
             msg_sender.send(response.into()).unwrap();
         }
-        Task::Diagnostic(file_diags) => {
+        ResponseEvent::Diagnostic(file_diags) => {
             for file_diag in file_diags {
                 let uri = Url::from_file_path(file_diag.fpath).unwrap();
 
@@ -272,7 +297,7 @@ pub fn on_task(task: Task, msg_sender: &Sender<Message>) {
 
 fn on_notification(
     msg_sender: &Sender<Message>,
-    global_state: &mut GlobalState,
+    fs_events_sender: &Sender<FileSystemEvent>,
     loop_state: &mut LoopState,
     not: Notification,
 ) -> Result<()> {
@@ -282,17 +307,11 @@ fn on_notification(
             let fpath = uri
                 .to_file_path()
                 .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
-            let overlay = global_state
-                .vfs
-                .add_file_overlay(fpath.as_path(), params.text_document.text);
-            assert!(
-                overlay.is_some(),
-                "Cannot find file {:?} in current roots",
-                &fpath
-            );
-            loop_state
-                .opened_files
-                .add(leaked_fpath(fpath.to_str().unwrap()));
+            let file = (leaked_fpath(&fpath), params.text_document.text);
+            fs_events_sender
+                .send(FileSystemEvent::AddFile(file))
+                .unwrap();
+            loop_state.opened_files.add(leaked_fpath(fpath));
             return Ok(());
         }
         Err(not) => not,
@@ -308,14 +327,11 @@ fn on_notification(
                 .pop()
                 .ok_or_else(|| anyhow::anyhow!("empty changes".to_string()))?
                 .text;
-            global_state
-                .vfs
-                .change_file_overlay(fpath.as_path(), |text| {
-                    *text = new_text;
-                });
-            loop_state
-                .opened_files
-                .add(leaked_fpath(fpath.to_str().unwrap()));
+            let changed_file = (leaked_fpath(&fpath), new_text);
+            fs_events_sender
+                .send(FileSystemEvent::ChangeFile(changed_file))
+                .unwrap();
+            loop_state.opened_files.add(leaked_fpath(fpath));
             return Ok(());
         }
         Err(not) => not,
@@ -326,9 +342,7 @@ fn on_notification(
             let fpath = uri
                 .to_file_path()
                 .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
-            loop_state
-                .opened_files
-                .remove(leaked_fpath(fpath.to_str().unwrap()));
+            loop_state.opened_files.remove(leaked_fpath(fpath));
             return Ok(());
         }
         Err(not) => not,
@@ -364,7 +378,7 @@ fn on_notification(
 
 pub fn compute_file_diagnostics(
     analysis: Analysis,
-    task_sender: Sender<Task>,
+    task_sender: Sender<ResponseEvent>,
     files: Vec<MoveFilePath>,
 ) {
     log::info!("Computing diagnostics for files: {:#?}", files);
@@ -384,7 +398,9 @@ pub fn compute_file_diagnostics(
             diagnostics.push(d);
         }
     }
-    task_sender.send(Task::Diagnostic(diagnostics)).unwrap();
+    task_sender
+        .send(ResponseEvent::Diagnostic(diagnostics))
+        .unwrap();
 }
 
 pub fn notification_cast<N>(notification: Notification) -> Result<N::Params, Notification>
