@@ -1,5 +1,4 @@
 pub mod dispatcher;
-pub mod fs;
 pub mod global_state;
 pub mod handlers;
 pub mod main_loop;
