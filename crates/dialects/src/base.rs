@@ -125,7 +125,7 @@ pub trait Dialect {
         file: MoveFile,
         deps: &[MoveFile],
         sender: ProvidedAccountAddress,
-    ) -> Result<(CompiledScript, Vec<CompiledModule>), ExecCompilerError> {
+    ) -> Result<(Option<CompiledScript>, Vec<CompiledModule>), ExecCompilerError> {
         let (mut script_defs, modules_defs, project_offsets_map) =
             self.parse_files(file, deps, &sender)?;
         script_defs.extend(modules_defs);
@@ -149,6 +149,8 @@ pub trait Dialect {
 
         let (compiled_script, compiled_modules) =
             self.check_and_generate_bytecode(script, deps, sender.clone())?;
+        let compiled_script =
+            compiled_script.expect("compile_and_run should always be called with the script");
 
         let network_state = prepare_fake_network_state(compiled_modules, genesis_write_set);
 
