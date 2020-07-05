@@ -25,20 +25,18 @@ pub fn vm_status_into_exec_status(vm_status: VMStatus) -> ExecutionError {
 
 pub fn generate_bytecode(
     program: PreBytecodeProgram,
-) -> Result<(CompiledScript, Vec<CompiledModule>), Vec<Error>> {
-    let mut units = to_bytecode::translate::program(program)?;
-    let script = match units.remove(units.len() - 1) {
-        CompiledUnit::Script { script, .. } => script,
-        CompiledUnit::Module { .. } => unreachable!(),
-    };
-    let modules = units
-        .into_iter()
-        .map(|unit| match unit {
-            CompiledUnit::Module { module, .. } => module,
-            CompiledUnit::Script { .. } => unreachable!(),
-        })
-        .collect();
-    Ok((script, modules))
+) -> Result<(Option<CompiledScript>, Vec<CompiledModule>), Vec<Error>> {
+    let units = to_bytecode::translate::program(program)?;
+
+    let mut gen_script = None;
+    let mut gen_modules = vec![];
+    for unit in units {
+        match unit {
+            CompiledUnit::Module { module, .. } => gen_modules.push(module),
+            CompiledUnit::Script { script, .. } => gen_script = Some(script),
+        }
+    }
+    Ok((gen_script, gen_modules))
 }
 
 pub fn serialize_script(script: CompiledScript) -> Result<Vec<u8>> {

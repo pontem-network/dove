@@ -1,19 +1,22 @@
 use lsp_server::{Connection, Message, Notification, Request, RequestId, Response};
 use lsp_types::request::{Initialize, Shutdown};
 use lsp_types::{
-    ClientCapabilities, DidChangeConfigurationParams, InitializeParams, InitializedParams,
+    ClientCapabilities, DidChangeConfigurationParams, DidChangeWatchedFilesParams,
+    FileChangeType, FileEvent, InitializeParams, InitializedParams, Url,
 };
 
 use analysis::config::Config;
 
 use dialects::DialectName;
 
-use integration_tests::config;
+use integration_tests::{config, get_script_path};
 
-use lsp_types::notification::{DidChangeConfiguration, Initialized};
+use lsp_types::notification::{DidChangeConfiguration, DidChangeWatchedFiles, Initialized};
 
 use move_language_server::global_state::{initialize_new_global_state, GlobalState};
-use move_language_server::main_loop::{main_loop, notification_new, request_new};
+use move_language_server::main_loop::{
+    main_loop, notification_new, request_new, FileSystemEvent,
+};
 use move_language_server::server::run_server;
 
 const SHUTDOWN_REQ_ID: u64 = 10;
@@ -58,20 +61,28 @@ fn response(req_id: usize, contents: serde_json::Value) -> Message {
 trait MessageType {
     fn into_request(self) -> Request;
     fn into_response(self) -> Response;
+    fn into_notification(self) -> Notification;
 }
 
 impl MessageType for Message {
     fn into_request(self) -> Request {
         match self {
             Message::Request(req) => req,
-            _ => panic!(),
+            _ => panic!("not a request"),
         }
     }
 
     fn into_response(self) -> Response {
         match self {
             Message::Response(resp) => resp,
-            _ => panic!(),
+            _ => panic!("not a response"),
+        }
+    }
+
+    fn into_notification(self) -> Notification {
+        match self {
+            Message::Notification(notification) => notification,
+            _ => panic!("not a notification"),
         }
     }
 }
@@ -115,13 +126,18 @@ fn test_server_initialization() {
     assert_eq!(init_finished_resp.id, RequestId::from(1));
     assert_eq!(
         init_finished_resp.result.unwrap()["capabilities"]["textDocumentSync"],
-        1
+        serde_json::json!({"change": 1, "openClose": true})
     );
-    let shutdown_req = client_conn.receiver.try_recv().unwrap();
+    let registration_req = client_conn.receiver.try_recv().unwrap().into_request();
+    assert_eq!(registration_req.method, "client/registerCapability");
     assert_eq!(
-        shutdown_req.into_response().id,
-        RequestId::from(SHUTDOWN_REQ_ID)
+        registration_req.params["registrations"][0]["method"],
+        "workspace/didChangeWatchedFiles"
     );
+
+    let shutdown_resp = client_conn.receiver.try_recv().unwrap().into_response();
+    assert_eq!(shutdown_resp.id, RequestId::from(SHUTDOWN_REQ_ID));
+
     client_conn.receiver.try_recv().unwrap_err();
 }
 
@@ -156,4 +172,32 @@ fn test_server_config_change() {
         "workspace/configuration"
     );
     assert_eq!(global_state.config().dialect_name, DialectName::DFinance);
+}
+
+#[test]
+fn test_removed_file_not_present_in_the_diagnostics() {
+    let (client_conn, server_conn) = Connection::memory();
+
+    let script_text = r"script {
+        use 0x0::Unknown;
+        fun main() {}
+    }";
+    let script_file = (get_script_path(), script_text.to_string());
+
+    let mut global_state = global_state(config!());
+    global_state.update_from_events(vec![FileSystemEvent::AddFile(script_file)]);
+
+    let delete_event = FileEvent::new(
+        Url::from_file_path(get_script_path()).unwrap(),
+        FileChangeType::Deleted,
+    );
+    let files_changed_notification =
+        notification::<DidChangeWatchedFiles>(DidChangeWatchedFilesParams {
+            changes: vec![delete_event],
+        });
+    send_messages(&client_conn, vec![files_changed_notification]);
+
+    main_loop(&mut global_state, &server_conn).unwrap();
+
+    assert!(global_state.analysis().db().available_files.is_empty());
 }

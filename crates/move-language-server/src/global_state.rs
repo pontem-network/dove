@@ -64,17 +64,17 @@ impl GlobalState {
 }
 
 pub fn initialize_new_global_state(config: Config) -> GlobalState {
-    let mut fs_events = vec![];
+    let mut initial_fs_events = vec![];
     match &config.stdlib_folder {
         Some(folder) => {
             for file in io::load_move_files(vec![folder.clone()]).unwrap() {
-                fs_events.push(FileSystemEvent::AddFile(file));
+                initial_fs_events.push(FileSystemEvent::AddFile(file));
             }
         }
         None => {}
     }
     for file in io::load_move_files(config.modules_folders.clone()).unwrap() {
-        fs_events.push(FileSystemEvent::AddFile(file));
+        initial_fs_events.push(FileSystemEvent::AddFile(file));
     }
-    GlobalState::new(config, fs_events)
+    GlobalState::new(config, initial_fs_events)
 }
