@@ -1,18 +1,29 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use lsp_server::{Connection, ProtocolError};
-use lsp_types::{ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind};
+use lsp_server::{Connection, ProtocolError, RequestId};
+use lsp_types::{
+    DidChangeWatchedFilesRegistrationOptions, FileSystemWatcher, RegistrationParams,
+    ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
+    TextDocumentSyncOptions, WatchKind,
+};
 use serde::de::DeserializeOwned;
 
 use analysis::config::Config;
 
 use crate::global_state::initialize_new_global_state;
 use crate::main_loop;
+use crate::main_loop::request_new;
 
 fn move_language_server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
-        text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::Full)),
+        text_document_sync: Some(TextDocumentSyncCapability::Options(
+            TextDocumentSyncOptions {
+                open_close: Some(true),
+                change: Some(TextDocumentSyncKind::Full),
+                ..TextDocumentSyncOptions::default()
+            },
+        )),
         ..ServerCapabilities::default()
     }
 }
@@ -45,13 +56,36 @@ pub fn parse_initialize_params(init_params: serde_json::Value) -> Result<(PathBu
     Ok((root, config))
 }
 
+fn register_for_file_changes(connection: &Connection) {
+    let move_files_watcher = FileSystemWatcher {
+        glob_pattern: "**/*.move".to_string(),
+        kind: Some(WatchKind::Delete),
+    };
+    let registration_options = DidChangeWatchedFilesRegistrationOptions {
+        watchers: vec![move_files_watcher],
+    };
+    let registration = lsp_types::Registration {
+        id: "workspace/didChangeWatchedFiles".to_string(),
+        method: "workspace/didChangeWatchedFiles".to_string(),
+        register_options: Some(serde_json::to_value(registration_options).unwrap()),
+    };
+    let registration_req = request_new::<lsp_types::request::RegisterCapability>(
+        RequestId::from(1),
+        RegistrationParams {
+            registrations: vec![registration],
+        },
+    );
+    connection.sender.send(registration_req.into()).unwrap();
+}
+
 pub fn run_server(connection: &Connection) -> Result<()> {
     let init_params = initialize_server(connection)?;
     let (_, config) = parse_initialize_params(init_params)?;
     log::info!("Initialization is finished");
 
+    register_for_file_changes(connection);
+
     let mut global_state = initialize_new_global_state(config);
-    dbg!(&global_state.config());
     main_loop::main_loop(&mut global_state, connection)
 }
 

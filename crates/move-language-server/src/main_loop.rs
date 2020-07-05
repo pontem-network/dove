@@ -6,8 +6,8 @@ use anyhow::Result;
 use crossbeam_channel::{unbounded, Sender};
 use lsp_server::{Connection, Message, Notification, Request, RequestId, Response};
 use lsp_types::notification::{
-    DidChangeConfiguration, DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument,
-    PublishDiagnostics, ShowMessage,
+    DidChangeConfiguration, DidChangeTextDocument, DidChangeWatchedFiles, DidCloseTextDocument,
+    DidOpenTextDocument, PublishDiagnostics, ShowMessage,
 };
 use lsp_types::request::WorkspaceConfiguration;
 use lsp_types::{
@@ -366,6 +366,23 @@ fn on_notification(
             msg_sender.send(request.into())?;
             loop_state.configuration_request_id = Some(request_id);
 
+            return Ok(());
+        }
+        Err(not) => not,
+    };
+    let not = match notification_cast::<DidChangeWatchedFiles>(not) {
+        Ok(params) => {
+            for file_event in params.changes {
+                let uri = file_event.uri;
+                let fpath = uri
+                    .to_file_path()
+                    .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
+                let fpath = leaked_fpath(fpath);
+                loop_state.opened_files.remove(fpath);
+                fs_events_sender
+                    .send(FileSystemEvent::RemoveFile(fpath))
+                    .unwrap();
+            }
             return Ok(());
         }
         Err(not) => not,
