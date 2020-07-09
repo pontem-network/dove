@@ -215,7 +215,7 @@ script {
     fun main(s: &signer) {
         let signer_address = Signer::address_of(s);
         let record = Record::get_record(signer_address);
-        Record::save(record);
+        Record::save(s, record);
     }
 }
     ";
@@ -242,7 +242,7 @@ script {
             config,
             record_module_fpath,
         );
-        assert!(errors.is_empty());
+        assert!(errors.is_empty(), "{:#?}", errors);
     }
 
     #[test]
@@ -256,7 +256,7 @@ script {
     fun main(s: &signer) {
         let signer_address = Signer::address_of(s);
         let record = Record::get_record(signer_address);
-        Record::save(record);
+        Record::save(s, record);
     }
 }
     ";

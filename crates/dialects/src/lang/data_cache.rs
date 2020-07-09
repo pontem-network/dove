@@ -1,6 +1,6 @@
 use libra_types::access_path::AccessPath;
 use libra_types::contract_event::ContractEvent;
-use libra_types::vm_error::StatusCode;
+use libra_types::vm_status::StatusCode;
 use libra_types::write_set::WriteOp;
 
 use move_core_types::language_storage::ModuleId;
@@ -16,14 +16,14 @@ use crate::shared::results::ResourceChange;
 use move_vm_types::values::GlobalValue;
 use std::collections::HashMap;
 use std::ops::Deref;
-use vm::errors::{vm_error, Location, VMResult};
+use vm::errors::{vm_status, Location, VMResult};
 
 fn convert_set_value(struct_type: &FatStructType, val: GlobalValue) -> VMResult<Vec<u8>> {
     // into_owned_struct will check if all references are properly released at the end of a transaction
     let data = val.into_owned_struct()?;
     match data.simple_serialize(struct_type) {
         Some(blob) => Ok(blob),
-        None => Err(vm_error(
+        None => Err(vm_status(
             Location::new(),
             StatusCode::VALUE_SERIALIZATION_ERROR,
         )),

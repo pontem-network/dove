@@ -14,8 +14,8 @@ address 0x2 {
             T { age }
         }
 
-        public fun save(record: T) {
-            move_to_sender<T>(record);
+        public fun save(account: &signer, record: T) {
+            move_to<T>(account, record);
         }
 
         public fun destroy_record(s: &signer) acquires T {

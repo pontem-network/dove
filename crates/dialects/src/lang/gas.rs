@@ -33,14 +33,14 @@ pub fn dfinance_cost_table() -> CostTable {
     use vm::file_format::Bytecode::*;
 
     let mut instrs = vec![
-        (
-            MoveToSender(StructDefinitionIndex::new(0)),
-            GasCost::new(774, 1),
-        ),
-        (
-            MoveToSenderGeneric(StructDefInstantiationIndex::new(0)),
-            GasCost::new(774, 1),
-        ),
+        // (
+        //     MoveToSender(StructDefinitionIndex::new(0)),
+        //     GasCost::new(774, 1),
+        // ),
+        // (
+        //     MoveToSenderGeneric(StructDefInstantiationIndex::new(0)),
+        //     GasCost::new(774, 1),
+        // ),
         (
             MoveTo(StructDefinitionIndex::new(0)),
             /* MoveToSender + ReadRef == 774 + 51 == 825 */
@@ -51,7 +51,7 @@ pub fn dfinance_cost_table() -> CostTable {
             /* MoveToSender + ReadRef == 774 + 51 == 825 */
             GasCost::new(825, 1),
         ),
-        (GetTxnSenderAddress, GasCost::new(30, 1)),
+        // (GetTxnSenderAddress, GasCost::new(30, 1)),
         (
             MoveFrom(StructDefinitionIndex::new(0)),
             GasCost::new(917, 1),

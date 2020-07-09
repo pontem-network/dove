@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use language_e2e_tests::data_store::FakeDataStore;
-use libra_types::{transaction::TransactionArgument, vm_error::VMStatus, write_set::WriteSet};
+use libra_types::{transaction::TransactionArgument, vm_status::VMStatus, write_set::WriteSet};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
 
