@@ -61,9 +61,9 @@ fn test_execute_script_and_record_resource_changes() {
 script {
     use 0x2::Record;
 
-    fun main() {
+    fun main(s: &signer) {
         let record = Record::create(10);
-        Record::save(record);
+        Record::save(s, record);
     }
 }";
     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
@@ -101,7 +101,7 @@ script {
 
     fun main(s: &signer) {
         let record = Record::with_doubled_age(s);
-        Record::save(record);
+        Record::save(s, record);
     }
 }";
     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
@@ -149,16 +149,16 @@ address 0x1 {
     module M {
         resource struct T { value: u8 }
 
-        public fun get_t(v: u8) {
-            move_to_sender<T>(T { value: v })
+        public fun get_t(s: &signer, v: u8) {
+            move_to<T>(s, T { value: v })
         }
     }
 }
         ";
     let script_text = r"
 script {
-    fun main() {
-        0x1::M::get_t(10);
+    fun main(s: &signer) {
+        0x1::M::get_t(s, 10);
     }
 }
         ";
@@ -203,16 +203,16 @@ fn test_run_with_non_default_dfinance_dialect() {
 address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     module M {
         resource struct T { value: u8 }
-        public fun get_t(v: u8) {
-            move_to_sender<T>(T { value: v })
+        public fun get_t(s: &signer, v: u8) {
+            move_to<T>(s, T { value: v })
         }
     }
 }
     ";
     let script_text = r"
 script {
-    fun main() {
-        wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(10);
+    fun main(s: &signer) {
+        wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(s, 10);
     }
 }
     ";
@@ -256,8 +256,8 @@ fn test_pass_arguments_to_script() {
 address 0x1 {
     module Module {
         resource struct T { value: bool }
-        public fun create_t(v: bool) {
-            move_to_sender<T>(T { value: v })
+        public fun create_t(s: &signer, v: bool) {
+            move_to<T>(s, T { value: v })
         }
     }
 }
@@ -266,8 +266,8 @@ address 0x1 {
 script {
     use 0x1::Module;
 
-    fun main(val: bool) {
-        Module::create_t(val);
+    fun main(s: &signer, val: bool) {
+        Module::create_t(s, val);
     }
 }
     ";
@@ -392,10 +392,10 @@ fn move_resource_from_another_user_to_sender() {
 script {
     use 0x2::Record;
 
-    fun main() {
+    fun main(s: &signer) {
         let original_record_owner = 0x1;
         let record = Record::get_record(original_record_owner);
-        Record::save(record);
+        Record::save(s, record);
     }
 }";
     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
@@ -487,7 +487,7 @@ script {
 
     fun main(s: &signer) {
         let record = Record::with_doubled_age(s);
-        Record::save(record);
+        Record::save(s, record);
     }
 }";
     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
