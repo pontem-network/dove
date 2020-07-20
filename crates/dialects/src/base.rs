@@ -18,7 +18,7 @@ use crate::lang::executor::{
 use crate::lang::{check_defs, into_exec_compiler_error, replace_sender_placeholder};
 use crate::shared::errors::{CompilerError, ExecCompilerError, FileSourceMap, ProjectSourceMap};
 use crate::shared::results::{ChainStateChanges, ResourceChange};
-use crate::shared::ProvidedAccountAddress;
+use crate::shared::{line_endings, ProvidedAccountAddress};
 
 pub trait Dialect {
     fn name(&self) -> &str;
@@ -34,9 +34,9 @@ pub trait Dialect {
         file: MoveFile,
         sender: &ProvidedAccountAddress,
     ) -> Result<(Vec<Definition>, FileSourceMap), ExecCompilerError> {
-        let (fname, mut source_text) = file;
+        let (fname, source_text) = file;
 
-        let mut file_source_map = FileSourceMap::default();
+        let (mut source_text, mut file_source_map) = line_endings::normalize(source_text);
         source_text = replace_sender_placeholder(
             source_text,
             &sender.normalized_original,
