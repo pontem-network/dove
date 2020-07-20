@@ -15,13 +15,15 @@ impl<'a> NewNormalized<'a> {
     }
 }
 
+const PATTERN_LENGTH: usize = 2;
+
 impl Iterator for NewNormalized<'_> {
     type Item = char;
 
     fn next(&mut self) -> Option<char> {
         match self.inner_next() {
             Some('\n') if self.prev_was_carriage_return => {
-                self.source_map.insert_layer(self.pos, 1);
+                self.source_map.insert_layer(self.pos - PATTERN_LENGTH, 1);
 
                 self.prev_was_carriage_return = false;
                 match self.inner_next() {

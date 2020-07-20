@@ -658,5 +658,10 @@ module DFI {
         let errors = diagnostics(script_text);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((1, 1), (1, 5)));
+
+        let script_text = "script {\r\n\r\n\r\n func main() {} \r\n }";
+        let errors = diagnostics(script_text);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].range, range((3, 1), (3, 5)));
     }
 }
