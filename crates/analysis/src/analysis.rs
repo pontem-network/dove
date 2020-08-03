@@ -1,7 +1,4 @@
-use lsp_types::CompletionItem;
-
-use crate::completion;
-use crate::db::{FileDiagnostic, FilePosition, RootDatabase};
+use crate::db::{FileDiagnostic, RootDatabase};
 use utils::{io, MoveFile, MoveFilePath};
 
 #[derive(Debug)]
@@ -16,10 +13,6 @@ impl Analysis {
 
     pub fn db(&self) -> &RootDatabase {
         &self.db
-    }
-
-    pub fn completions(&self, position: FilePosition) -> Vec<CompletionItem> {
-        completion::completions(self.db(), position)
     }
 
     pub fn check_file_with_compiler(

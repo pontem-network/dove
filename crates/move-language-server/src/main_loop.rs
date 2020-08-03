@@ -22,10 +22,8 @@ use threadpool::ThreadPool;
 use analysis::analysis::Analysis;
 use analysis::config::Config;
 
-use crate::dispatcher::PoolDispatcher;
 use crate::global_state::{initialize_new_global_state, GlobalState};
-use crate::handlers;
-use crate::req;
+
 use crate::subscriptions::OpenedFiles;
 use analysis::db::FileDiagnostic;
 use std::collections::HashSet;
@@ -239,6 +237,7 @@ pub fn loop_turn(
     Ok(())
 }
 
+#[allow(unused)]
 fn on_request(
     global_state: &mut GlobalState,
     pool: &ThreadPool,
@@ -246,11 +245,11 @@ fn on_request(
     msg_sender: &Sender<Message>,
     req: Request,
 ) -> Result<()> {
-    let mut pool_dispatcher =
-        PoolDispatcher::new(req, pool, global_state, msg_sender, task_sender);
-    pool_dispatcher
-        .on::<req::Completion>(handlers::handle_completion)?
-        .finish();
+    // let mut pool_dispatcher =
+    //     PoolDispatcher::new(req, pool, global_state, msg_sender, task_sender);
+    // pool_dispatcher
+    //     .on::<req::Completion>(handlers::handle_completion)?
+    //     .finish();
     Ok(())
 }
 
