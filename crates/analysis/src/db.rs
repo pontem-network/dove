@@ -8,7 +8,6 @@ use dialects::shared::errors::{CompilerError, CompilerErrorPart};
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use std::fmt;
-use syntax::ast::SourceFile;
 use utils::{FilesSourceText, MoveFilePath};
 
 pub struct FileDiagnostic {
@@ -81,14 +80,6 @@ impl RootDatabase {
             .into_iter()
             .filter(|(f, _)| self.is_fpath_for_a_module(f))
             .collect()
-    }
-
-    pub fn source_file(&self, fpath: MoveFilePath) -> SourceFile {
-        self.available_files
-            .get(fpath)
-            .unwrap_or_else(|| panic!("No entry found for key {:?}", fpath));
-        let source_text = self.available_files[fpath].clone();
-        SourceFile::new(source_text)
     }
 
     pub fn apply_change(&mut self, change: AnalysisChange) {

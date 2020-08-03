@@ -1,4 +1,0 @@
-binding.gyp
-index.js
-src/*.json
-src/binding.cc
