@@ -151,7 +151,6 @@ dependencies = [
  "lsp-types",
  "serde",
  "serde_json",
- "syntax",
  "tree-sitter",
  "utils",
 ]
@@ -3847,14 +3846,6 @@ dependencies = [
  "quote 1.0.7",
  "syn 1.0.33",
  "unicode-xid 0.2.1",
-]
-
-[[package]]
-name = "syntax"
-version = "0.1.0"
-dependencies = [
- "cc",
- "tree-sitter",
 ]
 
 [[package]]

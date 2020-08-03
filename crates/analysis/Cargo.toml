@@ -26,4 +26,3 @@ tree-sitter = "0.16.1"
 
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }
-syntax = { path = "../syntax" }

@@ -5,6 +5,5 @@ members = [
     "crates/move-executor",
     "crates/dialects",
     "crates/utils",
-    "crates/integration_tests",
-    "crates/syntax",
+    "crates/integration_tests"
 ]
