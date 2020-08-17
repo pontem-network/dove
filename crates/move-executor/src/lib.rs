@@ -42,7 +42,7 @@ pub fn compile_and_execute_script(
     })?;
     address_map.insert(provided_address.clone());
 
-    let chain_state = dialect.compile_and_run(
+    let chain_state_changes = dialect.compile_and_run(
         script,
         deps,
         provided_address,
@@ -54,7 +54,7 @@ pub fn compile_and_execute_script(
         resource_changes,
         gas_spent,
         events,
-    } = chain_state;
+    } = chain_state_changes;
     let normalized_changes: Vec<_> = resource_changes
         .into_iter()
         .map(|change| change.with_replaced_addresses(&address_map.reversed()))

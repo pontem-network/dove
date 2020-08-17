@@ -86,7 +86,6 @@ script {
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
-                "layout": ["U8"]
             },
             "op": {"type": "SetValue", "values": [10]}
         }])
@@ -113,7 +112,6 @@ script {
             "module": "Record",
             "name": "T",
             "ty_args": [],
-            "layout": ["U8"]
         },
         "op": {"type": "SetValue", "values": [10]}
     }]);
@@ -135,7 +133,6 @@ script {
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
-                "layout": ["U8"]
             },
             "op": {"type": "SetValue", "values": [20]}
         }])
@@ -187,9 +184,6 @@ script {
               "module": "M",
               "name": "T",
               "ty_args": [],
-              "layout": [
-                "U8"
-              ]
             },
             "op": {"type": "SetValue", "values": [10]}
           }
@@ -240,9 +234,6 @@ script {
               "module": "M",
               "name": "T",
               "ty_args": [],
-              "layout": [
-                "U8"
-              ]
             },
             "op": {"type": "SetValue", "values": [10]}
           }
@@ -295,9 +286,6 @@ script {
               "module": "Module",
               "name": "T",
               "ty_args": [],
-              "layout": [
-                "Bool"
-              ]
             },
             "op": {"type": "SetValue", "values": [1]}
           }
@@ -357,7 +345,6 @@ script {
             "module": "Record",
             "name": "T",
             "ty_args": [],
-            "layout": ["U8"]
         },
         "op": {"type": "SetValue", "values": [10]}
     }]);
@@ -379,7 +366,6 @@ script {
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
-                "layout": ["U8"]
             },
             "op": {"type": "Delete"}
         }])
@@ -407,7 +393,6 @@ script {
             "module": "Record",
             "name": "T",
             "ty_args": [],
-            "layout": ["U8"]
         },
         "op": {"type": "SetValue", "values": [10]}
     }]);
@@ -431,7 +416,6 @@ script {
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
-                    "layout": ["U8"]
                 },
                 "op": {"type": "Delete"},
             },
@@ -442,7 +426,6 @@ script {
                     "module": "Record",
                     "name": "T",
                     "ty_args": [],
-                    "layout": ["U8"]
                 },
                 "op": {"type": "SetValue", "values": [10]},
             }
@@ -498,7 +481,6 @@ script {
             "module": "Record",
             "name": "T",
             "ty_args": [],
-            "layout": ["U8"]
         },
         "op": {"type": "SetValue", "values": [10]}
     }]);
@@ -521,7 +503,6 @@ script {
                 "module": "Record",
                 "name": "T",
                 "ty_args": [],
-                "layout": ["U8"]
             },
             "op": {"type": "SetValue", "values": [20]}
         }])
@@ -548,7 +529,7 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(chain_state["gas_spent"], 1606);
+    assert_eq!(chain_state["gas_spent"], 4);
 }
 
 #[test]

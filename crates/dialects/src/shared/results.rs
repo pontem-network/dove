@@ -1,5 +1,7 @@
+use crate::lang::executor::Event;
 use crate::shared::ProvidedAccountAddress;
 use core::fmt;
+use move_core_types::language_storage::{StructTag, TypeTag};
 use serde::export::Formatter;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
@@ -17,7 +19,32 @@ pub struct ResourceType {
     pub module: String,
     pub name: String,
     pub ty_args: Vec<String>,
-    pub layout: Vec<String>,
+    // pub layout: Vec<String>,
+}
+
+impl ResourceType {
+    pub fn new(type_tag: TypeTag) -> Self {
+        match type_tag {
+            TypeTag::Struct(struct_tag) => {
+                let StructTag {
+                    address,
+                    module,
+                    name,
+                    type_params,
+                } = struct_tag;
+                ResourceType {
+                    address: format!("0x{}", address),
+                    module: module.to_string(),
+                    name: name.to_string(),
+                    ty_args: type_params
+                        .into_iter()
+                        .map(|ty| format!("{}", ty))
+                        .collect(),
+                }
+            }
+            _ => unreachable!("Resources are always structs"),
+        }
+    }
 }
 
 impl Display for ResourceType {
@@ -26,10 +53,11 @@ impl Display for ResourceType {
     }
 }
 
+#[derive(Debug)]
 pub struct ChainStateChanges {
     pub resource_changes: Vec<ResourceChange>,
     pub gas_spent: u64,
-    pub events: Vec<serde_json::Value>,
+    pub events: Vec<Event>,
 }
 
 #[derive(Default, Debug)]

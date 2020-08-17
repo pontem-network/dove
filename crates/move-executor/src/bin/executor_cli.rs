@@ -7,7 +7,8 @@ use dialects::DialectName;
 
 use clap::{App, Arg};
 use dialects::shared::errors::ExecCompilerError;
-use dialects::shared::results::ExecutionError;
+
+use libra_types::vm_status::VMStatus;
 use move_executor::compile_and_execute_script;
 use std::str::FromStr;
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
@@ -108,7 +109,7 @@ fn main() -> Result<()> {
                 }
                 Err(error) => error,
             };
-            let error = match error.downcast::<ExecutionError>() {
+            let error = match error.downcast::<VMStatus>() {
                 Ok(exec_error) => {
                     let out = serde_json::to_string_pretty(&exec_error)
                         .expect("Should always be serializable");

@@ -15,7 +15,6 @@ use crate::shared::errors::{
     ProjectSourceMap,
 };
 
-pub mod data_cache;
 pub mod executor;
 pub mod gas;
 pub mod resources;
