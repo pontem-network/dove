@@ -12,7 +12,7 @@ serde = "1.0.106"
 serde_json = "1.0.52"
 clap = "2.33.1"
 
-libra-types = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
+libra-types = { git = "https://github.com/dfinance/libra.git", branch = "17.08.2020" }
 
 dialects = { path = "../dialects" }
 utils = { path = "../utils" }
