@@ -141,7 +141,7 @@ fn execute_script_with_runtime_session(
     let vm = MoveVM::new();
     let mut runtime_session = vm.new_session(data_store);
 
-    runtime_session.execute_script(script, vec![], args, sender, cost_strategy)?;
+    runtime_session.execute_script(script, vec![], args, vec![sender], cost_strategy)?;
     runtime_session.finish()
 }
 
