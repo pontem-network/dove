@@ -1,7 +1,7 @@
 use crate::lang::executor::Event;
 use crate::shared::ProvidedAccountAddress;
 use core::fmt;
-use move_core_types::language_storage::{StructTag, TypeTag};
+use move_core_types::language_storage::StructTag;
 use serde::export::Formatter;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
@@ -23,26 +23,21 @@ pub struct ResourceType {
 }
 
 impl ResourceType {
-    pub fn new(type_tag: TypeTag) -> Self {
-        match type_tag {
-            TypeTag::Struct(struct_tag) => {
-                let StructTag {
-                    address,
-                    module,
-                    name,
-                    type_params,
-                } = struct_tag;
-                ResourceType {
-                    address: format!("0x{}", address),
-                    module: module.to_string(),
-                    name: name.to_string(),
-                    ty_args: type_params
-                        .into_iter()
-                        .map(|ty| format!("{}", ty))
-                        .collect(),
-                }
-            }
-            _ => unreachable!("Resources are always structs"),
+    pub fn new(resource_struct_tag: StructTag) -> Self {
+        let StructTag {
+            address,
+            module,
+            name,
+            type_params,
+        } = resource_struct_tag;
+        ResourceType {
+            address: format!("0x{}", address),
+            module: module.to_string(),
+            name: name.to_string(),
+            ty_args: type_params
+                .into_iter()
+                .map(|ty| format!("{}", ty))
+                .collect(),
         }
     }
 }
