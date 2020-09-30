@@ -72,9 +72,7 @@ mod tests {
     use super::*;
     use analysis::db::RootDatabase;
 
-    use integration_tests::{
-        config, get_modules_path, get_script_path, get_stdlib_path, modules_mod,
-    };
+    use integration_tests::{config, get_modules_path, get_script_path, get_stdlib_path, modules_mod};
     use utils::{leaked_fpath, FilesSourceText};
 
     #[test]
