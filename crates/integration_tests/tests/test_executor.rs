@@ -1,5 +1,5 @@
 use dialects::shared::errors::ExecCompilerError;
-use move_executor::compile_and_execute_script;
+use move_executor::{compile_and_execute_script, compile_and_execute_script_multisigner};
 
 use integration_tests::{
     existing_module_file_abspath, get_modules_path, get_script_path, modules_mod, stdlib_mod,
@@ -557,4 +557,38 @@ script {
         vec![],
     )
     .unwrap();
+}
+
+#[test]
+fn test_multiple_signers() {
+    let text = r"
+    script {
+        use 0x2::Record;
+
+        fun main(s1: &signer, s2: &signer) {
+            let r1 = Record::create(10);
+            Record::save(s1, r1);
+
+            let r2 = Record::create(20);
+            Record::save(s2, r2);
+        }
+    }
+    ";
+
+    let changes = compile_and_execute_script_multisigner(
+        (get_script_path(), text.to_string()),
+        &[stdlib_mod("signer.move"), modules_mod("record.move")],
+        "dfinance",
+        vec!["0x1".to_string(), "0x2".to_string()],
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+    let account1_change = changes["changes"][0].clone();
+    assert_eq!(account1_change["account"], "0x1");
+    assert_eq!(account1_change["op"]["values"][0], 10);
+
+    let account2_change = changes["changes"][1].clone();
+    assert_eq!(account2_change["account"], "0x2");
+    assert_eq!(account2_change["op"]["values"][0], 20);
 }

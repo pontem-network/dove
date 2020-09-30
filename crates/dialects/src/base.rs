@@ -140,15 +140,17 @@ pub trait Dialect {
         &self,
         script: MoveFile,
         deps: &[MoveFile],
-        sender: ProvidedAccountAddress,
+        provided_senders: Vec<ProvidedAccountAddress>,
         genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<ChainStateChanges> {
         let genesis_write_set = lang::resources::changes_into_writeset(genesis_changes)
             .with_context(|| "Provided genesis serialization error")?;
 
+        let compilation_sender = provided_senders[0].clone();
+
         let (compiled_script, compiled_modules) =
-            self.check_and_generate_bytecode(script, deps, sender.clone())?;
+            self.check_and_generate_bytecode(script, deps, compilation_sender)?;
         let compiled_script =
             compiled_script.expect("compile_and_run should always be called with the script");
 
@@ -164,8 +166,12 @@ pub trait Dialect {
             script_args.push(script_arg);
         }
 
+        let senders = provided_senders
+            .into_iter()
+            .map(|s| s.as_account_address())
+            .collect();
         execute_script(
-            sender.as_account_address(),
+            senders,
             &network_state,
             serialized_script,
             script_args,
