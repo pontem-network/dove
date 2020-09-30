@@ -17,7 +17,7 @@ use crate::lang::resources::ResourceWriteOp;
 use crate::shared::results::{ChainStateChanges, ResourceChange, ResourceType};
 
 use libra_types::write_set::WriteOp;
-use move_core_types::language_storage::{ModuleId, TypeTag};
+use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
 use move_core_types::value::MoveTypeLayout;
 use move_core_types::vm_status::StatusCode;
 use move_vm_runtime::data_cache::TransactionEffects;
@@ -68,16 +68,19 @@ fn serialize_val(val: Value, layout: MoveTypeLayout) -> VMResult<Vec<u8>> {
     }
 }
 
-type ResourceChangeData = (TypeTag, Option<(MoveTypeLayout, Value)>);
-
+// disable type_complexity lint, as the same type used in TransactionEffects field
+#[allow(clippy::type_complexity)]
 fn into_resource_changes(
-    effect_resources: Vec<(AccountAddress, Vec<ResourceChangeData>)>,
+    effect_resources: Vec<(
+        AccountAddress,
+        Vec<(StructTag, Option<(MoveTypeLayout, Value)>)>,
+    )>,
 ) -> VMResult<Vec<ResourceChange>> {
     let mut resources = vec![];
     for (addr, resource_vals) in effect_resources {
         let account_address = format!("0x{}", addr.to_string());
-        for (ty, val) in resource_vals {
-            let resource_type = ResourceType::new(ty);
+        for (struct_tag, val) in resource_vals {
+            let resource_type = ResourceType::new(struct_tag);
             match val {
                 None => resources.push(ResourceChange::new(
                     account_address.clone(),
@@ -150,7 +153,9 @@ pub fn chain_state_changes(
     gas_spent: u64,
 ) -> VMResult<ChainStateChanges> {
     let TransactionEffects {
-        resources, events, ..
+        resources,
+        events,
+        modules: _,
     } = effects;
     let resource_changes = into_resource_changes(resources)?;
     let events = into_events(events)?;

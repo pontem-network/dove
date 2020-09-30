@@ -529,7 +529,7 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(chain_state["gas_spent"], 4);
+    assert_eq!(chain_state["gas_spent"], 7);
 }
 
 #[test]

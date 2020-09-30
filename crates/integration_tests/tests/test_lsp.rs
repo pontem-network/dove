@@ -14,9 +14,7 @@ use integration_tests::{config, get_script_path};
 use lsp_types::notification::{DidChangeConfiguration, DidChangeWatchedFiles, Initialized};
 
 use move_language_server::global_state::{initialize_new_global_state, GlobalState};
-use move_language_server::main_loop::{
-    main_loop, notification_new, request_new, FileSystemEvent,
-};
+use move_language_server::main_loop::{main_loop, notification_new, request_new, FileSystemEvent};
 use move_language_server::server::run_server;
 
 const SHUTDOWN_REQ_ID: u64 = 10;
