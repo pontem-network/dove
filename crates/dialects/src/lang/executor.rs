@@ -138,13 +138,16 @@ fn execute_script_with_runtime_session(
     data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
-    sender: AccountAddress,
+    senders: Vec<AccountAddress>,
     cost_strategy: &mut CostStrategy,
 ) -> VMResult<TransactionEffects> {
     let vm = MoveVM::new();
     let mut runtime_session = vm.new_session(data_store);
 
-    runtime_session.execute_script(script, vec![], args, vec![sender], cost_strategy)?;
+    // first signer param -> first passed sender (otherwise reversed)
+    let senders = senders.into_iter().rev().collect();
+
+    runtime_session.execute_script(script, vec![], args, senders, cost_strategy)?;
     runtime_session.finish()
 }
 
@@ -167,7 +170,7 @@ pub fn chain_state_changes(
 }
 
 pub fn execute_script(
-    sender_address: AccountAddress,
+    senders: Vec<AccountAddress>,
     data_store: &FakeDataStore,
     script: Vec<u8>,
     args: Vec<Value>,
@@ -180,7 +183,7 @@ pub fn execute_script(
         data_store,
         script,
         args,
-        sender_address,
+        senders,
         &mut cost_strategy,
     )
     .map_err(|error| error.into_vm_status())

@@ -6,11 +6,11 @@ edition = "2018"
 build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[build-dependencies]
-build-info-build = "=0.0.18"
+#[build-dependencies]
+#build-info-build = "=0.0.18"
 
 [dependencies]
-build-info = "=0.0.18"
+#build-info = "=0.0.18"
 
 log = "0.4.8"
 env_logger = "0.7.1"
