@@ -3,12 +3,12 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 
 use crate::change::{AnalysisChange, RootChange};
 use crate::config::Config;
-use crate::utils::location::File;
 use dialects::shared::errors::{CompilerError, CompilerErrorPart};
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use std::fmt;
 use utils::{FilesSourceText, MoveFilePath};
+use utils::location::File;
 
 pub struct FileDiagnostic {
     pub fpath: MoveFilePath,

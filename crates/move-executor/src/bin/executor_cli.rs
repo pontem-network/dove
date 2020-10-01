@@ -9,7 +9,7 @@ use clap::{App, Arg};
 use dialects::shared::errors::ExecCompilerError;
 
 use libra_types::vm_status::VMStatus;
-use move_executor::compile_and_execute_script_multisigner;
+use move_executor::compile_and_execute_script;
 use std::str::FromStr;
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
 
@@ -39,9 +39,9 @@ fn main() -> Result<()> {
                 .help("Move language dialect"),
         )
         .arg(
-            Arg::from_usage("-s --sender [COMMA_SEP_SENDER_ADDRESSES]")
+            Arg::from_usage("-s --sender [SENDER_ADDRESS]")
                 .required(true)
-                .help("Address of the current user (comma separated addresses in case of multi-sig, first one will be used for compilation)"),
+                .help("Address of the current user"),
         )
         .arg(
             Arg::from_usage("-m --modules [MODULE_PATHS]")
@@ -75,12 +75,7 @@ fn main() -> Result<()> {
     };
 
     let dialect = cli_arguments.value_of("dialect").unwrap();
-    let senders = cli_arguments
-        .value_of("sender")
-        .unwrap()
-        .split(',')
-        .map(|s| s.to_string())
-        .collect();
+    let sender = cli_arguments.value_of("sender").unwrap();
     let args: Vec<String> = cli_arguments
         .value_of("args")
         .unwrap_or_default()
@@ -88,11 +83,11 @@ fn main() -> Result<()> {
         .map(String::from)
         .collect();
 
-    let res = compile_and_execute_script_multisigner(
+    let res = compile_and_execute_script(
         (script_fpath, script_source_text.clone()),
         &deps,
         dialect,
-        senders,
+        sender,
         genesis_json_contents,
         args,
     );

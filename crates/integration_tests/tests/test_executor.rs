@@ -1,5 +1,5 @@
 use dialects::shared::errors::ExecCompilerError;
-use move_executor::{compile_and_execute_script, compile_and_execute_script_multisigner};
+use move_executor::compile_and_execute_script;
 
 use integration_tests::{
     existing_module_file_abspath, get_modules_path, get_script_path, modules_mod, stdlib_mod,
@@ -560,12 +560,44 @@ script {
 }
 
 #[test]
+fn test_execute_script_with_custom_signer() {
+    let text = r"
+/// signer: 0x2
+script {
+    use 0x2::Record;
+
+    fun test_create_record(s1: &signer) {
+        let r1 = Record::create(20);
+        Record::save(s1, r1);
+    }
+}
+    ";
+    let changes = compile_and_execute_script(
+        (get_script_path(), text.to_string()),
+        &[stdlib_mod("signer.move"), modules_mod("record.move")],
+        "dfinance",
+        "0x3",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+    let account1_change = changes["changes"][0].clone();
+    assert_eq!(
+        account1_change["account"],
+        "0x0000000000000000000000000000000000000002"
+    );
+    assert_eq!(account1_change["op"]["values"][0], 20);
+}
+
+#[test]
 fn test_multiple_signers() {
     let text = r"
+    /// signer: 0x1
+    /// signer: 0x2
     script {
         use 0x2::Record;
 
-        fun main(s1: &signer, s2: &signer) {
+        fun test_multiple_signers(s1: &signer, s2: &signer) {
             let r1 = Record::create(10);
             Record::save(s1, r1);
 
@@ -575,20 +607,72 @@ fn test_multiple_signers() {
     }
     ";
 
-    let changes = compile_and_execute_script_multisigner(
+    let changes = compile_and_execute_script(
         (get_script_path(), text.to_string()),
         &[stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
-        vec!["0x1".to_string(), "0x2".to_string()],
+        "0x3",
         serde_json::json!([]),
         vec![],
     )
     .unwrap();
     let account1_change = changes["changes"][0].clone();
-    assert_eq!(account1_change["account"], "0x1");
+    assert_eq!(
+        account1_change["account"],
+        "0x0000000000000000000000000000000000000001"
+    );
     assert_eq!(account1_change["op"]["values"][0], 10);
 
     let account2_change = changes["changes"][1].clone();
-    assert_eq!(account2_change["account"], "0x2");
+    assert_eq!(
+        account2_change["account"],
+        "0x0000000000000000000000000000000000000002"
+    );
     assert_eq!(account2_change["op"]["values"][0], 20);
+}
+
+#[test]
+fn test_execute_script_with_module_in_the_same_file() {
+    let text = r"
+address 0x2 {
+    module Record {
+        resource struct T {
+            age: u8
+        }
+
+        public fun create(age: u8): T {
+            T { age }
+        }
+
+        public fun save(account: &signer, record: T) {
+            move_to<T>(account, record);
+        }
+    }
+}
+
+/// signer: 0x2
+script {
+    use 0x2::Record;
+
+    fun test_create_record(s1: &signer) {
+        let r1 = Record::create(20);
+        Record::save(s1, r1);
+    }
+}
+    ";
+    let changes = compile_and_execute_script(
+        (get_script_path(), text.to_string()),
+        &[],
+        "dfinance",
+        "0x3",
+        serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+    let account1_change = changes["changes"][0].clone();
+    assert_eq!(
+        account1_change["account"],
+        "0x0000000000000000000000000000000000000002"
+    );
+    assert_eq!(account1_change["op"]["values"][0], 20);
 }

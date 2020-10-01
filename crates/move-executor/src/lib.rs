@@ -6,30 +6,30 @@ use dialects::shared::results::{AddressMap, ChainStateChanges, ResourceChange};
 
 use std::str::FromStr;
 use utils::MoveFile;
+//
+// pub fn compile_and_execute_script(
+//     script: MoveFile,
+//     deps: &[MoveFile],
+//     dialect: &str,
+//     sender: &str,
+//     genesis_json_contents: serde_json::Value,
+//     args: Vec<String>,
+// ) -> Result<serde_json::Value> {
+//     compile_and_execute_script_multisigner(
+//         script,
+//         deps,
+//         dialect,
+//         sender.to_string(),
+//         genesis_json_contents,
+//         args,
+//     )
+// }
 
 pub fn compile_and_execute_script(
     script: MoveFile,
     deps: &[MoveFile],
     dialect: &str,
     sender: &str,
-    genesis_json_contents: serde_json::Value,
-    args: Vec<String>,
-) -> Result<serde_json::Value> {
-    compile_and_execute_script_multisigner(
-        script,
-        deps,
-        dialect,
-        vec![sender.to_string()],
-        genesis_json_contents,
-        args,
-    )
-}
-
-pub fn compile_and_execute_script_multisigner(
-    script: MoveFile,
-    deps: &[MoveFile],
-    dialect: &str,
-    senders: Vec<String>,
     genesis_json_contents: serde_json::Value,
     args: Vec<String>,
 ) -> Result<serde_json::Value> {
@@ -51,19 +51,21 @@ pub fn compile_and_execute_script_multisigner(
         lowered_genesis_changes.push(change.with_replaced_addresses(&address_map.forward()));
     }
 
-    let mut provided_sender_addresses = vec![];
-    for sender in senders {
-        let addr = dialect
-            .normalize_account_address(&sender)
-            .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
-        address_map.insert(addr.clone());
-        provided_sender_addresses.push(addr);
-    }
+    // let mut provided_sender_address = vec![];
+    // for sender in senders {
+
+    let provided_sender_address = dialect
+        .normalize_account_address(sender)
+        .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
+    address_map.insert(provided_sender_address.clone());
+
+    // provided_sender_address.push(addr);
+    // }
 
     let chain_state_changes = dialect.compile_and_run(
         script,
         deps,
-        provided_sender_addresses,
+        provided_sender_address,
         lowered_genesis_changes,
         args,
     )?;
