@@ -49,7 +49,8 @@ fn main() -> Result<()> {
                 .number_of_values(1)
                 .help("Path to module file / modules folder to use as dependency. \nCould be used more than once: '-m ./stdlib -m ./modules'"),
         )
-        .arg(Arg::from_usage("--genesis [GENESIS_CONTENTS]").help("JSON-based genesis contents"))
+        // .arg(Arg::from_usage("--genesis [GENESIS_CONTENTS]").help("JSON-based genesis contents"))
+        .arg(Arg::from_usage("--show-changes").help("Show what changes has been made to the network after script is executed"))
         .arg(
             Arg::from_usage("--args [SCRIPT_ARGS]")
                 .help(r#"Number of script main() function arguments in quotes, e.g. "10 20 30""#),
@@ -67,12 +68,13 @@ fn main() -> Result<()> {
         .collect::<Vec<PathBuf>>();
     let deps = io::load_move_files(modules_fpaths)?;
 
-    let genesis_json_contents = match cli_arguments.value_of("genesis") {
-        Some(contents) => {
-            serde_json::from_str(contents).context("JSON passed to --genesis is invalid")?
-        }
-        None => serde_json::json!([]),
-    };
+    let show_changes = cli_arguments.is_present("show_changes");
+    // let genesis_json_contents = match cli_arguments.value_of("genesis") {
+    //     Some(contents) => {
+    //         serde_json::from_str(contents).context("JSON passed to --genesis is invalid")?
+    //     }
+    //     None => serde_json::json!([]),
+    // };
 
     let dialect = cli_arguments.value_of("dialect").unwrap();
     let sender = cli_arguments.value_of("sender").unwrap();
@@ -88,14 +90,16 @@ fn main() -> Result<()> {
         &deps,
         dialect,
         sender,
-        genesis_json_contents,
+        // genesis_json_contents,
         args,
     );
     match res {
         Ok(changes) => {
-            let out =
-                serde_json::to_string_pretty(&changes).expect("Should always be serializable");
-            print!("{}", out);
+            if show_changes {
+                let out = serde_json::to_string_pretty(&changes)
+                    .expect("Should always be serializable");
+                print!("{}", out);
+            }
             Ok(())
         }
         Err(error) => {

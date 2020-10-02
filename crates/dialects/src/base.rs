@@ -1,4 +1,3 @@
-use anyhow::Context;
 use anyhow::Result;
 use move_core_types::gas_schedule::CostTable;
 use move_core_types::parser::parse_transaction_argument;
@@ -13,7 +12,7 @@ use crate::lang::{
     PreBytecodeProgram,
 };
 use crate::shared::errors::{CompilerError, ExecCompilerError, FileSourceMap, ProjectSourceMap};
-use crate::shared::results::{ChainStateChanges, ResourceChange};
+use crate::shared::results::{ChainStateChanges};
 use crate::shared::{line_endings, ProvidedAccountAddress};
 
 use crate::lang::session::{init_execution_session};
@@ -162,11 +161,11 @@ pub trait Dialect {
         script: MoveFile,
         deps: &[MoveFile],
         provided_sender: ProvidedAccountAddress,
-        genesis_changes: Vec<ResourceChange>,
+        // genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
     ) -> Result<ChainStateChanges> {
-        let genesis_write_set = lang::resources::changes_into_writeset(genesis_changes)
-            .with_context(|| "Provided genesis serialization error")?;
+        // let genesis_write_set = lang::resources::changes_into_writeset(genesis_changes)
+        //     .with_context(|| "Provided genesis serialization error")?;
 
         let (program, comments, project_source_map) =
             self.compile_to_prebytecode_program(script, deps, provided_sender.clone())?;
@@ -174,7 +173,7 @@ pub trait Dialect {
             .map_err(|errors| into_exec_compiler_error(errors, project_source_map))?;
 
         let modules = execution_session.modules();
-        let network_state = prepare_fake_network_state(modules, genesis_write_set);
+        let network_state = prepare_fake_network_state(modules);
 
         let mut script_args = Vec::with_capacity(args.len());
         for passed_arg in args {

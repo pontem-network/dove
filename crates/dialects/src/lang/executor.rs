@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use language_e2e_tests::data_store::FakeDataStore;
-use libra_types::{transaction::TransactionArgument, write_set::WriteSet};
+use libra_types::{transaction::TransactionArgument};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
 
@@ -22,15 +22,11 @@ use move_vm_runtime::data_cache::TransactionEffects;
 use vm::errors::{Location, PartialVMError, VMResult};
 use crate::lang::session::ExecutionMeta;
 
-pub fn prepare_fake_network_state(
-    modules: Vec<CompiledModule>,
-    genesis_write_set: WriteSet,
-) -> FakeDataStore {
+pub fn prepare_fake_network_state(modules: Vec<CompiledModule>) -> FakeDataStore {
     let mut network_state = FakeDataStore::default();
     for module in modules {
         network_state.add_module(&module.self_id(), &module);
     }
-    network_state.add_write_set(&genesis_write_set);
     network_state
 }
 
