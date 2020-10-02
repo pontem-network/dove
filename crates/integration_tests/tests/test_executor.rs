@@ -1,5 +1,5 @@
 use dialects::shared::errors::ExecCompilerError;
-use move_executor::{compile_and_execute_script, compile_and_execute_script_multisigner};
+use move_executor::compile_and_execute_script;
 
 use integration_tests::{
     existing_module_file_abspath, get_modules_path, get_script_path, modules_mod, stdlib_mod,
@@ -19,7 +19,7 @@ script {
         &[],
         "libra",
         "0x1111111111111111",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap_err()
@@ -49,7 +49,7 @@ script {
         &deps,
         "libra",
         "0x1111111111111111",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
@@ -73,14 +73,14 @@ script {
         &deps,
         "libra",
         "0x1111111111111111",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
     assert_eq!(
         state_changes["changes"],
         serde_json::json!([{
-            "account": "0x1111111111111111",
+            "account": "0x0000000000000000000000001111111111111111",
             "ty": {
                 "address": "0x0000000000000000000000000000000000000002",
                 "module": "Record",
@@ -92,52 +92,52 @@ script {
     );
 }
 
-#[test]
-fn test_execute_script_with_genesis_state_provided() {
-    let script_text = r"
-script {
-    use 0x2::Record;
-
-    fun main(s: &signer) {
-        let record = Record::with_doubled_age(s);
-        Record::save(s, record);
-    }
-}";
-    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-
-    let initial_chain_state = serde_json::json!([{
-        "account": "0x1111111111111111",
-        "ty": {
-            "address": "0x2",
-            "module": "Record",
-            "name": "T",
-            "ty_args": [],
-        },
-        "op": {"type": "SetValue", "values": [10]}
-    }]);
-    let state_changes = compile_and_execute_script(
-        (get_script_path(), script_text.to_string()),
-        &deps,
-        "libra",
-        "0x1111111111111111",
-        initial_chain_state,
-        vec![],
-    )
-    .unwrap();
-    assert_eq!(
-        state_changes["changes"],
-        serde_json::json!([{
-            "account": "0x1111111111111111",
-            "ty": {
-                "address": "0x0000000000000000000000000000000000000002",
-                "module": "Record",
-                "name": "T",
-                "ty_args": [],
-            },
-            "op": {"type": "SetValue", "values": [20]}
-        }])
-    );
-}
+// #[test]
+// fn test_execute_script_with_genesis_state_provided() {
+//     let script_text = r"
+// script {
+//     use 0x2::Record;
+//
+//     fun main(s: &signer) {
+//         let record = Record::with_doubled_age(s);
+//         Record::save(s, record);
+//     }
+// }";
+//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
+//
+//     let initial_chain_state = serde_json::json!([{
+//         "account": "0x1111111111111111",
+//         "ty": {
+//             "address": "0x2",
+//             "module": "Record",
+//             "name": "T",
+//             "ty_args": [],
+//         },
+//         "op": {"type": "SetValue", "values": [10]}
+//     }]);
+//     let state_changes = compile_and_execute_script(
+//         (get_script_path(), script_text.to_string()),
+//         &deps,
+//         "libra",
+//         "0x1111111111111111",
+//         // initial_chain_state,
+//         vec![],
+//     )
+//     .unwrap();
+//     assert_eq!(
+//         state_changes["changes"],
+//         serde_json::json!([{
+//             "account": "0x1111111111111111",
+//             "ty": {
+//                 "address": "0x0000000000000000000000000000000000000002",
+//                 "module": "Record",
+//                 "name": "T",
+//                 "ty_args": [],
+//             },
+//             "op": {"type": "SetValue", "values": [20]}
+//         }])
+//     );
+// }
 
 #[test]
 fn missing_writesets_for_move_to_sender() {
@@ -170,7 +170,7 @@ script {
         &deps,
         "libra",
         "0x1",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
@@ -178,9 +178,9 @@ script {
         state_changes["changes"],
         serde_json::json!([
           {
-            "account": "0x1",
+            "account": "0x0000000000000000000000000000000000000001",
             "ty": {
-              "address": "0x1",
+              "address": "0x0000000000000000000000000000000000000001",
               "module": "M",
               "name": "T",
               "ty_args": [],
@@ -219,7 +219,7 @@ script {
         )],
         "dfinance",
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
@@ -228,9 +228,9 @@ script {
         state_changes["changes"],
         serde_json::json!([
           {
-            "account": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
+            "account": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
             "ty": {
-              "address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
+              "address": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
               "module": "M",
               "name": "T",
               "ty_args": [],
@@ -271,7 +271,7 @@ script {
         )],
         "libra",
         "0x1",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![String::from("true")],
     )
     .unwrap();
@@ -280,9 +280,9 @@ script {
         state_changes["changes"],
         serde_json::json!([
           {
-            "account": "0x1",
+            "account": "0x0000000000000000000000000000000000000001",
             "ty": {
-              "address": "0x1",
+              "address": "0x0000000000000000000000000000000000000001",
               "module": "Module",
               "name": "T",
               "ty_args": [],
@@ -319,119 +319,119 @@ script {
         )],
         "libra",
         "0x1",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
     assert_eq!(state_changes["changes"], serde_json::json!([]));
 }
 
-#[test]
-fn test_resource_move_from_sender() {
-    let script_text = r"
-script {
-    use 0x2::Record;
+// #[test]
+// fn test_resource_move_from_sender() {
+//     let script_text = r"
+// script {
+//     use 0x2::Record;
+//
+//     fun main(s: &signer) {
+//         Record::destroy_record(s);
+//     }
+// }";
+//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
+//
+//     let initial_chain_state = serde_json::json!([{
+//         "account": "0x1111111111111111",
+//         "ty": {
+//             "address": "0x2",
+//             "module": "Record",
+//             "name": "T",
+//             "ty_args": [],
+//         },
+//         "op": {"type": "SetValue", "values": [10]}
+//     }]);
+//     let state_changes = compile_and_execute_script(
+//         (get_script_path(), script_text.to_string()),
+//         &deps,
+//         "libra",
+//         "0x1111111111111111",
+//         initial_chain_state,
+//         vec![],
+//     )
+//     .unwrap();
+//     assert_eq!(
+//         state_changes["changes"],
+//         serde_json::json!([{
+//             "account": "0x1111111111111111",
+//             "ty": {
+//                 "address": "0x0000000000000000000000000000000000000002",
+//                 "module": "Record",
+//                 "name": "T",
+//                 "ty_args": [],
+//             },
+//             "op": {"type": "Delete"}
+//         }])
+//     );
+// }
 
-    fun main(s: &signer) {
-        Record::destroy_record(s);
-    }
-}";
-    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-
-    let initial_chain_state = serde_json::json!([{
-        "account": "0x1111111111111111",
-        "ty": {
-            "address": "0x2",
-            "module": "Record",
-            "name": "T",
-            "ty_args": [],
-        },
-        "op": {"type": "SetValue", "values": [10]}
-    }]);
-    let state_changes = compile_and_execute_script(
-        (get_script_path(), script_text.to_string()),
-        &deps,
-        "libra",
-        "0x1111111111111111",
-        initial_chain_state,
-        vec![],
-    )
-    .unwrap();
-    assert_eq!(
-        state_changes["changes"],
-        serde_json::json!([{
-            "account": "0x1111111111111111",
-            "ty": {
-                "address": "0x0000000000000000000000000000000000000002",
-                "module": "Record",
-                "name": "T",
-                "ty_args": [],
-            },
-            "op": {"type": "Delete"}
-        }])
-    );
-}
-
-#[test]
-fn move_resource_from_another_user_to_sender() {
-    let script_text = r"
-script {
-    use 0x2::Record;
-
-    fun main(s: &signer) {
-        let original_record_owner = 0x1;
-        let record = Record::get_record(original_record_owner);
-        Record::save(s, record);
-    }
-}";
-    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-
-    let initial_chain_state = serde_json::json!([{
-        "account": "0x1",
-        "ty": {
-            "address": "0x2",
-            "module": "Record",
-            "name": "T",
-            "ty_args": [],
-        },
-        "op": {"type": "SetValue", "values": [10]}
-    }]);
-    let state_changes = compile_and_execute_script(
-        (get_script_path(), script_text.to_string()),
-        &deps,
-        "libra",
-        "0x3",
-        initial_chain_state,
-        vec![],
-    )
-    .unwrap();
-
-    assert_eq!(
-        state_changes["changes"],
-        serde_json::json!([
-            {
-                "account": "0x1",
-                "ty": {
-                    "address": "0x0000000000000000000000000000000000000002",
-                    "module": "Record",
-                    "name": "T",
-                    "ty_args": [],
-                },
-                "op": {"type": "Delete"},
-            },
-            {
-                "account": "0x3",
-                "ty": {
-                    "address": "0x0000000000000000000000000000000000000002",
-                    "module": "Record",
-                    "name": "T",
-                    "ty_args": [],
-                },
-                "op": {"type": "SetValue", "values": [10]},
-            }
-        ])
-    );
-}
+// #[test]
+// fn move_resource_from_another_user_to_sender() {
+//     let script_text = r"
+// script {
+//     use 0x2::Record;
+//
+//     fun main(s: &signer) {
+//         let original_record_owner = 0x1;
+//         let record = Record::get_record(original_record_owner);
+//         Record::save(s, record);
+//     }
+// }";
+//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
+//
+//     let initial_chain_state = serde_json::json!([{
+//         "account": "0x1",
+//         "ty": {
+//             "address": "0x2",
+//             "module": "Record",
+//             "name": "T",
+//             "ty_args": [],
+//         },
+//         "op": {"type": "SetValue", "values": [10]}
+//     }]);
+//     let state_changes = compile_and_execute_script(
+//         (get_script_path(), script_text.to_string()),
+//         &deps,
+//         "libra",
+//         "0x3",
+//         initial_chain_state,
+//         vec![],
+//     )
+//     .unwrap();
+//
+//     assert_eq!(
+//         state_changes["changes"],
+//         serde_json::json!([
+//             {
+//                 "account": "0x1",
+//                 "ty": {
+//                     "address": "0x0000000000000000000000000000000000000002",
+//                     "module": "Record",
+//                     "name": "T",
+//                     "ty_args": [],
+//                 },
+//                 "op": {"type": "Delete"},
+//             },
+//             {
+//                 "account": "0x3",
+//                 "ty": {
+//                     "address": "0x0000000000000000000000000000000000000002",
+//                     "module": "Record",
+//                     "name": "T",
+//                     "ty_args": [],
+//                 },
+//                 "op": {"type": "SetValue", "values": [10]},
+//             }
+//         ])
+//     );
+// }
 
 #[test]
 fn test_bech32_address_and_sender_in_compiler_error() {
@@ -447,7 +447,7 @@ script {
         &[],
         "dfinance",
         "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap_err()
@@ -462,52 +462,52 @@ script {
     );
 }
 
-#[test]
-fn test_bech32_in_genesis_json() {
-    let script_text = r"
-script {
-    use 0x2::Record;
-
-    fun main(s: &signer) {
-        let record = Record::with_doubled_age(s);
-        Record::save(s, record);
-    }
-}";
-    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-    let initial_chain_state = serde_json::json!([{
-        "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
-        "ty": {
-            "address": "0x0000000000000000000000000000000000000002",
-            "module": "Record",
-            "name": "T",
-            "ty_args": [],
-        },
-        "op": {"type": "SetValue", "values": [10]}
-    }]);
-
-    let state_changes = compile_and_execute_script(
-        (get_script_path(), script_text.to_string()),
-        &deps,
-        "dfinance",
-        "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
-        initial_chain_state,
-        vec![],
-    )
-    .unwrap();
-    assert_eq!(
-        state_changes["changes"],
-        serde_json::json!([{
-            "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
-            "ty": {
-                "address": "0x0000000000000000000000000000000000000002",
-                "module": "Record",
-                "name": "T",
-                "ty_args": [],
-            },
-            "op": {"type": "SetValue", "values": [20]}
-        }])
-    );
-}
+// #[test]
+// fn test_bech32_in_genesis_json() {
+//     let script_text = r"
+// script {
+//     use 0x2::Record;
+//
+//     fun main(s: &signer) {
+//         let record = Record::with_doubled_age(s);
+//         Record::save(s, record);
+//     }
+// }";
+//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
+//     let initial_chain_state = serde_json::json!([{
+//         "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
+//         "ty": {
+//             "address": "0x0000000000000000000000000000000000000002",
+//             "module": "Record",
+//             "name": "T",
+//             "ty_args": [],
+//         },
+//         "op": {"type": "SetValue", "values": [10]}
+//     }]);
+//
+//     let state_changes = compile_and_execute_script(
+//         (get_script_path(), script_text.to_string()),
+//         &deps,
+//         "dfinance",
+//         "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
+//         initial_chain_state,
+//         vec![],
+//     )
+//     .unwrap();
+//     assert_eq!(
+//         state_changes["changes"],
+//         serde_json::json!([{
+//             "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
+//             "ty": {
+//                 "address": "0x0000000000000000000000000000000000000002",
+//                 "module": "Record",
+//                 "name": "T",
+//                 "ty_args": [],
+//             },
+//             "op": {"type": "SetValue", "values": [20]}
+//         }])
+//     );
+// }
 
 #[test]
 fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
@@ -525,7 +525,7 @@ script {
         &deps,
         "libra",
         "0x1111111111111111",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
@@ -543,7 +543,7 @@ script {
         &[],
         "dfinance",
         "0x0",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
@@ -553,19 +553,51 @@ script {
         &[],
         "dfinance",
         "0x1",
-        serde_json::json!([]),
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
 }
 
 #[test]
+fn test_execute_script_with_custom_signer() {
+    let text = r"
+/// signer: 0x2
+script {
+    use 0x2::Record;
+
+    fun test_create_record(s1: &signer) {
+        let r1 = Record::create(20);
+        Record::save(s1, r1);
+    }
+}
+    ";
+    let changes = compile_and_execute_script(
+        (get_script_path(), text.to_string()),
+        &[stdlib_mod("signer.move"), modules_mod("record.move")],
+        "dfinance",
+        "0x3",
+        // serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+    let account1_change = changes["changes"][0].clone();
+    assert_eq!(
+        account1_change["account"],
+        "0x0000000000000000000000000000000000000002"
+    );
+    assert_eq!(account1_change["op"]["values"][0], 20);
+}
+
+#[test]
 fn test_multiple_signers() {
     let text = r"
+    /// signer: 0x1
+    /// signer: 0x2
     script {
         use 0x2::Record;
 
-        fun main(s1: &signer, s2: &signer) {
+        fun test_multiple_signers(s1: &signer, s2: &signer) {
             let r1 = Record::create(10);
             Record::save(s1, r1);
 
@@ -575,20 +607,72 @@ fn test_multiple_signers() {
     }
     ";
 
-    let changes = compile_and_execute_script_multisigner(
+    let changes = compile_and_execute_script(
         (get_script_path(), text.to_string()),
         &[stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
-        vec!["0x1".to_string(), "0x2".to_string()],
-        serde_json::json!([]),
+        "0x3",
+        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
     let account1_change = changes["changes"][0].clone();
-    assert_eq!(account1_change["account"], "0x1");
+    assert_eq!(
+        account1_change["account"],
+        "0x0000000000000000000000000000000000000001"
+    );
     assert_eq!(account1_change["op"]["values"][0], 10);
 
     let account2_change = changes["changes"][1].clone();
-    assert_eq!(account2_change["account"], "0x2");
+    assert_eq!(
+        account2_change["account"],
+        "0x0000000000000000000000000000000000000002"
+    );
     assert_eq!(account2_change["op"]["values"][0], 20);
+}
+
+#[test]
+fn test_execute_script_with_module_in_the_same_file() {
+    let text = r"
+address 0x2 {
+    module Record {
+        resource struct T {
+            age: u8
+        }
+
+        public fun create(age: u8): T {
+            T { age }
+        }
+
+        public fun save(account: &signer, record: T) {
+            move_to<T>(account, record);
+        }
+    }
+}
+
+/// signer: 0x2
+script {
+    use 0x2::Record;
+
+    fun test_create_record(s1: &signer) {
+        let r1 = Record::create(20);
+        Record::save(s1, r1);
+    }
+}
+    ";
+    let changes = compile_and_execute_script(
+        (get_script_path(), text.to_string()),
+        &[],
+        "dfinance",
+        "0x3",
+        // serde_json::json!([]),
+        vec![],
+    )
+    .unwrap();
+    let account1_change = changes["changes"][0].clone();
+    assert_eq!(
+        account1_change["account"],
+        "0x0000000000000000000000000000000000000002"
+    );
+    assert_eq!(account1_change["op"]["values"][0], 20);
 }

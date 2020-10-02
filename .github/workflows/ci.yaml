@@ -61,15 +61,15 @@ jobs:
       name: Download dependencies
       run: cargo fetch --locked
 
-    - id: cargo-build
-      name: (load cache) Build with --lib
-      uses: actions/cache@v2
-      with:
-        path: ./target
-        key: cargo-build-lib-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+#    - id: cargo-build
+#      name: (load cache) Build with --lib
+#      uses: actions/cache@v2
+#      with:
+#        path: ./target
+#        key: cargo-build-lib-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
 
-    - if: ${{ steps.cargo-build.outputs.cache-hit != 'true' }}
-      name: Build with --lib
+#    - if: ${{ steps.cargo-build.outputs.cache-hit != 'true' }}
+    - name: Build with --lib
       run: cargo build --lib
 
     - name: Build

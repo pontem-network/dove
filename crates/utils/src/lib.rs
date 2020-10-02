@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 pub mod io;
+pub mod location;
 
 pub type MoveFilePath = &'static str;
 pub type MoveFile = (MoveFilePath, String);

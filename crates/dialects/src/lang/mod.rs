@@ -8,16 +8,20 @@ use move_lang::{
     parser,
     parser::ast::Definition,
     shared::Address,
+    FileCommentMap,
 };
 
 use crate::shared::errors::{
     len_difference, CompilerError, CompilerErrorPart, ExecCompilerError, FileSourceMap, Location,
     ProjectSourceMap,
 };
+use std::collections::BTreeMap;
+use utils::MoveFilePath;
 
 pub mod executor;
 pub mod gas;
 pub mod resources;
+pub mod session;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {
     comp_error
@@ -91,7 +95,8 @@ pub fn replace_sender_placeholder(
     new_s
 }
 
-type PreBytecodeProgram = cfgir::ast::Program;
+pub type ProgramCommentsMap = BTreeMap<MoveFilePath, (String, FileCommentMap)>;
+pub type PreBytecodeProgram = cfgir::ast::Program;
 
 pub fn check_defs(
     source_definitions: Vec<Definition>,

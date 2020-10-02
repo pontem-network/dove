@@ -3,7 +3,7 @@ address 0x2 {
         use 0x1::Signer;
 
         resource struct T {
-            age: u8,
+            age: u8
         }
 
         public fun get_record(addr: address): T acquires T {
