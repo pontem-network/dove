@@ -13,6 +13,13 @@ use crate::shared::ProvidedAccountAddress;
 use move_ir_types::location::Loc;
 use utils::location;
 
+fn split_around<'s>(s: &'s str, p: &str) -> (&'s str, &'s str) {
+    let parts: Vec<_> = s.splitn(2, p).collect();
+    let key = parts[0].trim();
+    let val = parts[1].trim();
+    (key, val)
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct ExecutionMeta {
     pub signers: Vec<AccountAddress>,
@@ -24,9 +31,7 @@ impl ExecutionMeta {
         if !comment.contains(':') {
             return;
         }
-        let parts: Vec<_> = comment.splitn(2, ':').collect();
-        let key = parts[0].trim();
-        let val = parts[1].trim();
+        let (key, val) = split_around(&comment, ":");
         match key {
             "signer" => self
                 .signers
@@ -34,7 +39,7 @@ impl ExecutionMeta {
             "max_gas" => {
                 self.max_gas = val.parse().unwrap();
             }
-            _ => todo!("Add compilation failure"),
+            _ => todo!("Unimplemented meta key"),
         }
     }
 }

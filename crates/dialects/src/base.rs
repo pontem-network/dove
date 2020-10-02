@@ -29,13 +29,12 @@ pub trait Dialect {
 
     fn replace_addresses(&self, source_text: &str, source_map: &mut FileSourceMap) -> String;
 
-    fn parse_file(
+    fn normalize_source_text(
         &self,
         file: MoveFile,
         sender: &ProvidedAccountAddress,
-    ) -> Result<(Vec<Definition>, FileSourceMap, FileCommentMap), ExecCompilerError> {
+    ) -> (MoveFile, FileSourceMap) {
         let (fname, source_text) = file;
-
         let (mut source_text, mut file_source_map) = line_endings::normalize(source_text);
         source_text = replace_sender_placeholder(
             source_text,
@@ -43,22 +42,33 @@ pub trait Dialect {
             &mut file_source_map,
         );
         source_text = self.replace_addresses(&source_text, &mut file_source_map);
+        ((fname, source_text), file_source_map)
+    }
 
-        let (source_text, comment_map) =
-            strip_comments_and_verify(fname, &source_text).map_err(|errors| {
+    fn parse_file(
+        &self,
+        file: MoveFile,
+        sender: &ProvidedAccountAddress,
+    ) -> Result<(Vec<Definition>, String, FileSourceMap, FileCommentMap), ExecCompilerError> {
+        // let (fname, source_text) = file;
+        let ((fname, source_text), file_source_map) = self.normalize_source_text(file, sender);
+
+        let (stripped_source_text, comment_map) = strip_comments_and_verify(fname, &source_text)
+            .map_err(|errors| {
                 into_exec_compiler_error(
                     errors,
                     ProjectSourceMap::with_file_map(fname, FileSourceMap::default()),
                 )
             })?;
-        let (defs, _) = syntax::parse_file_string(fname, &source_text, FileCommentMap::default())
-            .map_err(|errors| {
-                into_exec_compiler_error(
-                    errors,
-                    ProjectSourceMap::with_file_map(fname, file_source_map.clone()),
-                )
-            })?;
-        Ok((defs, file_source_map, comment_map))
+        let (defs, _) =
+            syntax::parse_file_string(fname, &stripped_source_text, FileCommentMap::default())
+                .map_err(|errors| {
+                    into_exec_compiler_error(
+                        errors,
+                        ProjectSourceMap::with_file_map(fname, file_source_map.clone()),
+                    )
+                })?;
+        Ok((defs, source_text, file_source_map, comment_map))
     }
 
     fn parse_files(
@@ -79,10 +89,11 @@ pub trait Dialect {
 
         let mut project_offsets_map = ProjectSourceMap::default();
         let mut comment_map = ProgramCommentsMap::new();
+
         let script_defs = match self.parse_file(current_file.clone(), &sender) {
-            Ok((defs, offsets_map, comments)) => {
+            Ok((defs, normalized_source_text, offsets_map, comments)) => {
                 project_offsets_map.0.insert(current_file.0, offsets_map);
-                comment_map.insert(current_file.0, (current_file.1.clone(), comments));
+                comment_map.insert(current_file.0, (normalized_source_text, comments));
                 defs
             }
             Err(error) => {
@@ -94,9 +105,9 @@ pub trait Dialect {
         let mut dep_defs = vec![];
         for dep_file in deps.iter() {
             let defs = match self.parse_file(dep_file.clone(), &sender) {
-                Ok((defs, offsets_map, file_comment_map)) => {
+                Ok((defs, normalized_source_text, offsets_map, file_comment_map)) => {
                     project_offsets_map.0.insert(dep_file.0, offsets_map);
-                    comment_map.insert(dep_file.0, (dep_file.1.clone(), file_comment_map));
+                    comment_map.insert(dep_file.0, (normalized_source_text, file_comment_map));
                     defs
                 }
                 Err(error) => {
