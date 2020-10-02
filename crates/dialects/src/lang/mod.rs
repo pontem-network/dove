@@ -19,8 +19,8 @@ use std::collections::BTreeMap;
 use utils::MoveFilePath;
 
 pub mod executor;
+pub mod explain;
 pub mod gas;
-pub mod resources;
 pub mod session;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {

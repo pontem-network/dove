@@ -12,12 +12,11 @@ use crate::lang::{
     PreBytecodeProgram,
 };
 use crate::shared::errors::{CompilerError, ExecCompilerError, FileSourceMap, ProjectSourceMap};
-use crate::shared::results::{ChainStateChanges};
 use crate::shared::{line_endings, ProvidedAccountAddress};
 
 use crate::lang::session::{init_execution_session};
 use crate::lang;
-use crate::lang::executor::{prepare_fake_network_state, convert_txn_arg, execute_script};
+use crate::lang::executor::{convert_txn_arg, execute_script, FakeRemoteCache, ExecutionResult};
 
 pub trait Dialect {
     fn name(&self) -> &str;
@@ -158,22 +157,17 @@ pub trait Dialect {
 
     fn compile_and_run(
         &self,
-        script: MoveFile,
+        script_file: MoveFile,
         deps: &[MoveFile],
         provided_sender: ProvidedAccountAddress,
-        // genesis_changes: Vec<ResourceChange>,
         args: Vec<String>,
-    ) -> Result<ChainStateChanges> {
-        // let genesis_write_set = lang::resources::changes_into_writeset(genesis_changes)
-        //     .with_context(|| "Provided genesis serialization error")?;
-
+    ) -> Result<ExecutionResult> {
         let (program, comments, project_source_map) =
-            self.compile_to_prebytecode_program(script, deps, provided_sender.clone())?;
-        let execution_session = init_execution_session(program, comments, provided_sender)
+            self.compile_to_prebytecode_program(script_file, deps, provided_sender.clone())?;
+        let execution = init_execution_session(program, comments, provided_sender)
             .map_err(|errors| into_exec_compiler_error(errors, project_source_map))?;
 
-        let modules = execution_session.modules();
-        let network_state = prepare_fake_network_state(modules);
+        let data_store = FakeRemoteCache::new(execution.modules())?;
 
         let mut script_args = Vec::with_capacity(args.len());
         for passed_arg in args {
@@ -182,14 +176,8 @@ pub trait Dialect {
             script_args.push(script_arg);
         }
 
-        let (serialized_script, meta) = execution_session.into_script()?;
-        execute_script(
-            meta,
-            &network_state,
-            serialized_script,
-            script_args,
-            self.cost_table(),
-        )
+        let (script, meta) = execution.into_script()?;
+        execute_script(meta, &data_store, script, script_args, self.cost_table())
     }
 
     fn print_compiler_errors_and_exit(

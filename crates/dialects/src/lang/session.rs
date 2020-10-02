@@ -59,14 +59,11 @@ impl ExecutionSession {
         ExecutionSession { units }
     }
 
-    pub fn into_script(self) -> Result<(Vec<u8>, ExecutionMeta)> {
-        let mut serialized = vec![];
+    pub fn into_script(self) -> Result<(CompiledScript, ExecutionMeta)> {
+        // let mut serialized = vec![];
         for unit in self.units {
             if let ExecutionUnit::Script((script, meta)) = unit {
-                script
-                    .serialize(&mut serialized)
-                    .context("Script serialization error")?;
-                return Ok((serialized, meta));
+                return Ok((script, meta));
             }
         }
         unreachable!()
@@ -81,6 +78,14 @@ impl ExecutionSession {
         }
         modules
     }
+}
+
+pub fn serialize_script(script: &CompiledScript) -> Result<Vec<u8>> {
+    let mut serialized = vec![];
+    script
+        .serialize(&mut serialized)
+        .context("Script serialization error")?;
+    Ok(serialized)
 }
 
 pub fn extract_script_doc_comments(

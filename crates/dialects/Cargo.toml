@@ -29,10 +29,12 @@ move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "15.
 vm = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 libra-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 move-lang = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-libra-canonical-serialization = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+lcs = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 libra-crypto = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 vm-genesis = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+compiled-stdlib = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+errmapgen = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 
 #move-vm-runtime = { path = "../../../dvm-libra/language/move-vm/runtime" }
 #move-vm-types = { path = "../../../dvm-libra/language/move-vm/types" }

@@ -2,37 +2,18 @@ use anyhow::{Context, Result};
 
 use dialects::DialectName;
 
-use dialects::shared::results::{AddressMap, ChainStateChanges};
-
 use std::str::FromStr;
 use utils::MoveFile;
-//
-// pub fn compile_and_execute_script(
-//     script: MoveFile,
-//     deps: &[MoveFile],
-//     dialect: &str,
-//     sender: &str,
-//     genesis_json_contents: serde_json::Value,
-//     args: Vec<String>,
-// ) -> Result<serde_json::Value> {
-//     compile_and_execute_script_multisigner(
-//         script,
-//         deps,
-//         dialect,
-//         sender.to_string(),
-//         genesis_json_contents,
-//         args,
-//     )
-// }
+use dialects::shared::AddressMap;
+use dialects::lang::executor::ExecutionResult;
 
 pub fn compile_and_execute_script(
     script: MoveFile,
     deps: &[MoveFile],
     dialect: &str,
     sender: &str,
-    // genesis_json_contents: serde_json::Value,
     args: Vec<String>,
-) -> Result<serde_json::Value> {
+) -> Result<ExecutionResult> {
     let dialect = DialectName::from_str(dialect)?.get_dialect();
     // let initial_genesis_changes = serde_json::from_value::<Vec<ResourceChange>>(
     //     genesis_json_contents,
@@ -57,7 +38,7 @@ pub fn compile_and_execute_script(
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
     address_map.insert(provided_sender_address.clone());
 
-    let chain_state_changes = dialect.compile_and_run(
+    let res = dialect.compile_and_run(
         script,
         deps,
         provided_sender_address,
@@ -65,18 +46,14 @@ pub fn compile_and_execute_script(
         args,
     )?;
 
-    let ChainStateChanges {
-        resource_changes,
-        gas_spent,
-        events,
-    } = chain_state_changes;
+    // let ChainStateChanges {
+    //     resource_changes,
+    //     gas_spent,
+    //     events,
+    // } = Chain;
     // let normalized_changes: Vec<_> = resource_changes
     //     .into_iter()
     //     // .map(|change| change.with_replaced_addresses(&address_map.reversed()))
     //     .collect();
-    Ok(serde_json::json!({
-        "changes": resource_changes,
-        "gas_spent": gas_spent,
-        "events": events
-    }))
+    Ok(res)
 }

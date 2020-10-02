@@ -623,6 +623,8 @@ dependencies = [
  "anyhow",
  "bech32",
  "codespan 0.8.0",
+ "compiled-stdlib",
+ "errmapgen",
  "hex",
  "language-e2e-tests",
  "lazy_static",

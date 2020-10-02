@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use language_e2e_tests::data_store::FakeDataStore;
+
 use libra_types::{transaction::TransactionArgument};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
@@ -10,106 +10,95 @@ use move_vm_types::values::Value;
 
 use vm::CompiledModule;
 
-use crate::lang::resources::ResourceWriteOp;
-use crate::shared::results::{ChainStateChanges, ResourceChange, ResourceType};
-
-use libra_types::write_set::WriteOp;
 use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
-use move_core_types::value::MoveTypeLayout;
+
 use move_core_types::vm_status::StatusCode;
-use move_vm_runtime::data_cache::TransactionEffects;
+use move_vm_runtime::data_cache::{TransactionEffects, RemoteCache};
 
-use vm::errors::{Location, PartialVMError, VMResult};
-use crate::lang::session::ExecutionMeta;
+use vm::errors::{Location, PartialVMError, VMResult, PartialVMResult};
+use crate::lang::session::{ExecutionMeta, serialize_script};
+use crate::lang::explain::{explain_error, explain_effects, ExplainedTransactionEffects};
+use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
+use std::collections::HashMap;
+use move_core_types::identifier::Identifier;
+use vm::access::ModuleAccess;
 
-pub fn prepare_fake_network_state(modules: Vec<CompiledModule>) -> FakeDataStore {
-    let mut network_state = FakeDataStore::default();
-    for module in modules {
-        network_state.add_module(&module.self_id(), &module);
-    }
-    network_state
+#[derive(Debug, Default)]
+pub struct FakeRemoteCache {
+    modules: HashMap<ModuleId, Vec<u8>>,
+    resources: HashMap<(AccountAddress, StructTag), Vec<u8>>,
 }
 
-fn serialize_val(val: Value, layout: MoveTypeLayout) -> VMResult<Vec<u8>> {
-    match val.simple_serialize(&layout) {
-        Some(blob) => Ok(blob),
-        None => {
-            let partial_vm_error = PartialVMError::new(StatusCode::VALUE_SERIALIZATION_ERROR);
-            Err(partial_vm_error.finish(Location::Undefined))
+impl FakeRemoteCache {
+    pub fn new(compiled_modules: Vec<CompiledModule>) -> Result<Self> {
+        let mut modules = HashMap::with_capacity(compiled_modules.len());
+        for module in compiled_modules {
+            let mut module_bytes = vec![];
+            module.serialize(&mut module_bytes)?;
+            modules.insert(module.self_id(), module_bytes);
         }
+        let resources = HashMap::new();
+        Ok(FakeRemoteCache { modules, resources })
+    }
+
+    /// Read the resource bytes stored on-disk at `addr`/`tag`
+    pub fn get_resource_bytes(&self, addr: AccountAddress, tag: StructTag) -> Option<Vec<u8>> {
+        self.resources.get(&(addr, tag)).map(|r| r.to_owned())
+    }
+
+    /// Read the resource bytes stored on-disk at `addr`/`tag`
+    fn get_module_bytes(&self, module_id: &ModuleId) -> Option<Vec<u8>> {
+        self.modules.get(module_id).map(|r| r.to_owned())
+    }
+
+    /// Deserialize and return the module stored on-disk at `addr`/`module_id`
+    pub fn get_compiled_module(&self, module_id: &ModuleId) -> Result<CompiledModule> {
+        CompiledModule::deserialize(&self.get_module_bytes(module_id).unwrap())
+            .map_err(|e| anyhow::anyhow!("Failure deserializing module {:?}: {:?}", module_id, e))
+    }
+
+    pub fn resolve_function(&self, module_id: &ModuleId, idx: u16) -> Result<Identifier> {
+        let m = self.get_compiled_module(module_id).unwrap();
+        Ok(m.identifier_at(
+            m.function_handle_at(m.function_def_at(FunctionDefinitionIndex(idx)).function)
+                .name,
+        )
+        .to_owned())
     }
 }
 
-// disable type_complexity lint, as the same type used in TransactionEffects field
-#[allow(clippy::type_complexity)]
-fn into_resource_changes(
-    effect_resources: Vec<(
-        AccountAddress,
-        Vec<(StructTag, Option<(MoveTypeLayout, Value)>)>,
-    )>,
-) -> VMResult<Vec<ResourceChange>> {
-    let mut resources = vec![];
-    for (addr, resource_vals) in effect_resources {
-        let account_address = format!("0x{}", addr.to_string());
-        for (struct_tag, val) in resource_vals {
-            let resource_type = ResourceType::new(struct_tag);
-            match val {
-                None => resources.push(ResourceChange::new(
-                    account_address.clone(),
-                    resource_type,
-                    ResourceWriteOp(WriteOp::Deletion),
-                )),
-                Some((layout, val)) => {
-                    let val = serialize_val(val, layout)?;
-                    resources.push(ResourceChange::new(
-                        account_address.clone(),
-                        resource_type,
-                        ResourceWriteOp(WriteOp::Value(val)),
-                    ));
+impl RemoteCache for FakeRemoteCache {
+    fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
+        match self.modules.get(module_id) {
+            None => {
+                match self.get_module_bytes(module_id) {
+                    Some(bytes) => Ok(Some(bytes)),
+                    None => Err(PartialVMError::new(StatusCode::STORAGE_ERROR)
+                        .finish(Location::Undefined)),
                 }
             }
+            m => Ok(m.cloned()),
         }
     }
-    Ok(resources)
-}
 
-#[derive(Debug, serde::Serialize)]
-pub struct Event {
-    guid: Vec<u8>,
-    seq_num: u64,
-    ty_tag: TypeTag,
-    val: Vec<u8>,
-    caller: Option<ModuleId>,
-}
-
-type EventData = (
-    Vec<u8>,
-    u64,
-    TypeTag,
-    MoveTypeLayout,
-    Value,
-    Option<ModuleId>,
-);
-
-fn into_events(effect_events: Vec<EventData>) -> VMResult<Vec<Event>> {
-    let mut events = vec![];
-    for (guid, seq_num, ty_tag, ty_layout, val, caller) in effect_events {
-        let val = serialize_val(val, ty_layout)?;
-        events.push(Event {
-            guid,
-            seq_num,
-            ty_tag,
-            val,
-            caller,
-        })
+    fn get_resource(
+        &self,
+        address: &AccountAddress,
+        struct_tag: &StructTag,
+    ) -> PartialVMResult<Option<Vec<u8>>> {
+        let res = match self.resources.get(&(*address, struct_tag.clone())) {
+            None => self.get_resource_bytes(*address, struct_tag.clone()),
+            res => res.cloned(),
+        };
+        Ok(res)
     }
-    Ok(events)
 }
 
-fn execute_script_with_runtime_session(
-    data_store: &FakeDataStore,
+fn execute_script_with_runtime_session<R: RemoteCache>(
+    data_store: &R,
     script: Vec<u8>,
     args: Vec<Value>,
+    ty_args: Vec<TypeTag>,
     senders: Vec<AccountAddress>,
     cost_strategy: &mut CostStrategy,
 ) -> VMResult<TransactionEffects> {
@@ -119,53 +108,42 @@ fn execute_script_with_runtime_session(
     // first signer param -> first passed sender (otherwise reversed)
     let senders = senders.into_iter().rev().collect();
 
-    runtime_session.execute_script(script, vec![], args, senders, cost_strategy)?;
+    runtime_session.execute_script(script, ty_args, args, senders, cost_strategy)?;
     runtime_session.finish()
 }
 
-pub fn chain_state_changes(
-    effects: TransactionEffects,
-    gas_spent: u64,
-) -> VMResult<ChainStateChanges> {
-    let TransactionEffects {
-        resources,
-        events,
-        modules: _,
-    } = effects;
-    let resource_changes = into_resource_changes(resources)?;
-    let events = into_events(events)?;
-    Ok(ChainStateChanges {
-        resource_changes,
-        events,
-        gas_spent,
-    })
+#[derive(Debug, serde::Serialize)]
+pub struct ExecutionResult {
+    pub effects: ExplainedTransactionEffects,
+    pub gas_spent: u64,
 }
 
 pub fn execute_script(
     meta: ExecutionMeta,
-    data_store: &FakeDataStore,
-    script: Vec<u8>,
+    data_store: &FakeRemoteCache,
+    script: CompiledScript,
     args: Vec<Value>,
     cost_table: CostTable,
-) -> Result<ChainStateChanges> {
+) -> Result<ExecutionResult> {
     let total_gas = 1_000_000;
     let mut cost_strategy = CostStrategy::transaction(&cost_table, GasUnits::new(total_gas));
 
     let signers = meta.signers;
+    let ty_args = vec![];
     let effects = execute_script_with_runtime_session(
         data_store,
-        script,
+        serialize_script(&script)?,
         args,
+        ty_args,
         signers,
         &mut cost_strategy,
     )
-    .map_err(|error| error.into_vm_status())
+    .map_err(|error| explain_error(error, data_store))
     .with_context(|| "Script execution error")?;
     let gas_spent = total_gas - cost_strategy.remaining_gas().get();
+    let effects = explain_effects(&effects, &data_store)?;
 
-    let changes =
-        chain_state_changes(effects, gas_spent).map_err(|error| error.into_vm_status())?;
-    Ok(changes)
+    Ok(ExecutionResult { effects, gas_spent })
 }
 
 /// Convert the transaction arguments into move values.
