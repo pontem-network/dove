@@ -21,8 +21,6 @@ pub fn existing_module_file_abspath() -> MoveFilePath {
 pub fn get_test_resources_dir() -> PathBuf {
     std::env::current_dir()
         .unwrap()
-        .parent() // crates/
-        .unwrap()
         .parent() // project root
         .unwrap()
         .join("resources")
