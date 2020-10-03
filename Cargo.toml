@@ -1,9 +1,7 @@
 [workspace]
 members = [
-    "crates/move-language-server",
-    "crates/analysis",
-    "crates/move-executor",
-    "crates/dialects",
-    "crates/utils",
-    "crates/integration_tests"
+    "language_server",
+    "executor",
+    "dialects",
+    "utils",
 ]

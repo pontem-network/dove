@@ -80,26 +80,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "analysis"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "codespan 0.8.0",
- "codespan 0.9.5",
- "codespan-reporting 0.8.0",
- "codespan-reporting 0.9.5",
- "crossbeam-channel",
- "dialects",
- "env_logger",
- "hex",
- "log",
- "lsp-types",
- "serde",
- "serde_json",
- "utils",
-]
-
-[[package]]
 name = "ansi_term"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -623,6 +603,8 @@ dependencies = [
  "anyhow",
  "bech32",
  "codespan 0.8.0",
+ "compiled-stdlib",
+ "errmapgen",
  "hex",
  "language-e2e-tests",
  "lazy_static",
@@ -1303,25 +1285,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63312a18f7ea8760cdd0a7c5aac1a619752a246b833545e3e36d1f81f7cd9e66"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "integration_tests"
-version = "0.1.0"
-dependencies = [
- "analysis",
- "anyhow",
- "crossbeam-channel",
- "dialects",
- "env_logger",
- "log",
- "lsp-server",
- "lsp-types",
- "move-executor",
- "move-language-server",
- "serde_json",
- "threadpool",
- "utils",
 ]
 
 [[package]]
@@ -2214,7 +2177,6 @@ dependencies = [
 name = "move-language-server"
 version = "0.4.0"
 dependencies = [
- "analysis",
  "anyhow",
  "codespan 0.8.0",
  "codespan 0.9.5",
@@ -3961,6 +3923,7 @@ dependencies = [
  "codespan 0.9.5",
  "codespan-reporting 0.8.0",
  "codespan-reporting 0.9.5",
+ "env_logger",
  "log",
  "lsp-types",
  "ra_vfs",
