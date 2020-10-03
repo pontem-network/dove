@@ -1,9 +1,5 @@
-use analysis::change::AnalysisChange;
-use analysis::config::Config;
-use move_language_server::global_state::{initialize_new_global_state, GlobalStateSnapshot};
 use std::path::PathBuf;
-use utils::io::read_move_files;
-use utils::{io, leaked_fpath, MoveFile, MoveFilePath};
+use crate::{MoveFile, io, MoveFilePath, leaked_fpath};
 
 pub fn get_script_path() -> MoveFilePath {
     leaked_fpath(get_modules_path().join("script.move"))
@@ -48,42 +44,6 @@ pub fn setup_test_logging() {
         .is_test(true)
         .try_init()
         .unwrap_or_default();
-}
-
-pub fn global_state_snapshot(
-    file: MoveFile,
-    config: Config,
-    additional_files: Vec<MoveFile>,
-) -> GlobalStateSnapshot {
-    let mut global_state = initialize_new_global_state(config);
-    let mut change = AnalysisChange::new();
-
-    for folder in &global_state.config().modules_folders {
-        for (fpath, text) in read_move_files(folder) {
-            change.add_file(fpath, text);
-        }
-    }
-
-    for (fpath, text) in additional_files {
-        change.add_file(fpath, text);
-    }
-    change.update_file(file.0, file.1);
-
-    global_state.apply_change(change);
-    global_state.snapshot()
-}
-
-#[macro_export]
-macro_rules! config {
-    () => {{
-        analysis::config::Config::default()
-    }};
-    ($json: tt) => {{
-        let config_json = serde_json::json!($json);
-        let mut config = analysis::config::Config::default();
-        config.update(&config_json);
-        config
-    }};
 }
 
 pub fn stdlib_mod(name: &str) -> MoveFile {

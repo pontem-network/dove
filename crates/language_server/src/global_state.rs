@@ -1,9 +1,9 @@
 use crate::main_loop::FileSystemEvent;
-use analysis::analysis::Analysis;
-use analysis::change::AnalysisChange;
-use analysis::config::Config;
-use analysis::db::RootDatabase;
 use utils::io;
+use crate::inner::config::Config;
+use crate::inner::analysis::Analysis;
+use crate::inner::db::RootDatabase;
+use crate::inner::change::AnalysisChange;
 
 pub struct GlobalStateSnapshot {
     pub config: Config,

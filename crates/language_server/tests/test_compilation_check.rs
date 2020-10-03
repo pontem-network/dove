@@ -1,15 +1,26 @@
 use lsp_types::{Diagnostic, Position, Range};
 
-use analysis::analysis::Analysis;
-
-use analysis::config::Config;
-use analysis::db::FileDiagnostic;
-use integration_tests::{get_modules_path, get_test_resources_dir, global_state_snapshot};
-use move_language_server::global_state::GlobalState;
-
 use crossbeam_channel::unbounded;
 use move_language_server::main_loop::{compute_file_diagnostics, FileSystemEvent, ResponseEvent};
-use utils::{leaked_fpath, MoveFile, MoveFilePath};
+use utils::*;
+use move_language_server::inner::config::Config;
+use move_language_server::inner::db::FileDiagnostic;
+
+use utils::tests::*;
+use move_language_server::global_state::{GlobalState};
+use move_language_server::test_utils::global_state_snapshot;
+
+macro_rules! config {
+    () => {{
+        move_language_server::inner::config::Config::default()
+    }};
+    ($json: tt) => {{
+        let config_json = serde_json::json!($json);
+        let mut config = move_language_server::inner::config::Config::default();
+        config.update(&config_json);
+        config
+    }};
+}
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
@@ -70,10 +81,10 @@ fn diagnostics_with_deps(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use analysis::db::RootDatabase;
 
-    use integration_tests::{config, get_modules_path, get_script_path, get_stdlib_path, modules_mod};
     use utils::{leaked_fpath, FilesSourceText};
+    use move_language_server::inner::db::RootDatabase;
+    use move_language_server::inner::analysis::Analysis;
 
     #[test]
     fn test_fail_on_non_ascii_character() {

@@ -19,15 +19,14 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use threadpool::ThreadPool;
 
-use analysis::analysis::Analysis;
-use analysis::config::Config;
-
 use crate::global_state::{initialize_new_global_state, GlobalState};
 
 use crate::subscriptions::OpenedFiles;
-use analysis::db::FileDiagnostic;
 use std::collections::HashSet;
 use utils::{leaked_fpath, MoveFile, MoveFilePath};
+use crate::inner::db::FileDiagnostic;
+use crate::inner::config::Config;
+use crate::inner::analysis::Analysis;
 
 #[derive(Debug)]
 pub struct LspError {

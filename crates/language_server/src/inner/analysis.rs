@@ -1,5 +1,5 @@
-use crate::db::{FileDiagnostic, RootDatabase};
 use utils::{io, MoveFile, MoveFilePath};
+use crate::inner::db::{RootDatabase, FileDiagnostic};
 
 #[derive(Debug)]
 pub struct Analysis {

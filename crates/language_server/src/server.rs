@@ -9,11 +9,10 @@ use lsp_types::{
 };
 use serde::de::DeserializeOwned;
 
-use analysis::config::Config;
-
 use crate::global_state::initialize_new_global_state;
 use crate::main_loop;
 use crate::main_loop::request_new;
+use crate::inner::config::Config;
 
 fn move_language_server_capabilities() -> ServerCapabilities {
     ServerCapabilities {

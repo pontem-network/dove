@@ -5,17 +5,16 @@ use lsp_types::{
     FileChangeType, FileEvent, InitializeParams, InitializedParams, Url,
 };
 
-use analysis::config::Config;
-
 use dialects::DialectName;
-
-use integration_tests::{config, get_script_path};
 
 use lsp_types::notification::{DidChangeConfiguration, DidChangeWatchedFiles, Initialized};
 
 use move_language_server::global_state::{initialize_new_global_state, GlobalState};
 use move_language_server::main_loop::{main_loop, notification_new, request_new, FileSystemEvent};
 use move_language_server::server::run_server;
+
+use move_language_server::inner::config::Config;
+use utils::tests::get_script_path;
 
 const SHUTDOWN_REQ_ID: u64 = 10;
 
@@ -155,7 +154,7 @@ fn test_server_config_change() {
         vec![didchange_notification, updated_settings_response],
     );
 
-    let mut global_state = global_state(config!());
+    let mut global_state = global_state(Config::default());
     assert_eq!(global_state.config().dialect_name, DialectName::Libra);
 
     main_loop(&mut global_state, &server_conn).unwrap();
@@ -182,7 +181,7 @@ fn test_removed_file_not_present_in_the_diagnostics() {
     }";
     let script_file = (get_script_path(), script_text.to_string());
 
-    let mut global_state = global_state(config!());
+    let mut global_state = global_state(Config::default());
     global_state.update_from_events(vec![FileSystemEvent::AddFile(script_file)]);
 
     let delete_event = FileEvent::new(
