@@ -1,5 +1,6 @@
 use utils::{io, MoveFile, MoveFilePath};
 use crate::inner::db::{RootDatabase, FileDiagnostic};
+use lang::compiler::check_with_compiler;
 
 #[derive(Debug)]
 pub struct Analysis {
@@ -40,10 +41,7 @@ impl Analysis {
             .collect();
 
         let current_file = (current_fpath, current_text.to_string());
-        self.db
-            .config
-            .dialect()
-            .check_with_compiler(current_file, deps, self.db.config.sender())
+        check_with_compiler(self.db.config.dialect().as_ref(), current_file, deps, self.db.config.sender())
             .map_err(|errors| {
                 errors
                     .into_iter()
