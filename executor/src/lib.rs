@@ -1,16 +1,21 @@
-use anyhow::{Context, Result};
-
-use dialects::DialectName;
-
 use std::str::FromStr;
-use utils::MoveFile;
-use dialects::shared::{AddressMap, ProvidedAccountAddress};
-use dialects::lang::executor::{ExecutionResult, FakeRemoteCache, convert_txn_arg, execute_script};
-use dialects::lang::session::init_execution_session;
-use dialects::lang::into_exec_compiler_error;
+
+use anyhow::{Context, Result};
 use libra_types::transaction::parse_transaction_argument;
+
 use dialects::base::Dialect;
+use dialects::DialectName;
+use dialects::lang::into_exec_compiler_error;
+use dialects::shared::{AddressMap, ProvidedAccountAddress};
 use lang::compiler::compile_to_prebytecode_program;
+use utils::MoveFile;
+
+use crate::execution::{convert_txn_arg, execute_script, ExecutionResult, FakeRemoteCache};
+use crate::session::init_execution_session;
+
+pub mod execution;
+pub mod explain;
+pub mod session;
 
 pub fn compile_and_execute_script(
     script: MoveFile,
