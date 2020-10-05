@@ -1,6 +1,4 @@
 use anyhow::Result;
-use move_core_types::gas_schedule::CostTable;
-use move_core_types::parser::parse_transaction_argument;
 use move_lang::parser::ast::Definition;
 use move_lang::parser::syntax;
 use move_lang::{strip_comments_and_verify, FileCommentMap};

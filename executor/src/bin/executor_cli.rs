@@ -3,14 +3,11 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
-use dialects::DialectName;
-
 use clap::{App, Arg};
 use dialects::shared::errors::ExecCompilerError;
 
 use libra_types::vm_status::VMStatus;
 use move_executor::compile_and_execute_script;
-use std::str::FromStr;
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
 use lang::compiler::print_compiler_errors_and_exit;
 

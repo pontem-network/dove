@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path};
+use std::path::PathBuf;
 use anyhow::Result;
 
 use libra::prelude::*;
@@ -7,7 +7,6 @@ use tiny_keccak::{Hasher, Sha3};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use http::Uri;
-use std::fs;
 use serde::{Deserialize, Serialize};
 
 /// Module loader.
