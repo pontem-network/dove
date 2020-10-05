@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::base::Dialect;
-use crate::lang::gas::{dfinance_cost_table, libra_cost_table};
+use crate::gas::{dfinance_cost_table, libra_cost_table};
 use crate::shared::bech32::{bech32_into_libra, HRP};
 use crate::shared::errors::FileSourceMap;
 use crate::shared::ProvidedAccountAddress;

@@ -1,27 +1,15 @@
-use anyhow::Result;
-use codespan::ByteIndex;
-
-use move_ir_types::location::Loc;
-use move_lang::{
-    cfgir,
-    errors::{Error, FilesSourceText},
-    parser,
-    parser::ast::Definition,
-    shared::Address,
-    FileCommentMap,
-};
-
-use crate::shared::errors::{
-    len_difference, CompilerError, CompilerErrorPart, ExecCompilerError, FileSourceMap, Location,
-    ProjectSourceMap,
-};
 use std::collections::BTreeMap;
-use utils::MoveFilePath;
-
-pub mod executor;
-pub mod explain;
-pub mod gas;
-pub mod session;
+use utils::{MoveFilePath, FilesSourceText};
+use move_lang::{FileCommentMap, cfgir, parser};
+use move_lang::parser::ast::Definition;
+use move_lang::errors::Error;
+use crate::shared::errors::{
+    CompilerError, CompilerErrorPart, Location, ProjectSourceMap, ExecCompilerError,
+    FileSourceMap, len_difference,
+};
+use move_ir_types::location::Loc;
+use codespan::ByteIndex;
+use move_lang::shared::Address;
 
 fn from_compiler_error(comp_error: CompilerError) -> Error {
     comp_error

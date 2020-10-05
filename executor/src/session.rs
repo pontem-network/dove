@@ -7,11 +7,11 @@ use move_lang::{compiled_unit::CompiledUnit, errors::Error, to_bytecode, FileCom
 use vm::file_format::CompiledScript;
 use vm::CompiledModule;
 
-use crate::lang::{PreBytecodeProgram, ProgramCommentsMap};
 use std::collections::BTreeMap;
-use crate::shared::ProvidedAccountAddress;
-use move_ir_types::location::Loc;
 use utils::location;
+use dialects::lang::{PreBytecodeProgram, ProgramCommentsMap};
+use dialects::shared::ProvidedAccountAddress;
+use move_ir_types::location::Loc;
 
 fn split_around<'s>(s: &'s str, p: &str) -> (&'s str, &'s str) {
     let parts: Vec<_> = s.splitn(2, p).collect();

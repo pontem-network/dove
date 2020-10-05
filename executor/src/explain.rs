@@ -2,11 +2,11 @@ use anyhow::Result;
 use std::fmt::Write;
 
 use vm::errors::VMError;
-use move_core_types::vm_status::{VMStatus, AbortLocation, StatusCode};
 use errmapgen::ErrorMapping;
 
-use crate::lang::executor::FakeRemoteCache;
 use move_vm_runtime::data_cache::TransactionEffects;
+use crate::execution::FakeRemoteCache;
+use libra_types::vm_status::{VMStatus, AbortLocation, StatusCode};
 
 #[derive(Debug, serde::Serialize, Eq, PartialEq)]
 pub struct AddressResourceChanges {

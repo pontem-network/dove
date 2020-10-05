@@ -8,6 +8,7 @@ use serde::export::fmt::Debug;
 use std::str::FromStr;
 
 pub mod base;
+pub mod gas;
 pub mod impls;
 pub mod lang;
 pub mod shared;

@@ -2241,12 +2241,23 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "compiled-stdlib",
  "dialects",
+ "errmapgen",
  "lang",
+ "libra-canonical-serialization 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
  "libra-types",
+ "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git)",
+ "move-ir-types",
+ "move-lang",
+ "move-vm-runtime",
+ "move-vm-types",
  "serde",
  "serde_json",
  "utils",
+ "vm",
+ "vm-genesis",
 ]
 
 [[package]]

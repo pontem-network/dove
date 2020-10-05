@@ -2,10 +2,10 @@ use dialects::shared::errors::ExecCompilerError;
 use move_executor::compile_and_execute_script;
 
 use utils::leaked_fpath;
-use dialects::lang::explain::AddressResourceChanges;
 use utils::tests::{
     get_script_path, stdlib_mod, existing_module_file_abspath, modules_mod, get_modules_path,
 };
+use move_executor::explain::AddressResourceChanges;
 
 #[test]
 fn test_show_compilation_errors() {
