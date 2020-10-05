@@ -394,6 +394,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "colored"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3616f750b84d8f0de8a58bda93e08e2a81ad3f523089b05f1dffecab48c6cbd"
+dependencies = [
+ "atty",
+ "lazy_static",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "compiled-stdlib"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=15.09.2020#38beaf2b83e4fbc3df4ed1f73667e7501b532df8"
@@ -463,6 +474,22 @@ dependencies = [
  "time 0.2.22",
  "version_check",
 ]
+
+[[package]]
+name = "core-foundation"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57d24c7a13c43e870e37c1556b74555437870a04514f7685f5b354e090567171"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
+]
+
+[[package]]
+name = "core-foundation-sys"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3a71ab494c0b5b860bdc8407ae08978052417070c2ced38573a9157ad75b8ac"
 
 [[package]]
 name = "cpuid-bool"
@@ -594,6 +621,31 @@ dependencies = [
  "structopt",
  "termcolor",
  "walkdir",
+]
+
+[[package]]
+name = "dfibra"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/libra.git?branch=15.09.2020#38beaf2b83e4fbc3df4ed1f73667e7501b532df8"
+dependencies = [
+ "bytecode-source-map",
+ "bytecode-verifier",
+ "compiler",
+ "ir-to-bytecode-syntax",
+ "libra-canonical-serialization 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "libra-logger",
+ "libra-state-view",
+ "libra-types",
+ "libra-vm",
+ "libra-workspace-hack 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "move-coverage",
+ "move-ir-types",
+ "move-lang",
+ "move-vm-natives",
+ "move-vm-runtime",
+ "move-vm-types",
+ "vm",
 ]
 
 [[package]]
@@ -860,6 +912,21 @@ name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
+
+[[package]]
+name = "foreign-types"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6f339eb8adc052cd2ca78910fda869aefa38d22d5cb648e6485e4d3fc06f3b1"
+dependencies = [
+ "foreign-types-shared",
+]
+
+[[package]]
+name = "foreign-types-shared"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "fsevent"
@@ -1214,6 +1281,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper-tls"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d979acc56dcb5b8dddba3917601745e877576475aa046df3226eabdecef78eed"
+dependencies = [
+ "bytes",
+ "hyper",
+ "native-tls",
+ "tokio",
+ "tokio-tls",
+]
+
+[[package]]
 name = "idna"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1382,6 +1462,23 @@ checksum = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 dependencies = [
  "winapi 0.2.8",
  "winapi-build",
+]
+
+[[package]]
+name = "lang"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dfibra",
+ "dialects",
+ "env_logger",
+ "hex",
+ "itertools",
+ "log",
+ "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "move-lang",
+ "rand",
+ "utils",
 ]
 
 [[package]]
@@ -2119,12 +2216,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "move-coverage"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/libra.git?branch=15.09.2020#38beaf2b83e4fbc3df4ed1f73667e7501b532df8"
+dependencies = [
+ "anyhow",
+ "bytecode-source-map",
+ "codespan 0.8.0",
+ "colored",
+ "libra-canonical-serialization 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "libra-types",
+ "libra-workspace-hack 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
+ "move-ir-types",
+ "once_cell",
+ "serde",
+ "structopt",
+ "vm",
+]
+
+[[package]]
 name = "move-executor"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
  "dialects",
+ "lang",
  "libra-types",
  "serde",
  "serde_json",
@@ -2186,6 +2304,7 @@ dependencies = [
  "dialects",
  "env_logger",
  "hex",
+ "lang",
  "log",
  "lsp-server",
  "lsp-types",
@@ -2287,6 +2406,52 @@ dependencies = [
  "serde",
  "sha2 0.9.1",
  "vm",
+]
+
+[[package]]
+name = "movec"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bech32",
+ "dfibra",
+ "dialects",
+ "hex",
+ "http",
+ "itertools",
+ "lang",
+ "lazy_static",
+ "log",
+ "once_cell",
+ "rand",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_derive",
+ "structopt",
+ "termcolor",
+ "tiny-keccak",
+ "toml",
+ "twox-hash",
+ "walkdir",
+]
+
+[[package]]
+name = "native-tls"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b0d88c06fe90d5ee94048ba40409ef1d9315d86f6f38c2efdaad4fb50c58b2d"
+dependencies = [
+ "lazy_static",
+ "libc",
+ "log",
+ "openssl",
+ "openssl-probe",
+ "openssl-sys",
+ "schannel",
+ "security-framework",
+ "security-framework-sys",
+ "tempfile",
 ]
 
 [[package]]
@@ -2443,6 +2608,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
+name = "openssl"
+version = "0.10.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d575eff3665419f9b83678ff2815858ad9d11567e082f5ac1814baba4e2bcb4"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "foreign-types",
+ "lazy_static",
+ "libc",
+ "openssl-sys",
+]
+
+[[package]]
+name = "openssl-probe"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77af24da69f9d9341038eba93a073b1fdaaa1b788221b00a69bce9e762cb32de"
+
+[[package]]
+name = "openssl-sys"
+version = "0.9.58"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a842db4709b604f0fe5d1170ae3565899be2ad3d9cbc72dedc789ac0511f78de"
+dependencies = [
+ "autocfg",
+ "cc",
+ "libc",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2582,6 +2780,12 @@ name = "pin-utils"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
+
+[[package]]
+name = "pkg-config"
+version = "0.3.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d36492546b6af1463394d46f0c834346f31548646f6ba10849802c9c9a27ac33"
 
 [[package]]
 name = "polyval"
@@ -2921,18 +3125,21 @@ dependencies = [
  "http",
  "http-body",
  "hyper",
+ "hyper-tls",
  "ipnet",
  "js-sys",
  "lazy_static",
  "log",
  "mime",
  "mime_guess",
+ "native-tls",
  "percent-encoding",
  "pin-project-lite",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "tokio",
+ "tokio-tls",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -3017,6 +3224,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "schannel"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f05ba609c234e60bee0d547fe94a4c7e9da733d1c962cf6e59efa4cd9c8bc75"
+dependencies = [
+ "lazy_static",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3041,6 +3258,29 @@ checksum = "e3042af939fca8c3453b7af0f1c66e533a15a86169e39de2657310ade8f98d3c"
 dependencies = [
  "ring",
  "untrusted",
+]
+
+[[package]]
+name = "security-framework"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64808902d7d99f78eaddd2b4e2509713babc3dc3c85ad6f4c447680f3c01e535"
+dependencies = [
+ "bitflags",
+ "core-foundation",
+ "core-foundation-sys",
+ "libc",
+ "security-framework-sys",
+]
+
+[[package]]
+name = "security-framework-sys"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17bf11d99252f512695eb468de5516e5cf75455521e69dfe343f3b74e4748405"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
 ]
 
 [[package]]
@@ -3678,6 +3918,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-tls"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a70f4fcd7b3b24fb194f837560168208f669ca8cb70d0c4b862944452396343"
+dependencies = [
+ "native-tls",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3929,6 +4179,12 @@ dependencies = [
  "ra_vfs",
  "walkdir",
 ]
+
+[[package]]
+name = "vcpkg"
+version = "0.2.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6454029bf181f092ad1b853286f23e2c507d8e8194d01d92da4a55c274a5508c"
 
 [[package]]
 name = "vec_map"

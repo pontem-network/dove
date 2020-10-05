@@ -4,8 +4,13 @@ use dialects::DialectName;
 
 use std::str::FromStr;
 use utils::MoveFile;
-use dialects::shared::AddressMap;
-use dialects::lang::executor::ExecutionResult;
+use dialects::shared::{AddressMap, ProvidedAccountAddress};
+use dialects::lang::executor::{ExecutionResult, FakeRemoteCache, convert_txn_arg, execute_script};
+use dialects::lang::session::init_execution_session;
+use dialects::lang::into_exec_compiler_error;
+use libra_types::transaction::parse_transaction_argument;
+use dialects::base::Dialect;
+use lang::compiler::compile_to_prebytecode_program;
 
 pub fn compile_and_execute_script(
     script: MoveFile,
@@ -38,7 +43,8 @@ pub fn compile_and_execute_script(
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
     address_map.insert(provided_sender_address.clone());
 
-    let res = dialect.compile_and_run(
+    let res = compile_and_run(
+        dialect.as_ref(),
         script,
         deps,
         provided_sender_address,
@@ -56,4 +62,29 @@ pub fn compile_and_execute_script(
     //     // .map(|change| change.with_replaced_addresses(&address_map.reversed()))
     //     .collect();
     Ok(res)
+}
+
+fn compile_and_run(
+    dialect: &dyn Dialect,
+    script_file: MoveFile,
+    deps: &[MoveFile],
+    provided_sender: ProvidedAccountAddress,
+    args: Vec<String>,
+) -> Result<ExecutionResult> {
+    let (program, comments, project_source_map) =
+        compile_to_prebytecode_program(dialect, script_file, deps, provided_sender.clone())?;
+    let execution = init_execution_session(program, comments, provided_sender)
+        .map_err(|errors| into_exec_compiler_error(errors, project_source_map))?;
+
+    let data_store = FakeRemoteCache::new(execution.modules())?;
+
+    let mut script_args = Vec::with_capacity(args.len());
+    for passed_arg in args {
+        let transaction_argument = parse_transaction_argument(&passed_arg)?;
+        let script_arg = convert_txn_arg(transaction_argument);
+        script_args.push(script_arg);
+    }
+
+    let (script, meta) = execution.into_script()?;
+    execute_script(meta, &data_store, script, script_args, dialect.cost_table())
 }

@@ -3,15 +3,13 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
-use dialects::DialectName;
-
 use clap::{App, Arg};
 use dialects::shared::errors::ExecCompilerError;
 
 use libra_types::vm_status::VMStatus;
 use move_executor::compile_and_execute_script;
-use std::str::FromStr;
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
+use lang::compiler::print_compiler_errors_and_exit;
 
 fn get_files_for_error_reporting(
     script: (MoveFilePath, String),
@@ -107,9 +105,8 @@ fn main() -> Result<()> {
                 Ok(compiler_error) => {
                     let files_mapping =
                         get_files_for_error_reporting((script_fpath, script_source_text), deps);
-                    let dialect = DialectName::from_str(&dialect).unwrap().get_dialect();
                     let transformed_errors = compiler_error.transform_with_source_map();
-                    dialect.print_compiler_errors_and_exit(files_mapping, transformed_errors);
+                    print_compiler_errors_and_exit(files_mapping, transformed_errors);
                 }
                 Err(error) => error,
             };

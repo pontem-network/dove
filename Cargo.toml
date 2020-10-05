@@ -4,4 +4,6 @@ members = [
     "executor",
     "dialects",
     "utils",
+    "lang",
+    "movec"
 ]
