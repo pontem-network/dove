@@ -41,22 +41,27 @@ impl Analysis {
             .collect();
 
         let current_file = (current_fpath, current_text.to_string());
-        check_with_compiler(self.db.config.dialect().as_ref(), current_file, deps, self.db.config.sender())
-            .map_err(|errors| {
-                errors
-                    .into_iter()
-                    .map(
-                        |err| match self.db.compiler_error_into_diagnostic(err.clone()) {
-                            Ok(d) => d,
-                            Err(error) => panic!(
-                                "While converting {:#?} into Diagnostic, error occurred: {:?}",
-                                err,
-                                error.to_string()
-                            ),
-                        },
-                    )
-                    .collect()
-            })
+        check_with_compiler(
+            self.db.config.dialect().as_ref(),
+            current_file,
+            deps,
+            self.db.config.sender(),
+        )
+        .map_err(|errors| {
+            errors
+                .into_iter()
+                .map(
+                    |err| match self.db.compiler_error_into_diagnostic(err.clone()) {
+                        Ok(d) => d,
+                        Err(error) => panic!(
+                            "While converting {:#?} into Diagnostic, error occurred: {:?}",
+                            err,
+                            error.to_string()
+                        ),
+                    },
+                )
+                .collect()
+        })
     }
 
     fn read_stdlib_files(&self) -> Vec<(MoveFilePath, String)> {

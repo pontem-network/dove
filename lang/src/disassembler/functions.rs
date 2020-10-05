@@ -4,9 +4,7 @@ use crate::disassembler::generics::{Generics, Generic, extract_type_params, writ
 use crate::disassembler::{Encode, write_array, Config};
 use anyhow::Error;
 use std::fmt::Write;
-use crate::disassembler::types::{
-    FType, extract_type_signature, FullStructName, extract_struct_name,
-};
+use crate::disassembler::types::{FType, extract_type_signature, FullStructName, extract_struct_name};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::rc::Rc;
 use crate::disassembler::code::body::Body;
@@ -87,16 +85,16 @@ impl<'a> FunctionsDef<'a> {
         imports: &'a Imports<'a>,
         generics: &'a Generics,
     ) -> FunctionsDef<'a> {
-        let (type_params, params, body) = if let Some((code, type_parameters, params)) =
-            unit.script_info()
-        {
-            let type_params = extract_type_params(type_parameters, generics);
-            let params = FunctionsDef::params(unit, imports, unit.signature(params), &type_params);
-            let body = Body::new(code, 0, unit, &params, &imports, &type_params);
-            (type_params, params, Some(body))
-        } else {
-            (vec![], vec![], None)
-        };
+        let (type_params, params, body) =
+            if let Some((code, type_parameters, params)) = unit.script_info() {
+                let type_params = extract_type_params(type_parameters, generics);
+                let params =
+                    FunctionsDef::params(unit, imports, unit.signature(params), &type_params);
+                let body = Body::new(code, 0, unit, &params, &imports, &type_params);
+                (type_params, params, Some(body))
+            } else {
+                (vec![], vec![], None)
+            };
 
         FunctionsDef {
             is_public: false,

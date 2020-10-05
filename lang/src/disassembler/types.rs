@@ -43,12 +43,9 @@ pub fn extract_type_signature<'a>(
             imports,
             type_params,
         ))),
-        SignatureToken::MutableReference(sign) => FType::RefMut(Box::new(extract_type_signature(
-            unit,
-            sign.as_ref(),
-            imports,
-            type_params,
-        ))),
+        SignatureToken::MutableReference(sign) => FType::RefMut(Box::new(
+            extract_type_signature(unit, sign.as_ref(), imports, type_params),
+        )),
         SignatureToken::TypeParameter(index) => {
             FType::Generic(type_params[*index as usize].clone())
         }

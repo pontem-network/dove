@@ -7,7 +7,10 @@ use utils::{FilesSourceText, MoveFile};
 use dialects::base::Dialect;
 use dialects::shared::{ProvidedAccountAddress, line_endings};
 use dialects::shared::errors::{FileSourceMap, ExecCompilerError, ProjectSourceMap, CompilerError};
-use dialects::lang::{into_exec_compiler_error, PreBytecodeProgram, ProgramCommentsMap, check_defs, replace_sender_placeholder};
+use dialects::lang::{
+    into_exec_compiler_error, PreBytecodeProgram, ProgramCommentsMap, check_defs,
+    replace_sender_placeholder,
+};
 use dialects::lang;
 
 pub fn parse_file(
@@ -93,9 +96,8 @@ pub fn check_with_compiler(
     deps: Vec<MoveFile>,
     sender: &ProvidedAccountAddress,
 ) -> Result<(), Vec<CompilerError>> {
-    let (script_defs, dep_defs, offsets_map, _) =
-        parse_files(dialect, current, &deps, sender)
-            .map_err(|errors| errors.transform_with_source_map())?;
+    let (script_defs, dep_defs, offsets_map, _) = parse_files(dialect, current, &deps, sender)
+        .map_err(|errors| errors.transform_with_source_map())?;
 
     match check_defs(script_defs, dep_defs, sender.as_address()) {
         Ok(_) => Ok(()),
@@ -110,8 +112,7 @@ pub fn compile_to_prebytecode_program(
     script: MoveFile,
     deps: &[MoveFile],
     sender: ProvidedAccountAddress,
-) -> Result<(PreBytecodeProgram, ProgramCommentsMap, ProjectSourceMap), ExecCompilerError>
-{
+) -> Result<(PreBytecodeProgram, ProgramCommentsMap, ProjectSourceMap), ExecCompilerError> {
     let (mut file_defs, dep_defs, project_offsets_map, comments) =
         parse_files(dialect, script, deps, &sender)?;
     file_defs.extend(dep_defs);
@@ -121,10 +122,7 @@ pub fn compile_to_prebytecode_program(
     Ok((program, comments, project_offsets_map))
 }
 
-pub fn print_compiler_errors_and_exit(
-    files: FilesSourceText,
-    errors: Vec<CompilerError>,
-) -> ! {
+pub fn print_compiler_errors_and_exit(files: FilesSourceText, errors: Vec<CompilerError>) -> ! {
     lang::report_errors(files, errors)
 }
 

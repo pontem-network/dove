@@ -7,8 +7,8 @@ use std::fmt::Write;
 use crate::disassembler::unit::UnitAccess;
 
 const GENERICS_PREFIX: [&str; 22] = [
-    "T", "G", "V", "A", "B", "C", "D", "F", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "W",
-    "X", "Y", "Z",
+    "T", "G", "V", "A", "B", "C", "D", "F", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S",
+    "W", "X", "Y", "Z",
 ];
 
 /// Generics template.

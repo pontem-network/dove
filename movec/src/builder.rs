@@ -6,7 +6,9 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use anyhow::{Result, Error};
 use libra::{prelude::*, compiler::*};
-use crate::dependence::extractor::{extract_dependencies_from_source, extract_dependencies_from_bytecode};
+use crate::dependence::extractor::{
+    extract_dependencies_from_source, extract_dependencies_from_bytecode,
+};
 use std::collections::{HashMap, HashSet};
 use termcolor::{StandardStream, ColorChoice, Buffer};
 use lang::disassembler::{Config, Disassembler, unit::CompiledUnit as Unit};
@@ -87,8 +89,12 @@ where
         let address = self
             .address()?
             .map(|addr| AccountAddress::new(addr.to_u8()));
-        let source_imports =
-            extract_dependencies_from_source(sources, address, self.print_err, self.shutdown_on_err)?;
+        let source_imports = extract_dependencies_from_source(
+            sources,
+            address,
+            self.print_err,
+            self.shutdown_on_err,
+        )?;
         let mut deps = HashMap::new();
 
         let mut dep_list = HashSet::new();
@@ -125,10 +131,7 @@ where
     }
 
     /// Disassembles dependencies.
-    pub fn prepare_deps(
-        &self,
-        bytecode: HashMap<ModuleId, Vec<u8>>,
-    ) -> Result<Vec<PathBuf>> {
+    pub fn prepare_deps(&self, bytecode: HashMap<ModuleId, Vec<u8>>) -> Result<Vec<PathBuf>> {
         let deps = self.temp_dir()?.join("deps");
         fs::create_dir_all(&deps)?;
 

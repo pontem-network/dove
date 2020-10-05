@@ -6,12 +6,11 @@
 extern crate anyhow;
 extern crate log;
 
-/// Movec commands handler.
-pub mod cmd;
-/// Movec configuration.
-pub mod manifest;
-/// Dependencies loader.
-pub mod dependence;
 /// Move builder.
 pub mod builder;
-
+/// Movec commands handler.
+pub mod cmd;
+/// Dependencies loader.
+pub mod dependence;
+/// Movec configuration.
+pub mod manifest;

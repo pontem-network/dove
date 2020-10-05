@@ -88,4 +88,3 @@ fn compile_and_run(
     let (script, meta) = execution.into_script()?;
     execute_script(meta, &data_store, script, script_args, dialect.cost_table())
 }
-

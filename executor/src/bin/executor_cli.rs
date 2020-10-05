@@ -106,7 +106,7 @@ fn main() -> Result<()> {
                     let files_mapping =
                         get_files_for_error_reporting((script_fpath, script_source_text), deps);
                     let transformed_errors = compiler_error.transform_with_source_map();
-                    print_compiler_errors_and_exit( files_mapping, transformed_errors);
+                    print_compiler_errors_and_exit(files_mapping, transformed_errors);
                 }
                 Err(error) => error,
             };
