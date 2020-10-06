@@ -1,5 +1,5 @@
 use dialects::shared::errors::ExecCompilerError;
-use move_executor::compile_and_execute_script;
+use move_executor::compile_and_run_first_script;
 
 use utils::leaked_fpath;
 use utils::tests::{
@@ -15,7 +15,7 @@ script {
         let _ = 0x0::Transaction::sender();
     }
 }";
-    let errors = compile_and_execute_script(
+    let errors = compile_and_run_first_script(
         (get_script_path(), text.to_string()),
         &[],
         "libra",
@@ -44,7 +44,7 @@ script {
     }
 }";
     let deps = vec![stdlib_mod("signer.move")];
-    compile_and_execute_script(
+    compile_and_run_first_script(
         (existing_module_file_abspath(), text.to_string()),
         &deps,
         "libra",
@@ -67,7 +67,7 @@ script {
 }";
     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
 
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -75,7 +75,7 @@ script {
         vec![],
     )
     .unwrap()
-    .effects;
+    .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0],
@@ -109,7 +109,7 @@ script {
 //         },
 //         "op": {"type": "SetValue", "values": [10]}
 //     }]);
-//     let state_changes = compile_and_execute_script(
+//     let state_changes = compile_and_execute_script_script(
 //         (get_script_path(), script_text.to_string()),
 //         &deps,
 //         "libra",
@@ -159,7 +159,7 @@ script {
         module_text.to_string(),
     ));
 
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -167,7 +167,7 @@ script {
         vec![],
     )
     .unwrap()
-    .effects;
+    .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0],
@@ -198,7 +198,7 @@ script {
 }
     ";
 
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), script_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("m.move")),
@@ -209,7 +209,7 @@ script {
         vec![],
     )
     .unwrap()
-    .effects;
+    .effects();
 
     assert_eq!(
         effects.resources()[0],
@@ -258,7 +258,7 @@ script {
 }
     ";
 
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), script_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("m.move")),
@@ -269,7 +269,7 @@ script {
         vec![String::from("true")],
     )
     .unwrap()
-    .effects;
+    .effects();
 
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
@@ -299,7 +299,7 @@ script {
     }
 }
         ";
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), source_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("debug.move")),
@@ -310,7 +310,7 @@ script {
         vec![],
     )
     .unwrap()
-    .effects;
+    .effects();
     assert_eq!(effects.resources().len(), 0);
 }
 
@@ -337,7 +337,7 @@ script {
 //     //     },
 //     //     "op": {"type": "SetValue", "values": [10]}
 //     // }]);
-//     let effects = compile_and_execute_script(
+//     let effects = compile_and_execute_script_script(
 //         (get_script_path(), script_text.to_string()),
 //         &deps,
 //         "libra",
@@ -375,7 +375,7 @@ script {
 //         },
 //         "op": {"type": "SetValue", "values": [10]}
 //     }]);
-//     let state_changes = compile_and_execute_script(
+//     let state_changes = compile_and_execute_script_script(
 //         (get_script_path(), script_text.to_string()),
 //         &deps,
 //         "libra",
@@ -421,7 +421,7 @@ script {
     }
 }
         ";
-    let exec_error = compile_and_execute_script(
+    let exec_error = compile_and_run_first_script(
         (get_script_path(), text.to_string()),
         &[],
         "dfinance",
@@ -463,7 +463,7 @@ script {
 //         "op": {"type": "SetValue", "values": [10]}
 //     }]);
 //
-//     let state_changes = compile_and_execute_script(
+//     let state_changes = compile_and_execute_script_script(
 //         (get_script_path(), script_text.to_string()),
 //         &deps,
 //         "dfinance",
@@ -498,7 +498,7 @@ script {
     }
 }";
     let deps = vec![stdlib_mod("signer.move")];
-    let res = compile_and_execute_script(
+    let res = compile_and_run_first_script(
         (existing_module_file_abspath(), text.to_string()),
         &deps,
         "libra",
@@ -506,7 +506,7 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(res.gas_spent, 7);
+    assert_eq!(res.gas_spent(), 7);
 }
 
 #[test]
@@ -515,7 +515,7 @@ fn test_dfinance_executor_allows_0x0() {
 script {
     fun main() {}
 }";
-    compile_and_execute_script(
+    compile_and_run_first_script(
         (existing_module_file_abspath(), text.to_string()),
         &[],
         "dfinance",
@@ -525,7 +525,7 @@ script {
     )
     .unwrap();
 
-    compile_and_execute_script(
+    compile_and_run_first_script(
         (existing_module_file_abspath(), text.to_string()),
         &[],
         "dfinance",
@@ -548,7 +548,7 @@ script {
     }
 }
     ";
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), text.to_string()),
         &[stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
@@ -556,7 +556,7 @@ script {
         vec![],
     )
     .unwrap()
-    .effects;
+    .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0].address,
@@ -586,7 +586,7 @@ fn test_multiple_signers() {
     }
     ";
 
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), text.to_string()),
         &[stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
@@ -594,7 +594,7 @@ fn test_multiple_signers() {
         vec![],
     )
     .unwrap()
-    .effects;
+    .effects();
     let account1_change = &effects.resources()[0];
     assert_eq!(
         account1_change.address,
@@ -645,7 +645,7 @@ script {
     }
 }
     ";
-    let effects = compile_and_execute_script(
+    let effects = compile_and_run_first_script(
         (get_script_path(), text.to_string()),
         &[],
         "dfinance",
@@ -653,7 +653,7 @@ script {
         vec![],
     )
     .unwrap()
-    .effects;
+    .effects();
     assert_eq!(effects.resources().len(), 1);
 
     let account1_change = &effects.resources()[0];
@@ -672,20 +672,42 @@ fn test_fail_with_assert() {
     let text = r"
 script {
     fun main() {
-        assert(1 == 0, 1);
+        assert(1 == 0, 401);
     }
 }
     ";
-    let res = compile_and_execute_script(
+    let res = compile_and_run_first_script(
         (get_script_path(), text.to_string()),
         &[],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap_err();
+    .unwrap();
     assert_eq!(
-        res.source().unwrap().to_string(),
-        "Execution aborted with code 1 in transaction script\n"
+        res.error(),
+        "Execution aborted with code 401 in transaction script"
     );
 }
+
+// #[test]
+// fn test_no_oracle_module_available_and_oracle_price_passed() {
+//     let text = r"
+// /// price: usd_btc 100
+// script {
+//     fun main() {}
+// }
+//     ";
+//     let res = compile_and_run_first_script(
+//         anonymous_script_file(text),
+//         &[],
+//         "dfinance",
+//         "0x3",
+//         vec![],
+//     )
+//     .unwrap();
+//     assert_eq!(
+//         res.error(),
+//         "Execution aborted with code 401 in transaction script"
+//     );
+// }

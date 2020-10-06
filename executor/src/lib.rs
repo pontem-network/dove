@@ -1,36 +1,65 @@
 use std::str::FromStr;
 
 use anyhow::{Context, Result};
-use libra_types::transaction::parse_transaction_argument;
 
 use dialects::base::Dialect;
 use dialects::DialectName;
-use dialects::lang::into_exec_compiler_error;
-use dialects::shared::{AddressMap, ProvidedAccountAddress};
+use dialects::lang::{into_exec_compiler_error};
+use dialects::shared::{AddressMap};
 use lang::compiler::compile_to_prebytecode_program;
 use utils::MoveFile;
 
-use crate::execution::{convert_txn_arg, execute_script, ExecutionResult, FakeRemoteCache};
-use crate::session::init_execution_session;
+use crate::session::{init_execution_session, ExecutionSession};
+
+use crate::explain::ExecutionResult;
+use crate::execution::{FakeRemoteCache, execute_script};
+use std::collections::BTreeMap;
 
 pub mod execution;
 pub mod explain;
 pub mod session;
 
-pub fn compile_and_execute_script(
-    script: MoveFile,
+pub fn compile_and_run_first_script(
+    file: MoveFile,
     deps: &[MoveFile],
     dialect: &str,
     sender: &str,
     args: Vec<String>,
 ) -> Result<ExecutionResult> {
+    compile_and_execute(file, deps, dialect, sender, args, vec![], run_first_script)
+}
+
+pub fn compile_and_run_scripts(
+    file: MoveFile,
+    deps: &[MoveFile],
+    dialect: &str,
+    sender: &str,
+    test_names: Vec<String>,
+) -> Result<BTreeMap<String, ExecutionResult>> {
+    compile_and_execute(
+        file,
+        deps,
+        dialect,
+        sender,
+        vec![],
+        test_names,
+        run_all_scripts_as_tests,
+    )
+}
+
+fn compile_and_execute<R, F>(
+    file: MoveFile,
+    deps: &[MoveFile],
+    dialect: &str,
+    sender: &str,
+    args: Vec<String>,
+    test_names: Vec<String>,
+    execute: F,
+) -> Result<R>
+where
+    F: FnOnce(ExecutionSession, Box<dyn Dialect>, Vec<String>) -> Result<R>,
+{
     let dialect = DialectName::from_str(dialect)?.get_dialect();
-    // let initial_genesis_changes = serde_json::from_value::<Vec<ResourceChange>>(
-    //     genesis_json_contents,
-    // )
-    // .with_context(|| {
-    //     "Genesis JSON data is in invalid format (list of genesis resource objects required)"
-    // })?;
 
     // let mut lowered_genesis_changes = Vec::with_capacity(initial_genesis_changes.len());
     // for (i, change) in initial_genesis_changes.into_iter().enumerate() {
@@ -41,21 +70,22 @@ pub fn compile_and_execute_script(
     //     // lowered_genesis_changes.push(change.with_replaced_addresses(&address_map.forward()));
     // }
 
-    let mut address_map = AddressMap::default();
-
     let provided_sender_address = dialect
         .normalize_account_address(sender)
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
+
+    let mut address_map = AddressMap::default();
     address_map.insert(provided_sender_address.clone());
 
-    let res = compile_and_run(
+    let (program, comments, project_source_map) = compile_to_prebytecode_program(
         dialect.as_ref(),
-        script,
+        file,
         deps,
-        provided_sender_address,
-        // lowered_genesis_changes,
-        args,
+        provided_sender_address.clone(),
     )?;
+    let session = init_execution_session(program, comments, provided_sender_address, args)
+        .map_err(|errors| into_exec_compiler_error(errors, project_source_map))?;
+    execute(session, dialect, test_names)
 
     // let ChainStateChanges {
     //     resource_changes,
@@ -66,30 +96,34 @@ pub fn compile_and_execute_script(
     //     .into_iter()
     //     // .map(|change| change.with_replaced_addresses(&address_map.reversed()))
     //     .collect();
-    Ok(res)
+    // Ok(res)
 }
 
-fn compile_and_run(
-    dialect: &dyn Dialect,
-    script_file: MoveFile,
-    deps: &[MoveFile],
-    provided_sender: ProvidedAccountAddress,
-    args: Vec<String>,
+fn run_first_script(
+    execution_session: ExecutionSession,
+    dialect: Box<dyn Dialect>,
+    _test_names: Vec<String>,
 ) -> Result<ExecutionResult> {
-    let (program, comments, project_source_map) =
-        compile_to_prebytecode_program(dialect, script_file, deps, provided_sender.clone())?;
-    let execution = init_execution_session(program, comments, provided_sender)
-        .map_err(|errors| into_exec_compiler_error(errors, project_source_map))?;
+    let data_store = FakeRemoteCache::new(execution_session.modules())?;
+    let script_args = execution_session.arguments()?;
 
-    let data_store = FakeRemoteCache::new(execution.modules())?;
-
-    let mut script_args = Vec::with_capacity(args.len());
-    for passed_arg in args {
-        let transaction_argument = parse_transaction_argument(&passed_arg)?;
-        let script_arg = convert_txn_arg(transaction_argument);
-        script_args.push(script_arg);
-    }
-
-    let (script, meta) = execution.into_script()?;
+    let (_, script, meta) = execution_session.scripts().remove(0);
     execute_script(meta, &data_store, script, script_args, dialect.cost_table())
+}
+
+fn run_all_scripts_as_tests(
+    session: ExecutionSession,
+    dialect: Box<dyn Dialect>,
+    test_names: Vec<String>,
+) -> Result<BTreeMap<String, ExecutionResult>> {
+    let mut results = BTreeMap::new();
+    for (name, script, meta) in session.scripts() {
+        if !test_names.is_empty() && !test_names.contains(&name) {
+            continue;
+        }
+        let data_store = FakeRemoteCache::new(session.modules())?;
+        let res = execute_script(meta, &data_store, script, vec![], dialect.cost_table())?;
+        results.insert(name, res);
+    }
+    Ok(results)
 }

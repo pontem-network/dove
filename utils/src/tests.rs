@@ -5,6 +5,10 @@ pub fn get_script_path() -> MoveFilePath {
     leaked_fpath(get_modules_path().join("script.move"))
 }
 
+pub fn anonymous_script_file(text: &str) -> MoveFile {
+    (get_script_path(), text.to_string())
+}
+
 // just need some valid fname
 pub fn existing_module_file_abspath() -> MoveFilePath {
     let abspath = std::env::current_dir()

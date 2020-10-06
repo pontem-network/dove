@@ -6,8 +6,8 @@ use anyhow::{Context, Result};
 use clap::{App, Arg};
 use dialects::shared::errors::ExecCompilerError;
 
-use libra_types::vm_status::VMStatus;
-use move_executor::compile_and_execute_script;
+use move_executor::compile_and_run_first_script;
+use move_executor::explain::ExecutionResult;
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
 use lang::compiler::print_compiler_errors_and_exit;
 
@@ -47,8 +47,8 @@ fn main() -> Result<()> {
                 .number_of_values(1)
                 .help("Path to module file / modules folder to use as dependency. \nCould be used more than once: '-m ./stdlib -m ./modules'"),
         )
-        // .arg(Arg::from_usage("--genesis [GENESIS_CONTENTS]").help("JSON-based genesis contents"))
         .arg(Arg::from_usage("--show-changes").help("Show what changes has been made to the network after script is executed"))
+        .arg(Arg::from_usage("--show-events").help("Show which events was emitted"))
         .arg(
             Arg::from_usage("--args [SCRIPT_ARGS]")
                 .help(r#"Number of script main() function arguments in quotes, e.g. "10 20 30""#),
@@ -66,13 +66,8 @@ fn main() -> Result<()> {
         .collect::<Vec<PathBuf>>();
     let deps = io::load_move_files(modules_fpaths)?;
 
-    let show_changes = cli_arguments.is_present("show_changes");
-    // let genesis_json_contents = match cli_arguments.value_of("genesis") {
-    //     Some(contents) => {
-    //         serde_json::from_str(contents).context("JSON passed to --genesis is invalid")?
-    //     }
-    //     None => serde_json::json!([]),
-    // };
+    let show_network_effects = cli_arguments.is_present("show-changes");
+    let show_events = cli_arguments.is_present("show-events");
 
     let dialect = cli_arguments.value_of("dialect").unwrap();
     let sender = cli_arguments.value_of("sender").unwrap();
@@ -83,7 +78,7 @@ fn main() -> Result<()> {
         .map(String::from)
         .collect();
 
-    let res = compile_and_execute_script(
+    let res = compile_and_run_first_script(
         (script_fpath, script_source_text.clone()),
         &deps,
         dialect,
@@ -92,12 +87,32 @@ fn main() -> Result<()> {
         args,
     );
     match res {
-        Ok(changes) => {
-            if show_changes {
-                let out = serde_json::to_string_pretty(&changes)
-                    .expect("Should always be serializable");
-                print!("{}", out);
+        Ok(exec_result) => {
+            match exec_result {
+                ExecutionResult::Error(error) => {
+                    // println!("Script execution error");
+                    // println!();
+                    println!("{}", error);
+                }
+                ExecutionResult::Success((effects, gas_used)) => {
+                    println!("Gas used: {}", gas_used);
+                    if show_events {
+                        for event in effects.events() {
+                            println!("{}", event)
+                        }
+                    }
+                    if show_network_effects {
+                        for change in effects.resources() {
+                            print!("{}", change)
+                        }
+                    }
+                }
             }
+            // if show_changes {
+            //     let out = serde_json::to_string_pretty(&changes)
+            //         .expect("Should always be serializable");
+            //     print!("{}", out);
+            // }
             Ok(())
         }
         Err(error) => {
@@ -110,15 +125,15 @@ fn main() -> Result<()> {
                 }
                 Err(error) => error,
             };
-            let error = match error.downcast::<VMStatus>() {
-                Ok(exec_error) => {
-                    let out = serde_json::to_string_pretty(&exec_error)
-                        .expect("Should always be serializable");
-                    print!("{}", out);
-                    std::process::exit(1)
-                }
-                Err(error) => error,
-            };
+            // let error = match error.downcast::<VMStatus>() {
+            //     Ok(exec_error) => {
+            //         let out = serde_json::to_string_pretty(&exec_error)
+            //             .expect("Should always be serializable");
+            //         print!("{}", out);
+            //         std::process::exit(1)
+            //     }
+            //     Err(error) => error,
+            // };
             Err(error)
         }
     }

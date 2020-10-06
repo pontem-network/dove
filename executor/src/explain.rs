@@ -2,11 +2,44 @@ use anyhow::Result;
 use std::fmt::Write;
 
 use vm::errors::VMError;
-use errmapgen::ErrorMapping;
 
 use move_vm_runtime::data_cache::TransactionEffects;
 use crate::execution::FakeRemoteCache;
 use libra_types::vm_status::{VMStatus, AbortLocation, StatusCode};
+use vm::file_format::CompiledScript;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::transaction_argument::TransactionArgument;
+use vm::access::ScriptAccess;
+use serde::export::Formatter;
+
+#[derive(Debug, serde::Serialize)]
+pub enum ExecutionResult {
+    Error(String),
+    Success((ExplainedTransactionEffects, u64)),
+}
+
+impl ExecutionResult {
+    pub fn error(self) -> String {
+        match self {
+            ExecutionResult::Error(error) => error,
+            _ => panic!(),
+        }
+    }
+
+    pub fn effects(self) -> ExplainedTransactionEffects {
+        match self {
+            ExecutionResult::Success((effects, _)) => effects,
+            _ => panic!(),
+        }
+    }
+
+    pub fn gas_spent(self) -> u64 {
+        match self {
+            ExecutionResult::Success((_, gas_spent)) => gas_spent,
+            _ => panic!(),
+        }
+    }
+}
 
 #[derive(Debug, serde::Serialize, Eq, PartialEq)]
 pub struct AddressResourceChanges {
@@ -23,7 +56,17 @@ impl AddressResourceChanges {
     }
 }
 
-#[derive(Debug, Default, serde::Serialize)]
+impl std::fmt::Display for AddressResourceChanges {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{}", self.address).unwrap();
+        for change in &self.changes {
+            writeln!(f, "    {}", change).unwrap();
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Default, serde::Serialize, Eq, PartialEq)]
 pub struct ExplainedTransactionEffects {
     events: Vec<String>,
     resources: Vec<AddressResourceChanges>,
@@ -81,39 +124,88 @@ pub fn explain_effects(
     Ok(explained_effects)
 }
 
+// pub const ERROR_DESCRIPTIONS: &[u8] = include_bytes!("./error_descriptions/error_descriptions.errmap");
+
+fn explain_type_error(
+    script: &CompiledScript,
+    signers: &[AccountAddress],
+    txn_args: &[TransactionArgument],
+) {
+    use vm::file_format::SignatureToken::*;
+    let script_params = script.signature_at(script.as_inner().parameters);
+    let expected_num_signers = script_params
+        .0
+        .iter()
+        .filter(|t| match t {
+            Reference(r) => matches!(**r, Signer),
+            _ => false,
+        })
+        .count();
+    if expected_num_signers != signers.len() {
+        println!(
+            "Execution failed with incorrect number of signers: script expected {:?}, but found \
+             {:?}",
+            expected_num_signers,
+            signers.len()
+        );
+        return;
+    }
+
+    // TODO: printing type(s) of missing arguments could be useful
+    let expected_num_args = script_params.len() - signers.len();
+    if expected_num_args != txn_args.len() {
+        println!(
+            "Execution failed with incorrect number of arguments: script expected {:?}, but found \
+             {:?}",
+            expected_num_args,
+            txn_args.len()
+        );
+        return;
+    }
+
+    // TODO: print more helpful error message pinpointing the (argument, type)
+    // pair that didn't match
+    println!("Execution failed with type error when binding type arguments to type parameters")
+}
+
 /// Explain an execution error
-pub fn explain_error(error: VMError, remote_cache: &FakeRemoteCache) -> anyhow::Error {
+pub fn explain_error(
+    error: VMError,
+    remote_cache: &FakeRemoteCache,
+    script: &CompiledScript,
+    signers: &[AccountAddress],
+) -> String {
     let mut text_representation = String::new();
     match error.into_vm_status() {
         VMStatus::MoveAbort(AbortLocation::Module(id), abort_code) => {
             // try to use move-explain to explain the abort
             // TODO: this will only work for errors in the stdlib or Libra Framework. We should
             // add code to build an ErrorMapping for modules in move_lib as well
-            let error_descriptions: ErrorMapping =
-                lcs::from_bytes(compiled_stdlib::ERROR_DESCRIPTIONS).unwrap();
-            writeln!(
+            // let error_descriptions: ErrorMapping =
+            //     lcs::from_bytes(ERROR_DESCRIPTIONS).unwrap();
+            write!(
                 &mut text_representation,
                 "Execution aborted with code {} in module {}.",
                 abort_code, id
             )
             .unwrap();
 
-            if let Some(error_desc) = error_descriptions.get_explanation(&id, abort_code) {
-                writeln!(
-                    &mut text_representation,
-                    " Abort code details:\nReason:\n  Name: {}\n  Description:{}\nCategory:\n  Name: {}\n  Description:{}",
-                    error_desc.reason.code_name,
-                    error_desc.reason.code_description,
-                    error_desc.category.code_name,
-                    error_desc.category.code_description,
-                ).unwrap();
-            } else {
-                writeln!(&mut text_representation).unwrap();
-            }
+            // if let Some(error_desc) = error_descriptions.get_explanation(&id, abort_code) {
+            //     writeln!(
+            //         &mut text_representation,
+            //         " Abort code details:\nReason:\n  Name: {}\n  Description:{}\nCategory:\n  Name: {}\n  Description:{}",
+            //         error_desc.reason.code_name,
+            //         error_desc.reason.code_description,
+            //         error_desc.category.code_name,
+            //         error_desc.category.code_description,
+            //     ).unwrap();
+            // } else {
+            //     writeln!(&mut text_representation).unwrap();
+            // }
         }
         VMStatus::MoveAbort(AbortLocation::Script, abort_code) => {
             // TODO: map to source code location
-            writeln!(
+            write!(
                 &mut text_representation,
                 "Execution aborted with code {} in transaction script",
                 abort_code
@@ -147,7 +239,7 @@ pub fn explain_error(error: VMError, remote_cache: &FakeRemoteCache) -> anyhow::
             // TODO: code offset is 1-indexed, but disassembler instruction numbering starts at zero
             // This is potentially confusing to someone trying to understnd where something failed
             // by looking at a code offset + disassembled bytecode; we should fix it
-            writeln!(
+            write!(
                 &mut text_representation,
                 "Execution failed with {} in {} at code offset {}",
                 status_explanation, location_explanation, code_offset
@@ -160,7 +252,8 @@ pub fn explain_error(error: VMError, remote_cache: &FakeRemoteCache) -> anyhow::
         //     &script.as_inner().type_parameters.len(),
         //     vm_type_args.len()
         // ),
-        VMStatus::Error(status_code) => writeln!(
+        VMStatus::Error(StatusCode::TYPE_MISMATCH) => explain_type_error(script, signers, &[]),
+        VMStatus::Error(status_code) => write!(
             &mut text_representation,
             "Execution failed with unexpected error {:?}",
             status_code
@@ -168,5 +261,5 @@ pub fn explain_error(error: VMError, remote_cache: &FakeRemoteCache) -> anyhow::
         .unwrap(),
         VMStatus::Executed => unreachable!(),
     };
-    anyhow::anyhow!(text_representation)
+    text_representation
 }

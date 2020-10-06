@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use anyhow::{Context, Result};
-use libra_types::{transaction::TransactionArgument};
+use anyhow::Result;
+
 use move_core_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
 use move_core_types::identifier::Identifier;
@@ -16,7 +16,7 @@ use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
-use crate::explain::{explain_effects, explain_error, ExplainedTransactionEffects};
+use crate::explain::{explain_effects, explain_error, ExecutionResult};
 use crate::session::{ExecutionMeta, serialize_script};
 
 #[derive(Debug, Default)]
@@ -108,12 +108,6 @@ fn execute_script_with_runtime_session<R: RemoteCache>(
     runtime_session.finish()
 }
 
-#[derive(Debug, serde::Serialize)]
-pub struct ExecutionResult {
-    pub effects: ExplainedTransactionEffects,
-    pub gas_spent: u64,
-}
-
 pub fn execute_script(
     meta: ExecutionMeta,
     data_store: &FakeRemoteCache,
@@ -126,29 +120,38 @@ pub fn execute_script(
 
     let signers = meta.signers;
     let ty_args = vec![];
-    let effects = execute_script_with_runtime_session(
+
+    let res = execute_script_with_runtime_session(
         data_store,
         serialize_script(&script)?,
         args,
         ty_args,
-        signers,
+        signers.clone(),
         &mut cost_strategy,
-    )
-    .map_err(|error| explain_error(error, data_store))
-    .with_context(|| "Script execution error")?;
-    let gas_spent = total_gas - cost_strategy.remaining_gas().get();
-    let effects = explain_effects(&effects, &data_store)?;
+    );
+    Ok(match res {
+        Ok(effects) => {
+            let explained = explain_effects(&effects, data_store)?;
+            let gas_spent = total_gas - cost_strategy.remaining_gas().get();
+            ExecutionResult::Success((explained, gas_spent))
+        }
+        Err(vm_error) => {
+            let error_as_string = explain_error(vm_error, data_store, &script, &signers);
+            ExecutionResult::Error(error_as_string)
+        }
+    })
+    // let effects = execute_script_with_runtime_session(
+    //     data_store,
+    //     serialize_script(&script)?,
+    //     args,
+    //     ty_args,
+    //     signers,
+    //     &mut cost_strategy,
+    // )
+    // .map_err(|error| explain_error(error, data_store))
+    // .with_context(|| "Script execution error")?;
+    // let gas_spent = total_gas - cost_strategy.remaining_gas().get();
+    // let effects = explain_effects(&effects, &data_store)?;
 
-    Ok(ExecutionResult { effects, gas_spent })
-}
-
-/// Convert the transaction arguments into move values.
-pub fn convert_txn_arg(arg: TransactionArgument) -> Value {
-    match arg {
-        TransactionArgument::U64(i) => Value::u64(i),
-        TransactionArgument::Address(a) => Value::address(a),
-        TransactionArgument::Bool(b) => Value::bool(b),
-        TransactionArgument::U8Vector(v) => Value::vector_u8(v),
-        _ => unimplemented!(),
-    }
+    // Ok(ExecutionResult { effects, gas_spent })
 }

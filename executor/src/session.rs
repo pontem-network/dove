@@ -12,6 +12,9 @@ use utils::location;
 use dialects::lang::{PreBytecodeProgram, ProgramCommentsMap};
 use dialects::shared::ProvidedAccountAddress;
 use move_ir_types::location::Loc;
+use move_core_types::parser::parse_transaction_argument;
+use move_core_types::transaction_argument::TransactionArgument;
+use move_vm_types::values::Value;
 
 fn split_around<'s>(s: &'s str, p: &str) -> (&'s str, &'s str) {
     let parts: Vec<_> = s.splitn(2, p).collect();
@@ -47,27 +50,27 @@ impl ExecutionMeta {
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
     Module(CompiledModule),
-    Script((CompiledScript, ExecutionMeta)),
+    Script((String, CompiledScript, ExecutionMeta)),
 }
 
 pub struct ExecutionSession {
     units: Vec<ExecutionUnit>,
+    arguments: Vec<String>,
 }
 
 impl ExecutionSession {
-    pub fn new(units: Vec<ExecutionUnit>) -> Self {
-        ExecutionSession { units }
+    pub fn new(units: Vec<ExecutionUnit>, arguments: Vec<String>) -> Self {
+        ExecutionSession { units, arguments }
     }
 
-    pub fn into_script(self) -> Result<(CompiledScript, ExecutionMeta)> {
-        // let mut serialized = vec![];
-        for unit in self.units {
-            if let ExecutionUnit::Script((script, meta)) = unit {
-                return Ok((script, meta));
-            }
-        }
-        unreachable!()
-    }
+    // pub fn into_first_script(self) -> (CompiledScript, ExecutionMeta) {
+    //     for unit in self.units {
+    //         if let ExecutionUnit::Script((name, script, meta)) = unit {
+    //             return (script, meta);
+    //         }
+    //     }
+    //     unreachable!()
+    // }
 
     pub fn modules(&self) -> Vec<CompiledModule> {
         let mut modules = vec![];
@@ -77,6 +80,26 @@ impl ExecutionSession {
             }
         }
         modules
+    }
+
+    pub fn scripts(&self) -> Vec<(String, CompiledScript, ExecutionMeta)> {
+        let mut scripts = vec![];
+        for unit in &self.units {
+            if let ExecutionUnit::Script((name, script, meta)) = unit {
+                scripts.push((name.clone(), script.to_owned(), meta.to_owned()));
+            }
+        }
+        scripts
+    }
+
+    pub fn arguments(&self) -> Result<Vec<Value>> {
+        let mut script_args = Vec::with_capacity(self.arguments.len());
+        for passed_arg in &self.arguments {
+            let transaction_argument = parse_transaction_argument(passed_arg)?;
+            let script_arg = convert_txn_arg(transaction_argument);
+            script_args.push(script_arg);
+        }
+        Ok(script_args)
     }
 }
 
@@ -112,10 +135,22 @@ pub fn extract_script_doc_comments(
     doc_comments
 }
 
+/// Convert the transaction arguments into move values.
+pub fn convert_txn_arg(arg: TransactionArgument) -> Value {
+    match arg {
+        TransactionArgument::U64(i) => Value::u64(i),
+        TransactionArgument::Address(a) => Value::address(a),
+        TransactionArgument::Bool(b) => Value::bool(b),
+        TransactionArgument::U8Vector(v) => Value::vector_u8(v),
+        _ => unimplemented!(),
+    }
+}
+
 pub fn init_execution_session(
     program: PreBytecodeProgram,
     program_doc_comments: ProgramCommentsMap,
     provided_sender: ProvidedAccountAddress,
+    args: Vec<String>,
 ) -> Result<ExecutionSession, Vec<Error>> {
     let script_loc_map: BTreeMap<_, _> = program
         .scripts
@@ -150,12 +185,11 @@ pub fn init_execution_session(
                     meta.signers.push(provided_sender.as_account_address());
                 }
 
-                ExecutionUnit::Script((script, meta))
+                ExecutionUnit::Script((key, script, meta))
             }
         };
         execution_units.push(execution_unit);
     }
-    Ok(ExecutionSession {
-        units: execution_units,
-    })
+
+    Ok(ExecutionSession::new(execution_units, args))
 }
