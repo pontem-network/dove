@@ -122,13 +122,23 @@ pub fn extract_script_doc_comments(
         .unwrap()
         .line;
 
-    let mut doc_comment_candidate_line = script_start_line - 1;
+    let mut doc_comment_candidate_line = match script_start_line.checked_sub(1) {
+        Some(line) => line,
+        None => {
+            return vec![];
+        }
+    };
     let mut doc_comments = vec![];
     for (span, comment) in file_comments.iter().rev() {
         let comment_start_line = file.position(span.start().to_usize()).unwrap().line;
         if comment_start_line == doc_comment_candidate_line {
             doc_comments.push(comment.trim().to_string());
-            doc_comment_candidate_line -= 1;
+            doc_comment_candidate_line = match doc_comment_candidate_line.checked_sub(1) {
+                Some(line) => line,
+                None => {
+                    break;
+                }
+            }
         }
     }
     doc_comments.reverse();

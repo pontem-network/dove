@@ -4,6 +4,7 @@ use move_executor::compile_and_run_first_script;
 use utils::leaked_fpath;
 use utils::tests::{
     get_script_path, stdlib_mod, existing_module_file_abspath, modules_mod, get_modules_path,
+    anonymous_script_file,
 };
 use move_executor::explain::AddressResourceChanges;
 
@@ -711,3 +712,28 @@ script {
 //         "Execution aborted with code 401 in transaction script"
 //     );
 // }
+
+#[test]
+fn test_script_starts_from_line_0() {
+    let text = r"script { fun main() { assert(false, 401); } }";
+    let res =
+        compile_and_run_first_script(anonymous_script_file(text), &[], "dfinance", "0x3", vec![])
+            .unwrap();
+    assert_eq!(
+        res.error(),
+        "Execution aborted with code 401 in transaction script"
+    );
+}
+
+#[test]
+fn test_doc_comment_starts_at_line_0() {
+    let text = r"/// signer: 0x1
+script { fun main(_: &signer) { assert(false, 401); } }";
+    let res =
+        compile_and_run_first_script(anonymous_script_file(text), &[], "dfinance", "0x3", vec![])
+            .unwrap();
+    assert_eq!(
+        res.error(),
+        "Execution aborted with code 401 in transaction script"
+    );
+}
