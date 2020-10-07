@@ -12,36 +12,55 @@ use move_core_types::transaction_argument::TransactionArgument;
 use vm::access::ScriptAccess;
 use serde::export::Formatter;
 
-#[derive(Debug, serde::Serialize)]
-pub enum PipelineExecutionResult {
-    Error(String),
-    Success((ExplainedTransactionEffects, u64)),
+#[derive(Debug)]
+pub struct PipelineExecutionResult {
+    pub step_results: Vec<(String, StepExecutionResult)>,
+    pub gas_spent: u64,
 }
 
 impl PipelineExecutionResult {
+    pub fn new(step_results: Vec<(String, StepExecutionResult)>, gas_spent: u64) -> Self {
+        PipelineExecutionResult {
+            step_results,
+            gas_spent,
+        }
+    }
+
+    pub fn last(&self) -> Option<StepExecutionResult> {
+        self.step_results.last().map(|(_, r)| r.to_owned())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum StepExecutionResult {
+    Error(String),
+    Success(ExplainedTransactionEffects),
+}
+
+impl StepExecutionResult {
     pub fn error(self) -> String {
         match self {
-            PipelineExecutionResult::Error(error) => error,
+            StepExecutionResult::Error(error) => error,
             _ => panic!(),
         }
     }
 
     pub fn effects(self) -> ExplainedTransactionEffects {
         match self {
-            PipelineExecutionResult::Success((effects, _)) => effects,
-            PipelineExecutionResult::Error(msg) => panic!("{}", msg),
+            StepExecutionResult::Success(effects) => effects,
+            StepExecutionResult::Error(msg) => panic!("{}", msg),
         }
     }
 
-    pub fn gas_spent(self) -> u64 {
-        match self {
-            PipelineExecutionResult::Success((_, gas_spent)) => gas_spent,
-            PipelineExecutionResult::Error(msg) => panic!("{}", msg),
-        }
-    }
+    // pub fn gas_spent(self) -> u64 {
+    //     match self {
+    //         StepExecutionResult::Success((_, gas_spent)) => gas_spent,
+    //         StepExecutionResult::Error(msg) => panic!("{}", msg),
+    //     }
+    // }
 }
 
-#[derive(Debug, serde::Serialize, Eq, PartialEq)]
+#[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct AddressResourceChanges {
     pub address: String,
     pub changes: Vec<String>,
@@ -66,7 +85,7 @@ impl std::fmt::Display for AddressResourceChanges {
     }
 }
 
-#[derive(Debug, Default, serde::Serialize, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct ExplainedTransactionEffects {
     events: Vec<String>,
     resources: Vec<AddressResourceChanges>,

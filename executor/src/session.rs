@@ -68,7 +68,7 @@ impl ExecutionMeta {
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
     Module(CompiledModule),
-    Script((CompiledScript, ExecutionMeta)),
+    Script((String, CompiledScript, ExecutionMeta)),
 }
 
 pub struct ExecutionSession {
@@ -100,11 +100,11 @@ impl ExecutionSession {
         modules
     }
 
-    pub fn scripts(&self) -> Vec<(CompiledScript, ExecutionMeta)> {
+    pub fn scripts(&self) -> Vec<(String, CompiledScript, ExecutionMeta)> {
         let mut scripts = vec![];
         for unit in &self.units {
-            if let ExecutionUnit::Script((script, meta)) = unit {
-                scripts.push((script.to_owned(), meta.to_owned()));
+            if let ExecutionUnit::Script((name, script, meta)) = unit {
+                scripts.push((name.to_owned(), script.to_owned(), meta.to_owned()));
             }
         }
         scripts
@@ -189,19 +189,16 @@ pub fn init_execution_session(
 
     let mut execution_units = vec![];
     for unit in units {
-        let execution_unit = match unit {
-            CompiledUnit::Module {
-                // ident: Spanned { loc, .. },
-                module,
-                ..
-            } => ExecutionUnit::Module(module),
+        let (loc, execution_unit) = match unit {
+            CompiledUnit::Module { module, .. } => (None, ExecutionUnit::Module(module)),
 
             CompiledUnit::Script {
                 loc, script, key, ..
             } => {
+                let script_loc = script_loc_map.get(&key).unwrap().to_owned();
+
                 let mut meta = ExecutionMeta::default();
                 if let Some((file_content, comments)) = program_doc_comments.get(loc.file()) {
-                    let script_loc = script_loc_map.get(&key).unwrap().to_owned();
                     let doc_comments =
                         extract_script_doc_comments(script_loc, file_content, comments);
                     for doc_comment in doc_comments {
@@ -212,12 +209,17 @@ pub fn init_execution_session(
                 if meta.signers.is_empty() {
                     meta.signers.push(provided_sender.as_account_address());
                 }
-
-                ExecutionUnit::Script((script, meta))
+                (Some(script_loc), ExecutionUnit::Script((key, script, meta)))
             }
         };
-        execution_units.push(execution_unit);
+        execution_units.push((loc, execution_unit));
     }
-
-    Ok(ExecutionSession::new(execution_units, args))
+    execution_units.sort_by_key(|(loc, _)| match loc {
+        Some(loc) => loc.span().end().to_usize(),
+        None => 0,
+    });
+    Ok(ExecutionSession::new(
+        execution_units.into_iter().map(|(_, unit)| unit).collect(),
+        args,
+    ))
 }

@@ -15,7 +15,7 @@ use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
-use crate::explain::{explain_effects, explain_error, ExplainedTransactionEffects};
+use crate::explain::{explain_effects, explain_error, StepExecutionResult};
 use crate::session::{ExecutionMeta, serialize_script};
 use crate::oracles::oracle_coins_module;
 
@@ -124,18 +124,13 @@ fn execute_script_with_runtime_session<R: RemoteCache>(
     runtime_session.finish()
 }
 
-pub enum ExecutionResult {
-    Success(ExplainedTransactionEffects),
-    Error(String),
-}
-
 pub fn execute_script(
     meta: ExecutionMeta,
     data_store: &mut FakeRemoteCache,
     script: CompiledScript,
     args: Vec<Value>,
     cost_strategy: &mut CostStrategy,
-) -> Result<ExecutionResult> {
+) -> Result<StepExecutionResult> {
     let mut ds = data_store.clone();
     let ExecutionMeta {
         signers,
@@ -145,7 +140,7 @@ pub fn execute_script(
     if !oracle_prices.is_empty() {
         // check if module exists, and fail with MISSING_DEPENDENCY if not
         if ds.get_module(&oracle_coins_module()).is_err() {
-            return Ok(ExecutionResult::Error(
+            return Ok(StepExecutionResult::Error(
                 "Cannot use `price:` comments: missing `0x1::Coins` module".to_string(),
             ));
         }
@@ -167,13 +162,13 @@ pub fn execute_script(
     Ok(match res {
         Ok(effects) => {
             let explained = explain_effects(&effects, &ds)?;
-            let res = ExecutionResult::Success(explained);
+            let res = StepExecutionResult::Success(explained);
             data_store.merge_transaction_effects(effects);
             res
         }
         Err(vm_error) => {
             let error_as_string = explain_error(vm_error, data_store, &script, &signers);
-            ExecutionResult::Error(error_as_string)
+            StepExecutionResult::Error(error_as_string)
         }
     })
 }

@@ -10,8 +10,8 @@ use utils::MoveFile;
 
 use crate::session::init_execution_session;
 
-use crate::explain::PipelineExecutionResult;
-use crate::execution::{FakeRemoteCache, execute_script, ExecutionResult};
+use crate::explain::{PipelineExecutionResult, StepExecutionResult};
+use crate::execution::{FakeRemoteCache, execute_script};
 use move_vm_types::gas_schedule::CostStrategy;
 use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
 
@@ -54,35 +54,31 @@ pub fn compile_and_run_scripts_in_file(
     }
 
     let mut overall_gas_spent = 0;
-    let mut res = None;
-    for (script, meta) in execution_session.scripts() {
+    let mut step_results = vec![];
+    for (name, script, meta) in execution_session.scripts() {
         let total_gas = 1_000_000;
         let cost_table = dialect.cost_table();
         let mut cost_strategy = CostStrategy::transaction(&cost_table, GasUnits::new(total_gas));
-
-        let result = execute_script(
+        let step_result = execute_script(
             meta,
             &mut data_store,
             script,
             script_args,
             &mut cost_strategy,
         )?;
+        script_args = vec![];
 
         let gas_spent = total_gas - cost_strategy.remaining_gas().get();
         overall_gas_spent += gas_spent;
 
-        match result {
-            ExecutionResult::Error(error_string) => {
-                return Ok(PipelineExecutionResult::Error(error_string));
-            }
-            ExecutionResult::Success(effects) => {
-                res = Some(effects);
-            }
+        let is_error = matches!(step_result, StepExecutionResult::Error(_));
+        step_results.push((name, step_result));
+        if is_error {
+            break;
         }
-        script_args = vec![];
     }
-    Ok(PipelineExecutionResult::Success((
-        res.unwrap(),
+    Ok(PipelineExecutionResult::new(
+        step_results,
         overall_gas_spent,
-    )))
+    ))
 }

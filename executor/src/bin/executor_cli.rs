@@ -7,7 +7,7 @@ use clap::{App, Arg};
 use dialects::shared::errors::ExecCompilerError;
 
 use move_executor::compile_and_run_scripts_in_file;
-use move_executor::explain::PipelineExecutionResult;
+use move_executor::explain::{PipelineExecutionResult, StepExecutionResult};
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
 use lang::compiler::print_compiler_errors_and_exit;
 
@@ -88,31 +88,32 @@ fn main() -> Result<()> {
     );
     match res {
         Ok(exec_result) => {
-            match exec_result {
-                PipelineExecutionResult::Error(error) => {
-                    // println!("Script execution error");
-                    // println!();
-                    println!("{}", error);
-                }
-                PipelineExecutionResult::Success((effects, gas_used)) => {
-                    println!("Gas used: {}", gas_used);
-                    if show_events {
-                        for event in effects.events() {
-                            println!("{}", event)
-                        }
+            let PipelineExecutionResult {
+                gas_spent,
+                step_results,
+            } = exec_result;
+            println!("Gas used: {}", gas_spent);
+
+            for (name, step_result) in step_results {
+                println!("{}: ", name);
+                match step_result {
+                    StepExecutionResult::Error(error) => {
+                        print!("{}", textwrap::indent(&error, "    "));
                     }
-                    if show_network_effects {
-                        for change in effects.resources() {
-                            print!("{}", change)
+                    StepExecutionResult::Success(effects) => {
+                        if show_events {
+                            for event in effects.events() {
+                                print!("{}", textwrap::indent(event, "    "));
+                            }
+                        }
+                        if show_network_effects {
+                            for change in effects.resources() {
+                                print!("{}", textwrap::indent(&format!("{}", change), "    "));
+                            }
                         }
                     }
                 }
             }
-            // if show_changes {
-            //     let out = serde_json::to_string_pretty(&changes)
-            //         .expect("Should always be serializable");
-            //     print!("{}", out);
-            // }
             Ok(())
         }
         Err(error) => {

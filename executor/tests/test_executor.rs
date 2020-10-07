@@ -76,6 +76,8 @@ script {
         vec![],
     )
     .unwrap()
+    .last()
+    .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
@@ -168,6 +170,8 @@ script {
         vec![],
     )
     .unwrap()
+    .last()
+    .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
@@ -209,6 +213,8 @@ script {
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap()
     .effects();
 
@@ -270,6 +276,8 @@ script {
         vec![String::from("true")],
     )
     .unwrap()
+    .last()
+    .unwrap()
     .effects();
 
     assert_eq!(effects.resources().len(), 1);
@@ -310,6 +318,8 @@ script {
         "0x1",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 0);
@@ -507,7 +517,7 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(res.gas_spent(), 7);
+    assert_eq!(res.gas_spent, 7);
 }
 
 #[test]
@@ -557,6 +567,8 @@ script {
         vec![],
     )
     .unwrap()
+    .last()
+    .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
@@ -594,6 +606,8 @@ fn test_multiple_signers() {
         "0x3",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap()
     .effects();
     let account1_change = &effects.resources()[0];
@@ -654,6 +668,8 @@ script {
         vec![],
     )
     .unwrap()
+    .last()
+    .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 1);
 
@@ -684,6 +700,8 @@ script {
         "0x3",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap();
     assert_eq!(
         res.error(),
@@ -723,6 +741,8 @@ fn test_script_starts_from_line_0() {
         "0x3",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap();
     assert_eq!(
         res.error(),
@@ -741,6 +761,8 @@ script { fun main(_: &signer) { assert(false, 401); } }";
         "0x3",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap();
     assert_eq!(
         res.error(),
@@ -763,6 +785,8 @@ script {
         "0x3",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap();
     assert_eq!(
         res.error(),
@@ -791,26 +815,11 @@ script {
         "0x3",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap();
     assert!(res.effects().resources().is_empty());
 }
-
-// #[test]
-// fn test_fail_if_scripts_has_same_name() {
-//     let text = r"
-// script {
-//     fun step_1() {}
-// }
-//
-// script {
-//     fun step_1() {}
-// }
-//     ";
-//     let res =
-//         compile_and_run_scripts_in_file(anonymous_script_file(text), &[], "libra", "0x1", vec![])
-//             .unwrap_err();
-//     dbg!(res);
-// }
 
 #[test]
 fn test_run_scripts_in_sequential_order() {
@@ -818,7 +827,7 @@ fn test_run_scripts_in_sequential_order() {
 script {
     use 0x2::Record;
 
-    fun step_1(s: &signer) {
+    fun step_2(s: &signer) {
         Record::create_record(s, 10);
     }
 }
@@ -826,7 +835,7 @@ script {
 script {
     use 0x2::Record;
 
-    fun step_2(s: &signer) {
+    fun step_1(s: &signer) {
         Record::increment_record(s);
     }
 }
@@ -839,6 +848,8 @@ script {
         "0x3",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 1);
@@ -874,6 +885,8 @@ script {
         "0x1",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap();
     assert_eq!(
         res.error(),
@@ -904,6 +917,8 @@ script {
         "0x1",
         vec![],
     )
+    .unwrap()
+    .last()
     .unwrap();
     assert_eq!(
         res.error(),
@@ -945,5 +960,5 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(results.gas_spent(), 10);
+    assert_eq!(results.gas_spent, 10);
 }
