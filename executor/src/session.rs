@@ -15,6 +15,8 @@ use move_ir_types::location::Loc;
 use move_core_types::parser::parse_transaction_argument;
 use move_core_types::transaction_argument::TransactionArgument;
 use move_vm_types::values::Value;
+use crate::oracles::oracle_metadata;
+use move_core_types::language_storage::StructTag;
 
 fn split_around<'s>(s: &'s str, p: &str) -> (&'s str, &'s str) {
     let parts: Vec<_> = s.splitn(2, p).collect();
@@ -27,6 +29,7 @@ fn split_around<'s>(s: &'s str, p: &str) -> (&'s str, &'s str) {
 pub struct ExecutionMeta {
     pub signers: Vec<AccountAddress>,
     pub max_gas: u64,
+    pub oracle_prices: Vec<(StructTag, u128)>,
 }
 
 impl ExecutionMeta {
@@ -42,6 +45,21 @@ impl ExecutionMeta {
             "max_gas" => {
                 self.max_gas = val.parse().unwrap();
             }
+            "price" => {
+                if !val.contains(' ') {
+                    eprintln!("Invalid ticker price doc comment: {}", comment);
+                    return;
+                }
+                let (tickers, value) = split_around(val, " ");
+                if !tickers.contains('_') {
+                    eprintln!("Invalid ticker price doc comment: {}", comment);
+                    return;
+                }
+                let (ticker_left, ticker_right) = split_around(&tickers, "_");
+                let price_struct_tag = oracle_metadata(ticker_left, ticker_right);
+                self.oracle_prices
+                    .push((price_struct_tag, value.parse().unwrap()))
+            }
             _ => todo!("Unimplemented meta key"),
         }
     }
@@ -50,7 +68,7 @@ impl ExecutionMeta {
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
     Module(CompiledModule),
-    Script((String, CompiledScript, ExecutionMeta)),
+    Script((CompiledScript, ExecutionMeta)),
 }
 
 pub struct ExecutionSession {
@@ -82,11 +100,11 @@ impl ExecutionSession {
         modules
     }
 
-    pub fn scripts(&self) -> Vec<(String, CompiledScript, ExecutionMeta)> {
+    pub fn scripts(&self) -> Vec<(CompiledScript, ExecutionMeta)> {
         let mut scripts = vec![];
         for unit in &self.units {
-            if let ExecutionUnit::Script((name, script, meta)) = unit {
-                scripts.push((name.clone(), script.to_owned(), meta.to_owned()));
+            if let ExecutionUnit::Script((script, meta)) = unit {
+                scripts.push((script.to_owned(), meta.to_owned()));
             }
         }
         scripts
@@ -195,7 +213,7 @@ pub fn init_execution_session(
                     meta.signers.push(provided_sender.as_account_address());
                 }
 
-                ExecutionUnit::Script((key, script, meta))
+                ExecutionUnit::Script((script, meta))
             }
         };
         execution_units.push(execution_unit);

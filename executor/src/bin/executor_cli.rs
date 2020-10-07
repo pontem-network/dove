@@ -6,8 +6,8 @@ use anyhow::{Context, Result};
 use clap::{App, Arg};
 use dialects::shared::errors::ExecCompilerError;
 
-use move_executor::compile_and_run_first_script;
-use move_executor::explain::ExecutionResult;
+use move_executor::compile_and_run_scripts_in_file;
+use move_executor::explain::PipelineExecutionResult;
 use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
 use lang::compiler::print_compiler_errors_and_exit;
 
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
         .map(String::from)
         .collect();
 
-    let res = compile_and_run_first_script(
+    let res = compile_and_run_scripts_in_file(
         (script_fpath, script_source_text.clone()),
         &deps,
         dialect,
@@ -89,12 +89,12 @@ fn main() -> Result<()> {
     match res {
         Ok(exec_result) => {
             match exec_result {
-                ExecutionResult::Error(error) => {
+                PipelineExecutionResult::Error(error) => {
                     // println!("Script execution error");
                     // println!();
                     println!("{}", error);
                 }
-                ExecutionResult::Success((effects, gas_used)) => {
+                PipelineExecutionResult::Success((effects, gas_used)) => {
                     println!("Gas used: {}", gas_used);
                     if show_events {
                         for event in effects.events() {

@@ -13,30 +13,30 @@ use vm::access::ScriptAccess;
 use serde::export::Formatter;
 
 #[derive(Debug, serde::Serialize)]
-pub enum ExecutionResult {
+pub enum PipelineExecutionResult {
     Error(String),
     Success((ExplainedTransactionEffects, u64)),
 }
 
-impl ExecutionResult {
+impl PipelineExecutionResult {
     pub fn error(self) -> String {
         match self {
-            ExecutionResult::Error(error) => error,
+            PipelineExecutionResult::Error(error) => error,
             _ => panic!(),
         }
     }
 
     pub fn effects(self) -> ExplainedTransactionEffects {
         match self {
-            ExecutionResult::Success((effects, _)) => effects,
-            _ => panic!(),
+            PipelineExecutionResult::Success((effects, _)) => effects,
+            PipelineExecutionResult::Error(msg) => panic!("{}", msg),
         }
     }
 
     pub fn gas_spent(self) -> u64 {
         match self {
-            ExecutionResult::Success((_, gas_spent)) => gas_spent,
-            _ => panic!(),
+            PipelineExecutionResult::Success((_, gas_spent)) => gas_spent,
+            PipelineExecutionResult::Error(msg) => panic!("{}", msg),
         }
     }
 }

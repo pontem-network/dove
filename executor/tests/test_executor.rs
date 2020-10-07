@@ -1,10 +1,10 @@
 use dialects::shared::errors::ExecCompilerError;
-use move_executor::compile_and_run_first_script;
+use move_executor::compile_and_run_scripts_in_file;
 
 use utils::leaked_fpath;
 use utils::tests::{
     get_script_path, stdlib_mod, existing_module_file_abspath, modules_mod, get_modules_path,
-    anonymous_script_file,
+    anonymous_script_file, record_mod,
 };
 use move_executor::explain::AddressResourceChanges;
 
@@ -16,7 +16,7 @@ script {
         let _ = 0x0::Transaction::sender();
     }
 }";
-    let errors = compile_and_run_first_script(
+    let errors = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),
         &[],
         "libra",
@@ -45,7 +45,7 @@ script {
     }
 }";
     let deps = vec![stdlib_mod("signer.move")];
-    compile_and_run_first_script(
+    compile_and_run_scripts_in_file(
         (existing_module_file_abspath(), text.to_string()),
         &deps,
         "libra",
@@ -68,7 +68,7 @@ script {
 }";
     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
 
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -160,7 +160,7 @@ script {
         module_text.to_string(),
     ));
 
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), script_text.to_string()),
         &deps,
         "libra",
@@ -199,7 +199,7 @@ script {
 }
     ";
 
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), script_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("m.move")),
@@ -259,7 +259,7 @@ script {
 }
     ";
 
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), script_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("m.move")),
@@ -300,7 +300,7 @@ script {
     }
 }
         ";
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), source_text.to_string()),
         &[(
             leaked_fpath(get_modules_path().join("debug.move")),
@@ -422,7 +422,7 @@ script {
     }
 }
         ";
-    let exec_error = compile_and_run_first_script(
+    let exec_error = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),
         &[],
         "dfinance",
@@ -499,7 +499,7 @@ script {
     }
 }";
     let deps = vec![stdlib_mod("signer.move")];
-    let res = compile_and_run_first_script(
+    let res = compile_and_run_scripts_in_file(
         (existing_module_file_abspath(), text.to_string()),
         &deps,
         "libra",
@@ -516,7 +516,7 @@ fn test_dfinance_executor_allows_0x0() {
 script {
     fun main() {}
 }";
-    compile_and_run_first_script(
+    compile_and_run_scripts_in_file(
         (existing_module_file_abspath(), text.to_string()),
         &[],
         "dfinance",
@@ -526,7 +526,7 @@ script {
     )
     .unwrap();
 
-    compile_and_run_first_script(
+    compile_and_run_scripts_in_file(
         (existing_module_file_abspath(), text.to_string()),
         &[],
         "dfinance",
@@ -549,7 +549,7 @@ script {
     }
 }
     ";
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),
         &[stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
@@ -587,7 +587,7 @@ fn test_multiple_signers() {
     }
     ";
 
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),
         &[stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
@@ -646,7 +646,7 @@ script {
     }
 }
     ";
-    let effects = compile_and_run_first_script(
+    let effects = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),
         &[],
         "dfinance",
@@ -677,7 +677,7 @@ script {
     }
 }
     ";
-    let res = compile_and_run_first_script(
+    let res = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),
         &[],
         "dfinance",
@@ -716,9 +716,14 @@ script {
 #[test]
 fn test_script_starts_from_line_0() {
     let text = r"script { fun main() { assert(false, 401); } }";
-    let res =
-        compile_and_run_first_script(anonymous_script_file(text), &[], "dfinance", "0x3", vec![])
-            .unwrap();
+    let res = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[],
+        "dfinance",
+        "0x3",
+        vec![],
+    )
+    .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 401 in transaction script"
@@ -729,11 +734,216 @@ fn test_script_starts_from_line_0() {
 fn test_doc_comment_starts_at_line_0() {
     let text = r"/// signer: 0x1
 script { fun main(_: &signer) { assert(false, 401); } }";
-    let res =
-        compile_and_run_first_script(anonymous_script_file(text), &[], "dfinance", "0x3", vec![])
-            .unwrap();
+    let res = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[],
+        "dfinance",
+        "0x3",
+        vec![],
+    )
+    .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 401 in transaction script"
     );
+}
+
+#[test]
+fn test_coin_price_fails_if_no_coins_module_available() {
+    let text = r"
+/// price: btc_usdt 100
+script {
+    fun main() {}
+}
+    ";
+    let res = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[],
+        "dfinance",
+        "0x3",
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(
+        res.error(),
+        "Cannot use `price:` comments: missing `0x1::Coins` module".to_string()
+    );
+}
+
+#[test]
+fn test_initialize_coin_price_before_run() {
+    let text = r"
+/// price: btc_usdt 100
+script {
+    use 0x1::Coins;
+    use 0x1::Coins::{BTC, USDT};
+
+    fun main() {
+        let price = Coins::get_price<BTC, USDT>();
+        assert(price == 100, 1);
+    }
+}
+    ";
+    let res = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[stdlib_mod("coins.move")],
+        "dfinance",
+        "0x3",
+        vec![],
+    )
+    .unwrap();
+    assert!(res.effects().resources().is_empty());
+}
+
+// #[test]
+// fn test_fail_if_scripts_has_same_name() {
+//     let text = r"
+// script {
+//     fun step_1() {}
+// }
+//
+// script {
+//     fun step_1() {}
+// }
+//     ";
+//     let res =
+//         compile_and_run_scripts_in_file(anonymous_script_file(text), &[], "libra", "0x1", vec![])
+//             .unwrap_err();
+//     dbg!(res);
+// }
+
+#[test]
+fn test_run_scripts_in_sequential_order() {
+    let text = r"
+script {
+    use 0x2::Record;
+
+    fun step_1(s: &signer) {
+        Record::create_record(s, 10);
+    }
+}
+
+script {
+    use 0x2::Record;
+
+    fun step_2(s: &signer) {
+        Record::increment_record(s);
+    }
+}
+    ";
+
+    let effects = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[stdlib_mod("signer.move"), record_mod()],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .effects();
+    assert_eq!(effects.resources().len(), 1);
+    assert_eq!(
+        effects.resources()[0],
+        AddressResourceChanges::new(
+            "0x0000000000000000000000000000000000000003",
+            vec!["Changed type 00000000::Record::T: [U8(11)]".to_string()]
+        )
+    );
+}
+
+#[test]
+fn test_failure_in_first_script() {
+    let text = r"
+script {
+    fun step_1() {
+        assert(false, 1);
+    }
+}
+
+script {
+    fun step_2() {
+        assert(true, 2);
+    }
+}
+    ";
+
+    let res = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[stdlib_mod("signer.move"), record_mod()],
+        "libra",
+        "0x1",
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(
+        res.error(),
+        "Execution aborted with code 1 in transaction script"
+    );
+}
+
+#[test]
+fn test_failure_in_second_script() {
+    let text = r"
+script {
+    fun step_1() {
+        assert(true, 1);
+    }
+}
+
+script {
+    fun step_2() {
+        assert(false, 2);
+    }
+}
+    ";
+
+    let res = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[stdlib_mod("signer.move"), record_mod()],
+        "libra",
+        "0x1",
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(
+        res.error(),
+        "Execution aborted with code 2 in transaction script"
+    );
+}
+
+#[test]
+fn test_run_scripts_and_set_oracles_before_each_step() {
+    let text = r"
+/// price: btc_usdt 100
+script {
+    use 0x1::Coins;
+    use 0x1::Coins::{BTC, USDT};
+
+    fun test_1() {
+        let price = Coins::get_price<BTC, USDT>();
+        assert(price == 100, 1);
+    }
+}
+
+/// price: btc_usdt 200
+script {
+    use 0x1::Coins;
+    use 0x1::Coins::{BTC, USDT};
+
+    fun test_3() {
+        let price = Coins::get_price<BTC, USDT>();
+        assert(price == 200, 1);
+    }
+}
+    ";
+
+    let results = compile_and_run_scripts_in_file(
+        anonymous_script_file(text),
+        &[stdlib_mod("coins.move")],
+        "libra",
+        "0x1",
+        vec![],
+    )
+    .unwrap();
+    assert_eq!(results.gas_spent(), 10);
 }
