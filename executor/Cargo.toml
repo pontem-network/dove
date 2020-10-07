@@ -14,7 +14,7 @@ clap = "2.33.1"
 textwrap = "0.12.1"
 
 libra-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020", features = ["debug_module"] }
 move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 lcs = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 vm = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
