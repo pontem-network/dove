@@ -83,7 +83,6 @@ fn main() -> Result<()> {
         &deps,
         dialect,
         sender,
-        // genesis_json_contents,
         args,
     );
     match res {
@@ -126,15 +125,6 @@ fn main() -> Result<()> {
                 }
                 Err(error) => error,
             };
-            // let error = match error.downcast::<VMStatus>() {
-            //     Ok(exec_error) => {
-            //         let out = serde_json::to_string_pretty(&exec_error)
-            //             .expect("Should always be serializable");
-            //         print!("{}", out);
-            //         std::process::exit(1)
-            //     }
-            //     Err(error) => error,
-            // };
             Err(error)
         }
     }
