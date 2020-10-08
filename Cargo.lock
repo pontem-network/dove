@@ -2161,6 +2161,7 @@ dependencies = [
  "move-vm-types",
  "serde",
  "serde_json",
+ "textwrap 0.12.1",
  "utils",
  "vm",
  "vm-genesis",

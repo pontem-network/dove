@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
-use anyhow::{Context, Result};
-use libra_types::{transaction::TransactionArgument};
+use anyhow::Result;
+
 use move_core_types::account_address::AccountAddress;
-use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
 use move_core_types::vm_status::StatusCode;
@@ -16,10 +15,11 @@ use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
-use crate::explain::{explain_effects, explain_error, ExplainedTransactionEffects};
+use crate::explain::{explain_effects, explain_error, StepExecutionResult};
 use crate::session::{ExecutionMeta, serialize_script};
+use crate::oracles::oracle_coins_module;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
     modules: HashMap<ModuleId, Vec<u8>>,
     resources: HashMap<(AccountAddress, StructTag), Vec<u8>>,
@@ -60,6 +60,22 @@ impl FakeRemoteCache {
                 .name,
         )
         .to_owned())
+    }
+
+    pub fn merge_transaction_effects(&mut self, effects: TransactionEffects) {
+        for (addr, changes) in effects.resources {
+            for (struct_tag, val) in changes {
+                match val {
+                    Some((layout, val)) => {
+                        let serialized = val.simple_serialize(&layout).expect("Valid value.");
+                        self.resources.insert((addr, struct_tag), serialized);
+                    }
+                    None => {
+                        self.resources.remove(&(addr, struct_tag));
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -108,47 +124,51 @@ fn execute_script_with_runtime_session<R: RemoteCache>(
     runtime_session.finish()
 }
 
-#[derive(Debug, serde::Serialize)]
-pub struct ExecutionResult {
-    pub effects: ExplainedTransactionEffects,
-    pub gas_spent: u64,
-}
-
 pub fn execute_script(
     meta: ExecutionMeta,
-    data_store: &FakeRemoteCache,
+    data_store: &mut FakeRemoteCache,
     script: CompiledScript,
     args: Vec<Value>,
-    cost_table: CostTable,
-) -> Result<ExecutionResult> {
-    let total_gas = 1_000_000;
-    let mut cost_strategy = CostStrategy::transaction(&cost_table, GasUnits::new(total_gas));
+    cost_strategy: &mut CostStrategy,
+) -> Result<StepExecutionResult> {
+    let mut ds = data_store.clone();
+    let ExecutionMeta {
+        signers,
+        oracle_prices,
+        ..
+    } = meta;
+    if !oracle_prices.is_empty() {
+        // check if module exists, and fail with MISSING_DEPENDENCY if not
+        if ds.get_module(&oracle_coins_module()).is_err() {
+            return Ok(StepExecutionResult::Error(
+                "Cannot use `price:` comments: missing `0x1::Coins` module".to_string(),
+            ));
+        }
+    }
+    for (price_tag, val) in oracle_prices {
+        let addr = AccountAddress::from_hex_literal("0x1").expect("Standart address");
+        ds.resources
+            .insert((addr, price_tag), lcs::to_bytes(&val).unwrap());
+    }
 
-    let signers = meta.signers;
-    let ty_args = vec![];
-    let effects = execute_script_with_runtime_session(
-        data_store,
+    let res = execute_script_with_runtime_session(
+        &ds,
         serialize_script(&script)?,
         args,
-        ty_args,
-        signers,
-        &mut cost_strategy,
-    )
-    .map_err(|error| explain_error(error, data_store))
-    .with_context(|| "Script execution error")?;
-    let gas_spent = total_gas - cost_strategy.remaining_gas().get();
-    let effects = explain_effects(&effects, &data_store)?;
-
-    Ok(ExecutionResult { effects, gas_spent })
-}
-
-/// Convert the transaction arguments into move values.
-pub fn convert_txn_arg(arg: TransactionArgument) -> Value {
-    match arg {
-        TransactionArgument::U64(i) => Value::u64(i),
-        TransactionArgument::Address(a) => Value::address(a),
-        TransactionArgument::Bool(b) => Value::bool(b),
-        TransactionArgument::U8Vector(v) => Value::vector_u8(v),
-        _ => unimplemented!(),
-    }
+        vec![],
+        signers.clone(),
+        cost_strategy,
+    );
+    Ok(match res {
+        Ok(effects) => {
+            let explained = explain_effects(&effects, &ds)?;
+            let res = StepExecutionResult::Success(explained);
+            data_store.merge_transaction_effects(effects);
+            res
+        }
+        Err(vm_error) => {
+            let error_as_string = explain_error(vm_error, data_store, &script, &signers);
+            StepExecutionResult::Error(error_as_string)
+        }
+    })
 }
