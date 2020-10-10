@@ -188,10 +188,7 @@ pub enum Exp<'a> {
 impl<'a> Exp<'a> {
     /// Returns `true` if the current expression is `Exp::Nop`.
     pub fn is_nop(&self) -> bool {
-        match self {
-            Exp::Nop => true,
-            _ => false,
-        }
+        matches!(self, Exp::Nop)
     }
 
     /// Returns bytecode range of the curent expression.

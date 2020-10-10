@@ -1426,6 +1426,7 @@ dependencies = [
  "dialects",
  "env_logger",
  "hex",
+ "include_dir",
  "itertools",
  "log",
  "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
