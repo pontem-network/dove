@@ -5,24 +5,24 @@ use utils::MoveFilePath;
 use crate::inner::config::Config;
 
 pub enum RootChange {
-    AddFile(MoveFilePath, String),
-    ChangeFile(MoveFilePath, String),
-    RemoveFile(MoveFilePath),
+    AddFile { path: String, text: String },
+    ChangeFile { path: String, text: String },
+    RemoveFile { path: String },
 }
 
 impl fmt::Debug for RootChange {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut s = f.debug_struct("RootChange");
         match self {
-            RootChange::AddFile(fpath, text) => s
-                .field("fpath", fpath)
+            RootChange::AddFile { path, text } => s
+                .field("fpath", path)
                 .field("type", &String::from("AddFile"))
                 .field("text", &text[0..min(text.len(), 55)].to_owned()),
-            RootChange::RemoveFile(fpath) => s
-                .field("fpath", fpath)
+            RootChange::RemoveFile { path } => s
+                .field("fpath", path)
                 .field("type", &String::from("RemoveFile")),
-            RootChange::ChangeFile(fpath, text) => s
-                .field("fpath", fpath)
+            RootChange::ChangeFile { path, text } => s
+                .field("fpath", path)
                 .field("type", &String::from("ChangeFile"))
                 .field("text", &text[0..min(text.len(), 55)].to_owned()),
         };
@@ -41,19 +41,19 @@ impl AnalysisChange {
         AnalysisChange::default()
     }
 
-    pub fn add_file(&mut self, fname: MoveFilePath, text: String) {
+    pub fn add_file(&mut self, fname: String, text: String) {
         self.tracked_files_changed
-            .push(RootChange::AddFile(fname, text));
+            .push(RootChange::AddFile { path: fname, text });
     }
 
-    pub fn update_file(&mut self, fname: MoveFilePath, text: String) {
+    pub fn update_file(&mut self, fname: String, text: String) {
         self.tracked_files_changed
-            .push(RootChange::ChangeFile(fname, text));
+            .push(RootChange::ChangeFile { path: fname, text });
     }
 
-    pub fn remove_file(&mut self, fname: MoveFilePath) {
+    pub fn remove_file(&mut self, fname: String) {
         self.tracked_files_changed
-            .push(RootChange::RemoveFile(fname))
+            .push(RootChange::RemoveFile { path: fname })
     }
 
     pub fn change_config(&mut self, config: Config) {

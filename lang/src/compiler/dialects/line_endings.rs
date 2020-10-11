@@ -1,5 +1,5 @@
-use crate::shared::errors::FileSourceMap;
 use std::str::Chars;
+use crate::compiler::source_map::FileSourceMap;
 
 struct NewNormalized<'a> {
     chars: Chars<'a>,

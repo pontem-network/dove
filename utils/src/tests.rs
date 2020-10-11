@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use crate::{MoveFile, io, MoveFilePath, leaked_fpath};
+use crate::{MoveFile, MoveFilePath, leaked_fpath};
 
 pub fn get_script_path() -> MoveFilePath {
     leaked_fpath(get_modules_path().join("script.move"))
@@ -49,11 +49,13 @@ pub fn setup_test_logging() {
 }
 
 pub fn stdlib_mod(name: &str) -> MoveFile {
-    io::load_move_file(get_stdlib_path().join(name)).unwrap()
+    //io::load_move_file(get_stdlib_path().join(name)).unwrap()
+    todo!()
 }
 
 pub fn modules_mod(name: &str) -> MoveFile {
-    io::load_move_file(get_modules_path().join(name)).unwrap()
+    // io::load_move_file(get_modules_path().join(name)).unwrap()
+    todo!()
 }
 
 pub fn stdlib_transaction_mod() -> MoveFile {
@@ -61,5 +63,6 @@ pub fn stdlib_transaction_mod() -> MoveFile {
 }
 
 pub fn record_mod() -> MoveFile {
-    io::load_move_file(get_modules_path().join("record.move")).unwrap()
+    // io::load_move_file(get_modules_path().join("record.move")).unwrap()
+    todo!()
 }

@@ -1,4 +1,9 @@
-use move_core_types::gas_schedule::{CostTable, GasConstants, GasCost};
+use crate::compiler::dialects::Dialect;
+use crate::compiler::source_map::FileSourceMap;
+use anyhow::Context;
+use move_core_types::account_address::AccountAddress;
+use anyhow::Result;
+use move_core_types::gas_schedule::{CostTable, GasCost};
 use move_vm_types::gas_schedule::new_from_instructions;
 use move_vm_types::gas_schedule::NativeCostIndex as N;
 use vm::{
@@ -8,22 +13,39 @@ use vm::{
     },
     file_format_common::instruction_key,
 };
+use crate::compiler::address::ProvidedAccountAddress;
+use crate::bech32::{bech32_into_libra, HRP, replace_bech32_addresses};
 
-pub fn libra_cost_table() -> CostTable {
-    let instructions_table_bytes = vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
-        .0
-        .clone();
-    let instruction_table: Vec<GasCost> = lcs::from_bytes(&instructions_table_bytes).unwrap();
+#[derive(Default)]
+pub struct DFinanceDialect;
 
-    let native_table_bytes = vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
-        .1
-        .clone();
-    let native_table: Vec<GasCost> = lcs::from_bytes(&native_table_bytes).unwrap();
+impl Dialect for DFinanceDialect {
+    fn name(&self) -> &str {
+        "dfinance"
+    }
 
-    CostTable {
-        instruction_table,
-        native_table,
-        gas_constants: GasConstants::default(),
+    fn normalize_account_address(&self, addr: &str) -> Result<ProvidedAccountAddress> {
+        let address_res = if addr.starts_with(HRP) {
+            bech32_into_libra(addr).map(|lowered_addr| {
+                ProvidedAccountAddress::new(addr.to_string(), addr.to_string(), lowered_addr)
+            })
+        } else if addr.starts_with("0x") {
+            AccountAddress::from_hex_literal(addr).map(|address| {
+                let lowered_addr = format!("0x{}", address);
+                ProvidedAccountAddress::new(addr.to_string(), lowered_addr.clone(), lowered_addr)
+            })
+        } else {
+            Err(anyhow::anyhow!("Does not start with either wallet1 or 0x"))
+        };
+        address_res.with_context(|| format!("Address {:?} is not a valid dfinance address", addr))
+    }
+
+    fn cost_table(&self) -> CostTable {
+        dfinance_cost_table()
+    }
+
+    fn replace_addresses(&self, source_text: &str, source_map: &mut FileSourceMap) -> String {
+        replace_bech32_addresses(&source_text, source_map)
     }
 }
 

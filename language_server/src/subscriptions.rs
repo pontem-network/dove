@@ -6,17 +6,17 @@ use utils::MoveFilePath;
 
 #[derive(Debug, Default, Clone)]
 pub struct OpenedFiles {
-    files: HashSet<MoveFilePath>,
+    files: HashSet<String>,
 }
 
 impl OpenedFiles {
-    pub fn add(&mut self, fpath: MoveFilePath) {
+    pub fn add(&mut self, fpath: String) {
         self.files.insert(fpath);
     }
-    pub fn remove(&mut self, fpath: MoveFilePath) {
+    pub fn remove(&mut self, fpath: String) {
         self.files.remove(&fpath);
     }
-    pub fn files(&self) -> Vec<MoveFilePath> {
-        self.files.iter().copied().collect()
+    pub fn files(&self) -> &HashSet<String> {
+        &self.files
     }
 }

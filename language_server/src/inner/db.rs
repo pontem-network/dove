@@ -1,17 +1,19 @@
 use anyhow::Result;
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 
-use dialects::shared::errors::{CompilerError, CompilerErrorPart};
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use std::fmt;
-use utils::{FilesSourceText, MoveFilePath};
+use utils::{MoveFilePath};
 use utils::location::File;
 use crate::inner::config::Config;
 use crate::inner::change::{AnalysisChange, RootChange};
+use lang::compiler::errors::{CompilerError, CompilerErrorPart};
+use lang::compiler::FilesSourceText;
+use std::collections::HashMap;
 
 pub struct FileDiagnostic {
-    pub fpath: MoveFilePath,
+    pub fpath: String,
     pub diagnostic: Option<Diagnostic>,
 }
 
@@ -40,16 +42,16 @@ impl Debug for FileDiagnostic {
 }
 
 impl FileDiagnostic {
-    pub fn new(fpath: MoveFilePath, diagnostic: Diagnostic) -> FileDiagnostic {
+    pub fn new(fpath: String, diagnostic: Diagnostic) -> FileDiagnostic {
         FileDiagnostic {
             fpath,
             diagnostic: Some(diagnostic),
         }
     }
 
-    pub fn new_empty(fpath: MoveFilePath) -> FileDiagnostic {
+    pub fn new_empty(fpath: &str) -> FileDiagnostic {
         FileDiagnostic {
-            fpath,
+            fpath: fpath.to_owned(),
             diagnostic: None,
         }
     }
@@ -63,18 +65,18 @@ pub struct FilePosition {
 #[derive(Debug, Default, Clone)]
 pub struct RootDatabase {
     pub config: Config,
-    pub available_files: FilesSourceText,
+    pub available_files: HashMap<String, String>,
 }
 
 impl RootDatabase {
     pub fn new(config: Config) -> RootDatabase {
         RootDatabase {
             config,
-            available_files: FilesSourceText::default(),
+            available_files: Default::default(),
         }
     }
 
-    pub fn module_files(&self) -> FilesSourceText {
+    pub fn module_files(&self) -> HashMap<String, String> {
         self.available_files
             .clone()
             .into_iter()
@@ -88,23 +90,26 @@ impl RootDatabase {
         }
         for root_change in change.tracked_files_changed {
             match root_change {
-                RootChange::AddFile(fpath, text) => {
-                    self.available_files.insert(fpath, text);
+                RootChange::AddFile { path, text } => {
+                    self.available_files.insert(path, text);
                 }
-                RootChange::ChangeFile(fpath, text) => {
-                    self.available_files.insert(fpath, text);
+                RootChange::ChangeFile { path, text } => {
+                    self.available_files.insert(path, text);
                 }
-                RootChange::RemoveFile(fpath) => {
-                    if !self.available_files.contains_key(fpath) {
-                        log::warn!("RemoveFile: file {:?} does not exist", fpath);
+                RootChange::RemoveFile { path } => {
+                    if !self.available_files.contains_key(&path) {
+                        log::warn!("RemoveFile: file {:?} does not exist", path);
                     }
-                    self.available_files.remove(fpath);
+                    self.available_files.remove(&path);
                 }
             }
         }
     }
 
-    fn error_location_to_range(&self, loc: &dialects::shared::errors::Location) -> Result<Range> {
+    fn error_location_to_range(
+        &self,
+        loc: &lang::compiler::source_map::Location,
+    ) -> Result<Range> {
         let file = loc.fpath;
         let text = match self.available_files.get(file) {
             Some(text) => text.clone(),
@@ -151,13 +156,18 @@ impl RootDatabase {
             }
             diagnostic.related_information = Some(related_info)
         }
-        Ok(FileDiagnostic::new(prim_location.fpath, diagnostic))
+        Ok(FileDiagnostic::new(
+            prim_location.fpath.to_owned(),
+            diagnostic,
+        ))
     }
 
-    fn is_fpath_for_a_module(&self, fpath: MoveFilePath) -> bool {
+    fn is_fpath_for_a_module(&self, fpath: &str) -> bool {
         for module_folder in self.config.modules_folders.iter() {
-            if fpath.starts_with(module_folder.to_str().unwrap()) {
-                return true;
+            if let Some(m_folder) = module_folder.to_str() {
+                if fpath.starts_with(m_folder) {
+                    return true;
+                }
             }
         }
         log::info!("{:?} is not a module file (not relative to any module folder), skipping from dependencies", fpath);

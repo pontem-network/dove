@@ -30,4 +30,3 @@ termcolor = "1.1.0"
 reqwest = { version = "0.10.4", features = ["blocking", "json"] }
 itertools = "0.9.0"
 lang = { path = "../lang" }
-dialects = { path = "../dialects" }

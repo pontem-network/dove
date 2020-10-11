@@ -7,8 +7,9 @@ use move_language_server::inner::config::Config;
 use move_language_server::inner::db::FileDiagnostic;
 
 use utils::tests::*;
-use move_language_server::global_state::{GlobalState};
-use move_language_server::test_utils::global_state_snapshot;
+use move_language_server::global_state::{GlobalState, GlobalStateSnapshot, initialize_new_global_state};
+use lang::file::MvFile;
+use move_language_server::inner::change::AnalysisChange;
 
 macro_rules! config {
     () => {{
@@ -44,7 +45,7 @@ fn diagnostics_with_config_and_filename(
     config: Config,
     fpath: MoveFilePath,
 ) -> Vec<FileDiagnostic> {
-    let state_snapshot = global_state_snapshot((fpath, text.to_string()), config, vec![]);
+    let state_snapshot = global_state_snapshot(MvFile::with_content(fpath.to_owned(), text.to_string()), config, vec![]);
     let (task_sender, task_receiver) = unbounded::<ResponseEvent>();
 
     compute_file_diagnostics(state_snapshot.analysis, task_sender, vec![fpath]);
@@ -673,4 +674,31 @@ module DFI {
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((3, 1), (3, 5)));
     }
+}
+
+pub fn global_state_snapshot(
+    file: MvFile,
+    config: Config,
+    additional_files: Vec<MvFile>,
+) -> GlobalStateSnapshot {
+    let mut global_state = initialize_new_global_state(config);
+    let mut change = AnalysisChange::new();
+
+    for folder in &global_state.config().modules_folders {
+        for file in file::load_move_files(&[folder]).unwrap() {
+            let (fpath, text) = file.into();
+            change.add_file(fpath, text);
+        }
+    }
+
+    for file in additional_files {
+        let (fpath, text) = file.into();
+        change.add_file(fpath, text);
+    }
+
+    let (fpath, text) = file.into();
+    change.update_file(fpath, text);
+
+    global_state.apply_change(change);
+    global_state.snapshot()
 }

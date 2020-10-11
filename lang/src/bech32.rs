@@ -2,8 +2,8 @@ use anyhow::{ensure, Result};
 use bech32::u5;
 use lazy_static::lazy_static;
 
-use crate::shared::errors::FileSourceMap;
 use regex::Regex;
+use crate::compiler::source_map::FileSourceMap;
 
 pub static HRP: &str = "wallet";
 

@@ -1,8 +1,5 @@
 use std::collections::HashMap;
-
-use serde::export::Formatter;
-use std::fmt;
-
+use crate::compiler::errors::{CompilerError, CompilerErrorPart};
 use utils::MoveFilePath;
 
 pub fn len_difference(orig: &str, replacement: &str) -> isize {
@@ -131,45 +128,5 @@ impl Location {
     pub fn is_inside_interval(&self, start: usize, end: usize) -> bool {
         let (loc_start, _) = self.span;
         loc_start >= start && loc_start <= end
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct CompilerErrorPart {
-    pub location: Location,
-    pub message: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct CompilerError {
-    pub parts: Vec<CompilerErrorPart>,
-}
-
-#[derive(Debug, Default)]
-pub struct ExecCompilerError(pub Vec<CompilerError>, pub ProjectSourceMap);
-
-impl ExecCompilerError {
-    pub fn transform_with_source_map(self) -> Vec<CompilerError> {
-        let ExecCompilerError(errors, project_source_map) = self;
-        errors
-            .into_iter()
-            .map(|error| project_source_map.transform(error))
-            .collect()
-    }
-
-    pub fn extend(&mut self, other: ExecCompilerError) {
-        let ExecCompilerError(errors, proj_offsets_map) = other;
-        self.0.extend(errors);
-        for (fpath, offsets_map) in proj_offsets_map.0.into_iter() {
-            self.1.insert(fpath, offsets_map);
-        }
-    }
-}
-
-impl std::error::Error for ExecCompilerError {}
-
-impl fmt::Display for ExecCompilerError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
     }
 }

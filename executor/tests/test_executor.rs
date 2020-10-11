@@ -1,4 +1,3 @@
-use dialects::shared::errors::ExecCompilerError;
 use move_executor::compile_and_run_scripts_in_file;
 
 use utils::leaked_fpath;
@@ -7,6 +6,7 @@ use utils::tests::{
     anonymous_script_file, record_mod,
 };
 use move_executor::explain::AddressResourceChanges;
+use lang::compiler::errors::ExecCompilerError;
 
 #[test]
 fn test_show_compilation_errors() {

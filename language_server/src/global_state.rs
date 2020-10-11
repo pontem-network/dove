@@ -1,9 +1,9 @@
 use crate::main_loop::FileSystemEvent;
-use utils::io;
 use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
 use crate::inner::db::RootDatabase;
 use crate::inner::change::AnalysisChange;
+use lang::file;
 
 pub struct GlobalStateSnapshot {
     pub config: Config,
@@ -36,10 +36,12 @@ impl GlobalState {
         let mut change = AnalysisChange::new();
         for fs_event in fs_events {
             match fs_event {
-                FileSystemEvent::AddFile((fpath, text)) => {
+                FileSystemEvent::AddFile(file) => {
+                    let (fpath, text) = file.into();
                     change.add_file(fpath, text);
                 }
-                FileSystemEvent::ChangeFile((fpath, text)) => {
+                FileSystemEvent::ChangeFile(file) => {
+                    let (fpath, text) = file.into();
                     change.update_file(fpath, text);
                 }
                 FileSystemEvent::RemoveFile(fpath) => {
@@ -67,13 +69,13 @@ pub fn initialize_new_global_state(config: Config) -> GlobalState {
     let mut initial_fs_events = vec![];
     match &config.stdlib_folder {
         Some(folder) => {
-            for file in io::load_move_files(vec![folder.clone()]).unwrap() {
+            for file in file::load_move_files(&[folder]).unwrap() {
                 initial_fs_events.push(FileSystemEvent::AddFile(file));
             }
         }
         None => {}
     }
-    for file in io::load_move_files(config.modules_folders.clone()).unwrap() {
+    for file in file::load_move_files(&config.modules_folders).unwrap() {
         initial_fs_events.push(FileSystemEvent::AddFile(file));
     }
     GlobalState::new(config, initial_fs_events)

@@ -6,6 +6,7 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use anyhow::{Result, Error};
 use libra::{prelude::*, compiler::*};
+use lang::compiler::compile_program;
 use crate::dependence::extractor::{
     extract_dependencies_from_source, extract_dependencies_from_bytecode,
 };
@@ -13,10 +14,15 @@ use std::collections::{HashMap, HashSet};
 use termcolor::{StandardStream, ColorChoice, Buffer};
 use lang::disassembler::{Config, Disassembler, unit::CompiledUnit as Unit};
 use crate::dependence::loader::{BytecodeLoader, Loader};
-use dialects::shared::bech32::bech32_into_libra;
+use lang::compiler::dialects::{Dialect, DialectName};
+use lang::bech32::bech32_into_libra;
+use lang::file::MvFile;
+use std::convert::TryFrom;
 
 /// Move builder.
 pub struct Builder<'a, S: BytecodeLoader> {
+    /// move dialect.
+    dialect: Box<dyn Dialect>,
     /// movec project directory.
     project_dir: &'a Path,
     /// movec manifest.
@@ -44,6 +50,7 @@ where
         shutdown_on_err: bool,
     ) -> Builder<'a, S> {
         Builder {
+            dialect: DialectName::DFinance.get_dialect(),
             project_dir,
             manifest,
             loader,
@@ -186,13 +193,20 @@ where
         source_list: Vec<PathBuf>,
         dep_list: Vec<PathBuf>,
     ) -> Result<(FilesSourceText, Vec<CompiledUnit>)> {
-        let source_list = convert_path(&source_list)?;
-        let dep_list = convert_path(&dep_list)?;
+        let source_list = source_list
+            .iter()
+            .map(MvFile::try_from)
+            .collect::<Result<Vec<_>>>()?;
+
+        let dep_list = dep_list
+            .iter()
+            .map(MvFile::try_from)
+            .collect::<Result<Vec<_>>>()?;
+
         let addr = self.address()?;
 
-        let (files, pprog_and_comments_res) = parse_program(&source_list, &dep_list)?;
-        let pprog_res = pprog_and_comments_res.map(|(pprog, _)| pprog);
-        match compile_program(pprog_res, addr) {
+        let (files, prog) = compile_program(self.dialect.as_ref(), source_list, dep_list, addr)?;
+        match prog {
             Err(errors) => {
                 if self.print_err {
                     let mut writer = StandardStream::stderr(ColorChoice::Auto);
