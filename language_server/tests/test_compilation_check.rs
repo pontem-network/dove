@@ -8,7 +8,7 @@ use move_language_server::inner::db::FileDiagnostic;
 
 use utils::tests::*;
 use move_language_server::global_state::{GlobalState, GlobalStateSnapshot, initialize_new_global_state};
-use lang::file::MvFile;
+use lang::file::*;
 use move_language_server::inner::change::AnalysisChange;
 
 macro_rules! config {
@@ -61,7 +61,7 @@ fn diagnostics_with_config_and_filename(
 }
 
 fn diagnostics_with_deps(
-    script_file: MoveFile,
+    script_file: MvFile,
     deps: Vec<MoveFile>,
     config: Config,
 ) -> Option<FileDiagnostic> {
@@ -76,16 +76,16 @@ fn diagnostics_with_deps(
     let global_state = GlobalState::new(config, fs_events);
     global_state
         .analysis()
-        .check_file_with_compiler(script_file.0, &script_file.1)
+        .check_file_with_compiler(script_file)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    use utils::{leaked_fpath, FilesSourceText};
     use move_language_server::inner::db::RootDatabase;
     use move_language_server::inner::analysis::Analysis;
+    use lang::compiler::FilesSourceText;
 
     #[test]
     fn test_fail_on_non_ascii_character() {
@@ -685,7 +685,7 @@ pub fn global_state_snapshot(
     let mut change = AnalysisChange::new();
 
     for folder in &global_state.config().modules_folders {
-        for file in file::load_move_files(&[folder]).unwrap() {
+        for file in load_move_files(&[folder]).unwrap() {
             let (fpath, text) = file.into();
             change.add_file(fpath, text);
         }

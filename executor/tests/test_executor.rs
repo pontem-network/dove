@@ -2,11 +2,12 @@ use move_executor::compile_and_run_scripts_in_file;
 
 use utils::leaked_fpath;
 use utils::tests::{
-    get_script_path, stdlib_mod, existing_module_file_abspath, modules_mod, get_modules_path,
+    get_script_path, existing_module_file_abspath, modules_mod, get_modules_path,
     anonymous_script_file, record_mod,
 };
 use move_executor::explain::AddressResourceChanges;
 use lang::compiler::errors::ExecCompilerError;
+use lang::file::MvFile;
 
 #[test]
 fn test_show_compilation_errors() {
@@ -46,7 +47,7 @@ script {
 }";
     let deps = vec![stdlib_mod("signer.move")];
     compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
+            MvFile::with_content(existing_module_file_abspath(), text.to_string())
         &deps,
         "libra",
         "0x1111111111111111",
@@ -961,4 +962,9 @@ script {
     )
     .unwrap();
     assert_eq!(results.gas_spent, 10);
+}
+
+pub fn stdlib_mod(name: &str) -> MvFile {
+    //io::load_move_file(get_stdlib_path().join(name)).unwrap()
+    todo!()
 }
