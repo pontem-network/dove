@@ -1,69 +1,22 @@
-use anyhow::{Context, Result};
-
-use move_core_types::account_address::AccountAddress;
-
-use move_lang::{compiled_unit::CompiledUnit, errors::Error, to_bytecode, FileCommentMap};
-
-use vm::file_format::CompiledScript;
-use vm::CompiledModule;
-
 use std::collections::BTreeMap;
-use utils::location;
+
+use anyhow::Result;
+use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
+use move_ir_types::location::Loc;
+use move_lang::{compiled_unit::CompiledUnit, errors::Error, FileCommentMap, to_bytecode};
+use move_vm_types::gas_schedule::CostStrategy;
+use move_vm_types::values::Value;
+use vm::CompiledModule;
+use vm::file_format::CompiledScript;
+
 use dialects::lang::{PreBytecodeProgram, ProgramCommentsMap};
 use dialects::shared::ProvidedAccountAddress;
-use move_ir_types::location::Loc;
-use move_core_types::parser::parse_transaction_argument;
-use move_core_types::transaction_argument::TransactionArgument;
-use move_vm_types::values::Value;
-use crate::oracles::oracle_metadata;
-use move_core_types::language_storage::StructTag;
+use utils::location;
 
-fn split_around<'s>(s: &'s str, p: &str) -> (&'s str, &'s str) {
-    let parts: Vec<_> = s.splitn(2, p).collect();
-    let key = parts[0].trim();
-    let val = parts[1].trim();
-    (key, val)
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct ExecutionMeta {
-    pub signers: Vec<AccountAddress>,
-    pub max_gas: u64,
-    pub oracle_prices: Vec<(StructTag, u128)>,
-}
-
-impl ExecutionMeta {
-    pub fn apply_meta_comment(&mut self, comment: String) {
-        if !comment.contains(':') {
-            return;
-        }
-        let (key, val) = split_around(&comment, ":");
-        match key {
-            "signer" => self
-                .signers
-                .push(AccountAddress::from_hex_literal(val).unwrap()),
-            "max_gas" => {
-                self.max_gas = val.parse().unwrap();
-            }
-            "price" => {
-                if !val.contains(' ') {
-                    eprintln!("Invalid ticker price doc comment: {}", comment);
-                    return;
-                }
-                let (tickers, value) = split_around(val, " ");
-                if !tickers.contains('_') {
-                    eprintln!("Invalid ticker price doc comment: {}", comment);
-                    return;
-                }
-                let (ticker_left, ticker_right) = split_around(&tickers, "_");
-                let price_struct_tag = oracle_metadata(ticker_left, ticker_right);
-                self.oracle_prices
-                    .push((price_struct_tag, value.parse().unwrap()))
-            }
-            _ => todo!("Unimplemented meta key"),
-        }
-    }
-}
+use crate::execution::{execute_script, FakeRemoteCache};
+use crate::explain::PipelineExecutionResult;
+use crate::explain::StepExecutionResult;
+use crate::meta::ExecutionMeta;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
@@ -73,24 +26,57 @@ pub enum ExecutionUnit {
 
 pub struct ExecutionSession {
     units: Vec<ExecutionUnit>,
-    arguments: Vec<String>,
 }
 
 impl ExecutionSession {
-    pub fn new(units: Vec<ExecutionUnit>, arguments: Vec<String>) -> Self {
-        ExecutionSession { units, arguments }
+    pub fn is_executable(&self) -> bool {
+        for unit in &self.units {
+            if let ExecutionUnit::Script(_) = unit {
+                return true;
+            }
+        }
+        false
     }
 
-    // pub fn into_first_script(self) -> (CompiledScript, ExecutionMeta) {
-    //     for unit in self.units {
-    //         if let ExecutionUnit::Script((name, script, meta)) = unit {
-    //             return (script, meta);
-    //         }
-    //     }
-    //     unreachable!()
-    // }
+    pub fn execute(
+        self,
+        script_args: Vec<Value>,
+        cost_table: CostTable,
+    ) -> Result<PipelineExecutionResult> {
+        let mut data_store = FakeRemoteCache::new(self.modules())?;
+        let mut script_args = script_args;
 
-    pub fn modules(&self) -> Vec<CompiledModule> {
+        let mut overall_gas_spent = 0;
+        let mut step_results = vec![];
+        for (name, script, meta) in self.scripts() {
+            let total_gas = 1_000_000;
+            let mut cost_strategy =
+                CostStrategy::transaction(&cost_table, GasUnits::new(total_gas));
+            let step_result = execute_script(
+                meta,
+                &mut data_store,
+                script,
+                script_args,
+                &mut cost_strategy,
+            )?;
+            script_args = vec![];
+
+            let gas_spent = total_gas - cost_strategy.remaining_gas().get();
+            overall_gas_spent += gas_spent;
+
+            let is_error = matches!(step_result, StepExecutionResult::Error(_));
+            step_results.push((name, step_result));
+            if is_error {
+                break;
+            }
+        }
+        Ok(PipelineExecutionResult::new(
+            step_results,
+            overall_gas_spent,
+        ))
+    }
+
+    fn modules(&self) -> Vec<CompiledModule> {
         let mut modules = vec![];
         for unit in &self.units {
             if let ExecutionUnit::Module(module) = unit {
@@ -100,7 +86,7 @@ impl ExecutionSession {
         modules
     }
 
-    pub fn scripts(&self) -> Vec<(String, CompiledScript, ExecutionMeta)> {
+    fn scripts(&self) -> Vec<(String, CompiledScript, ExecutionMeta)> {
         let mut scripts = vec![];
         for unit in &self.units {
             if let ExecutionUnit::Script((name, script, meta)) = unit {
@@ -109,24 +95,6 @@ impl ExecutionSession {
         }
         scripts
     }
-
-    pub fn arguments(&self) -> Result<Vec<Value>> {
-        let mut script_args = Vec::with_capacity(self.arguments.len());
-        for passed_arg in &self.arguments {
-            let transaction_argument = parse_transaction_argument(passed_arg)?;
-            let script_arg = convert_txn_arg(transaction_argument);
-            script_args.push(script_arg);
-        }
-        Ok(script_args)
-    }
-}
-
-pub fn serialize_script(script: &CompiledScript) -> Result<Vec<u8>> {
-    let mut serialized = vec![];
-    script
-        .serialize(&mut serialized)
-        .context("Script serialization error")?;
-    Ok(serialized)
 }
 
 pub fn extract_script_doc_comments(
@@ -163,22 +131,10 @@ pub fn extract_script_doc_comments(
     doc_comments
 }
 
-/// Convert the transaction arguments into move values.
-pub fn convert_txn_arg(arg: TransactionArgument) -> Value {
-    match arg {
-        TransactionArgument::U64(i) => Value::u64(i),
-        TransactionArgument::Address(a) => Value::address(a),
-        TransactionArgument::Bool(b) => Value::bool(b),
-        TransactionArgument::U8Vector(v) => Value::vector_u8(v),
-        _ => unimplemented!(),
-    }
-}
-
 pub fn init_execution_session(
     program: PreBytecodeProgram,
     program_doc_comments: ProgramCommentsMap,
     provided_sender: ProvidedAccountAddress,
-    args: Vec<String>,
 ) -> Result<ExecutionSession, Vec<Error>> {
     let script_loc_map: BTreeMap<_, _> = program
         .scripts
@@ -218,8 +174,7 @@ pub fn init_execution_session(
         Some(loc) => loc.span().end().to_usize(),
         None => 0,
     });
-    Ok(ExecutionSession::new(
-        execution_units.into_iter().map(|(_, unit)| unit).collect(),
-        args,
-    ))
+    Ok(ExecutionSession {
+        units: execution_units.into_iter().map(|(_, unit)| unit).collect(),
+    })
 }

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
-
+use anyhow::{Context, Result};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
@@ -16,7 +15,7 @@ use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
 use crate::explain::{explain_effects, explain_error, StepExecutionResult};
-use crate::session::{ExecutionMeta, serialize_script};
+use crate::meta::ExecutionMeta;
 use crate::oracles::oracle_coins_module;
 
 #[derive(Debug, Default, Clone)]
@@ -30,7 +29,9 @@ impl FakeRemoteCache {
         let mut modules = HashMap::with_capacity(compiled_modules.len());
         for module in compiled_modules {
             let mut module_bytes = vec![];
-            module.serialize(&mut module_bytes)?;
+            module
+                .serialize(&mut module_bytes)
+                .context("Module serialization error")?;
             modules.insert(module.self_id(), module_bytes);
         }
         let resources = HashMap::new();
@@ -104,6 +105,14 @@ impl RemoteCache for FakeRemoteCache {
         };
         Ok(res)
     }
+}
+
+pub fn serialize_script(script: &CompiledScript) -> Result<Vec<u8>> {
+    let mut serialized = vec![];
+    script
+        .serialize(&mut serialized)
+        .context("Script serialization error")?;
+    Ok(serialized)
 }
 
 fn execute_script_with_runtime_session<R: RemoteCache>(
