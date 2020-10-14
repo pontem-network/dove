@@ -8,19 +8,9 @@ use dialects::shared::errors::ExecCompilerError;
 
 use move_executor::compile_and_run_scripts_in_file;
 use move_executor::explain::{PipelineExecutionResult, StepExecutionResult};
-use utils::{io, leaked_fpath, FilesSourceText, MoveFilePath};
+use utils::{io, leaked_fpath};
 use lang::compiler::print_compiler_errors_and_exit;
-
-fn get_files_for_error_reporting(
-    script: (MoveFilePath, String),
-    deps: Vec<(MoveFilePath, String)>,
-) -> FilesSourceText {
-    let mut mapping = FilesSourceText::with_capacity(deps.len() + 1);
-    for (fpath, text) in vec![script].into_iter().chain(deps.into_iter()) {
-        mapping.insert(fpath, text);
-    }
-    mapping
-}
+use move_executor::exec_utils::get_files_for_error_reporting;
 
 fn main() -> Result<()> {
     let cli_arguments = App::new("Move Executor")

@@ -10,6 +10,15 @@ address 0x2 {
             move_from<T>(addr)
         }
 
+//        public fun get_record_of_account(s: &signer): &T acquires T {
+//            borrow_global<T>(Signer::address_of(s))
+//        }
+
+        public fun record_age(s: &signer): u8 acquires T {
+            let T { age } = move_from<T>(Signer::address_of(s));
+            return age
+        }
+
         public fun create(age: u8): T {
             T { age }
         }

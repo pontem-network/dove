@@ -1,24 +1,66 @@
 use std::str::FromStr;
 
 use anyhow::{Context, Result};
+use move_core_types::parser::parse_transaction_argument;
+use move_core_types::transaction_argument::TransactionArgument;
+use move_vm_types::values::Value;
 
+use dialects::base::Dialect;
 use dialects::DialectName;
-use dialects::lang::{into_exec_compiler_error};
-use dialects::shared::{AddressMap};
+use dialects::lang::into_exec_compiler_error;
 use lang::compiler::compile_to_prebytecode_program;
 use utils::MoveFile;
 
-use crate::session::init_execution_session;
+use crate::explain::PipelineExecutionResult;
+use crate::session::{ExecutionSession, init_execution_session};
 
-use crate::explain::{PipelineExecutionResult, StepExecutionResult};
-use crate::execution::{FakeRemoteCache, execute_script};
-use move_vm_types::gas_schedule::CostStrategy;
-use move_core_types::gas_schedule::{GasAlgebra, GasUnits};
-
+pub mod exec_utils;
 pub mod execution;
 pub mod explain;
+pub mod meta;
 pub mod oracles;
 pub mod session;
+
+pub fn compile_and_initialize_file_execution_session(
+    file: MoveFile,
+    deps: &[MoveFile],
+    sender: &str,
+    dialect: &dyn Dialect,
+) -> Result<ExecutionSession> {
+    let provided_sender_address = dialect
+        .normalize_account_address(sender)
+        .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
+
+    // let mut address_map = AddressMap::default();
+    // address_map.insert(provided_sender_address.clone());
+
+    let (program, comments, project_source_map) =
+        compile_to_prebytecode_program(dialect, file, deps, provided_sender_address.clone())?;
+    init_execution_session(program, comments, provided_sender_address).map_err(|errors| {
+        anyhow::Error::new(into_exec_compiler_error(errors, project_source_map))
+    })
+}
+
+/// Convert the transaction arguments into move values.
+pub fn convert_txn_arg(arg: TransactionArgument) -> Value {
+    match arg {
+        TransactionArgument::U64(i) => Value::u64(i),
+        TransactionArgument::Address(a) => Value::address(a),
+        TransactionArgument::Bool(b) => Value::bool(b),
+        TransactionArgument::U8Vector(v) => Value::vector_u8(v),
+        _ => unimplemented!(),
+    }
+}
+
+pub fn parse_script_arguments(passed_args: Vec<String>) -> Result<Vec<Value>> {
+    let mut script_args = Vec::with_capacity(passed_args.len());
+    for passed_arg in &passed_args {
+        let transaction_argument = parse_transaction_argument(passed_arg)?;
+        let script_arg = convert_txn_arg(transaction_argument);
+        script_args.push(script_arg);
+    }
+    Ok(script_args)
+}
 
 pub fn compile_and_run_scripts_in_file(
     file: MoveFile,
@@ -28,57 +70,26 @@ pub fn compile_and_run_scripts_in_file(
     args: Vec<String>,
 ) -> Result<PipelineExecutionResult> {
     let dialect = DialectName::from_str(dialect)?.get_dialect();
+    let file_execution_session =
+        compile_and_initialize_file_execution_session(file, deps, sender, dialect.as_ref())?;
 
-    let provided_sender_address = dialect
-        .normalize_account_address(sender)
-        .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
-
-    let mut address_map = AddressMap::default();
-    address_map.insert(provided_sender_address.clone());
-
-    let (program, comments, project_source_map) = compile_to_prebytecode_program(
-        dialect.as_ref(),
-        file,
-        deps,
-        provided_sender_address.clone(),
-    )?;
-    let execution_session =
-        init_execution_session(program, comments, provided_sender_address, args)
-            .map_err(|errors| into_exec_compiler_error(errors, project_source_map))?;
-
-    let mut data_store = FakeRemoteCache::new(execution_session.modules())?;
-    let mut script_args = execution_session.arguments()?;
-
-    if execution_session.scripts().is_empty() {
+    let script_args = parse_script_arguments(args)?;
+    if !file_execution_session.is_executable() {
         return Err(anyhow::anyhow!("No scripts found"));
     }
 
-    let mut overall_gas_spent = 0;
-    let mut step_results = vec![];
-    for (name, script, meta) in execution_session.scripts() {
-        let total_gas = 1_000_000;
-        let cost_table = dialect.cost_table();
-        let mut cost_strategy = CostStrategy::transaction(&cost_table, GasUnits::new(total_gas));
-        let step_result = execute_script(
-            meta,
-            &mut data_store,
-            script,
-            script_args,
-            &mut cost_strategy,
-        )?;
-        script_args = vec![];
+    file_execution_session.execute(script_args, dialect.cost_table())
+}
 
-        let gas_spent = total_gas - cost_strategy.remaining_gas().get();
-        overall_gas_spent += gas_spent;
+pub fn compile_and_run_file_as_test(
+    file: MoveFile,
+    deps: &[MoveFile],
+    dialect: &str,
+    sender: &str,
+) -> Result<PipelineExecutionResult> {
+    let dialect = DialectName::from_str(dialect)?.get_dialect();
+    let file_execution_session =
+        compile_and_initialize_file_execution_session(file, deps, sender, dialect.as_ref())?;
 
-        let is_error = matches!(step_result, StepExecutionResult::Error(_));
-        step_results.push((name, step_result));
-        if is_error {
-            break;
-        }
-    }
-    Ok(PipelineExecutionResult::new(
-        step_results,
-        overall_gas_spent,
-    ))
+    file_execution_session.execute(vec![], dialect.cost_table())
 }
