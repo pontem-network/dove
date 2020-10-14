@@ -12,7 +12,7 @@ use std::path::Path;
 use anyhow::Error;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Move compiler.")]
+#[structopt(name = "Move compiler.", version = git_hash::crate_version_with_git_hash_short!())]
 enum Opt {
     #[structopt(about = "Init directory as move project.")]
     Init {
