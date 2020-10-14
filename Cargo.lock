@@ -2181,6 +2181,7 @@ dependencies = [
  "clap",
  "compiled-stdlib",
  "errmapgen",
+ "git-hash",
  "lang",
  "libra-canonical-serialization 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
  "libra-types",
