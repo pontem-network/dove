@@ -36,20 +36,20 @@ pub fn git_hash_short(_: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn crate_version_with_git_hash(_: TokenStream) -> TokenStream {
-    let ver = env!("CARGO_PKG_VERSION");
-    let res = cmd::git_hash()
-        .map(|rev| format!("{}-{}", ver, rev))
-        .unwrap_or_else(|| ver.to_owned());
-    format!("\"{}\"", res).parse().unwrap()
+    crate_version_with(cmd::git_hash()).unwrap()
 }
 
 #[proc_macro]
 pub fn crate_version_with_git_hash_short(_: TokenStream) -> TokenStream {
-    let ver = env!("CARGO_PKG_VERSION");
-    let res = cmd::git_hash_short()
-        .map(|rev| format!("{}-{}", ver, rev))
-        .unwrap_or_else(|| ver.to_owned());
-    format!("\"{}\"", res).parse().unwrap()
+    crate_version_with(cmd::git_hash_short()).unwrap()
+}
+
+fn crate_version_with(s: Option<String>) -> Result<TokenStream, LexError> {
+    let res = s
+        .map(|rev| format!("-{}", rev))
+        .unwrap_or_else(|| Default::default());
+
+    format!("concat!(env!(\"CARGO_PKG_VERSION\"), \"{}\")", res).parse()
 }
 
 fn opt_tokenize(s: Option<String>) -> Result<TokenStream, LexError> {
