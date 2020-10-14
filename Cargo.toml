@@ -4,5 +4,9 @@ members = [
     "executor",
     "utils",
     "lang",
-    "movec"
+    "movec",
+
+    # common utilities:
+    "common/git-hash",
+    "common/git-hash/macro",
 ]
