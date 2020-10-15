@@ -15,6 +15,8 @@ pub fn print_test_status(test_name: &str, status: &str) {
 pub fn main() -> Result<()> {
     let cli_arguments = App::new("Test runner")
         .version("0.1.0")
+        .arg(Arg::from_usage("--verbose"))
+        .arg(Arg::from_usage("-k --name-pattern [NAME_PATTERN]").help("Specify test name to run (or substring)"))
         .arg(
             Arg::from_usage("-s --sender [SENDER_ADDRESS]")
                 .required(true)
@@ -35,16 +37,21 @@ pub fn main() -> Result<()> {
         )
         .get_matches();
 
+    let verbose_output = cli_arguments.is_present("verbose");
+    let test_name_pattern = cli_arguments.value_of("name-pattern");
+
     let modules_fpaths = cli_arguments
         .values_of("modules")
         .unwrap_or_default()
         .map(|path| path.into())
         .collect::<Vec<PathBuf>>();
     let deps = io::load_move_files(modules_fpaths)?;
-    println!(
-        "Found deps: {:#?}",
-        deps.iter().map(|(n, _)| n).collect::<Vec<_>>()
-    );
+    if verbose_output {
+        println!(
+            "Found deps: {:#?}",
+            deps.iter().map(|(n, _)| n).collect::<Vec<_>>()
+        );
+    }
 
     let sender = cli_arguments.value_of("sender").unwrap();
 
@@ -53,10 +60,12 @@ pub fn main() -> Result<()> {
         None => vec![],
     };
     let test_files = io::load_move_files(test_directories)?;
-    println!(
-        "Found tests: {:#?}",
-        test_files.iter().map(|(n, _)| n).collect::<Vec<_>>()
-    );
+    if verbose_output {
+        println!(
+            "Found tests: {:#?}",
+            test_files.iter().map(|(n, _)| n).collect::<Vec<_>>()
+        );
+    }
 
     let mut has_failures = false;
     for test_file in test_files {
@@ -67,6 +76,12 @@ pub fn main() -> Result<()> {
             .unwrap()
             .to_string();
         let test_name = test_file_name.strip_suffix(".move").unwrap();
+
+        if let Some(pattern) = test_name_pattern {
+            if !test_name.contains(pattern) {
+                continue;
+            }
+        }
 
         let deps = deps.clone();
         let exec_result =
