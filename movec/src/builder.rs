@@ -16,7 +16,7 @@ use lang::disassembler::{Config, Disassembler, unit::CompiledUnit as Unit};
 use crate::dependence::loader::{BytecodeLoader, Loader};
 use lang::compiler::dialects::{Dialect, DialectName};
 use lang::bech32::bech32_into_libra;
-use lang::file::MvFile;
+use lang::compiler::file::MvFile;
 use std::convert::TryFrom;
 
 /// Move builder.
@@ -204,8 +204,11 @@ where
             .collect::<Result<Vec<_>>>()?;
 
         let addr = self.address()?;
+        let sender = addr
+            .map(|addr| self.dialect.normalize_account_address(&addr.to_string()))
+            .map_or(Ok(None), |v| v.map(Some))?;
 
-        let (files, prog) = compile_program(self.dialect.as_ref(), source_list, dep_list, addr)?;
+        let (files, prog) = compile_program(self.dialect.as_ref(), source_list, dep_list, sender.as_ref());
         match prog {
             Err(errors) => {
                 if self.print_err {

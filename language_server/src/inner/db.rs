@@ -9,7 +9,6 @@ use utils::location::File;
 use crate::inner::config::Config;
 use crate::inner::change::{AnalysisChange, RootChange};
 use lang::compiler::errors::{CompilerError, CompilerErrorPart};
-use lang::compiler::FilesSourceText;
 use std::collections::HashMap;
 
 pub struct FileDiagnostic {

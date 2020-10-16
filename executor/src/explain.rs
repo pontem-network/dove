@@ -51,13 +51,6 @@ impl StepExecutionResult {
             StepExecutionResult::Error(msg) => panic!("{}", msg),
         }
     }
-
-    // pub fn gas_spent(self) -> u64 {
-    //     match self {
-    //         StepExecutionResult::Success((_, gas_spent)) => gas_spent,
-    //         StepExecutionResult::Error(msg) => panic!("{}", msg),
-    //     }
-    // }
 }
 
 #[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
@@ -208,19 +201,6 @@ pub fn explain_error(
                 abort_code, id
             )
             .unwrap();
-
-            // if let Some(error_desc) = error_descriptions.get_explanation(&id, abort_code) {
-            //     writeln!(
-            //         &mut text_representation,
-            //         " Abort code details:\nReason:\n  Name: {}\n  Description:{}\nCategory:\n  Name: {}\n  Description:{}",
-            //         error_desc.reason.code_name,
-            //         error_desc.reason.code_description,
-            //         error_desc.category.code_name,
-            //         error_desc.category.code_description,
-            //     ).unwrap();
-            // } else {
-            //     writeln!(&mut text_representation).unwrap();
-            // }
         }
         VMStatus::MoveAbort(AbortLocation::Script, abort_code) => {
             // TODO: map to source code location
@@ -265,12 +245,6 @@ pub fn explain_error(
             )
             .unwrap();
         }
-        // VMStatus::Error(StatusCode::NUMBER_OF_TYPE_ARGUMENTS_MISMATCH) => writeln!(
-        //     "Execution failed with incorrect number of type arguments: script expected {:?}, but \
-        //      found {:?}",
-        //     &script.as_inner().type_parameters.len(),
-        //     vm_type_args.len()
-        // ),
         VMStatus::Error(StatusCode::TYPE_MISMATCH) => explain_type_error(script, signers, &[]),
         VMStatus::Error(status_code) => write!(
             &mut text_representation,

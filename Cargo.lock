@@ -2174,32 +2174,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "move-executor"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "compiled-stdlib",
- "errmapgen",
- "git-hash",
- "lang",
- "libra-canonical-serialization 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
- "libra-types",
- "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=15.09.2020)",
- "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git)",
- "move-ir-types",
- "move-lang",
- "move-vm-runtime",
- "move-vm-types",
- "serde",
- "serde_json",
- "textwrap 0.12.1",
- "utils",
- "vm",
- "vm-genesis",
-]
-
-[[package]]
 name = "move-ir-types"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=15.09.2020#7f3dc705a0c56f8ce09753c97ac686cecd3318c2"
@@ -2257,6 +2231,7 @@ dependencies = [
  "log",
  "lsp-server",
  "lsp-types",
+ "resources",
  "serde",
  "serde_json",
  "threadpool",
@@ -3049,6 +3024,13 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
+]
+
+[[package]]
+name = "resources"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
 ]
 
 [[package]]

@@ -23,11 +23,10 @@ use crate::global_state::{initialize_new_global_state, GlobalState};
 
 use crate::subscriptions::OpenedFiles;
 use std::collections::HashSet;
-use utils::{leaked_fpath, MoveFile, MoveFilePath};
 use crate::inner::db::FileDiagnostic;
 use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
-use lang::file::MvFile;
+use lang::compiler::file::MvFile;
 use std::fmt::Debug;
 
 #[derive(Debug)]

@@ -4,13 +4,13 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 
 use clap::{App, Arg};
-use dialects::shared::errors::ExecCompilerError;
 
 use move_executor::compile_and_run_scripts_in_file;
 use move_executor::explain::{PipelineExecutionResult, StepExecutionResult};
-use utils::{io, leaked_fpath};
-use lang::compiler::print_compiler_errors_and_exit;
 use move_executor::exec_utils::get_files_for_error_reporting;
+use move_lang::name_pool::ConstPool;
+use lang::file::MvFile;
+use lang::compiler::errors::ExecCompilerError;
 
 fn main() -> Result<()> {
     let cli_arguments = App::new("Move Executor")
@@ -45,6 +45,8 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
+    let _pool = ConstPool::new();
+    MvFile::load(path);
     let script_fpath = leaked_fpath(cli_arguments.value_of("SCRIPT").unwrap());
     let script_source_text = fs::read_to_string(script_fpath)
         .with_context(|| format!("Cannot open {:?}", script_fpath))?;

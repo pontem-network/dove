@@ -8,15 +8,14 @@ use move_vm_types::gas_schedule::CostStrategy;
 use move_vm_types::values::Value;
 use vm::CompiledModule;
 use vm::file_format::CompiledScript;
-
-use dialects::lang::{PreBytecodeProgram, ProgramCommentsMap};
-use dialects::shared::ProvidedAccountAddress;
 use utils::location;
 
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
+use lang::compiler::{PreBytecodeProgram, ProgramCommentsMap};
+use lang::compiler::address::ProvidedAccountAddress;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {

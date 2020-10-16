@@ -4,17 +4,15 @@ use anyhow::{Context, Result};
 use move_core_types::parser::parse_transaction_argument;
 use move_core_types::transaction_argument::TransactionArgument;
 use move_vm_types::values::Value;
-
-use dialects::base::Dialect;
-use dialects::DialectName;
-use dialects::lang::into_exec_compiler_error;
-use lang::compiler::compile_to_prebytecode_program;
 use utils::MoveFile;
 
 use crate::explain::PipelineExecutionResult;
 use crate::session::{ExecutionSession, init_execution_session};
+use lang::compiler::errors::into_exec_compiler_error;
+use lang::compiler::parser::compile_to_prebytecode_program;
+use lang::compiler::dialects::{DialectName, Dialect};
+use lang::file::MvFile;
 
-pub mod exec_utils;
 pub mod execution;
 pub mod explain;
 pub mod meta;
@@ -22,17 +20,14 @@ pub mod oracles;
 pub mod session;
 
 pub fn compile_and_initialize_file_execution_session(
-    file: MoveFile,
-    deps: &[MoveFile],
+    file: MvFile,
+    deps: &[MvFile],
     sender: &str,
     dialect: &dyn Dialect,
 ) -> Result<ExecutionSession> {
     let provided_sender_address = dialect
         .normalize_account_address(sender)
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
-
-    // let mut address_map = AddressMap::default();
-    // address_map.insert(provided_sender_address.clone());
 
     let (program, comments, project_source_map) =
         compile_to_prebytecode_program(dialect, file, deps, provided_sender_address.clone())?;
@@ -63,15 +58,15 @@ pub fn parse_script_arguments(passed_args: Vec<String>) -> Result<Vec<Value>> {
 }
 
 pub fn compile_and_run_scripts_in_file(
-    file: MoveFile,
-    deps: &[MoveFile],
+    script: MvFile,
+    deps: &[MvFile],
     dialect: &str,
     sender: &str,
     args: Vec<String>,
 ) -> Result<PipelineExecutionResult> {
     let dialect = DialectName::from_str(dialect)?.get_dialect();
     let file_execution_session =
-        compile_and_initialize_file_execution_session(file, deps, sender, dialect.as_ref())?;
+        compile_and_initialize_file_execution_session(script, deps, sender, dialect.as_ref())?;
 
     let script_args = parse_script_arguments(args)?;
     if !file_execution_session.is_executable() {

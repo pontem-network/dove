@@ -2,7 +2,6 @@
 //! which we want to publish diagnostics, syntax highlighting, etc.
 
 use std::collections::HashSet;
-use utils::MoveFilePath;
 
 #[derive(Debug, Default, Clone)]
 pub struct OpenedFiles {

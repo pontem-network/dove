@@ -3,7 +3,7 @@ use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
 use crate::inner::db::RootDatabase;
 use crate::inner::change::AnalysisChange;
-use lang::file;
+use lang::compiler::file;
 
 pub struct GlobalStateSnapshot {
     pub config: Config,

@@ -1,7 +1,6 @@
 use std::path::Path;
 
 pub mod location;
-pub mod tests;
 
 pub type MoveFilePath = &'static str;
 pub type MoveFile = (MoveFilePath, String);

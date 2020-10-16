@@ -6,7 +6,7 @@ use serde::export::Formatter;
 use serde::Deserialize;
 use lang::compiler::dialects::{DialectName, Dialect};
 use lang::compiler::address::ProvidedAccountAddress;
-use lang::file::find_move_files;
+use lang::compiler::file::find_move_files;
 
 #[derive(Clone)]
 pub struct Config {

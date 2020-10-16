@@ -4,6 +4,7 @@ use std::io::Read;
 use std::path::{PathBuf, Path};
 use std::convert::TryFrom;
 use walkdir::DirEntry;
+use std::borrow::Cow;
 
 #[derive(Debug, Clone)]
 pub struct MvFile {
@@ -12,20 +13,31 @@ pub struct MvFile {
 }
 
 impl MvFile {
-    pub fn with_path(path: String) -> Result<MvFile> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<MvFile> {
+        let path = path.as_ref();
         let mut f = File::open(&path)
-            .map_err(|err| std::io::Error::new(err.kind(), format!("{}: {}", err, path)))?;
-        let mut source_buffer = String::new();
-        f.read_to_string(&mut source_buffer)?;
+            .map_err(|err| std::io::Error::new(err.kind(), format!("{}: {:?}", err, path)))?;
+        let mut content = String::new();
+        f.read_to_string(&mut content)?;
 
-        Ok(MvFile {
-            name: path,
-            content: source_buffer,
-        })
+        let name = path
+            .to_str()
+            .map(|path| path.to_owned())
+            .ok_or_else(|| anyhow!("Failed to convert source path"))?;
+
+        Ok(MvFile { name, content })
     }
 
-    pub fn with_content(name: String, content: String) -> MvFile {
-        MvFile { name, content }
+    pub fn with_content<'a, S, S1>(name: S, content: S1) -> MvFile
+    where
+        S: Into<Cow<'a, str>>,
+        S1: Into<Cow<'a, str>>,
+    {
+        // TODO replace String with Cow<'a, str>
+        MvFile {
+            name: name.into().into_owned(),
+            content: content.into().into_owned(),
+        }
     }
 
     pub fn name(&self) -> &str {
@@ -45,19 +57,7 @@ impl TryFrom<&PathBuf> for MvFile {
     type Error = Error;
 
     fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
-        MvFile::try_from(value.as_path())
-    }
-}
-
-impl TryFrom<&Path> for MvFile {
-    type Error = Error;
-
-    fn try_from(value: &Path) -> Result<Self, Self::Error> {
-        let path = value
-            .to_str()
-            .map(|path| path.to_owned())
-            .ok_or_else(|| anyhow!("Failed to convert source path"))?;
-        MvFile::with_path(path)
+        MvFile::load(value)
     }
 }
 
@@ -71,10 +71,10 @@ pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MvFile>> {
             path
         );
         if path.is_file() {
-            module_files.push(MvFile::try_from(path)?);
+            module_files.push(MvFile::load(path)?);
         } else {
             for path in find_move_files(path)? {
-                module_files.push(MvFile::with_path(path)?);
+                module_files.push(MvFile::load(path)?);
             }
         }
     }

@@ -2,7 +2,7 @@ use move_executor::compile_and_run_scripts_in_file;
 
 use utils::leaked_fpath;
 use utils::tests::{
-    get_script_path, existing_module_file_abspath, modules_mod, get_modules_path,
+    get_script_path, modules_mod, get_modules_path,
     anonymous_script_file, record_mod,
 };
 use move_executor::explain::AddressResourceChanges;
@@ -38,16 +38,16 @@ script {
 #[test]
 fn test_execute_custom_script_with_stdlib_module() {
     let text = r"
-script {
-    use 0x1::Signer;
+    script {
+        use 0x1::Signer;
 
-    fun main(s: &signer) {
-        let _ = Signer::address_of(s);
-    }
-}";
+        fun main(s: &signer) {
+            let _ = Signer::address_of(s);
+        }
+    }";
     let deps = vec![stdlib_mod("signer.move")];
     compile_and_run_scripts_in_file(
-            MvFile::with_content(existing_module_file_abspath(), text.to_string())
+            MvFile::with_content("script", text)
         &deps,
         "libra",
         "0x1111111111111111",
@@ -140,22 +140,22 @@ script {
 #[test]
 fn missing_writesets_for_move_to_sender() {
     let module_text = r"
-address 0x1 {
-    module M {
-        resource struct T { value: u8 }
+    address 0x1 {
+        module M {
+            resource struct T { value: u8 }
 
-        public fun get_t(s: &signer, v: u8) {
-            move_to<T>(s, T { value: v })
+            public fun get_t(s: &signer, v: u8) {
+                move_to<T>(s, T { value: v })
+            }
         }
     }
-}
         ";
     let script_text = r"
-script {
-    fun main(s: &signer) {
-        0x1::M::get_t(s, 10);
+    script {
+        fun main(s: &signer) {
+            0x1::M::get_t(s, 10);
+        }
     }
-}
         ";
     let mut deps = vec![];
     deps.push((
@@ -187,21 +187,21 @@ script {
 #[test]
 fn test_run_with_non_default_dfinance_dialect() {
     let module_source_text = r"
-address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
-    module M {
-        resource struct T { value: u8 }
-        public fun get_t(s: &signer, v: u8) {
-            move_to<T>(s, T { value: v })
+    address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+        module M {
+            resource struct T { value: u8 }
+            public fun get_t(s: &signer, v: u8) {
+                move_to<T>(s, T { value: v })
+            }
         }
     }
-}
     ";
     let script_text = r"
-script {
-    fun main(s: &signer) {
-        wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(s, 10);
+    script {
+        fun main(s: &signer) {
+            wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(s, 10);
+        }
     }
-}
     ";
 
     let effects = compile_and_run_scripts_in_file(
@@ -247,23 +247,23 @@ script {
 #[test]
 fn test_pass_arguments_to_script() {
     let module_source_text = r"
-address 0x1 {
-    module Module {
-        resource struct T { value: bool }
-        public fun create_t(s: &signer, v: bool) {
-            move_to<T>(s, T { value: v })
+    address 0x1 {
+        module Module {
+            resource struct T { value: bool }
+            public fun create_t(s: &signer, v: bool) {
+                move_to<T>(s, T { value: v })
+            }
         }
     }
-}
     ";
     let script_text = r"
-script {
-    use 0x1::Module;
+    script {
+        use 0x1::Module;
 
-    fun main(s: &signer, val: bool) {
-        Module::create_t(s, val);
+        fun main(s: &signer, val: bool) {
+            Module::create_t(s, val);
+        }
     }
-}
     ";
 
     let effects = compile_and_run_scripts_in_file(
@@ -294,20 +294,20 @@ script {
 #[test]
 fn test_sender_string_in_script() {
     let module_text = r"
-address {{sender}} {
-    module Debug {
-        public fun debug(): u8 {
-            1
+    address {{sender}} {
+        module Debug {
+            public fun debug(): u8 {
+                1
+            }
+        }
+    }";
+    let source_text = r"
+    script {
+        use {{sender}}::Debug;
+        fun main() {
+            let _ = Debug::debug();
         }
     }
-}";
-    let source_text = r"
-script {
-    use {{sender}}::Debug;
-    fun main() {
-        let _ = Debug::debug();
-    }
-}
         ";
     let effects = compile_and_run_scripts_in_file(
         (get_script_path(), source_text.to_string()),
@@ -427,11 +427,11 @@ script {
 #[test]
 fn test_bech32_address_and_sender_in_compiler_error() {
     let text = r"
-script {
-    fun main() {
-        let _ = {{sender}}::Unknown::unknown();
+    script {
+        fun main() {
+            let _ = {{sender}}::Unknown::unknown();
+        }
     }
-}
         ";
     let exec_error = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),
@@ -502,16 +502,16 @@ script {
 #[test]
 fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
     let text = r"
-script {
-    use 0x1::Signer;
+    script {
+        use 0x1::Signer;
 
-    fun main(s: &signer) {
-        let _ = Signer::address_of(s);
-    }
-}";
+        fun main(s: &signer) {
+            let _ = Signer::address_of(s);
+        }
+    }";
     let deps = vec![stdlib_mod("signer.move")];
     let res = compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
+        ("script", text.to_string()),
         &deps,
         "libra",
         "0x1111111111111111",
@@ -524,11 +524,11 @@ script {
 #[test]
 fn test_dfinance_executor_allows_0x0() {
     let text = r"
-script {
-    fun main() {}
-}";
+    script {
+        fun main() {}
+    }";
     compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
+        MvFile::with_content("script", text),
         &[],
         "dfinance",
         "0x0",
@@ -538,7 +538,7 @@ script {
     .unwrap();
 
     compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
+        MvFile::with_content("script", text),
         &[],
         "dfinance",
         "0x1",
@@ -550,15 +550,15 @@ script {
 #[test]
 fn test_execute_script_with_custom_signer() {
     let text = r"
-/// signer: 0x2
-script {
-    use 0x2::Record;
+    /// signer: 0x2
+    script {
+        use 0x2::Record;
 
-    fun test_create_record(s1: &signer) {
-        let r1 = Record::create(20);
-        Record::save(s1, r1);
+        fun test_create_record(s1: &signer) {
+            let r1 = Record::create(20);
+            Record::save(s1, r1);
+        }
     }
-}
     ";
     let effects = compile_and_run_scripts_in_file(
         (get_script_path(), text.to_string()),

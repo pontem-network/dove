@@ -1,12 +1,11 @@
 [workspace]
 members = [
     "language_server",
-    "executor",
+#    "executor",
     "utils",
     "lang",
     "movec",
-
-    # common utilities:
+    "resources",
     "common/git-hash",
     "common/git-hash/macro",
 ]

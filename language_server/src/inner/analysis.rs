@@ -1,8 +1,7 @@
-use utils::{MoveFile, MoveFilePath};
 use crate::inner::db::{RootDatabase, FileDiagnostic};
 use lang::compiler::check;
-use lang::file::MvFile;
-use lang::file;
+use lang::compiler::file::MvFile;
+use lang::compiler::file;
 
 #[derive(Debug)]
 pub struct Analysis {
@@ -45,7 +44,7 @@ impl Analysis {
             self.db.config.dialect().as_ref(),
             current_file,
             deps,
-            Some(self.db.config.sender().as_address()),
+            Some(self.db.config.sender()),
         )
         .map_err(|errors| {
             errors

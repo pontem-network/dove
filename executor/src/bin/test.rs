@@ -1,12 +1,10 @@
 use anyhow::Result;
 use clap::{App, Arg};
 use move_executor::compile_and_run_file_as_test;
-use utils::io;
 use std::path::PathBuf;
-use dialects::shared::errors::ExecCompilerError;
-use lang::compiler::print_compiler_errors_and_exit;
 use move_executor::exec_utils::get_files_for_error_reporting;
 use move_executor::explain::StepExecutionResult;
+use lang::compiler::errors::ExecCompilerError;
 
 pub fn print_test_status(test_name: &str, status: &str) {
     println!("{} ....... {}", test_name, status);
