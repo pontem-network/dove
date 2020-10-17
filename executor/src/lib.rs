@@ -4,14 +4,11 @@ use anyhow::{Context, Result};
 use move_core_types::parser::parse_transaction_argument;
 use move_core_types::transaction_argument::TransactionArgument;
 use move_vm_types::values::Value;
-use utils::MoveFile;
 
 use crate::explain::PipelineExecutionResult;
 use crate::session::{ExecutionSession, init_execution_session};
-use lang::compiler::errors::into_exec_compiler_error;
-use lang::compiler::parser::compile_to_prebytecode_program;
 use lang::compiler::dialects::{DialectName, Dialect};
-use lang::file::MvFile;
+use lang::compiler::file::MvFile;
 
 pub mod execution;
 pub mod explain;
@@ -77,8 +74,8 @@ pub fn compile_and_run_scripts_in_file(
 }
 
 pub fn compile_and_run_file_as_test(
-    file: MoveFile,
-    deps: &[MoveFile],
+    file: MvFile,
+    deps: &[MvFile],
     dialect: &str,
     sender: &str,
 ) -> Result<PipelineExecutionResult> {

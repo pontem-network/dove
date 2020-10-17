@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use crate::compiler::errors::{CompilerError, CompilerErrorPart};
-use utils::MoveFilePath;
 
 pub fn len_difference(orig: &str, replacement: &str) -> isize {
     orig.len() as isize - replacement.len() as isize
@@ -92,16 +91,16 @@ impl FileSourceMap {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct ProjectSourceMap(pub HashMap<MoveFilePath, FileSourceMap>);
+pub struct ProjectSourceMap(pub HashMap<&'static str, FileSourceMap>);
 
 impl ProjectSourceMap {
-    pub fn with_file_map(fpath: MoveFilePath, map: FileSourceMap) -> ProjectSourceMap {
+    pub fn with_file_map(fpath: &'static str, map: FileSourceMap) -> ProjectSourceMap {
         let mut project_map = ProjectSourceMap::default();
         project_map.0.insert(fpath, map);
         project_map
     }
 
-    pub fn insert(&mut self, fpath: MoveFilePath, map: FileSourceMap) {
+    pub fn insert(&mut self, fpath: &'static str, map: FileSourceMap) {
         self.0.insert(fpath, map);
     }
 
@@ -120,7 +119,7 @@ impl ProjectSourceMap {
 
 #[derive(Debug, Clone)]
 pub struct Location {
-    pub fpath: MoveFilePath,
+    pub fpath: &'static str,
     pub span: (usize, usize),
 }
 

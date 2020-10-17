@@ -14,8 +14,8 @@ use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
-use lang::compiler::{PreBytecodeProgram, ProgramCommentsMap};
 use lang::compiler::address::ProvidedAccountAddress;
+use lang::compiler::parser::ProgramCommentsMap;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {

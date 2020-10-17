@@ -5,13 +5,14 @@ use std::path::PathBuf;
 use move_executor::exec_utils::get_files_for_error_reporting;
 use move_executor::explain::StepExecutionResult;
 use lang::compiler::errors::ExecCompilerError;
+use lang::compiler::ConstPool;
 
 pub fn print_test_status(test_name: &str, status: &str) {
     println!("{} ....... {}", test_name, status);
 }
 
-pub fn main() -> Result<()> {
-    let cli_arguments = App::new("Test runner")
+fn cli() -> App {
+    App::new("Test runner")
         .version("0.1.0")
         .arg(Arg::from_usage("--verbose"))
         .arg(Arg::from_usage("-k --name-pattern [NAME_PATTERN]").help("Specify test name to run (or substring)"))
@@ -33,7 +34,11 @@ pub fn main() -> Result<()> {
                 .required(true)
                 .help("Where to find tests"),
         )
-        .get_matches();
+}
+
+pub fn main() -> Result<()> {
+    let cli_arguments = cli().get_matches();
+    let _pool = ConstPool::new();
 
     let verbose_output = cli_arguments.is_present("verbose");
     let test_name_pattern = cli_arguments.value_of("name-pattern");

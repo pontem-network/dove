@@ -2,60 +2,9 @@ use serde::export::Formatter;
 use std::fmt;
 
 use crate::compiler::source_map::{ProjectSourceMap, Location};
-use move_lang::errors::{Error, FilesSourceText};
+use move_lang::errors::Error;
 use codespan::ByteIndex;
 use move_ir_types::location::Loc;
-
-pub fn from_compiler_error(comp_error: CompilerError) -> Error {
-    comp_error
-        .parts
-        .into_iter()
-        .map(|part| {
-            let CompilerErrorPart {
-                location: Location { fpath, span },
-                message,
-            } = part;
-            (
-                Loc::new(
-                    fpath,
-                    codespan::Span::new(ByteIndex(span.0 as u32), ByteIndex(span.1 as u32)),
-                ),
-                message,
-            )
-        })
-        .collect()
-}
-
-pub fn report_errors(files: FilesSourceText, errors: Vec<CompilerError>) -> ! {
-    let errors = errors.into_iter().map(from_compiler_error).collect();
-    move_lang::errors::report_errors(files, errors)
-}
-
-fn into_compiler_error(error: Error) -> CompilerError {
-    let mut parts = vec![];
-    for (loc, message) in error {
-        let part = CompilerErrorPart {
-            location: Location {
-                fpath: loc.file(),
-                span: (loc.span().start().to_usize(), loc.span().end().to_usize()),
-            },
-            message,
-        };
-        parts.push(part);
-    }
-    CompilerError { parts }
-}
-
-pub fn into_exec_compiler_error(
-    errors: Vec<Error>,
-    offsets_map: ProjectSourceMap,
-) -> ExecCompilerError {
-    let mut compiler_errors = vec![];
-    for error in errors {
-        compiler_errors.push(into_compiler_error(error));
-    }
-    ExecCompilerError(compiler_errors, offsets_map)
-}
 
 #[derive(Debug, Clone)]
 pub struct CompilerErrorPart {
@@ -68,10 +17,53 @@ pub struct CompilerError {
     pub parts: Vec<CompilerErrorPart>,
 }
 
+impl From<Error> for CompilerError {
+    fn from(err: Error) -> Self {
+        let mut parts = vec![];
+        for (loc, message) in err {
+            let part = CompilerErrorPart {
+                location: Location {
+                    fpath: loc.file(),
+                    span: (loc.span().start().to_usize(), loc.span().end().to_usize()),
+                },
+                message,
+            };
+            parts.push(part);
+        }
+        CompilerError { parts }
+    }
+}
+
+impl Into<Error> for CompilerError {
+    fn into(self) -> Error {
+        self.parts
+            .into_iter()
+            .map(|part| {
+                let CompilerErrorPart {
+                    location: Location { fpath, span },
+                    message,
+                } = part;
+                (
+                    Loc::new(
+                        fpath,
+                        codespan::Span::new(ByteIndex(span.0 as u32), ByteIndex(span.1 as u32)),
+                    ),
+                    message,
+                )
+            })
+            .collect()
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct ExecCompilerError(pub Vec<CompilerError>, pub ProjectSourceMap);
 
 impl ExecCompilerError {
+    pub fn new(errors: Vec<Error>, offsets_map: ProjectSourceMap) -> ExecCompilerError {
+        let compiler_errors = errors.into_iter().map(CompilerError::from).collect();
+        ExecCompilerError(compiler_errors, offsets_map)
+    }
+
     pub fn empty() -> ExecCompilerError {
         ExecCompilerError {
             0: vec![],

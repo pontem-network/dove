@@ -86,7 +86,7 @@ fn is_move_file(entry: &DirEntry) -> bool {
         && !entry
             .file_name()
             .to_str()
-            .map(|name| name.starts_with("."))
+            .map(|name| name.starts_with('.'))
             .unwrap_or(true)
         && entry
             .path()

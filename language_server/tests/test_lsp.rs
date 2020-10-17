@@ -44,8 +44,8 @@ fn shutdown_req() -> Message {
 }
 
 fn notification<N>(params: N::Params) -> Message
-    where
-        N: lsp_types::notification::Notification,
+where
+    N: lsp_types::notification::Notification,
 {
     Message::Notification(notification_new::<N>(params))
 }

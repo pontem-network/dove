@@ -1,97 +1,73 @@
 pub mod address;
 pub mod dialects;
 pub mod errors;
+pub mod file;
 pub mod parser;
 pub mod source_map;
-pub mod file;
+pub mod bech32;
+
+pub use anyhow::Result;
 
 pub use move_lang::name_pool::ConstPool;
 
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
 use parser::parse_program;
-use crate::compiler::errors::{into_exec_compiler_error, from_compiler_error, CompilerError};
 use crate::compiler::dialects::Dialect;
 use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MvFile;
-use std::collections::HashMap;
-use move_lang::check_program;
+use move_lang::{check_program, cfgir, to_bytecode};
+use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 
-pub type FilesSourceText = HashMap<&'static str, String>;
+pub type CheckerResult = Result<cfgir::ast::Program, Errors>;
 
-pub fn compile_program(
+pub trait CompileFlow<A> {
+    fn init(&mut self, _dialect: &dyn Dialect, _sender: &Option<&ProvidedAccountAddress>) {}
+    fn after_parsing(&mut self, parser_artifact: ParserArtifact) -> Step<A, ParserArtifact> {
+        Step::Next(parser_artifact)
+    }
+    fn after_check(
+        &mut self,
+        meta: ParsingMeta,
+        check_result: CheckerResult,
+    ) -> Step<A, (ParsingMeta, CheckerResult)> {
+        Step::Next((meta, check_result))
+    }
+    fn after_translate(
+        &mut self,
+        meta: ParsingMeta,
+        translation_result: Result<Vec<CompiledUnit>, Errors>,
+    ) -> A;
+}
+
+pub enum Step<A, N> {
+    Stop(A),
+    Next(N),
+}
+
+pub fn compile<A>(
     dialect: &dyn Dialect,
     targets: Vec<MvFile>,
     deps: Vec<MvFile>,
     sender: Option<&ProvidedAccountAddress>,
-) -> (FilesSourceText, Result<Vec<CompiledUnit>, Errors>) {
-    let (source_text, offsets_map, pprog_and_comments_res) =
-        parse_program(dialect, targets, deps, sender);
-    let pprog_res = pprog_and_comments_res
-        .map(|(pprog, _comments)| pprog)
-        .map_err(|errors| {
-            errors
-                .0
-                .into_iter()
-                .map(from_compiler_error)
-                .collect::<Vec<_>>()
-        });
+    mut flow: impl CompileFlow<A>,
+) -> A {
+    flow.init(dialect, &sender);
+    let parser_result = match flow.after_parsing(parse_program(dialect, targets, deps, sender)) {
+        Step::Stop(artifact) => return artifact,
+        Step::Next(res) => res,
+    };
+    let ParserArtifact {
+        meta,
+        result: pprog_and_comments_res,
+    } = parser_result;
+    let pprog_res = pprog_and_comments_res.map(|(pprog, _comments)| pprog);
 
-    match move_lang::compile_program(pprog_res, sender.map(|addr| addr.as_address())) {
-        Err(errors) => {
-            let errors = into_exec_compiler_error(errors, offsets_map)
-                .transform_with_source_map()
-                .into_iter()
-                .map(from_compiler_error)
-                .collect::<Vec<_>>();
-            (source_text, Err(errors))
-        }
-        Ok(compiled_units) => (source_text, Ok(compiled_units)),
-    }
-}
-
-pub fn check(
-    dialect: &dyn Dialect,
-    current: MvFile,
-    deps: Vec<MvFile>,
-    sender: Option<&ProvidedAccountAddress>,
-) -> Result<(), Vec<CompilerError>> {
-    let (_, offsets_map, pprog_and_comments_res) =
-        parse_program(dialect, vec![current], deps, sender.clone());
-
-    let pprog = match pprog_and_comments_res.map(|(pprog, _)| pprog) {
-        Ok(pprog) => Ok(pprog),
-        Err(mut err) => {
-            err.1 = offsets_map;
-            return Err(err.transform_with_source_map());
-        }
+    let sender = sender.map(|addr| addr.as_address());
+    let (meta, check_result) = match flow.after_check(meta, check_program(pprog_res, sender)) {
+        Step::Stop(artifact) => return artifact,
+        Step::Next(res) => res,
     };
 
-    check_program(pprog, sender.map(|addr| addr.as_address())).map_err(|errors| {
-        into_exec_compiler_error(errors, offsets_map)
-            .transform_with_source_map()
-    })?;
-    Ok(())
+    flow.after_translate(meta, check_result.and_then(to_bytecode::translate::program))
 }
-
-// use std::collections::{BTreeMap, HashMap};
-// use move_lang::{FileCommentMap, cfgir, parser as l_parser, check_program};
-// use move_lang::parser::ast::Definition;
-// use move_lang::errors::Error;
-// use file::MvFile;
-// use utils::{MoveFilePath};
-//
-// pub type ProgramCommentsMap = BTreeMap<MoveFilePath, (String, FileCommentMap)>;
-// pub type PreBytecodeProgram = cfgir::ast::Program;
-//
-// pub fn check_defs(
-//     source_definitions: Vec<Definition>,
-//     lib_definitions: Vec<Definition>,
-//     sender: Address,
-// ) -> Result<PreBytecodeProgram, Vec<Error>> {
-//     let ast_program = l_parser::ast::Program {
-//         source_definitions,
-//         lib_definitions,
-//     };
-//     move_lang::check_program(Ok(ast_program), Some(sender))
-// }

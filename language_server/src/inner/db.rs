@@ -4,7 +4,6 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use std::fmt;
-use utils::{MoveFilePath};
 use utils::location::File;
 use crate::inner::config::Config;
 use crate::inner::change::{AnalysisChange, RootChange};
@@ -57,7 +56,7 @@ impl FileDiagnostic {
 }
 
 pub struct FilePosition {
-    pub fpath: MoveFilePath,
+    pub fpath: &'static str,
     pub pos: (usize, usize),
 }
 

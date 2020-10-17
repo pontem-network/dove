@@ -6,7 +6,6 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use anyhow::{Result, Error};
 use libra::{prelude::*, compiler::*};
-use lang::compiler::compile_program;
 use crate::dependence::extractor::{
     extract_dependencies_from_source, extract_dependencies_from_bytecode,
 };
@@ -15,9 +14,10 @@ use termcolor::{StandardStream, ColorChoice, Buffer};
 use lang::disassembler::{Config, Disassembler, unit::CompiledUnit as Unit};
 use crate::dependence::loader::{BytecodeLoader, Loader};
 use lang::compiler::dialects::{Dialect, DialectName};
-use lang::bech32::bech32_into_libra;
+use lang::compiler::bech32::bech32_into_libra;
 use lang::compiler::file::MvFile;
 use std::convert::TryFrom;
+use lang::builder::{MoveBuilder, Artifacts};
 
 /// Move builder.
 pub struct Builder<'a, S: BytecodeLoader> {
@@ -208,7 +208,9 @@ where
             .map(|addr| self.dialect.normalize_account_address(&addr.to_string()))
             .map_or(Ok(None), |v| v.map(Some))?;
 
-        let (files, prog) = compile_program(self.dialect.as_ref(), source_list, dep_list, sender.as_ref());
+        let Artifacts { files, prog } =
+            MoveBuilder::new(self.dialect.as_ref(), sender.as_ref()).build(source_list, dep_list);
+
         match prog {
             Err(errors) => {
                 if self.print_err {

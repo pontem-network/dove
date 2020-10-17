@@ -67,9 +67,7 @@ fn diagnostics_with_deps(
     config: Config,
 ) -> Option<FileDiagnostic> {
     let mut config = config;
-    config.update(&serde_json::json!({
-        "modules_folders": [modules_path()]
-    }));
+    config.update(&serde_json::json!({ "modules_folders": [modules_path()] }));
 
     let mut fs_events: Vec<_> = deps.into_iter().map(FileSystemEvent::AddFile).collect();
     fs_events.push(FileSystemEvent::AddFile(script_file.clone()));
@@ -636,7 +634,10 @@ script {
         });
         let error = diagnostics_with_deps(
             MvFile::with_content(script_path(), source),
-            vec![MvFile::with_content(modules_path().join("debug.move").to_str().unwrap(), module)],
+            vec![MvFile::with_content(
+                modules_path().join("debug.move").to_str().unwrap(),
+                module,
+            )],
             config,
         );
         assert!(error.is_none(), "{:#?}", error);

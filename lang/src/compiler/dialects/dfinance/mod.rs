@@ -14,7 +14,7 @@ use vm::{
     file_format_common::instruction_key,
 };
 use crate::compiler::address::ProvidedAccountAddress;
-use crate::bech32::{bech32_into_libra, HRP, replace_bech32_addresses};
+use crate::compiler::bech32::{bech32_into_libra, HRP, replace_bech32_addresses};
 
 #[derive(Default)]
 pub struct DFinanceDialect;

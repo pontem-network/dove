@@ -1,7 +1,7 @@
 use crate::inner::db::{RootDatabase, FileDiagnostic};
-use lang::compiler::check;
 use lang::compiler::file::MvFile;
 use lang::compiler::file;
+use lang::checker::MoveChecker;
 
 #[derive(Debug)]
 pub struct Analysis {
@@ -40,12 +40,11 @@ impl Analysis {
             .filter(|file| file.name() != current_file.name())
             .collect();
 
-        check(
+        MoveChecker::new(
             self.db.config.dialect().as_ref(),
-            current_file,
-            deps,
             Some(self.db.config.sender()),
         )
+        .check(vec![current_file], deps)
         .map_err(|errors| {
             errors
                 .into_iter()

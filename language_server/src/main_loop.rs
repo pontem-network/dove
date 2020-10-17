@@ -223,7 +223,7 @@ pub fn loop_turn(
         let files = loop_state
             .opened_files
             .files()
-            .into_iter()
+            .iter()
             .chain(analysis.db().module_files().keys())
             .map(|f| f.to_string())
             .collect::<HashSet<_>>();

@@ -47,7 +47,7 @@ pub fn crate_version_with_git_hash_short(_: TokenStream) -> TokenStream {
 fn crate_version_with(s: Option<String>) -> Result<TokenStream, LexError> {
     let res = s
         .map(|rev| format!("-{}", rev))
-        .unwrap_or_else(|| Default::default());
+        .unwrap_or_else(Default::default);
 
     format!("concat!(env!(\"CARGO_PKG_VERSION\"), \"{}\")", res).parse()
 }

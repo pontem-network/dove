@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
-use clap::{App, Arg};
+use clap::{App, Arg, ArgMatches};
 
 use move_executor::compile_and_run_scripts_in_file;
 use move_executor::explain::{PipelineExecutionResult, StepExecutionResult};
@@ -11,9 +11,11 @@ use move_executor::exec_utils::get_files_for_error_reporting;
 use move_lang::name_pool::ConstPool;
 use lang::file::MvFile;
 use lang::compiler::errors::ExecCompilerError;
+use lang::compiler::file::MvFile;
+use lang::compiler::file;
 
-fn main() -> Result<()> {
-    let cli_arguments = App::new("Move Executor")
+fn cli() -> App {
+    App::new("Move Executor")
         .version(git_hash::crate_version_with_git_hash_short!())
         .arg(
             Arg::with_name("SCRIPT")
@@ -43,12 +45,13 @@ fn main() -> Result<()> {
             Arg::from_usage("--args [SCRIPT_ARGS]")
                 .help(r#"Number of script main() function arguments in quotes, e.g. "10 20 30""#),
         )
-        .get_matches();
+}
 
+fn main() -> Result<()> {
+    let cli_arguments = cli().get_matches();
     let _pool = ConstPool::new();
-    MvFile::load(path);
-    let script_fpath = leaked_fpath(cli_arguments.value_of("SCRIPT").unwrap());
-    let script_source_text = fs::read_to_string(script_fpath)
+
+    let script = MvFile::load(cli_arguments.value_of("SCRIPT").unwrap())
         .with_context(|| format!("Cannot open {:?}", script_fpath))?;
 
     let modules_fpaths = cli_arguments
@@ -56,7 +59,8 @@ fn main() -> Result<()> {
         .unwrap_or_default()
         .map(|path| path.into())
         .collect::<Vec<PathBuf>>();
-    let deps = io::load_move_files(modules_fpaths)?;
+
+    let deps = file::load_move_files(&modules_fpaths)?;
 
     let show_network_effects = cli_arguments.is_present("show-changes");
     let show_events = cli_arguments.is_present("show-events");
@@ -69,6 +73,7 @@ fn main() -> Result<()> {
         .split_ascii_whitespace()
         .map(String::from)
         .collect();
+
 
     let res = compile_and_run_scripts_in_file(
         (script_fpath, script_source_text.clone()),

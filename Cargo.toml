@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "language_server",
-#    "executor",
+    "executor",
     "utils",
     "lang",
     "movec",
