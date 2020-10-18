@@ -135,13 +135,13 @@ mod tests {
         let dialect = DialectName::DFinance.get_dialect();
 
         let sender = dialect.normalize_account_address("0x1").unwrap();
-        let deps = vec![
+        let deps = &[
             MoveFile::with_content("assets/base.move", include_str!("assets/base.move")),
             MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
         ];
-        let target = vec![MoveFile::with_content("target.move", source)];
+        let target = &[MoveFile::with_content("target.move", source)];
         let builder = MoveBuilder::new(dialect.as_ref(), Some(&sender));
-        let Artifacts { files, prog } = builder.build(target, deps.clone());
+        let Artifacts { files, prog } = builder.build(target, deps);
 
         match prog {
             Ok(mut prog) => prog.remove(0).serialize(),

@@ -57,7 +57,7 @@ pub fn execute_script(
     sources.push(script);
     sources.extend(deps);
     let session = SessionBuilder::new(dialect.as_ref(), &sender)
-        .build(sources, vec![])?;
+        .build(&sources, &[])?;
 
     if !session.is_executable() {
         return Err(anyhow::anyhow!("No scripts found"));

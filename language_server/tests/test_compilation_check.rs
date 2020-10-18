@@ -75,7 +75,7 @@ fn diagnostics_with_deps(
     let global_state = GlobalState::new(config, fs_events);
     global_state
         .analysis()
-        .check_file_with_compiler(script_file)
+        .check_file(script_file)
 }
 
 #[cfg(test)]
@@ -358,7 +358,7 @@ script {
         };
         let analysis = Analysis::new(db);
         let error = analysis
-            .check_file_with_compiler(MoveFile::with_content(path("module.move"), source))
+            .check_file(MoveFile::with_content(path("module.move"), source))
             .unwrap();
         assert_eq!(error.fpath, path("dep_module.move"));
         assert_eq!(

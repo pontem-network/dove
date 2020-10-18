@@ -149,7 +149,7 @@ impl<'a> SessionBuilder<'a> {
         }
     }
 
-    pub fn build(self, sources: Vec<MoveFile>, deps: Vec<MoveFile>) -> Result<ExecutionSession, CompilerError> {
+    pub fn build(self, sources: &[MoveFile], deps: &[MoveFile]) -> Result<ExecutionSession, CompilerError> {
         compile(self.dialect, sources, deps, Some(&self.sender), self)
     }
 }

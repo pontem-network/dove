@@ -17,14 +17,14 @@ impl Analysis {
         &self.db
     }
 
-    pub fn check_file_with_compiler(&self, file: MoveFile) -> Option<FileDiagnostic> {
-        match self.check_file_with_compiler_inner(file) {
+    pub fn check_file(&self, file: MoveFile) -> Option<FileDiagnostic> {
+        match self.check_file_inner(file) {
             Ok(_) => None,
             Err(mut ds) => Some(ds.remove(0)),
         }
     }
 
-    fn check_file_with_compiler_inner(
+    fn check_file_inner(
         &self,
         current_file: MoveFile,
     ) -> Result<(), Vec<FileDiagnostic>> {
@@ -44,7 +44,7 @@ impl Analysis {
             self.db.config.dialect().as_ref(),
             Some(self.db.config.sender()),
         )
-        .check(vec![current_file], deps)
+        .check(&[current_file], &deps)
         .map_err(|errors| {
             errors
                 .into_iter()

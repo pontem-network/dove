@@ -401,7 +401,7 @@ pub fn compute_file_diagnostics<I>(
                 continue;
             }
         };
-        if let Some(d) = analysis.check_file_with_compiler(MoveFile::with_content(fpath, text)) {
+        if let Some(d) = analysis.check_file(MoveFile::with_content(fpath, text)) {
             diagnostics.push(d);
         }
     }

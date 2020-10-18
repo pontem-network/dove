@@ -25,7 +25,7 @@ impl<'a> MoveBuilder<'a> {
         MoveBuilder { dialect, sender }
     }
 
-    pub fn build(self, targets: Vec<MoveFile>, deps: Vec<MoveFile>) -> Artifacts {
+    pub fn build(self, targets: &[MoveFile], deps: &[MoveFile]) -> Artifacts {
         compile(self.dialect, targets, deps, self.sender, self)
     }
 }

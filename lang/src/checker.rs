@@ -19,7 +19,7 @@ impl<'a> MoveChecker<'a> {
         MoveChecker { dialect, sender }
     }
 
-    pub fn check(self, targets: Vec<MoveFile>, deps: Vec<MoveFile>) -> Result<(), Errors> {
+    pub fn check(self, targets: &[MoveFile], deps: &[MoveFile]) -> Result<(), Errors> {
         compile(self.dialect, targets, deps, self.sender, self)
     }
 }

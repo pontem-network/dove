@@ -209,7 +209,7 @@ where
             .map_or(Ok(None), |v| v.map(Some))?;
 
         let Artifacts { files, prog } =
-            MoveBuilder::new(self.dialect.as_ref(), sender.as_ref()).build(source_list, dep_list);
+            MoveBuilder::new(self.dialect.as_ref(), sender.as_ref()).build(&source_list, &dep_list);
 
         match prog {
             Err(errors) => {

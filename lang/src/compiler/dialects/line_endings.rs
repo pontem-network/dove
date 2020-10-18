@@ -49,7 +49,7 @@ impl Iterator for NewNormalized<'_> {
     }
 }
 
-pub fn normalize(s: String) -> (String, FileOffsetMap) {
+pub fn normalize(s: &str) -> (String, FileOffsetMap) {
     let mut source_map = FileOffsetMap::default();
     let normalized = NewNormalized {
         chars: s.chars(),

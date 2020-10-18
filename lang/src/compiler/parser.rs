@@ -25,8 +25,8 @@ pub struct ParsingMeta {
 
 pub fn parse_program(
     dialect: &dyn Dialect,
-    targets: Vec<MoveFile>,
-    deps: Vec<MoveFile>,
+    targets: &[MoveFile],
+    deps: &[MoveFile],
     sender: Option<&ProvidedAccountAddress>,
 ) -> ParserArtifact {
     let mut files: FilesSourceText = HashMap::new();
@@ -38,10 +38,9 @@ pub fn parse_program(
     let mut errors: Errors = Vec::new();
 
     for target in targets {
-        let (name, content) = target.into();
-        let name = ConstPool::push(&name);
+        let name = ConstPool::push(target.name());
         let (defs, comments, es, offsets_map) =
-            parse_file(dialect, &mut files, name, content, sender);
+            parse_file(dialect, &mut files, name, target.content(), sender);
         source_definitions.extend(defs);
         comment_map.insert(name, comments);
         project_offsets_map.0.insert(name, offsets_map);
@@ -49,9 +48,8 @@ pub fn parse_program(
     }
 
     for dep in deps {
-        let (name, content) = dep.into();
-        let name = ConstPool::push(&name);
-        let (defs, _, es, offsets_map) = parse_file(dialect, &mut files, name, content, sender);
+        let name = ConstPool::push(&dep.name());
+        let (defs, _, es, offsets_map) = parse_file(dialect, &mut files, name, dep.content(), sender);
         project_offsets_map.0.insert(name, offsets_map);
         lib_definitions.extend(defs);
         errors.extend(es);
@@ -80,7 +78,7 @@ fn parse_file(
     dialect: &dyn Dialect,
     files: &mut FilesSourceText,
     fname: &'static str,
-    source_buffer: String,
+    source_buffer: &str,
     sender: Option<&ProvidedAccountAddress>,
 ) -> (
     Vec<parser::ast::Definition>,
@@ -107,7 +105,7 @@ fn parse_file(
 
 fn normalize_source_text(
     dialect: &dyn Dialect,
-    source_text: String,
+    source_text: &str,
     sender: Option<&ProvidedAccountAddress>,
 ) -> (String, FileOffsetMap) {
     let (mut source_text, mut file_source_map) = line_endings::normalize(source_text);
