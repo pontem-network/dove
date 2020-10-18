@@ -1,5 +1,7 @@
 use anyhow::Result;
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
+use move_lang::errors::Error;
+use move_ir_types::location::Loc;
 
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
@@ -7,7 +9,6 @@ use std::fmt;
 use utils::location::File;
 use crate::inner::config::Config;
 use crate::inner::change::{AnalysisChange, RootChange};
-use lang::compiler::errors::{CompilerError, CompilerErrorPart};
 use std::collections::HashMap;
 
 pub struct FileDiagnostic {
@@ -104,11 +105,8 @@ impl RootDatabase {
         }
     }
 
-    fn error_location_to_range(
-        &self,
-        loc: &lang::compiler::source_map::Location,
-    ) -> Result<Range> {
-        let file = loc.fpath;
+    fn loc_to_range(&self, loc: &Loc) -> Result<Range> {
+        let file = loc.file();
         let text = match self.available_files.get(file) {
             Some(text) => text.clone(),
             None => {
@@ -120,44 +118,39 @@ impl RootDatabase {
             }
         };
         let file = File::new(text);
-        let start_pos = file.position(loc.span.0).unwrap();
-        let end_pos = file.position(loc.span.1).unwrap();
+        let start_pos = file.position(loc.span().start())?;
+        let end_pos = file.position(loc.span().end())?;
         Ok(Range::new(start_pos, end_pos))
     }
 
-    pub fn compiler_error_into_diagnostic(&self, error: CompilerError) -> Result<FileDiagnostic> {
-        assert!(!error.parts.is_empty(), "No parts in CompilerError");
+    pub fn make_diagnostic(&self, error: Error) -> Result<FileDiagnostic> {
+        assert!(!error.is_empty(), "No parts in CompilerError");
 
-        let CompilerErrorPart {
-            location: prim_location,
-            message,
-        } = error.parts[0].to_owned();
+        let (loc, msg) = error[0].to_owned();
         let mut diagnostic = {
-            let range = self.error_location_to_range(&prim_location)?;
-            Diagnostic::new_simple(range, message)
+            let range = self.loc_to_range(&loc)?;
+            Diagnostic::new_simple(range, msg)
         };
 
         // first error is an actual one, others are related info
-        if error.parts.len() > 1 {
+        if error.len() > 1 {
             let mut related_info = vec![];
-            for CompilerErrorPart { location, message } in error.parts[1..].iter() {
-                let range = self.error_location_to_range(location)?;
-                let related_fpath = location.fpath;
+            for (loc, msg) in error[1..].iter() {
+                let range = self.loc_to_range(loc)?;
+                let related_fpath = loc.file();
                 let file_uri = Url::from_file_path(related_fpath)
                     .unwrap_or_else(|_| panic!("Cannot build Url from path {:?}", related_fpath));
 
                 let related_info_item = DiagnosticRelatedInformation {
                     location: Location::new(file_uri, range),
-                    message: message.to_string(),
+                    message: msg.to_string(),
                 };
                 related_info.push(related_info_item);
             }
             diagnostic.related_information = Some(related_info)
         }
-        Ok(FileDiagnostic::new(
-            prim_location.fpath.to_owned(),
-            diagnostic,
-        ))
+
+        Ok(FileDiagnostic::new(loc.file().to_owned(), diagnostic))
     }
 
     fn is_fpath_for_a_module(&self, fpath: &str) -> bool {

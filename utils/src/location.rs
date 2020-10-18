@@ -28,8 +28,7 @@ where
         }
     }
 
-    pub fn position(&self, byte_index: usize) -> Result<Position, LocationError> {
-        let byte_index = ByteIndex::from(byte_index as u32);
+    pub fn position(&self, byte_index: ByteIndex) -> Result<Position, LocationError> {
         let line_index = self.line_index(byte_index);
         let line_start_index =
             self.line_start(line_index)

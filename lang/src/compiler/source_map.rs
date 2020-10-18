@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-use crate::compiler::errors::{CompilerError, CompilerErrorPart};
+use move_lang::errors::Errors;
+use move_ir_types::location::Loc;
+use codespan::{Span, ByteIndex};
 
 pub fn len_difference(orig: &str, replacement: &str) -> isize {
     orig.len() as isize - replacement.len() as isize
@@ -22,12 +24,12 @@ impl Layer {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct FileSourceMap {
+pub struct FileOffsetMap {
     layers: Vec<Layer>,
     address_replacements: Vec<(String, String)>,
 }
 
-impl FileSourceMap {
+impl FileOffsetMap {
     pub fn insert_layer(&mut self, pos: usize, offset: isize) {
         self.layers.push(Layer { pos, offset });
     }
@@ -47,30 +49,18 @@ impl FileSourceMap {
         self.address_replacements.push((original, replacement))
     }
 
-    pub fn translate_error_part(&self, error_part: CompilerErrorPart) -> CompilerErrorPart {
-        let CompilerErrorPart {
-            location:
-                Location {
-                    fpath,
-                    span: loc_span,
-                },
-            message,
-        } = error_part;
-        let loc_span = self.translate_span(loc_span);
-        let message = self.translate_error_message(message);
-        CompilerErrorPart {
-            location: Location {
-                fpath,
-                span: loc_span,
-            },
-            message,
-        }
+    pub fn translate_error(&self, (loc, msg): (Loc, String)) -> (Loc, String) {
+        (
+            Loc::new(loc.file(), self.translate_span(loc.span())),
+            self.translate_message(msg),
+        )
     }
 
-    pub fn translate_span(&self, (start, end): (usize, usize)) -> (usize, usize) {
-        let start = self.translate_pos(start);
-        let end = self.translate_pos(end);
-        (start, end)
+    pub fn translate_span(&self, span: Span) -> Span {
+        Span::new(
+            ByteIndex(self.translate_pos(span.start().to_usize()) as u32),
+            ByteIndex(self.translate_pos(span.end().to_usize()) as u32),
+        )
     }
 
     fn translate_pos(&self, pos: usize) -> usize {
@@ -81,39 +71,38 @@ impl FileSourceMap {
         real_pos
     }
 
-    fn translate_error_message(&self, message: String) -> String {
-        let mut message = message;
+    fn translate_message(&self, mut msg: String) -> String {
         for (orig, replacement) in self.address_replacements.iter().rev() {
-            message = message.replace(replacement, orig);
+            msg = msg.replace(replacement, orig);
         }
-        message
+        msg
     }
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct ProjectSourceMap(pub HashMap<&'static str, FileSourceMap>);
+pub struct ProjectOffsetMap(pub HashMap<&'static str, FileOffsetMap>);
 
-impl ProjectSourceMap {
-    pub fn with_file_map(fpath: &'static str, map: FileSourceMap) -> ProjectSourceMap {
-        let mut project_map = ProjectSourceMap::default();
+impl ProjectOffsetMap {
+    pub fn with_file_map(fpath: &'static str, map: FileOffsetMap) -> ProjectOffsetMap {
+        let mut project_map = ProjectOffsetMap::default();
         project_map.0.insert(fpath, map);
         project_map
     }
 
-    pub fn insert(&mut self, fpath: &'static str, map: FileSourceMap) {
+    pub fn insert(&mut self, fpath: &'static str, map: FileOffsetMap) {
         self.0.insert(fpath, map);
     }
 
-    pub fn transform(&self, error: CompilerError) -> CompilerError {
-        let mut translated_parts = vec![];
-        for error_part in error.parts.into_iter() {
-            let file_source_map = &self.0[error_part.location.fpath];
-            let new_error_part = file_source_map.translate_error_part(error_part);
-            translated_parts.push(new_error_part);
-        }
-        CompilerError {
-            parts: translated_parts,
-        }
+    pub fn transform(&self, errors: Errors) -> Errors {
+        errors
+            .into_iter()
+            .map(|error| {
+                error
+                    .into_iter()
+                    .map(|(loc, msg)| self.0[loc.file()].translate_error((loc, msg)))
+                    .collect()
+            })
+            .collect()
     }
 }
 

@@ -26,6 +26,7 @@ compiled-stdlib = { git = "https://github.com/dfinance/libra.git", branch = "15.
 errmapgen = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
 libra-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "master" }
 
+resources = { path = "../resources" }
 lang = { path = "../lang" }
 utils = { path = "../utils" }
 git-hash = { path = "../common/git-hash" }

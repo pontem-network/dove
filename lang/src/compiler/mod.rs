@@ -1,15 +1,13 @@
 pub mod address;
+pub mod bech32;
 pub mod dialects;
-pub mod errors;
 pub mod file;
 pub mod parser;
 pub mod source_map;
-pub mod bech32;
+pub mod error;
 
 pub use anyhow::Result;
-
 pub use move_lang::name_pool::ConstPool;
-
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
 use parser::parse_program;
@@ -59,9 +57,8 @@ pub fn compile<A>(
     };
     let ParserArtifact {
         meta,
-        result: pprog_and_comments_res,
+        result: pprog_res,
     } = parser_result;
-    let pprog_res = pprog_and_comments_res.map(|(pprog, _comments)| pprog);
 
     let sender = sender.map(|addr| addr.as_address());
     let (meta, check_result) = match flow.after_check(meta, check_program(pprog_res, sender)) {

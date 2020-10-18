@@ -1,11 +1,11 @@
 use std::str::Chars;
-use crate::compiler::source_map::FileSourceMap;
+use crate::compiler::source_map::FileOffsetMap;
 
 struct NewNormalized<'a> {
     chars: Chars<'a>,
     prev_was_carriage_return: bool,
     pos: usize,
-    source_map: &'a mut FileSourceMap,
+    source_map: &'a mut FileOffsetMap,
 }
 
 impl<'a> NewNormalized<'a> {
@@ -49,8 +49,8 @@ impl Iterator for NewNormalized<'_> {
     }
 }
 
-pub fn normalize(s: String) -> (String, FileSourceMap) {
-    let mut source_map = FileSourceMap::default();
+pub fn normalize(s: String) -> (String, FileOffsetMap) {
+    let mut source_map = FileOffsetMap::default();
     let normalized = NewNormalized {
         chars: s.chars(),
         prev_was_carriage_return: false,

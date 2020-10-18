@@ -1,5 +1,5 @@
 use crate::compiler::dialects::Dialect;
-use crate::compiler::source_map::FileSourceMap;
+use crate::compiler::source_map::FileOffsetMap;
 use anyhow::Context;
 use move_core_types::account_address::AccountAddress;
 use anyhow::Result;
@@ -44,7 +44,7 @@ impl Dialect for DFinanceDialect {
         dfinance_cost_table()
     }
 
-    fn replace_addresses(&self, source_text: &str, source_map: &mut FileSourceMap) -> String {
+    fn replace_addresses(&self, source_text: &str, source_map: &mut FileOffsetMap) -> String {
         replace_bech32_addresses(&source_text, source_map)
     }
 }

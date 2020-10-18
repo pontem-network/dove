@@ -4,7 +4,7 @@ use anyhow::Result;
 use libra_move_core_types::account_address::AccountAddress as LibraAccountAddress;
 use crate::compiler::dialects::Dialect;
 use move_core_types::gas_schedule::{CostTable, GasCost, GasConstants};
-use crate::compiler::source_map::FileSourceMap;
+use crate::compiler::source_map::FileOffsetMap;
 use crate::compiler::dialects::libra::addresses::replace_libra_address;
 use crate::compiler::address::ProvidedAccountAddress;
 
@@ -45,7 +45,7 @@ impl Dialect for LibraDialect {
         }
     }
 
-    fn replace_addresses(&self, source_text: &str, source_map: &mut FileSourceMap) -> String {
+    fn replace_addresses(&self, source_text: &str, source_map: &mut FileOffsetMap) -> String {
         replace_libra_address(source_text, source_map)
     }
 }

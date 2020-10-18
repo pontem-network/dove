@@ -1,17 +1,17 @@
 use anyhow::Result;
 use clap::{App, Arg};
-use move_executor::compile_and_run_file_as_test;
+use move_executor::execute_script;
 use std::path::PathBuf;
-use move_executor::exec_utils::get_files_for_error_reporting;
 use move_executor::explain::StepExecutionResult;
-use lang::compiler::errors::ExecCompilerError;
-use lang::compiler::ConstPool;
+use lang::compiler::{ConstPool, file};
+use lang::compiler::error::CompilerError;
+use move_lang::errors::report_errors;
 
 pub fn print_test_status(test_name: &str, status: &str) {
     println!("{} ....... {}", test_name, status);
 }
 
-fn cli() -> App {
+fn cli() -> App<'static, 'static> {
     App::new("Test runner")
         .version("0.1.0")
         .arg(Arg::from_usage("--verbose"))
@@ -48,11 +48,11 @@ pub fn main() -> Result<()> {
         .unwrap_or_default()
         .map(|path| path.into())
         .collect::<Vec<PathBuf>>();
-    let deps = io::load_move_files(modules_fpaths)?;
+    let deps = file::load_move_files(&modules_fpaths)?;
     if verbose_output {
         println!(
             "Found deps: {:#?}",
-            deps.iter().map(|(n, _)| n).collect::<Vec<_>>()
+            deps.iter().map(|n| n.name()).collect::<Vec<_>>()
         );
     }
 
@@ -62,17 +62,17 @@ pub fn main() -> Result<()> {
         Some(dir) => vec![PathBuf::from(dir)],
         None => vec![],
     };
-    let test_files = io::load_move_files(test_directories)?;
+    let test_files = file::load_move_files(&test_directories)?;
     if verbose_output {
         println!(
             "Found tests: {:#?}",
-            test_files.iter().map(|(n, _)| n).collect::<Vec<_>>()
+            test_files.iter().map(|n| n.name()).collect::<Vec<_>>()
         );
     }
 
     let mut has_failures = false;
     for test_file in test_files {
-        let test_file_name = PathBuf::from(test_file.0)
+        let test_file_name = PathBuf::from(test_file.name())
             .file_name()
             .unwrap()
             .to_str()
@@ -86,21 +86,12 @@ pub fn main() -> Result<()> {
             }
         }
 
-        let deps = deps.clone();
-        let exec_result =
-            compile_and_run_file_as_test(test_file.clone(), &deps, "dfinance", sender).map_err(
-                |err| {
-                    let error = match err.downcast::<ExecCompilerError>() {
-                        Ok(compiler_error) => {
-                            let files_mapping = get_files_for_error_reporting(test_file, deps);
-                            let transformed_errors = compiler_error.transform_with_source_map();
-                            print_compiler_errors_and_exit(files_mapping, transformed_errors);
-                        }
-                        Err(error) => error,
-                    };
-                    error
-                },
-            )?;
+        let exec_result = execute_script(test_file, deps.clone(), "dfinance", sender, vec![])
+            .map_err(|err|
+                match err.downcast::<CompilerError>() {
+                    Ok(compiler_error) => report_errors(compiler_error.source_map, compiler_error.errors),
+                    Err(error) => error,
+                })?;
 
         match exec_result.last() {
             None => {

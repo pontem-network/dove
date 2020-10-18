@@ -48,16 +48,14 @@ impl Analysis {
         .map_err(|errors| {
             errors
                 .into_iter()
-                .map(
-                    |err| match self.db.compiler_error_into_diagnostic(err.clone()) {
-                        Ok(d) => d,
-                        Err(error) => panic!(
-                            "While converting {:#?} into Diagnostic, error occurred: {:?}",
-                            err,
-                            error.to_string()
-                        ),
-                    },
-                )
+                .map(|err| match self.db.make_diagnostic(err.clone()) {
+                    Ok(d) => d,
+                    Err(error) => panic!(
+                        "While converting {:#?} into Diagnostic, error occurred: {:?}",
+                        err,
+                        error.to_string()
+                    ),
+                })
                 .collect()
         })
     }

@@ -1,20 +1,18 @@
-use std::fs;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
-use clap::{App, Arg, ArgMatches};
+use clap::{App, Arg};
 
-use move_executor::compile_and_run_scripts_in_file;
+use move_executor::execute_script;
 use move_executor::explain::{PipelineExecutionResult, StepExecutionResult};
-use move_executor::exec_utils::get_files_for_error_reporting;
 use move_lang::name_pool::ConstPool;
-use lang::file::MvFile;
-use lang::compiler::errors::ExecCompilerError;
 use lang::compiler::file::MvFile;
 use lang::compiler::file;
+use lang::compiler::error::CompilerError;
+use move_lang::errors::report_errors;
 
-fn cli() -> App {
+fn cli() -> App<'static, 'static> {
     App::new("Move Executor")
         .version(git_hash::crate_version_with_git_hash_short!())
         .arg(
@@ -51,8 +49,12 @@ fn main() -> Result<()> {
     let cli_arguments = cli().get_matches();
     let _pool = ConstPool::new();
 
-    let script = MvFile::load(cli_arguments.value_of("SCRIPT").unwrap())
-        .with_context(|| format!("Cannot open {:?}", script_fpath))?;
+    let script = MvFile::load(cli_arguments.value_of("SCRIPT").unwrap()).with_context(|| {
+        format!(
+            "Cannot open {:?}",
+            cli_arguments.value_of("SCRIPT").unwrap()
+        )
+    })?;
 
     let modules_fpaths = cli_arguments
         .values_of("modules")
@@ -74,14 +76,7 @@ fn main() -> Result<()> {
         .map(String::from)
         .collect();
 
-
-    let res = compile_and_run_scripts_in_file(
-        (script_fpath, script_source_text.clone()),
-        &deps,
-        dialect,
-        sender,
-        args,
-    );
+    let res = execute_script(script, deps, dialect, sender, args);
     match res {
         Ok(exec_result) => {
             let PipelineExecutionResult {
@@ -112,17 +107,11 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        Err(error) => {
-            let error = match error.downcast::<ExecCompilerError>() {
-                Ok(compiler_error) => {
-                    let files_mapping =
-                        get_files_for_error_reporting((script_fpath, script_source_text), deps);
-                    let transformed_errors = compiler_error.transform_with_source_map();
-                    print_compiler_errors_and_exit(files_mapping, transformed_errors);
-                }
-                Err(error) => error,
-            };
-            Err(error)
+        Err(err) => {
+            match err.downcast::<CompilerError>() {
+                Ok(compiler_error) => report_errors(compiler_error.source_map, compiler_error.errors),
+                Err(error) => Err(error),
+            }
         }
     }
 }

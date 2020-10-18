@@ -1,7 +1,6 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MvFile;
-use crate::compiler::errors::CompilerError;
 use crate::compiler::{CompileFlow, compile};
 use crate::compiler::parser::ParsingMeta;
 use move_lang::compiled_unit::CompiledUnit;
@@ -37,14 +36,7 @@ impl<'a> CompileFlow<Artifacts> for MoveBuilder<'a> {
         meta: ParsingMeta,
         result: Result<Vec<CompiledUnit>, Errors>,
     ) -> Artifacts {
-        let prog = result.map_err(|errors| {
-            errors
-                .into_iter()
-                .map(CompilerError::from)
-                .map(|err| meta.offsets_map.transform(err).into())
-                .collect()
-        });
-
+        let prog = result.map_err(|errors| meta.offsets_map.transform(errors));
         Artifacts {
             files: meta.source_map,
             prog,

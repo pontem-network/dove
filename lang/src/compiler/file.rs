@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 use walkdir::DirEntry;
 use std::borrow::Cow;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MvFile {
     name: String,
     content: String,

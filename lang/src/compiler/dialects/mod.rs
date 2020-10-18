@@ -4,7 +4,7 @@ pub mod line_endings;
 
 use anyhow::Result;
 use move_core_types::gas_schedule::CostTable;
-use crate::compiler::source_map::FileSourceMap;
+use crate::compiler::source_map::FileOffsetMap;
 use std::str::FromStr;
 use crate::compiler::dialects::libra::LibraDialect;
 use crate::compiler::dialects::dfinance::DFinanceDialect;
@@ -17,7 +17,7 @@ pub trait Dialect {
 
     fn cost_table(&self) -> CostTable;
 
-    fn replace_addresses(&self, source_text: &str, source_map: &mut FileSourceMap) -> String;
+    fn replace_addresses(&self, source_text: &str, source_map: &mut FileOffsetMap) -> String;
 }
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]
