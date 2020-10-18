@@ -87,11 +87,12 @@ pub fn main() -> Result<()> {
         }
 
         let exec_result = execute_script(test_file, deps.clone(), "dfinance", sender, vec![])
-            .map_err(|err|
-                match err.downcast::<CompilerError>() {
-                    Ok(compiler_error) => report_errors(compiler_error.source_map, compiler_error.errors),
-                    Err(error) => error,
-                })?;
+            .map_err(|err| match err.downcast::<CompilerError>() {
+                Ok(compiler_error) => {
+                    report_errors(compiler_error.source_map, compiler_error.errors)
+                }
+                Err(error) => error,
+            })?;
 
         match exec_result.last() {
             None => {

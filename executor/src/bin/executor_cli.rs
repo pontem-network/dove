@@ -49,12 +49,13 @@ fn main() -> Result<()> {
     let cli_arguments = cli().get_matches();
     let _pool = ConstPool::new();
 
-    let script = MoveFile::load(cli_arguments.value_of("SCRIPT").unwrap()).with_context(|| {
-        format!(
-            "Cannot open {:?}",
-            cli_arguments.value_of("SCRIPT").unwrap()
-        )
-    })?;
+    let script =
+        MoveFile::load(cli_arguments.value_of("SCRIPT").unwrap()).with_context(|| {
+            format!(
+                "Cannot open {:?}",
+                cli_arguments.value_of("SCRIPT").unwrap()
+            )
+        })?;
 
     let modules_fpaths = cli_arguments
         .values_of("modules")
@@ -107,11 +108,9 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        Err(err) => {
-            match err.downcast::<CompilerError>() {
-                Ok(compiler_error) => report_errors(compiler_error.source_map, compiler_error.errors),
-                Err(error) => Err(error),
-            }
-        }
+        Err(err) => match err.downcast::<CompilerError>() {
+            Ok(compiler_error) => report_errors(compiler_error.source_map, compiler_error.errors),
+            Err(error) => Err(error),
+        },
     }
 }

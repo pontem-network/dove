@@ -24,10 +24,7 @@ impl Analysis {
         }
     }
 
-    fn check_file_inner(
-        &self,
-        current_file: MoveFile,
-    ) -> Result<(), Vec<FileDiagnostic>> {
+    fn check_file_inner(&self, current_file: MoveFile) -> Result<(), Vec<FileDiagnostic>> {
         let deps: Vec<MoveFile> = self
             .read_stdlib_files()
             .into_iter()

@@ -40,10 +40,7 @@ script {
     .unwrap()
     .errors;
     assert_eq!(errors.len(), 1);
-    assert_eq!(
-        errors[0][0].1,
-        "Unbound module \'0x0::Transaction\'"
-    );
+    assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
 }
 
 #[test]
@@ -259,7 +256,10 @@ fn test_sender_string_in_script() {
         ";
     let effects = execute_script(
         MoveFile::with_content(script_path(), source_text),
-        vec![MoveFile::with_content(module_path("debug.move"), module_text)],
+        vec![MoveFile::with_content(
+            module_path("debug.move"),
+            module_text,
+        )],
         "libra",
         "0x1",
         vec![],
@@ -292,7 +292,7 @@ fn test_bech32_address_and_sender_in_compiler_error() {
     .unwrap_err()
     .downcast::<CompilerError>()
     .unwrap()
-        .errors;
+    .errors;
 
     assert_eq!(errors.len(), 1);
     assert_eq!(
@@ -392,7 +392,7 @@ fn test_execute_script_with_custom_signer() {
 
 #[test]
 fn test_multiple_signers() {
-let _pool = ConstPool::new();
+    let _pool = ConstPool::new();
 
     let text = r"
     /// signer: 0x1

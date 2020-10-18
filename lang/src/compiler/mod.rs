@@ -1,11 +1,11 @@
 pub mod address;
 pub mod bech32;
 pub mod dialects;
+pub mod error;
 pub mod file;
+pub mod location;
 pub mod parser;
 pub mod source_map;
-pub mod error;
-pub mod location;
 
 pub use anyhow::Result;
 pub use move_lang::name_pool::ConstPool;

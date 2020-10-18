@@ -49,7 +49,8 @@ pub fn parse_program(
 
     for dep in deps {
         let name = ConstPool::push(&dep.name());
-        let (defs, _, es, offsets_map) = parse_file(dialect, &mut files, name, dep.content(), sender);
+        let (defs, _, es, offsets_map) =
+            parse_file(dialect, &mut files, name, dep.content(), sender);
         project_offsets_map.0.insert(name, offsets_map);
         lib_definitions.extend(defs);
         errors.extend(es);

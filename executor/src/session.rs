@@ -149,7 +149,11 @@ impl<'a> SessionBuilder<'a> {
         }
     }
 
-    pub fn build(self, sources: &[MoveFile], deps: &[MoveFile]) -> Result<ExecutionSession, CompilerError> {
+    pub fn build(
+        self,
+        sources: &[MoveFile],
+        deps: &[MoveFile],
+    ) -> Result<ExecutionSession, CompilerError> {
         compile(self.dialect, sources, deps, Some(&self.sender), self)
     }
 }
@@ -186,13 +190,14 @@ impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder
         } = meta;
         let loc_map = self.loc_map.take().unwrap_or_default();
 
-
         let units = match translation_result {
             Ok(units) => units,
-            Err(errors) => return Err(CompilerError {
-                source_map,
-                errors: offsets_map.transform(errors),
-            }),
+            Err(errors) => {
+                return Err(CompilerError {
+                    source_map,
+                    errors: offsets_map.transform(errors),
+                })
+            }
         };
 
         for unit in units {

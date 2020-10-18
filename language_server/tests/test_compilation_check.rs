@@ -73,9 +73,7 @@ fn diagnostics_with_deps(
     fs_events.push(FileSystemEvent::AddFile(script_file.clone()));
 
     let global_state = GlobalState::new(config, fs_events);
-    global_state
-        .analysis()
-        .check_file(script_file)
+    global_state.analysis().check_file(script_file)
 }
 
 #[cfg(test)]
@@ -324,7 +322,8 @@ script {
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()]
         });
-        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].related_information.as_ref().unwrap().len(), 2);
     }
@@ -383,8 +382,10 @@ address 0x0 {
         let config = config!({
             "stdlib_folder": stdlib_path(),
         });
-        let errors =
-            diagnostics_with_config_and_filename(MoveFile::with_content("script", source), config);
+        let errors = diagnostics_with_config_and_filename(
+            MoveFile::with_content("script", source),
+            config,
+        );
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -539,7 +540,8 @@ address {{sender}} {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
         assert_eq!(errors[0].range, range((4, 20), (4, 41)));
     }
@@ -561,7 +563,8 @@ address {{sender}} {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
         assert_eq!(errors[0].range, range((5, 20), (5, 41)));
     }
@@ -678,7 +681,8 @@ script {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((3, 16), (3, 44)));
         assert_eq!(
