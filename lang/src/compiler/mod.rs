@@ -5,6 +5,7 @@ pub mod file;
 pub mod parser;
 pub mod source_map;
 pub mod error;
+pub mod location;
 
 pub use anyhow::Result;
 pub use move_lang::name_pool::ConstPool;
@@ -13,7 +14,7 @@ use move_lang::errors::Errors;
 use parser::parse_program;
 use crate::compiler::dialects::Dialect;
 use crate::compiler::address::ProvidedAccountAddress;
-use crate::compiler::file::MvFile;
+use crate::compiler::file::MoveFile;
 use move_lang::{check_program, cfgir, to_bytecode};
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 
@@ -45,8 +46,8 @@ pub enum Step<A, N> {
 
 pub fn compile<A>(
     dialect: &dyn Dialect,
-    targets: Vec<MvFile>,
-    deps: Vec<MvFile>,
+    targets: Vec<MoveFile>,
+    deps: Vec<MoveFile>,
     sender: Option<&ProvidedAccountAddress>,
     mut flow: impl CompileFlow<A>,
 ) -> A {

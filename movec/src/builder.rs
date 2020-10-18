@@ -15,7 +15,7 @@ use lang::disassembler::{Config, Disassembler, unit::CompiledUnit as Unit};
 use crate::dependence::loader::{BytecodeLoader, Loader};
 use lang::compiler::dialects::{Dialect, DialectName};
 use lang::compiler::bech32::bech32_into_libra;
-use lang::compiler::file::MvFile;
+use lang::compiler::file::MoveFile;
 use std::convert::TryFrom;
 use lang::builder::{MoveBuilder, Artifacts};
 
@@ -195,12 +195,12 @@ where
     ) -> Result<(FilesSourceText, Vec<CompiledUnit>)> {
         let source_list = source_list
             .iter()
-            .map(MvFile::try_from)
+            .map(MoveFile::try_from)
             .collect::<Result<Vec<_>>>()?;
 
         let dep_list = dep_list
             .iter()
-            .map(MvFile::try_from)
+            .map(MoveFile::try_from)
             .collect::<Result<Vec<_>>>()?;
 
         let addr = self.address()?;

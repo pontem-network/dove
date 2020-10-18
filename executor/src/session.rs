@@ -8,7 +8,6 @@ use move_vm_types::gas_schedule::CostStrategy;
 use move_vm_types::values::Value;
 use vm::CompiledModule;
 use vm::file_format::CompiledScript;
-use utils::location;
 
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
@@ -16,10 +15,10 @@ use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
 use lang::compiler::address::ProvidedAccountAddress;
 use lang::compiler::parser::ParsingMeta;
-use lang::compiler::{CompileFlow, CheckerResult, Step, compile};
+use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
 use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
-use lang::compiler::file::MvFile;
+use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
 
 #[derive(Debug, Clone)]
@@ -150,7 +149,7 @@ impl<'a> SessionBuilder<'a> {
         }
     }
 
-    pub fn build(self, sources: Vec<MvFile>, deps: Vec<MvFile>) -> Result<ExecutionSession, CompilerError> {
+    pub fn build(self, sources: Vec<MoveFile>, deps: Vec<MoveFile>) -> Result<ExecutionSession, CompilerError> {
         compile(self.dialect, sources, deps, Some(&self.sender), self)
     }
 }

@@ -1,5 +1,5 @@
 use crate::inner::db::{RootDatabase, FileDiagnostic};
-use lang::compiler::file::MvFile;
+use lang::compiler::file::MoveFile;
 use lang::compiler::file;
 use lang::checker::MoveChecker;
 
@@ -17,7 +17,7 @@ impl Analysis {
         &self.db
     }
 
-    pub fn check_file_with_compiler(&self, file: MvFile) -> Option<FileDiagnostic> {
+    pub fn check_file_with_compiler(&self, file: MoveFile) -> Option<FileDiagnostic> {
         match self.check_file_with_compiler_inner(file) {
             Ok(_) => None,
             Err(mut ds) => Some(ds.remove(0)),
@@ -26,16 +26,16 @@ impl Analysis {
 
     fn check_file_with_compiler_inner(
         &self,
-        current_file: MvFile,
+        current_file: MoveFile,
     ) -> Result<(), Vec<FileDiagnostic>> {
-        let deps: Vec<MvFile> = self
+        let deps: Vec<MoveFile> = self
             .read_stdlib_files()
             .into_iter()
             .chain(
                 self.db
                     .module_files()
                     .into_iter()
-                    .map(|(name, text)| MvFile::with_content(name, text)),
+                    .map(|(name, text)| MoveFile::with_content(name, text)),
             )
             .filter(|file| file.name() != current_file.name())
             .collect();
@@ -60,7 +60,7 @@ impl Analysis {
         })
     }
 
-    fn read_stdlib_files(&self) -> Vec<MvFile> {
+    fn read_stdlib_files(&self) -> Vec<MoveFile> {
         self.db
             .config
             .stdlib_folder

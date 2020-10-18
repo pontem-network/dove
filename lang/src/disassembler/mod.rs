@@ -126,7 +126,7 @@ mod tests {
     use crate::disassembler::{disasm_str, Config};
     use crate::builder::{MoveBuilder, Artifacts};
     use crate::compiler::dialects::DialectName;
-    use crate::compiler::file::MvFile;
+    use crate::compiler::file::MoveFile;
     use crate::compiler::ConstPool;
     use move_lang::errors::report_errors_to_buffer;
 
@@ -136,10 +136,10 @@ mod tests {
 
         let sender = dialect.normalize_account_address("0x1").unwrap();
         let deps = vec![
-            MvFile::with_content("assets/base.move", include_str!("assets/base.move")),
-            MvFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
+            MoveFile::with_content("assets/base.move", include_str!("assets/base.move")),
+            MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
         ];
-        let target = vec![MvFile::with_content("target.move", source)];
+        let target = vec![MoveFile::with_content("target.move", source)];
         let builder = MoveBuilder::new(dialect.as_ref(), Some(&sender));
         let Artifacts { files, prog } = builder.build(target, deps.clone());
 

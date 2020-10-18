@@ -6,10 +6,10 @@ use move_ir_types::location::Loc;
 use serde::export::fmt::Debug;
 use serde::export::Formatter;
 use std::fmt;
-use utils::location::File;
 use crate::inner::config::Config;
 use crate::inner::change::{AnalysisChange, RootChange};
 use std::collections::HashMap;
+use lang::compiler::location::File;
 
 pub struct FileDiagnostic {
     pub fpath: String,

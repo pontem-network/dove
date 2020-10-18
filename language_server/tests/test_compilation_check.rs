@@ -35,16 +35,16 @@ fn range(start: (u64, u64), end: (u64, u64)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
 }
 
-fn diagnostics(file: MvFile) -> Vec<Diagnostic> {
+fn diagnostics(file: MoveFile) -> Vec<Diagnostic> {
     diagnostics_with_config(file, Config::default())
 }
 
-fn diagnostics_with_config(file: MvFile, config: Config) -> Vec<Diagnostic> {
+fn diagnostics_with_config(file: MoveFile, config: Config) -> Vec<Diagnostic> {
     let loc_ds = diagnostics_with_config_and_filename(file, config);
     loc_ds.into_iter().filter_map(|d| d.diagnostic).collect()
 }
 
-fn diagnostics_with_config_and_filename(file: MvFile, config: Config) -> Vec<FileDiagnostic> {
+fn diagnostics_with_config_and_filename(file: MoveFile, config: Config) -> Vec<FileDiagnostic> {
     let fpath = file.name().to_owned();
     let state_snapshot = global_state_snapshot(file, config, vec![]);
     let (task_sender, task_receiver) = unbounded::<ResponseEvent>();
@@ -62,8 +62,8 @@ fn diagnostics_with_config_and_filename(file: MvFile, config: Config) -> Vec<Fil
 }
 
 fn diagnostics_with_deps(
-    script_file: MvFile,
-    deps: Vec<MvFile>,
+    script_file: MoveFile,
+    deps: Vec<MoveFile>,
     config: Config,
 ) -> Option<FileDiagnostic> {
     let mut config = config;
@@ -92,7 +92,7 @@ mod tests {
         let _pool = ConstPool::new();
 
         let source = r"fun main() { return; }ффф";
-        let errors = diagnostics(MvFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content("script", source));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((0, 22), (0, 22)));
     }
@@ -106,7 +106,7 @@ script {
     fun main() {}
 }
 ";
-        let errors = diagnostics(MvFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content("script", source));
         assert!(errors.is_empty());
     }
 
@@ -115,7 +115,7 @@ script {
         let _pool = ConstPool::new();
 
         let source = "module M { struc S { f: u64 } }";
-        let errors = diagnostics(MvFile::with_content(script_path(), source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
 
         assert_eq!(errors[0].message, "Unexpected 'struc'");
@@ -127,7 +127,7 @@ script {
         let _pool = ConstPool::new();
 
         let source = "script { main() {} }";
-        let errors = diagnostics(MvFile::with_content(script_path(), source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unexpected 'main'");
     }
@@ -143,7 +143,7 @@ module M {
     }
 }
 ";
-        let errors = diagnostics(MvFile::with_content(script_path(), source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unexpected \'struc\'");
     }
@@ -160,7 +160,7 @@ module M {
     }
 }
 ";
-        let errors = diagnostics(MvFile::with_content(script_path(), source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -174,7 +174,7 @@ module M {
 
         let source = r"script { public fun main() {} }";
 
-        let errors = diagnostics(MvFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content("script", source));
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -192,7 +192,7 @@ module M {
 }
 ";
 
-        let errors = diagnostics(MvFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content("script", source));
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -211,7 +211,7 @@ module M {
     }
 }
 ";
-        let errors = diagnostics(MvFile::with_content(script_path(), source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Invalid borrow");
     }
@@ -230,7 +230,7 @@ module MyModule {
 }
 ";
         let errors = diagnostics_with_config(
-            MvFile::with_content("script", source),
+            MoveFile::with_content("script", source),
             config!({ "stdlib_folder": stdlib_path() }),
         );
         assert!(errors.is_empty());
@@ -259,7 +259,7 @@ script {
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()],
         });
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
@@ -267,7 +267,7 @@ script {
     fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
         let _pool = ConstPool::new();
 
-        let record = MvFile::load(asset("modules/record.move")).unwrap();
+        let record = MoveFile::load(asset("modules/record.move")).unwrap();
         let config = config!({
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()],
@@ -300,7 +300,7 @@ script {
             "modules_folders": [modules_path()],
             "sender_address": "0x1",
         });
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
@@ -324,7 +324,7 @@ script {
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()]
         });
-        let errors = diagnostics_with_config(MvFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].related_information.as_ref().unwrap().len(), 2);
     }
@@ -358,7 +358,7 @@ script {
         };
         let analysis = Analysis::new(db);
         let error = analysis
-            .check_file_with_compiler(MvFile::with_content(path("module.move"), source))
+            .check_file_with_compiler(MoveFile::with_content(path("module.move"), source))
             .unwrap();
         assert_eq!(error.fpath, path("dep_module.move"));
         assert_eq!(
@@ -384,7 +384,7 @@ address 0x0 {
             "stdlib_folder": stdlib_path(),
         });
         let errors =
-            diagnostics_with_config_and_filename(MvFile::with_content("script", source), config);
+            diagnostics_with_config_and_filename(MoveFile::with_content("script", source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -400,7 +400,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 }
  ";
         let errors = diagnostics_with_config(
-            MvFile::with_content(script_path(), source),
+            MoveFile::with_content(script_path(), source),
             config!({"dialect": "dfinance"}),
         );
         assert_eq!(errors.len(), 1);
@@ -422,7 +422,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 }
 ";
         let errors = diagnostics_with_config(
-            MvFile::with_content(script_path(), source),
+            MoveFile::with_content(script_path(), source),
             config!({"dialect": "dfinance"}),
         );
         assert!(errors.is_empty(), "{:?}", errors);
@@ -437,7 +437,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 }
         ";
         let errors = diagnostics_with_config(
-            MvFile::with_content(script_path(), source),
+            MoveFile::with_content(script_path(), source),
             config!({"dialect": "dfinance"}),
         );
         assert_eq!(errors.len(), 1);
@@ -456,7 +456,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 }
  ";
         let errors = diagnostics_with_config(
-            MvFile::with_content(script_path(), source),
+            MoveFile::with_content(script_path(), source),
             config!({"dialect": "dfinance"}),
         );
         assert_eq!(errors.len(), 1);
@@ -479,7 +479,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -499,7 +499,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -519,7 +519,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -539,7 +539,7 @@ address {{sender}} {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MvFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
         assert_eq!(errors[0].range, range((4, 20), (4, 41)));
     }
@@ -561,7 +561,7 @@ address {{sender}} {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MvFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
         assert_eq!(errors[0].range, range((5, 20), (5, 41)));
     }
@@ -585,7 +585,7 @@ address {{ sender }} {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
         assert_eq!(errors[0].range, range((7, 12), (7, 33)));
@@ -605,7 +605,7 @@ address {{sender}} {
             "dialect": "libra",
             "sender_address": "0x1"
         });
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -633,8 +633,8 @@ script {
             "sender_address": "0x1",
         });
         let error = diagnostics_with_deps(
-            MvFile::with_content(script_path(), source),
-            vec![MvFile::with_content(
+            MoveFile::with_content(script_path(), source),
+            vec![MoveFile::with_content(
                 modules_path().join("debug.move").to_str().unwrap(),
                 module,
             )],
@@ -655,7 +655,7 @@ script {
         }
         ";
         let config = config!({"dialect": "dfinance"});
-        let errors = diagnostics_with_config(MvFile::with_content("script", source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -678,7 +678,7 @@ script {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors = diagnostics_with_config(MvFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((3, 16), (3, 44)));
         assert_eq!(
@@ -698,7 +698,7 @@ script {
             struct T {}
         }
         }";
-        let errors = diagnostics(MvFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content("script", source));
         assert_eq!(errors.len(), 0);
     }
 
@@ -712,7 +712,7 @@ script {
                 UnknownPayments::send_payment_event();
             }
         }";
-        let errors = diagnostics(MvFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content("script", source));
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -725,7 +725,7 @@ script {
         let _pool = ConstPool::new();
 
         let source = "script { fun main() {} \r\n } \r\n";
-        let errors = diagnostics(MvFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content("script", source));
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
@@ -734,21 +734,21 @@ script {
         let _pool = ConstPool::new();
 
         let source = "script {\r\n func main() {} \r\n }";
-        let errors = diagnostics(MvFile::with_content(script_path(), source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((1, 1), (1, 5)));
 
         let source = "script {\r\n\r\n\r\n func main() {} \r\n }";
-        let errors = diagnostics(MvFile::with_content(script_path(), source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((3, 1), (3, 5)));
     }
 }
 
 pub fn global_state_snapshot(
-    file: MvFile,
+    file: MoveFile,
     config: Config,
-    additional_files: Vec<MvFile>,
+    additional_files: Vec<MoveFile>,
 ) -> GlobalStateSnapshot {
     let mut global_state = initialize_new_global_state(config);
     let mut change = AnalysisChange::new();

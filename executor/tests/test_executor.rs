@@ -2,7 +2,7 @@ use move_executor::execute_script;
 
 use move_executor::explain::AddressResourceChanges;
 use lang::compiler::ConstPool;
-use lang::compiler::file::MvFile;
+use lang::compiler::file::MoveFile;
 use resources::assets_dir;
 use lang::compiler::error::CompilerError;
 
@@ -29,7 +29,7 @@ script {
     }
 }";
     let errors = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "libra",
         "0x1111111111111111",
@@ -59,7 +59,7 @@ fn test_execute_custom_script_with_stdlib_module() {
         }
     }";
     execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move")],
         "libra",
         "0x1111111111111111",
@@ -83,7 +83,7 @@ script {
 }";
 
     let effects = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x1111111111111111",
@@ -125,10 +125,10 @@ fn missing_write_set_for_move_to_sender() {
         }
     }
         ";
-    let deps = vec![MvFile::with_content(module_path("m.move"), module_text)];
+    let deps = vec![MoveFile::with_content(module_path("m.move"), module_text)];
 
     let effects = execute_script(
-        MvFile::with_content(script_path(), script_text),
+        MoveFile::with_content(script_path(), script_text),
         deps,
         "libra",
         "0x1",
@@ -171,8 +171,8 @@ fn test_run_with_non_default_dfinance_dialect() {
     ";
 
     let effects = execute_script(
-        MvFile::with_content(script_path(), script_text),
-        vec![MvFile::with_content(module_path("m.move"), module_text)],
+        MoveFile::with_content(script_path(), script_text),
+        vec![MoveFile::with_content(module_path("m.move"), module_text)],
         "dfinance",
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
         vec![],
@@ -216,8 +216,8 @@ fn test_pass_arguments_to_script() {
     ";
 
     let effects = execute_script(
-        MvFile::with_content(script_path(), script_text),
-        vec![MvFile::with_content(module_path("m.move"), module_text)],
+        MoveFile::with_content(script_path(), script_text),
+        vec![MoveFile::with_content(module_path("m.move"), module_text)],
         "libra",
         "0x1",
         vec![String::from("true")],
@@ -258,8 +258,8 @@ fn test_sender_string_in_script() {
     }
         ";
     let effects = execute_script(
-        MvFile::with_content(script_path(), source_text),
-        vec![MvFile::with_content(module_path("debug.move"), module_text)],
+        MoveFile::with_content(script_path(), source_text),
+        vec![MoveFile::with_content(module_path("debug.move"), module_text)],
         "libra",
         "0x1",
         vec![],
@@ -283,7 +283,7 @@ fn test_bech32_address_and_sender_in_compiler_error() {
     }
         ";
     let errors = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
@@ -315,7 +315,7 @@ fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
     }";
 
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move")],
         "libra",
         "0x1111111111111111",
@@ -335,7 +335,7 @@ fn test_dfinance_executor_allows_0x0() {
     }";
 
     execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "0x0",
@@ -344,7 +344,7 @@ fn test_dfinance_executor_allows_0x0() {
     .unwrap();
 
     execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "0x1",
@@ -369,7 +369,7 @@ fn test_execute_script_with_custom_signer() {
     }
     ";
     let effects = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
         "0x3",
@@ -411,7 +411,7 @@ let _pool = ConstPool::new();
     ";
 
     let effects = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
         "0x3",
@@ -474,7 +474,7 @@ script {
 }
     ";
     let effects = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "0x3",
@@ -509,7 +509,7 @@ script {
 }
     ";
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "0x3",
@@ -530,7 +530,7 @@ fn test_script_starts_from_line_0() {
 
     let text = r"script { fun main() { assert(false, 401); } }";
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "0x3",
@@ -552,7 +552,7 @@ fn test_doc_comment_starts_at_line_0() {
     let text = r"/// signer: 0x1
 script { fun main(_: &signer) { assert(false, 401); } }";
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "0x3",
@@ -578,7 +578,7 @@ script {
 }
     ";
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![],
         "dfinance",
         "0x3",
@@ -610,7 +610,7 @@ script {
 }
     ";
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("coins.move")],
         "dfinance",
         "0x3",
@@ -645,7 +645,7 @@ script {
     ";
 
     let effects = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x3",
@@ -684,7 +684,7 @@ script {
     ";
 
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x1",
@@ -718,7 +718,7 @@ script {
     ";
 
     let res = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x1",
@@ -762,7 +762,7 @@ script {
     ";
 
     let results = execute_script(
-        MvFile::with_content(script_path(), text),
+        MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("coins.move")],
         "libra",
         "0x1",
@@ -772,10 +772,10 @@ script {
     assert_eq!(results.gas_spent, 10);
 }
 
-pub fn stdlib_mod(name: &str) -> MvFile {
-    MvFile::load(assets_dir().join("stdlib").join(name)).unwrap()
+pub fn stdlib_mod(name: &str) -> MoveFile {
+    MoveFile::load(assets_dir().join("stdlib").join(name)).unwrap()
 }
 
-pub fn modules_mod(name: &str) -> MvFile {
-    MvFile::load(assets_dir().join("modules").join(name)).unwrap()
+pub fn modules_mod(name: &str) -> MoveFile {
+    MoveFile::load(assets_dir().join("modules").join(name)).unwrap()
 }

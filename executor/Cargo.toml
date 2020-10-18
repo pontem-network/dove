@@ -28,5 +28,4 @@ libra-move-core-types = { package = "move-core-types", git = "https://github.com
 
 resources = { path = "../resources" }
 lang = { path = "../lang" }
-utils = { path = "../utils" }
 git-hash = { path = "../common/git-hash" }

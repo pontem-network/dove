@@ -7,13 +7,13 @@ use walkdir::DirEntry;
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct MvFile {
+pub struct MoveFile {
     name: String,
     content: String,
 }
 
-impl MvFile {
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<MvFile> {
+impl MoveFile {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<MoveFile> {
         let path = path.as_ref();
         let mut f = File::open(&path)
             .map_err(|err| std::io::Error::new(err.kind(), format!("{}: {:?}", err, path)))?;
@@ -25,16 +25,16 @@ impl MvFile {
             .map(|path| path.to_owned())
             .ok_or_else(|| anyhow!("Failed to convert source path"))?;
 
-        Ok(MvFile { name, content })
+        Ok(MoveFile { name, content })
     }
 
-    pub fn with_content<'a, S, S1>(name: S, content: S1) -> MvFile
+    pub fn with_content<'s, 's1, S, S1>(name: S, content: S1) -> MoveFile
     where
-        S: Into<Cow<'a, str>>,
-        S1: Into<Cow<'a, str>>,
+        S: Into<Cow<'s, str>>,
+        S1: Into<Cow<'s1, str>>,
     {
-        // TODO replace String with Cow<'a, str>
-        MvFile {
+        // TODO replace String with Cow<'s, str>
+        MoveFile {
             name: name.into().into_owned(),
             content: content.into().into_owned(),
         }
@@ -53,15 +53,15 @@ impl MvFile {
     }
 }
 
-impl TryFrom<&PathBuf> for MvFile {
+impl TryFrom<&PathBuf> for MoveFile {
     type Error = Error;
 
     fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
-        MvFile::load(value)
+        MoveFile::load(value)
     }
 }
 
-pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MvFile>> {
+pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile>> {
     let mut module_files = vec![];
     for path in paths {
         let path = path.as_ref();
@@ -71,10 +71,10 @@ pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MvFile>> {
             path
         );
         if path.is_file() {
-            module_files.push(MvFile::load(path)?);
+            module_files.push(MoveFile::load(path)?);
         } else {
             for path in find_move_files(path)? {
-                module_files.push(MvFile::load(path)?);
+                module_files.push(MoveFile::load(path)?);
             }
         }
     }

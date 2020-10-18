@@ -1,6 +1,6 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::address::ProvidedAccountAddress;
-use crate::compiler::file::MvFile;
+use crate::compiler::file::MoveFile;
 use crate::compiler::{CompileFlow, compile};
 use crate::compiler::parser::ParsingMeta;
 use move_lang::compiled_unit::CompiledUnit;
@@ -25,7 +25,7 @@ impl<'a> MoveBuilder<'a> {
         MoveBuilder { dialect, sender }
     }
 
-    pub fn build(self, targets: Vec<MvFile>, deps: Vec<MvFile>) -> Artifacts {
+    pub fn build(self, targets: Vec<MoveFile>, deps: Vec<MoveFile>) -> Artifacts {
         compile(self.dialect, targets, deps, self.sender, self)
     }
 }

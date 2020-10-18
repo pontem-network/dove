@@ -7,7 +7,7 @@ use move_lang::parser::syntax::parse_file_string;
 use crate::compiler::source_map::{FileOffsetMap, ProjectOffsetMap, len_difference};
 use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::address::ProvidedAccountAddress;
-use crate::compiler::file::MvFile;
+use crate::compiler::file::MoveFile;
 use move_lang::errors::{FilesSourceText, Errors};
 
 pub type CommentsMap = BTreeMap<&'static str, FileCommentMap>;
@@ -25,8 +25,8 @@ pub struct ParsingMeta {
 
 pub fn parse_program(
     dialect: &dyn Dialect,
-    targets: Vec<MvFile>,
-    deps: Vec<MvFile>,
+    targets: Vec<MoveFile>,
+    deps: Vec<MoveFile>,
     sender: Option<&ProvidedAccountAddress>,
 ) -> ParserArtifact {
     let mut files: FilesSourceText = HashMap::new();

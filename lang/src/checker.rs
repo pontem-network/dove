@@ -1,6 +1,6 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::address::ProvidedAccountAddress;
-use crate::compiler::file::MvFile;
+use crate::compiler::file::MoveFile;
 use crate::compiler::{CompileFlow, Step, compile, CheckerResult};
 use crate::compiler::parser::{ParsingMeta, ParserArtifact};
 use move_lang::compiled_unit::CompiledUnit;
@@ -19,7 +19,7 @@ impl<'a> MoveChecker<'a> {
         MoveChecker { dialect, sender }
     }
 
-    pub fn check(self, targets: Vec<MvFile>, deps: Vec<MvFile>) -> Result<(), Errors> {
+    pub fn check(self, targets: Vec<MoveFile>, deps: Vec<MoveFile>) -> Result<(), Errors> {
         compile(self.dialect, targets, deps, self.sender, self)
     }
 }

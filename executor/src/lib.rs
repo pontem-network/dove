@@ -8,7 +8,7 @@ use move_vm_types::values::Value;
 use crate::explain::PipelineExecutionResult;
 use crate::session::SessionBuilder;
 use lang::compiler::dialects::DialectName;
-use lang::compiler::file::MvFile;
+use lang::compiler::file::MoveFile;
 
 pub mod execution;
 pub mod explain;
@@ -40,8 +40,8 @@ pub fn parse_script_arguments(passed_args: Vec<String>) -> Result<Vec<Value>> {
 }
 
 pub fn execute_script(
-    script: MvFile,
-    deps: Vec<MvFile>,
+    script: MoveFile,
+    deps: Vec<MoveFile>,
     dialect: &str,
     sender: &str,
     args: Vec<String>,

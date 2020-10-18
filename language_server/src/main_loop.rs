@@ -26,7 +26,7 @@ use std::collections::HashSet;
 use crate::inner::db::FileDiagnostic;
 use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
-use lang::compiler::file::MvFile;
+use lang::compiler::file::MoveFile;
 use std::fmt::Debug;
 
 #[derive(Debug)]
@@ -63,9 +63,9 @@ pub enum ResponseEvent {
 
 #[derive(Debug)]
 pub enum FileSystemEvent {
-    AddFile(MvFile),
+    AddFile(MoveFile),
     RemoveFile(String),
-    ChangeFile(MvFile),
+    ChangeFile(MoveFile),
 }
 
 pub enum Event {
@@ -301,7 +301,7 @@ fn on_notification(
         Ok(params) => {
             let fpath = uri_to_str(params.text_document.uri)?;
 
-            let file = MvFile::with_content(fpath.clone(), params.text_document.text);
+            let file = MoveFile::with_content(fpath.clone(), params.text_document.text);
             fs_events_sender
                 .send(FileSystemEvent::AddFile(file))
                 .unwrap();
@@ -321,7 +321,7 @@ fn on_notification(
                 .ok_or_else(|| anyhow::anyhow!("empty changes".to_string()))?
                 .text;
 
-            let changed_file = MvFile::with_content(fpath.clone(), new_text);
+            let changed_file = MoveFile::with_content(fpath.clone(), new_text);
             fs_events_sender
                 .send(FileSystemEvent::ChangeFile(changed_file))
                 .unwrap();
@@ -401,7 +401,7 @@ pub fn compute_file_diagnostics<I>(
                 continue;
             }
         };
-        if let Some(d) = analysis.check_file_with_compiler(MvFile::with_content(fpath, text)) {
+        if let Some(d) = analysis.check_file_with_compiler(MoveFile::with_content(fpath, text)) {
             diagnostics.push(d);
         }
     }

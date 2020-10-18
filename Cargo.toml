@@ -2,7 +2,6 @@
 members = [
     "language_server",
     "executor",
-    "utils",
     "lang",
     "movec",
     "resources",

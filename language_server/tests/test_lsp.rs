@@ -12,7 +12,7 @@ use move_language_server::server::run_server;
 use resources::{assets_dir};
 use move_language_server::inner::config::Config;
 use lang::compiler::dialects::DialectName;
-use lang::compiler::file::MvFile;
+use lang::compiler::file::MoveFile;
 use lang::compiler::ConstPool;
 
 const SHUTDOWN_REQ_ID: u64 = 10;
@@ -181,7 +181,7 @@ fn test_removed_file_not_present_in_the_diagnostics() {
         use 0x0::Unknown;
         fun main() {}
     }";
-    let script_file = MvFile::with_content(script_path.to_str().unwrap(), script_text);
+    let script_file = MoveFile::with_content(script_path.to_str().unwrap(), script_text);
 
     let mut global_state = global_state(Config::default());
     global_state.update_from_events(vec![FileSystemEvent::AddFile(script_file)]);
