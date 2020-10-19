@@ -63,9 +63,9 @@ pub enum ResponseEvent {
 
 #[derive(Debug)]
 pub enum FileSystemEvent {
-    AddFile(MoveFile),
+    AddFile(MoveFile<'static, 'static>),
     RemoveFile(String),
-    ChangeFile(MoveFile),
+    ChangeFile(MoveFile<'static, 'static>),
 }
 
 pub enum Event {

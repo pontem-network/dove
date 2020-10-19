@@ -27,8 +27,8 @@ fn path(name: &str) -> String {
     modules_path().join(name).to_str().unwrap().to_owned()
 }
 
-fn script_path() -> String {
-    path("script.move")
+fn script_path() -> &'static str {
+    "/resources/script.move"
 }
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -62,8 +62,8 @@ fn diagnostics_with_config_and_filename(file: MoveFile, config: Config) -> Vec<F
 }
 
 fn diagnostics_with_deps(
-    script_file: MoveFile,
-    deps: Vec<MoveFile>,
+    script_file: MoveFile<'static, 'static>,
+    deps: Vec<MoveFile<'static, 'static>>,
     config: Config,
 ) -> Option<FileDiagnostic> {
     let mut config = config;
@@ -638,7 +638,7 @@ script {
         let error = diagnostics_with_deps(
             MoveFile::with_content(script_path(), source),
             vec![MoveFile::with_content(
-                modules_path().join("debug.move").to_str().unwrap(),
+                ConstPool::push(&modules_path().join("debug.move").to_str().unwrap()),
                 module,
             )],
             config,

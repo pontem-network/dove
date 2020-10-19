@@ -7,13 +7,13 @@ use walkdir::DirEntry;
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct MoveFile {
-    name: String,
-    content: String,
+pub struct MoveFile<'n, 'c> {
+    name: Cow<'n, str>,
+    content: Cow<'c, str>,
 }
 
-impl MoveFile {
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<MoveFile> {
+impl<'n, 'c> MoveFile<'n, 'c> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<MoveFile<'static, 'static>> {
         let path = path.as_ref();
         let mut f = File::open(&path)
             .map_err(|err| std::io::Error::new(err.kind(), format!("{}: {:?}", err, path)))?;
@@ -25,18 +25,20 @@ impl MoveFile {
             .map(|path| path.to_owned())
             .ok_or_else(|| anyhow!("Failed to convert source path"))?;
 
-        Ok(MoveFile { name, content })
+        Ok(MoveFile {
+            name: Cow::Owned(name),
+            content: Cow::Owned(content),
+        })
     }
 
-    pub fn with_content<'s, 's1, S, S1>(name: S, content: S1) -> MoveFile
+    pub fn with_content<N, C>(name: N, content: C) -> MoveFile<'n, 'c>
     where
-        S: Into<Cow<'s, str>>,
-        S1: Into<Cow<'s1, str>>,
+        N: Into<Cow<'n, str>>,
+        C: Into<Cow<'c, str>>,
     {
-        // TODO replace String with Cow<'s, str>
         MoveFile {
-            name: name.into().into_owned(),
-            content: content.into().into_owned(),
+            name: name.into(),
+            content: content.into(),
         }
     }
 
@@ -49,11 +51,11 @@ impl MoveFile {
     }
 
     pub fn into(self) -> (String, String) {
-        (self.name, self.content)
+        (self.name.into_owned(), self.content.into_owned())
     }
 }
 
-impl TryFrom<&PathBuf> for MoveFile {
+impl TryFrom<&PathBuf> for MoveFile<'static, 'static> {
     type Error = Error;
 
     fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
@@ -61,7 +63,7 @@ impl TryFrom<&PathBuf> for MoveFile {
     }
 }
 
-pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile>> {
+pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile<'static, 'static>>> {
     let mut module_files = vec![];
     for path in paths {
         let path = path.as_ref();

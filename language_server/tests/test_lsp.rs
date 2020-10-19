@@ -9,7 +9,6 @@ use lsp_types::notification::{DidChangeConfiguration, DidChangeWatchedFiles, Ini
 use move_language_server::global_state::{initialize_new_global_state, GlobalState};
 use move_language_server::main_loop::{main_loop, notification_new, request_new, FileSystemEvent};
 use move_language_server::server::run_server;
-use resources::{assets_dir};
 use move_language_server::inner::config::Config;
 use lang::compiler::dialects::DialectName;
 use lang::compiler::file::MoveFile;
@@ -174,14 +173,14 @@ fn test_server_config_change() {
 fn test_removed_file_not_present_in_the_diagnostics() {
     let _pool = ConstPool::new();
 
-    let script_path = assets_dir().join("script.move");
+    let script_path = "/resources/assets/script.move";
     let (client_conn, server_conn) = Connection::memory();
 
     let script_text = r"script {
         use 0x0::Unknown;
         fun main() {}
     }";
-    let script_file = MoveFile::with_content(script_path.to_str().unwrap(), script_text);
+    let script_file = MoveFile::with_content(script_path, script_text);
 
     let mut global_state = global_state(Config::default());
     global_state.update_from_events(vec![FileSystemEvent::AddFile(script_file)]);
