@@ -395,7 +395,7 @@ pub fn compute_file_diagnostics<I>(
         diagnostics.push(FileDiagnostic::new_empty(&fpath));
 
         let text = match analysis.db().available_files.get(&fpath) {
-            Some(text) => text.to_owned(),
+            Some(text) => text,
             None => {
                 log::warn!("Trying to check untracked file: {:?}", fpath);
                 continue;
