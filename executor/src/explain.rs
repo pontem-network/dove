@@ -11,6 +11,7 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::transaction_argument::TransactionArgument;
 use vm::access::ScriptAccess;
 use serde::export::Formatter;
+use move_core_types::language_storage::{StructTag, TypeTag};
 
 #[derive(Debug)]
 pub struct PipelineExecutionResult {
@@ -93,6 +94,45 @@ impl ExplainedTransactionEffects {
     }
 }
 
+fn short_address(addr: &AccountAddress) -> String {
+    let mut trimmed = addr.short_str();
+    if trimmed == "00000000" {
+        let addr_bytes = addr.to_vec();
+        let len = addr_bytes.len();
+        trimmed = hex::encode(&addr_bytes[(len - 4)..len]);
+    }
+    trimmed
+}
+
+fn format_struct_tag(s: &StructTag) -> Result<String> {
+    let mut f = String::new();
+    write!(f, "{}::{}::{}", short_address(&s.address), s.module, s.name)?;
+    if let Some(first_ty) = s.type_params.first() {
+        write!(f, "<")?;
+        write!(f, "{}", first_ty)?;
+        for ty in s.type_params.iter().skip(1) {
+            write!(f, ", {}", format_type_tag(ty)?)?;
+        }
+        write!(f, ">")?;
+    }
+    Ok(f)
+}
+
+fn format_type_tag(type_tag: &TypeTag) -> Result<String> {
+    let mut f = String::new();
+    match type_tag {
+        TypeTag::Struct(s) => write!(f, "{}", format_struct_tag(s)?),
+        TypeTag::Vector(ty) => write!(f, "Vector<{}>", format_type_tag(ty)?),
+        TypeTag::U8 => write!(f, "U8"),
+        TypeTag::U64 => write!(f, "U64"),
+        TypeTag::U128 => write!(f, "U128"),
+        TypeTag::Address => write!(f, "Address"),
+        TypeTag::Signer => write!(f, "Signer"),
+        TypeTag::Bool => write!(f, "Bool"),
+    }?;
+    Ok(f)
+}
+
 pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
@@ -102,9 +142,7 @@ pub fn explain_effects(
 
     let mut explained_effects = ExplainedTransactionEffects::default();
     if !effects.events.is_empty() {
-        for (event_handle, event_sequence_number, _event_type, _event_layout, event_data, _) in
-            &effects.events
-        {
+        for (event_handle, event_sequence_number, _, _, event_data, _) in &effects.events {
             explained_effects.events.push(format!(
                 "Emitted {:?} as the {}th event to stream {:?}",
                 event_data, event_sequence_number, event_handle
@@ -112,25 +150,26 @@ pub fn explain_effects(
         }
     }
     for (addr, writes) in &effects.resources {
-        let address = format!("0x{}", addr);
         let mut changes = vec![];
         for (struct_tag, write_opt) in writes {
+            let formatted_struct_tag = format_struct_tag(&struct_tag)?;
             let change = match write_opt {
-                Some((_layout, value)) => {
+                Some((_, value)) => {
                     if state
                         .get_resource_bytes(*addr, struct_tag.clone())
                         .is_some()
                     {
-                        format!("Changed type {}: {}", struct_tag, value)
+                        format!("Changed type {}: {}", formatted_struct_tag, value)
                     } else {
-                        format!("Added type {}: {}", struct_tag, value)
+                        format!("Added type {}: {}", formatted_struct_tag, value)
                     }
                 }
-                None => format!("Deleted type {}", struct_tag),
+                None => format!("Deleted type {}", formatted_struct_tag),
             };
             changes.push(change);
         }
-        let change = AddressResourceChanges::new(address, changes);
+        let trimmed_address = format!("0x{}", addr.to_string().trim_start_matches('0'));
+        let change = AddressResourceChanges::new(trimmed_address, changes);
         explained_effects.resources.push(change);
     }
     Ok(explained_effects)

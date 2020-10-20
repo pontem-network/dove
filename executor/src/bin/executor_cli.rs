@@ -37,7 +37,6 @@ fn cli() -> App<'static, 'static> {
                 .number_of_values(1)
                 .help("Path to module file / modules folder to use as dependency. \nCould be used more than once: '-m ./stdlib -m ./modules'"),
         )
-        .arg(Arg::from_usage("--show-changes").help("Show what changes has been made to the network after script is executed"))
         .arg(Arg::from_usage("--show-events").help("Show which events was emitted"))
         .arg(
             Arg::from_usage("--args [SCRIPT_ARGS]")
@@ -65,7 +64,6 @@ fn main() -> Result<()> {
 
     let deps = file::load_move_files(&modules_fpaths)?;
 
-    let show_network_effects = cli_arguments.is_present("show-changes");
     let show_events = cli_arguments.is_present("show-events");
 
     let dialect = cli_arguments.value_of("dialect").unwrap();
@@ -93,14 +91,12 @@ fn main() -> Result<()> {
                         print!("{}", textwrap::indent(&error, "    "));
                     }
                     StepExecutionResult::Success(effects) => {
+                        for change in effects.resources() {
+                            print!("{}", textwrap::indent(&format!("{}", change), "    "));
+                        }
                         if show_events {
                             for event in effects.events() {
                                 print!("{}", textwrap::indent(event, "    "));
-                            }
-                        }
-                        if show_network_effects {
-                            for change in effects.resources() {
-                                print!("{}", textwrap::indent(&format!("{}", change), "    "));
                             }
                         }
                     }
