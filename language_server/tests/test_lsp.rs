@@ -13,6 +13,7 @@ use move_language_server::inner::config::Config;
 use lang::compiler::dialects::DialectName;
 use lang::compiler::file::MoveFile;
 use lang::compiler::ConstPool;
+use resources::assets_dir;
 
 const SHUTDOWN_REQ_ID: u64 = 10;
 
@@ -171,16 +172,18 @@ fn test_server_config_change() {
 
 #[test]
 fn test_removed_file_not_present_in_the_diagnostics() {
+    // TODO: use or rem ConstPool
     let _pool = ConstPool::new();
 
-    let script_path = "/resources/assets/script.move";
+    let script_path = assets_dir().join("script.move");
     let (client_conn, server_conn) = Connection::memory();
 
     let script_text = r"script {
         use 0x0::Unknown;
         fun main() {}
     }";
-    let script_file = MoveFile::with_content(script_path, script_text);
+    let script_file =
+        MoveFile::with_content(script_path.to_string_lossy().to_string(), script_text);
 
     let mut global_state = global_state(Config::default());
     global_state.update_from_events(vec![FileSystemEvent::AddFile(script_file)]);

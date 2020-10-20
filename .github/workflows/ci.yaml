@@ -10,17 +10,17 @@ jobs:
     name: Rust
     runs-on: ${{ matrix.os }}
 
-    # defaults:
-    #   run:
-    #     shell: bash
+    defaults:
+      run:
+        shell: bash
 
     strategy:
       fail-fast: false
       matrix:
         os: [
+          macos-latest
           ubuntu-latest,
           windows-latest,
-          macos-latest
         ]
 
     env:
@@ -39,7 +39,7 @@ jobs:
     # anything and just updating rust-docs.
     - name: Rename existing rust toolchain (Windows)
       if: matrix.os == 'windows-latest'
-      run: Rename-Item C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc.old
+      run: mv -f /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc.old
 
     - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
@@ -77,12 +77,11 @@ jobs:
     - name: Check formatting
       run: cargo fmt -- --check
 
-    - name: Build
-      run: cargo build --all
+    - name: Test
+      run: cargo test --all --no-fail-fast
 
     - name: Run clippy
       run: cargo clippy --tests --examples -- -Dwarnings
 
-    - name: Test
-      run: cargo test --all --no-fail-fast
+
 

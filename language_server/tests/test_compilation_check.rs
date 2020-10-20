@@ -1,10 +1,11 @@
-use lsp_types::{Diagnostic, Position, Range};
-
+use std::borrow::Cow;
 use crossbeam_channel::unbounded;
+
+use lsp_types::{Diagnostic, Position, Range};
 use move_language_server::main_loop::{compute_file_diagnostics, FileSystemEvent, ResponseEvent};
 use move_language_server::inner::config::Config;
 use move_language_server::inner::db::FileDiagnostic;
-use resources::{asset, modules_path, stdlib_path};
+use resources::{modules_path, resources_dir, stdlib_path};
 use move_language_server::global_state::{
     GlobalState, GlobalStateSnapshot, initialize_new_global_state,
 };
@@ -27,8 +28,11 @@ fn path(name: &str) -> String {
     modules_path().join(name).to_str().unwrap().to_owned()
 }
 
-fn script_path() -> &'static str {
-    "/resources/script.move"
+fn script_path<'a>() -> impl Into<Cow<'a, str>> {
+    resources_dir()
+        .join("script.move")
+        .to_string_lossy()
+        .to_string()
 }
 
 fn range(start: (u64, u64), end: (u64, u64)) -> Range {
@@ -265,7 +269,7 @@ script {
     fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
         let _pool = ConstPool::new();
 
-        let record = MoveFile::load(asset("modules/record.move")).unwrap();
+        let record = MoveFile::load(modules_path().join("record.move")).unwrap();
         let config = config!({
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()],
