@@ -257,13 +257,13 @@ pub fn explain_error(
             code_offset,
         } => {
             let status_explanation = match status_code {
-                    StatusCode::RESOURCE_ALREADY_EXISTS => "resource already exists (i.e., move_to<T>(account) when there is already a value of type T under account)".to_string(),
-                    StatusCode::MISSING_DATA => "resource does not exist (i.e., move_from<T>(a), borrow_global<T>(a), or borrow_global_mut<T>(a) when there is no value of type T at address a)".to_string(),
-                    StatusCode::ARITHMETIC_ERROR => "arithmetic error (i.e., integer overflow, underflow, or divide-by-zero)".to_string(),
-                    StatusCode::EXECUTION_STACK_OVERFLOW => "execution stack overflow".to_string(),
-                    StatusCode::CALL_STACK_OVERFLOW => "call stack overflow".to_string(),
-                    StatusCode::OUT_OF_GAS => "out of gas".to_string(),
-                    _ => format!("{} error", status_code.status_type()),
+                    StatusCode::RESOURCE_ALREADY_EXISTS => "a RESOURCE_ALREADY_EXISTS error (i.e., `move_to<T>(account)` when there is already a resource of type `T` under `account`)".to_string(),
+                    StatusCode::MISSING_DATA => "a RESOURCE_DOES_NOT_EXIST error (i.e., `move_from<T>(a)`, `borrow_global<T>(a)`, or `borrow_global_mut<T>(a)` when there is no resource of type `T` at address `a`)".to_string(),
+                    StatusCode::ARITHMETIC_ERROR => "an arithmetic error (i.e., integer overflow/underflow, div/mod by zero, or invalid shift)".to_string(),
+                    StatusCode::EXECUTION_STACK_OVERFLOW => "an execution stack overflow".to_string(),
+                    StatusCode::CALL_STACK_OVERFLOW => "a call stack overflow".to_string(),
+                    StatusCode::OUT_OF_GAS => "an out of gas error".to_string(),
+                    _ => format!("a {} error", status_code.status_type()),
                 };
             // TODO: map to source code location
             let location_explanation = match location {
