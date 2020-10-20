@@ -1048,13 +1048,6 @@ dependencies = [
 [[package]]
 name = "git-hash"
 version = "0.1.0"
-dependencies = [
- "git-hash-proc-macro",
-]
-
-[[package]]
-name = "git-hash-proc-macro"
-version = "0.1.0"
 
 [[package]]
 name = "glob"

@@ -6,5 +6,4 @@ members = [
     "movec",
     "resources",
     "common/git-hash",
-    "common/git-hash/macro",
 ]

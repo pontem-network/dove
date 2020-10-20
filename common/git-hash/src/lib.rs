@@ -1,24 +1,7 @@
 /*!
-    Utility crate for get current git HEAD hash as
+    Utility proc-macro crate for get current git HEAD hash as constant `Option<&'static str>`.
 
-    - environment variables `GIT_HASH` and `GIT_HASH_SHORT`
-    - constant `Option<&'static str>`
-
-    ## Usage examples
-
-    ### Use env var:
-
-    ```rust
-    // build.rs
-    extern crate git_hash;
-
-    fn main() { git_hash::env_git_hash_short(); }
-
-    // main.rs
-    // fn main() { println!("{}", env!("GIT_HASH_SHORT")); }
-    ```
-
-    ### Use proc macro:
+    ## Usage example:
 
     ```rust
     // main.rs
@@ -31,24 +14,42 @@
     ```
 */
 
-pub use macros::{git_hash, git_hash_short};
-pub use macros::{crate_version_with_git_hash, crate_version_with_git_hash_short};
-pub mod cmd;
+extern crate proc_macro;
+use proc_macro::{TokenStream, LexError};
+mod cmd;
 
-/// Sets the current git (HEAD) commit SHA to env var `GIT_HASH`
-/// and makes it available for build & source code via standard `env!` macro.
-pub fn env_git_hash() {
-    if let Some(git_hash) = cmd::git_hash() {
-        println!("cargo:rustc-env=GIT_HASH={}", git_hash);
-        println!("cargo:rustc-rerun-if-changed=.git/HEAD");
-    }
+#[proc_macro]
+pub fn git_hash(_: TokenStream) -> TokenStream {
+    let git_hash = cmd::git_hash();
+    opt_tokenize(git_hash).unwrap()
 }
 
-/// Sets the current git (HEAD) commit SHA (as shorten view) to env var `GIT_HASH_SHORT`
-/// and makes it available for build & source code via standard `env!` macro.
-pub fn env_git_hash_short() {
-    if let Some(git_hash) = cmd::git_hash_short() {
-        println!("cargo:rustc-env=GIT_HASH_SHORT={}", git_hash);
-        println!("cargo:rustc-rerun-if-changed=.git/HEAD");
-    }
+#[proc_macro]
+pub fn git_hash_short(_: TokenStream) -> TokenStream {
+    let git_hash = cmd::git_hash_short();
+    opt_tokenize(git_hash).unwrap()
+}
+
+#[proc_macro]
+pub fn crate_version_with_git_hash(_: TokenStream) -> TokenStream {
+    crate_version_with(cmd::git_hash()).unwrap()
+}
+
+#[proc_macro]
+pub fn crate_version_with_git_hash_short(_: TokenStream) -> TokenStream {
+    crate_version_with(cmd::git_hash_short()).unwrap()
+}
+
+fn crate_version_with(s: Option<String>) -> Result<TokenStream, LexError> {
+    let res = s
+        .map(|rev| format!("-{}", rev))
+        .unwrap_or_else(Default::default);
+
+    format!("concat!(env!(\"CARGO_PKG_VERSION\"), \"{}\")", res).parse()
+}
+
+fn opt_tokenize(s: Option<String>) -> Result<TokenStream, LexError> {
+    s.map(|s| format!("Some(\"{}\")", s))
+        .unwrap_or_else(|| "None".to_owned())
+        .parse()
 }
