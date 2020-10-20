@@ -236,7 +236,7 @@ pub fn explain_error(
                 AbortLocation::Script => "script".to_string(),
             };
             // TODO: code offset is 1-indexed, but disassembler instruction numbering starts at zero
-            // This is potentially confusing to someone trying to understnd where something failed
+            // This is potentially confusing to someone trying to understand where something failed
             // by looking at a code offset + disassembled bytecode; we should fix it
             write!(
                 &mut text_representation,

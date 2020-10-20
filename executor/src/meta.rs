@@ -45,7 +45,7 @@ impl ExecutionMeta {
                 self.oracle_prices
                     .push((price_struct_tag, value.parse().unwrap()))
             }
-            _ => todo!("Unimplemented meta key"),
+            _ => eprintln!("Unimplemented meta key, {:?}", key),
         }
     }
 }
