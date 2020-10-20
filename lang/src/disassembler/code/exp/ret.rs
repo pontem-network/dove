@@ -15,9 +15,11 @@ pub struct Ret<'a> {
 
 impl<'a> Ret<'a> {
     /// Create a new `Ret` expression.
+    #[allow(clippy::needless_collect)]
     pub fn exp(ret_len: usize, ctx: &mut impl Context<'a>) -> Exp<'a> {
+        let params = (0..ret_len).map(|_| ctx.pop_exp()).collect::<Vec<_>>();
         Exp::Ret(Ret {
-            ret_list: (0..ret_len).map(|_| ctx.pop_exp()).rev().collect(),
+            ret_list: params.into_iter().rev().collect(),
             explicit_keyword: false,
         })
     }

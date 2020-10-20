@@ -1,0 +1,8 @@
+[package]
+name = "git-hash"
+version = "0.1.0"
+authors = ["Alex Koz. <a@koz.email>"]
+edition = "2018"
+
+[lib]
+proc-macro = true

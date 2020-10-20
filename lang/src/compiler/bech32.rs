@@ -2,8 +2,8 @@ use anyhow::{ensure, Result};
 use bech32::u5;
 use lazy_static::lazy_static;
 
-use crate::shared::errors::FileSourceMap;
 use regex::Regex;
+use crate::compiler::source_map::FileOffsetMap;
 
 pub static HRP: &str = "wallet";
 
@@ -36,7 +36,7 @@ pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
     Ok(bech32::encode(&HRP, data)?)
 }
 
-pub fn replace_bech32_addresses(source: &str, file_source_map: &mut FileSourceMap) -> String {
+pub fn replace_bech32_addresses(source: &str, file_source_map: &mut FileOffsetMap) -> String {
     let mut transformed_source = source.to_string();
 
     for mat in BECH32_REGEX.captures_iter(source).into_iter() {

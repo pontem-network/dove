@@ -1,53 +1,71 @@
-use dialects::shared::errors::ExecCompilerError;
-use move_executor::compile_and_run_scripts_in_file;
+use move_executor::execute_script;
 
-use utils::leaked_fpath;
-use utils::tests::{
-    get_script_path, stdlib_mod, existing_module_file_abspath, modules_mod, get_modules_path,
-    anonymous_script_file, record_mod,
-};
 use move_executor::explain::AddressResourceChanges;
+use lang::compiler::ConstPool;
+use lang::compiler::file::MoveFile;
+use resources::assets_dir;
+use lang::compiler::error::CompilerError;
+
+fn script_path() -> String {
+    assets_dir()
+        .join("script.move")
+        .to_str()
+        .unwrap()
+        .to_owned()
+}
+
+fn module_path(name: &str) -> String {
+    assets_dir().join(name).to_str().unwrap().to_owned()
+}
+
+pub fn stdlib_mod(name: &str) -> MoveFile {
+    MoveFile::load(assets_dir().join("stdlib").join(name)).unwrap()
+}
+
+pub fn modules_mod(name: &str) -> MoveFile {
+    MoveFile::load(assets_dir().join("modules").join(name)).unwrap()
+}
 
 #[test]
 fn test_show_compilation_errors() {
+    let _pool = ConstPool::new();
+
     let text = r"
 script {
     fun main() {
         let _ = 0x0::Transaction::sender();
     }
 }";
-    let errors = compile_and_run_scripts_in_file(
-        (get_script_path(), text.to_string()),
-        &[],
+    let errors = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "libra",
         "0x1111111111111111",
         vec![],
     )
     .unwrap_err()
-    .downcast::<ExecCompilerError>()
+    .downcast::<CompilerError>()
     .unwrap()
-    .0;
+    .errors;
     assert_eq!(errors.len(), 1);
-    assert_eq!(
-        errors[0].parts[0].message,
-        "Unbound module \'0x0::Transaction\'"
-    );
+    assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
 }
 
 #[test]
 fn test_execute_custom_script_with_stdlib_module() {
-    let text = r"
-script {
-    use 0x1::Signer;
+    let _pool = ConstPool::new();
 
-    fun main(s: &signer) {
-        let _ = Signer::address_of(s);
-    }
-}";
-    let deps = vec![stdlib_mod("signer.move")];
-    compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
-        &deps,
+    let text = r"
+    script {
+        use 0x1::Signer;
+
+        fun main(s: &signer) {
+            let _ = Signer::address_of(s);
+        }
+    }";
+    execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move")],
         "libra",
         "0x1111111111111111",
         vec![],
@@ -57,7 +75,9 @@ script {
 
 #[test]
 fn test_execute_script_and_record_resource_changes() {
-    let script_text = r"
+    let _pool = ConstPool::new();
+
+    let text = r"
 script {
     use 0x2::Record;
 
@@ -66,11 +86,10 @@ script {
         Record::save(s, record);
     }
 }";
-    let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
 
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), script_text.to_string()),
-        &deps,
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x1111111111111111",
         vec![],
@@ -83,88 +102,39 @@ script {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000001111111111111111",
-            vec!["Added type 00000000::Record::T: [U8(10)]".to_string()],
+            "0x1111111111111111",
+            vec!["Added type 00000002::Record::T: [U8(10)]".to_string()],
         )
     );
 }
 
-// #[test]
-// fn test_execute_script_with_genesis_state_provided() {
-//     let script_text = r"
-// script {
-//     use 0x2::Record;
-//
-//     fun main(s: &signer) {
-//         let record = Record::with_doubled_age(s);
-//         Record::save(s, record);
-//     }
-// }";
-//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-//
-//     let initial_chain_state = serde_json::json!([{
-//         "account": "0x1111111111111111",
-//         "ty": {
-//             "address": "0x2",
-//             "module": "Record",
-//             "name": "T",
-//             "ty_args": [],
-//         },
-//         "op": {"type": "SetValue", "values": [10]}
-//     }]);
-//     let state_changes = compile_and_execute_script_script(
-//         (get_script_path(), script_text.to_string()),
-//         &deps,
-//         "libra",
-//         "0x1111111111111111",
-//         // initial_chain_state,
-//         vec![],
-//     )
-//     .unwrap();
-//     assert_eq!(
-//         state_changes["changes"],
-//         serde_json::json!([{
-//             "account": "0x1111111111111111",
-//             "ty": {
-//                 "address": "0x0000000000000000000000000000000000000002",
-//                 "module": "Record",
-//                 "name": "T",
-//                 "ty_args": [],
-//             },
-//             "op": {"type": "SetValue", "values": [20]}
-//         }])
-//     );
-// }
-
 #[test]
-fn missing_writesets_for_move_to_sender() {
-    let module_text = r"
-address 0x1 {
-    module M {
-        resource struct T { value: u8 }
+fn missing_write_set_for_move_to_sender() {
+    let _pool = ConstPool::new();
 
-        public fun get_t(s: &signer, v: u8) {
-            move_to<T>(s, T { value: v })
+    let module_text = r"
+    address 0x1 {
+        module M {
+            resource struct T { value: u8 }
+
+            public fun get_t(s: &signer, v: u8) {
+                move_to<T>(s, T { value: v })
+            }
         }
     }
-}
         ";
     let script_text = r"
-script {
-    fun main(s: &signer) {
-        0x1::M::get_t(s, 10);
+    script {
+        fun main(s: &signer) {
+            0x1::M::get_t(s, 10);
+        }
     }
-}
         ";
-    let mut deps = vec![];
-    deps.push((
-        leaked_fpath(get_modules_path().join("m.move")),
-        module_text.to_string(),
-    ));
+    let deps = vec![MoveFile::with_content(module_path("m.move"), module_text)];
 
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), script_text.to_string()),
-        &deps,
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), script_text),
+        deps,
         "libra",
         "0x1",
         vec![],
@@ -177,38 +147,37 @@ script {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000000000000000000001",
-            vec!["Added type 00000000::M::T: [U8(10)]".to_string()],
+            "0x1",
+            vec!["Added type 00000001::M::T: [U8(10)]".to_string()],
         )
     );
 }
 
 #[test]
 fn test_run_with_non_default_dfinance_dialect() {
-    let module_source_text = r"
-address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
-    module M {
-        resource struct T { value: u8 }
-        public fun get_t(s: &signer, v: u8) {
-            move_to<T>(s, T { value: v })
+    let _pool = ConstPool::new();
+
+    let module_text = r"
+    address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
+        module M {
+            resource struct T { value: u8 }
+            public fun get_t(s: &signer, v: u8) {
+                move_to<T>(s, T { value: v })
+            }
         }
     }
-}
     ";
     let script_text = r"
-script {
-    fun main(s: &signer) {
-        wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(s, 10);
+    script {
+        fun main(s: &signer) {
+            wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(s, 10);
+        }
     }
-}
     ";
 
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), script_text.to_string()),
-        &[(
-            leaked_fpath(get_modules_path().join("m.move")),
-            module_source_text.to_string(),
-        )],
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), script_text),
+        vec![MoveFile::with_content(module_path("m.move"), module_text)],
         "dfinance",
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
         vec![],
@@ -225,52 +194,35 @@ script {
             vec!["Added type de5f86ce::M::T: [U8(10)]".to_string()],
         )
     );
-
-    // assert_eq!(
-    //     state_changes["changes"],
-    //     serde_json::json!([
-    //       {
-    //         "account": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
-    //         "ty": {
-    //           "address": "0xde5f86ce8ad7944f272d693cb4625a955b610150",
-    //           "module": "M",
-    //           "name": "T",
-    //           "ty_args": [],
-    //         },
-    //         "op": {"type": "SetValue", "values": [10]}
-    //       }
-    //     ])
-    // );
 }
 
 #[test]
 fn test_pass_arguments_to_script() {
-    let module_source_text = r"
-address 0x1 {
-    module Module {
-        resource struct T { value: bool }
-        public fun create_t(s: &signer, v: bool) {
-            move_to<T>(s, T { value: v })
+    let _pool = ConstPool::new();
+
+    let module_text = r"
+    address 0x1 {
+        module Module {
+            resource struct T { value: bool }
+            public fun create_t(s: &signer, v: bool) {
+                move_to<T>(s, T { value: v })
+            }
         }
     }
-}
     ";
     let script_text = r"
-script {
-    use 0x1::Module;
+    script {
+        use 0x1::Module;
 
-    fun main(s: &signer, val: bool) {
-        Module::create_t(s, val);
+        fun main(s: &signer, val: bool) {
+            Module::create_t(s, val);
+        }
     }
-}
     ";
 
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), script_text.to_string()),
-        &[(
-            leaked_fpath(get_modules_path().join("m.move")),
-            module_source_text.to_string(),
-        )],
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), script_text),
+        vec![MoveFile::with_content(module_path("m.move"), module_text)],
         "libra",
         "0x1",
         vec![String::from("true")],
@@ -284,35 +236,37 @@ script {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000000000000000000001",
-            vec!["Added type 00000000::Module::T: [true]".to_string()]
+            "0x1",
+            vec!["Added type 00000001::Module::T: [true]".to_string()],
         )
     );
 }
 
 #[test]
 fn test_sender_string_in_script() {
+    let _pool = ConstPool::new();
+
     let module_text = r"
-address {{sender}} {
-    module Debug {
-        public fun debug(): u8 {
-            1
+    address {{sender}} {
+        module Debug {
+            public fun debug(): u8 {
+                1
+            }
+        }
+    }";
+    let source_text = r"
+    script {
+        use {{sender}}::Debug;
+        fun main() {
+            let _ = Debug::debug();
         }
     }
-}";
-    let source_text = r"
-script {
-    use {{sender}}::Debug;
-    fun main() {
-        let _ = Debug::debug();
-    }
-}
         ";
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), source_text.to_string()),
-        &[(
-            leaked_fpath(get_modules_path().join("debug.move")),
-            module_text.to_string(),
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), source_text),
+        vec![MoveFile::with_content(
+            module_path("debug.move"),
+            module_text,
         )],
         "libra",
         "0x1",
@@ -325,193 +279,52 @@ script {
     assert_eq!(effects.resources().len(), 0);
 }
 
-// #[test]
-// fn test_resource_move_from_sender() {
-//     let script_text = r"
-// /// resource: 0x1111111111111111 0x2::Record::T [U8(10)]
-// script {
-//     use 0x2::Record;
-//
-//     fun main(s: &signer) {
-//         Record::destroy_record(s);
-//     }
-// }";
-//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-//
-//     // let initial_chain_state = serde_json::json!([{
-//     //     "account": "0x1111111111111111",
-//     //     "ty": {
-//     //         "address": "0x2",
-//     //         "module": "Record",
-//     //         "name": "T",
-//     //         "ty_args": [],
-//     //     },
-//     //     "op": {"type": "SetValue", "values": [10]}
-//     // }]);
-//     let effects = compile_and_execute_script_script(
-//         (get_script_path(), script_text.to_string()),
-//         &deps,
-//         "libra",
-//         "0x1111111111111111",
-//         vec![],
-//     )
-//     .unwrap()
-//     .effects;
-//     assert_eq!(effects.resources().len(), 1);
-//     assert_eq!(effects.resources()[0].address, "0x1111111111111111");
-//     assert_eq!(effects.resources()[0].changes[0], "Add");
-// }
-
-// #[test]
-// fn move_resource_from_another_user_to_sender() {
-//     let script_text = r"
-// script {
-//     use 0x2::Record;
-//
-//     fun main(s: &signer) {
-//         let original_record_owner = 0x1;
-//         let record = Record::get_record(original_record_owner);
-//         Record::save(s, record);
-//     }
-// }";
-//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-//
-//     let initial_chain_state = serde_json::json!([{
-//         "account": "0x1",
-//         "ty": {
-//             "address": "0x2",
-//             "module": "Record",
-//             "name": "T",
-//             "ty_args": [],
-//         },
-//         "op": {"type": "SetValue", "values": [10]}
-//     }]);
-//     let state_changes = compile_and_execute_script_script(
-//         (get_script_path(), script_text.to_string()),
-//         &deps,
-//         "libra",
-//         "0x3",
-//         initial_chain_state,
-//         vec![],
-//     )
-//     .unwrap();
-//
-//     assert_eq!(
-//         state_changes["changes"],
-//         serde_json::json!([
-//             {
-//                 "account": "0x1",
-//                 "ty": {
-//                     "address": "0x0000000000000000000000000000000000000002",
-//                     "module": "Record",
-//                     "name": "T",
-//                     "ty_args": [],
-//                 },
-//                 "op": {"type": "Delete"},
-//             },
-//             {
-//                 "account": "0x3",
-//                 "ty": {
-//                     "address": "0x0000000000000000000000000000000000000002",
-//                     "module": "Record",
-//                     "name": "T",
-//                     "ty_args": [],
-//                 },
-//                 "op": {"type": "SetValue", "values": [10]},
-//             }
-//         ])
-//     );
-// }
-
 #[test]
 fn test_bech32_address_and_sender_in_compiler_error() {
+    let _pool = ConstPool::new();
+
     let text = r"
-script {
-    fun main() {
-        let _ = {{sender}}::Unknown::unknown();
+    script {
+        fun main() {
+            let _ = {{sender}}::Unknown::unknown();
+        }
     }
-}
         ";
-    let exec_error = compile_and_run_scripts_in_file(
-        (get_script_path(), text.to_string()),
-        &[],
+    let errors = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
         vec![],
     )
     .unwrap_err()
-    .downcast::<ExecCompilerError>()
-    .unwrap();
+    .downcast::<CompilerError>()
+    .unwrap()
+    .errors;
 
-    let errors = exec_error.transform_with_source_map();
     assert_eq!(errors.len(), 1);
     assert_eq!(
-        errors[0].parts[0].message,
+        errors[0][0].1,
         "Unbound module \'wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8::Unknown\'"
     );
 }
 
-// #[test]
-// fn test_bech32_in_genesis_json() {
-//     let script_text = r"
-// script {
-//     use 0x2::Record;
-//
-//     fun main(s: &signer) {
-//         let record = Record::with_doubled_age(s);
-//         Record::save(s, record);
-//     }
-// }";
-//     let deps = vec![stdlib_mod("signer.move"), modules_mod("record.move")];
-//     let initial_chain_state = serde_json::json!([{
-//         "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
-//         "ty": {
-//             "address": "0x0000000000000000000000000000000000000002",
-//             "module": "Record",
-//             "name": "T",
-//             "ty_args": [],
-//         },
-//         "op": {"type": "SetValue", "values": [10]}
-//     }]);
-//
-//     let state_changes = compile_and_execute_script_script(
-//         (get_script_path(), script_text.to_string()),
-//         &deps,
-//         "dfinance",
-//         "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
-//         initial_chain_state,
-//         vec![],
-//     )
-//     .unwrap();
-//     assert_eq!(
-//         state_changes["changes"],
-//         serde_json::json!([{
-//             "account": "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
-//             "ty": {
-//                 "address": "0x0000000000000000000000000000000000000002",
-//                 "module": "Record",
-//                 "name": "T",
-//                 "ty_args": [],
-//             },
-//             "op": {"type": "SetValue", "values": [20]}
-//         }])
-//     );
-// }
-
 #[test]
 fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
-    let text = r"
-script {
-    use 0x1::Signer;
+    let _pool = ConstPool::new();
 
-    fun main(s: &signer) {
-        let _ = Signer::address_of(s);
-    }
-}";
-    let deps = vec![stdlib_mod("signer.move")];
-    let res = compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
-        &deps,
+    let text = r"
+    script {
+        use 0x1::Signer;
+
+        fun main(s: &signer) {
+            let _ = Signer::address_of(s);
+        }
+    }";
+
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move")],
         "libra",
         "0x1111111111111111",
         vec![],
@@ -522,23 +335,25 @@ script {
 
 #[test]
 fn test_dfinance_executor_allows_0x0() {
+    let _pool = ConstPool::new();
+
     let text = r"
-script {
-    fun main() {}
-}";
-    compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
-        &[],
+    script {
+        fun main() {}
+    }";
+
+    execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "0x0",
-        // serde_json::json!([]),
         vec![],
     )
     .unwrap();
 
-    compile_and_run_scripts_in_file(
-        (existing_module_file_abspath(), text.to_string()),
-        &[],
+    execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "0x1",
         vec![],
@@ -548,20 +363,22 @@ script {
 
 #[test]
 fn test_execute_script_with_custom_signer() {
-    let text = r"
-/// signer: 0x2
-script {
-    use 0x2::Record;
+    let _pool = ConstPool::new();
 
-    fun test_create_record(s1: &signer) {
-        let r1 = Record::create(20);
-        Record::save(s1, r1);
+    let text = r"
+    /// signer: 0x2
+    script {
+        use 0x2::Record;
+
+        fun test_create_record(s1: &signer) {
+            let r1 = Record::create(20);
+            Record::save(s1, r1);
+        }
     }
-}
     ";
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), text.to_string()),
-        &[stdlib_mod("signer.move"), modules_mod("record.move")],
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
         "0x3",
         vec![],
@@ -571,18 +388,17 @@ script {
     .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 1);
-    assert_eq!(
-        effects.resources()[0].address,
-        "0x0000000000000000000000000000000000000002"
-    );
+    assert_eq!(effects.resources()[0].address, "0x2");
     assert_eq!(
         effects.resources()[0].changes[0],
-        "Added type 00000000::Record::T: [U8(20)]"
+        "Added type 00000002::Record::T: [U8(20)]"
     );
 }
 
 #[test]
 fn test_multiple_signers() {
+    let _pool = ConstPool::new();
+
     let text = r"
     /// signer: 0x1
     /// signer: 0x2
@@ -599,9 +415,9 @@ fn test_multiple_signers() {
     }
     ";
 
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), text.to_string()),
-        &[stdlib_mod("signer.move"), modules_mod("record.move")],
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
         "0x3",
         vec![],
@@ -611,28 +427,24 @@ fn test_multiple_signers() {
     .unwrap()
     .effects();
     let account1_change = &effects.resources()[0];
-    assert_eq!(
-        account1_change.address,
-        "0x0000000000000000000000000000000000000001"
-    );
+    assert_eq!(account1_change.address, "0x1");
     assert_eq!(
         account1_change.changes[0],
-        "Added type 00000000::Record::T: [U8(10)]"
+        "Added type 00000002::Record::T: [U8(10)]"
     );
 
     let account2_change = &effects.resources()[1];
-    assert_eq!(
-        account2_change.address,
-        "0x0000000000000000000000000000000000000002"
-    );
+    assert_eq!(account2_change.address, "0x2");
     assert_eq!(
         account2_change.changes[0],
-        "Added type 00000000::Record::T: [U8(20)]"
+        "Added type 00000002::Record::T: [U8(20)]"
     );
 }
 
 #[test]
 fn test_execute_script_with_module_in_the_same_file() {
+    let _pool = ConstPool::new();
+
     let text = r"
 address 0x2 {
     module Record {
@@ -660,9 +472,9 @@ script {
     }
 }
     ";
-    let effects = compile_and_run_scripts_in_file(
-        (get_script_path(), text.to_string()),
-        &[],
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "0x3",
         vec![],
@@ -674,18 +486,17 @@ script {
     assert_eq!(effects.resources().len(), 1);
 
     let account1_change = &effects.resources()[0];
-    assert_eq!(
-        account1_change.address,
-        "0x0000000000000000000000000000000000000002"
-    );
+    assert_eq!(account1_change.address, "0x2");
     assert_eq!(
         account1_change.changes[0],
-        "Added type 00000000::Record::T: [U8(20)]"
+        "Added type 00000002::Record::T: [U8(20)]"
     );
 }
 
 #[test]
 fn test_fail_with_assert() {
+    let _pool = ConstPool::new();
+
     let text = r"
 script {
     fun main() {
@@ -693,9 +504,9 @@ script {
     }
 }
     ";
-    let res = compile_and_run_scripts_in_file(
-        (get_script_path(), text.to_string()),
-        &[],
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "0x3",
         vec![],
@@ -709,34 +520,14 @@ script {
     );
 }
 
-// #[test]
-// fn test_no_oracle_module_available_and_oracle_price_passed() {
-//     let text = r"
-// /// price: usd_btc 100
-// script {
-//     fun main() {}
-// }
-//     ";
-//     let res = compile_and_run_first_script(
-//         anonymous_script_file(text),
-//         &[],
-//         "dfinance",
-//         "0x3",
-//         vec![],
-//     )
-//     .unwrap();
-//     assert_eq!(
-//         res.error(),
-//         "Execution aborted with code 401 in transaction script"
-//     );
-// }
-
 #[test]
 fn test_script_starts_from_line_0() {
+    let _pool = ConstPool::new();
+
     let text = r"script { fun main() { assert(false, 401); } }";
-    let res = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[],
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "0x3",
         vec![],
@@ -752,11 +543,13 @@ fn test_script_starts_from_line_0() {
 
 #[test]
 fn test_doc_comment_starts_at_line_0() {
+    let _pool = ConstPool::new();
+
     let text = r"/// signer: 0x1
 script { fun main(_: &signer) { assert(false, 401); } }";
-    let res = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[],
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "0x3",
         vec![],
@@ -772,15 +565,17 @@ script { fun main(_: &signer) { assert(false, 401); } }";
 
 #[test]
 fn test_coin_price_fails_if_no_coins_module_available() {
+    let _pool = ConstPool::new();
+
     let text = r"
 /// price: btc_usdt 100
 script {
     fun main() {}
 }
     ";
-    let res = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[],
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
         "dfinance",
         "0x3",
         vec![],
@@ -796,6 +591,8 @@ script {
 
 #[test]
 fn test_initialize_coin_price_before_run() {
+    let _pool = ConstPool::new();
+
     let text = r"
 /// price: btc_usdt 100
 script {
@@ -808,9 +605,9 @@ script {
     }
 }
     ";
-    let res = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[stdlib_mod("coins.move")],
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("coins.move")],
         "dfinance",
         "0x3",
         vec![],
@@ -823,6 +620,8 @@ script {
 
 #[test]
 fn test_run_scripts_in_sequential_order() {
+    let _pool = ConstPool::new();
+
     let text = r"
 script {
     use 0x2::Record;
@@ -841,9 +640,9 @@ script {
 }
     ";
 
-    let effects = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[stdlib_mod("signer.move"), record_mod()],
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x3",
         vec![],
@@ -856,14 +655,16 @@ script {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000000000000000000003",
-            vec!["Changed type 00000000::Record::T: [U8(11)]".to_string()]
+            "0x3",
+            vec!["Changed type 00000002::Record::T: [U8(11)]".to_string()],
         )
     );
 }
 
 #[test]
 fn test_failure_in_first_script() {
+    let _pool = ConstPool::new();
+
     let text = r"
 script {
     fun step_1() {
@@ -878,9 +679,9 @@ script {
 }
     ";
 
-    let res = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[stdlib_mod("signer.move"), record_mod()],
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x1",
         vec![],
@@ -896,6 +697,8 @@ script {
 
 #[test]
 fn test_failure_in_second_script() {
+    let _pool = ConstPool::new();
+
     let text = r"
 script {
     fun step_1() {
@@ -910,9 +713,9 @@ script {
 }
     ";
 
-    let res = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[stdlib_mod("signer.move"), record_mod()],
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "libra",
         "0x1",
         vec![],
@@ -928,6 +731,8 @@ script {
 
 #[test]
 fn test_run_scripts_and_set_oracles_before_each_step() {
+    let _pool = ConstPool::new();
+
     let text = r"
 /// price: btc_usdt 100
 script {
@@ -952,9 +757,9 @@ script {
 }
     ";
 
-    let results = compile_and_run_scripts_in_file(
-        anonymous_script_file(text),
-        &[stdlib_mod("coins.move")],
+    let results = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("coins.move")],
         "libra",
         "0x1",
         vec![],

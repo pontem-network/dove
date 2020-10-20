@@ -2,13 +2,13 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use libra_move_core_types::account_address::AccountAddress as LibraAccountAddress;
+use crate::compiler::source_map::FileOffsetMap;
 
-use crate::shared::errors::FileSourceMap;
 lazy_static! {
     static ref LIBRA_16_BYTES_REGEX: Regex = Regex::new(r"(0x[0-9a-f]{1,32})[^0-9a-f]").unwrap();
 }
 
-pub fn replace_16_bytes_libra(source: &str, file_source_map: &mut FileSourceMap) -> String {
+pub fn replace_libra_address(source: &str, file_source_map: &mut FileOffsetMap) -> String {
     let mut transformed_source = source.to_string();
 
     while let Some(mat) = LIBRA_16_BYTES_REGEX.captures(&transformed_source.clone()) {
@@ -35,7 +35,7 @@ mod tests {
     #[test]
     fn replace_libra_16_byte_address() {
         let source = "use 0x00000000000000001111111111111111;";
-        let replaced = replace_16_bytes_libra(source, &mut FileSourceMap::default());
+        let replaced = replace_libra_address(source, &mut FileOffsetMap::default());
         assert_eq!(replaced, "use 0x0000000000000000000000001111111111111111;");
     }
 
@@ -43,14 +43,14 @@ mod tests {
     fn replace_multiple_addresses() {
         let source =
             "use 0x00000000000000001111111111111111; \n use 0x00000000000000001111111111111112;";
-        let replaced = replace_16_bytes_libra(source, &mut FileSourceMap::default());
+        let replaced = replace_libra_address(source, &mut FileOffsetMap::default());
         assert_eq!(replaced, "use 0x0000000000000000000000001111111111111111; \n use 0x0000000000000000000000001111111111111112;");
     }
 
     #[test]
     fn dont_replace_20_bytes_address() {
         let source = "use 0x0000000000000000000000001111111111111111;";
-        let replaced = replace_16_bytes_libra(source, &mut FileSourceMap::default());
+        let replaced = replace_libra_address(source, &mut FileOffsetMap::default());
         assert_eq!(replaced, "use 0x0000000000000000000000001111111111111111;");
     }
 
@@ -63,7 +63,7 @@ mod tests {
         use 0x11111111;
         use 0x1111111111111111;
         use 0x00000000000000001111111111111111;";
-        let replaced = replace_16_bytes_libra(source, &mut FileSourceMap::default());
+        let replaced = replace_libra_address(source, &mut FileOffsetMap::default());
         assert_eq!(
             replaced,
             r"use 0x0000000000000000000000000000000000000000;

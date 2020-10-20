@@ -1,11 +1,6 @@
-use move_core_types::account_address::AccountAddress;
-use move_lang::shared::Address;
 use std::collections::HashMap;
-
-pub mod addresses;
-pub mod bech32;
-pub mod errors;
-pub mod line_endings;
+use move_lang::shared::Address;
+use move_core_types::account_address::AccountAddress;
 
 #[derive(Debug, Clone)]
 pub struct ProvidedAccountAddress {
@@ -34,6 +29,12 @@ impl ProvidedAccountAddress {
 
     pub fn as_account_address(&self) -> AccountAddress {
         AccountAddress::from_hex_literal(&self.lowered).unwrap()
+    }
+}
+
+impl From<Address> for ProvidedAccountAddress {
+    fn from(addr: Address) -> Self {
+        ProvidedAccountAddress::new(addr.to_string(), addr.to_string(), addr.to_string())
     }
 }
 

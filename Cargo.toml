@@ -2,8 +2,8 @@
 members = [
     "language_server",
     "executor",
-    "dialects",
-    "utils",
     "lang",
-    "movec"
+    "movec",
+    "resources",
+    "common/git-hash",
 ]

@@ -1,22 +1,25 @@
 use std::collections::BTreeMap;
 
-use anyhow::Result;
+use anyhow::Error;
 use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
 use move_ir_types::location::Loc;
-use move_lang::{compiled_unit::CompiledUnit, errors::Error, FileCommentMap, to_bytecode};
+use move_lang::{compiled_unit::CompiledUnit, FileCommentMap};
 use move_vm_types::gas_schedule::CostStrategy;
 use move_vm_types::values::Value;
 use vm::CompiledModule;
 use vm::file_format::CompiledScript;
 
-use dialects::lang::{PreBytecodeProgram, ProgramCommentsMap};
-use dialects::shared::ProvidedAccountAddress;
-use utils::location;
-
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
+use lang::compiler::address::ProvidedAccountAddress;
+use lang::compiler::parser::ParsingMeta;
+use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
+use move_lang::errors::Errors;
+use lang::compiler::dialects::Dialect;
+use lang::compiler::file::MoveFile;
+use lang::compiler::error::CompilerError;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
@@ -42,7 +45,7 @@ impl ExecutionSession {
         self,
         script_args: Vec<Value>,
         cost_table: CostTable,
-    ) -> Result<PipelineExecutionResult> {
+    ) -> Result<PipelineExecutionResult, Error> {
         let mut data_store = FakeRemoteCache::new(self.modules())?;
         let mut script_args = script_args;
 
@@ -103,10 +106,7 @@ pub fn extract_script_doc_comments(
     file_comments: &FileCommentMap,
 ) -> Vec<String> {
     let file = location::File::new(file_content);
-    let script_start_line = file
-        .position(script_loc.span().start().to_usize())
-        .unwrap()
-        .line;
+    let script_start_line = file.position(script_loc.span().start()).unwrap().line;
 
     let mut doc_comment_candidate_line = match script_start_line.checked_sub(1) {
         Some(line) => line,
@@ -116,7 +116,7 @@ pub fn extract_script_doc_comments(
     };
     let mut doc_comments = vec![];
     for (span, comment) in file_comments.iter().rev() {
-        let comment_start_line = file.position(span.start().to_usize()).unwrap().line;
+        let comment_start_line = file.position(span.start()).unwrap().line;
         if comment_start_line == doc_comment_candidate_line {
             doc_comments.push(comment.trim().to_string());
             doc_comment_candidate_line = match doc_comment_candidate_line.checked_sub(1) {
@@ -131,50 +131,108 @@ pub fn extract_script_doc_comments(
     doc_comments
 }
 
-pub fn init_execution_session(
-    program: PreBytecodeProgram,
-    program_doc_comments: ProgramCommentsMap,
-    provided_sender: ProvidedAccountAddress,
-) -> Result<ExecutionSession, Vec<Error>> {
-    let script_loc_map: BTreeMap<_, _> = program
-        .scripts
-        .iter()
-        .map(|(key, s)| (key.to_owned(), s.loc.to_owned()))
-        .collect();
-    let units = to_bytecode::translate::program(program)?;
+pub struct SessionBuilder<'a> {
+    dialect: &'a dyn Dialect,
+    sender: &'a ProvidedAccountAddress,
+    loc_map: Option<BTreeMap<String, Loc>>,
+}
 
-    let mut execution_units = vec![];
-    for unit in units {
-        let (loc, execution_unit) = match unit {
-            CompiledUnit::Module { module, .. } => (None, ExecutionUnit::Module(module)),
+impl<'a> SessionBuilder<'a> {
+    pub fn new(
+        dialect: &'a dyn Dialect,
+        sender: &'a ProvidedAccountAddress,
+    ) -> SessionBuilder<'a> {
+        SessionBuilder {
+            dialect,
+            sender,
+            loc_map: None,
+        }
+    }
 
-            CompiledUnit::Script {
-                loc, script, key, ..
-            } => {
-                let script_loc = script_loc_map.get(&key).unwrap().to_owned();
+    pub fn build(
+        self,
+        sources: &[MoveFile],
+        deps: &[MoveFile],
+    ) -> Result<ExecutionSession, CompilerError> {
+        compile(self.dialect, sources, deps, Some(&self.sender), self)
+    }
+}
 
-                let mut meta = ExecutionMeta::default();
-                if let Some((file_content, comments)) = program_doc_comments.get(loc.file()) {
-                    let doc_comments =
-                        extract_script_doc_comments(script_loc, file_content, comments);
-                    for doc_comment in doc_comments {
-                        meta.apply_meta_comment(doc_comment)
-                    }
-                }
-                // first signer is "sender" if no explicit "signer:" clauses passed
-                if meta.signers.is_empty() {
-                    meta.signers.push(provided_sender.as_account_address());
-                }
-                (Some(script_loc), ExecutionUnit::Script((key, script, meta)))
+impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder<'a> {
+    fn after_check(
+        &mut self,
+        meta: ParsingMeta,
+        check_result: CheckerResult,
+    ) -> Step<Result<ExecutionSession, CompilerError>, (ParsingMeta, CheckerResult)> {
+        if check_result.is_ok() {
+            let prog = check_result.as_ref().unwrap();
+            let script_loc_map = prog
+                .scripts
+                .iter()
+                .map(|(key, s)| (key.to_owned(), s.loc.to_owned()))
+                .collect::<BTreeMap<_, _>>();
+            self.loc_map = Some(script_loc_map);
+        }
+        Step::Next((meta, check_result))
+    }
+
+    fn after_translate(
+        &mut self,
+        meta: ParsingMeta,
+        translation_result: Result<Vec<CompiledUnit>, Errors>,
+    ) -> Result<ExecutionSession, CompilerError> {
+        let mut execution_units = vec![];
+
+        let ParsingMeta {
+            source_map,
+            offsets_map,
+            comments,
+        } = meta;
+        let loc_map = self.loc_map.take().unwrap_or_default();
+
+        let units = match translation_result {
+            Ok(units) => units,
+            Err(errors) => {
+                return Err(CompilerError {
+                    source_map,
+                    errors: offsets_map.transform(errors),
+                })
             }
         };
-        execution_units.push((loc, execution_unit));
+
+        for unit in units {
+            let (loc, execution_unit) = match unit {
+                CompiledUnit::Module { module, .. } => (None, ExecutionUnit::Module(module)),
+
+                CompiledUnit::Script {
+                    loc, script, key, ..
+                } => {
+                    let script_loc = loc_map.get(&key).unwrap().to_owned();
+                    let mut meta = ExecutionMeta::default();
+                    if let Some(comments) = comments.get(loc.file()) {
+                        let source = source_map.get(loc.file()).map(|s| s.as_str()).unwrap_or("");
+                        let doc_comments =
+                            extract_script_doc_comments(script_loc, source, comments);
+                        for doc_comment in doc_comments {
+                            meta.apply_meta_comment(doc_comment)
+                        }
+                    }
+                    // first signer is "sender" if no explicit "signer:" clauses passed
+                    if meta.signers.is_empty() {
+                        meta.signers.push(self.sender.as_account_address());
+                    }
+                    (Some(script_loc), ExecutionUnit::Script((key, script, meta)))
+                }
+            };
+            execution_units.push((loc, execution_unit));
+        }
+
+        execution_units.sort_by_key(|(loc, _)| match loc {
+            Some(loc) => loc.span().end().to_usize(),
+            None => 0,
+        });
+        Ok(ExecutionSession {
+            units: execution_units.into_iter().map(|(_, unit)| unit).collect(),
+        })
     }
-    execution_units.sort_by_key(|(loc, _)| match loc {
-        Some(loc) => loc.span().end().to_usize(),
-        None => 0,
-    });
-    Ok(ExecutionSession {
-        units: execution_units.into_iter().map(|(_, unit)| unit).collect(),
-    })
 }

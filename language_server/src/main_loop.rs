@@ -23,10 +23,11 @@ use crate::global_state::{initialize_new_global_state, GlobalState};
 
 use crate::subscriptions::OpenedFiles;
 use std::collections::HashSet;
-use utils::{leaked_fpath, MoveFile, MoveFilePath};
 use crate::inner::db::FileDiagnostic;
 use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
+use lang::compiler::file::MoveFile;
+use std::fmt::Debug;
 
 #[derive(Debug)]
 pub struct LspError {
@@ -62,9 +63,9 @@ pub enum ResponseEvent {
 
 #[derive(Debug)]
 pub enum FileSystemEvent {
-    AddFile(MoveFile),
-    RemoveFile(MoveFilePath),
-    ChangeFile(MoveFile),
+    AddFile(MoveFile<'static, 'static>),
+    RemoveFile(String),
+    ChangeFile(MoveFile<'static, 'static>),
 }
 
 pub enum Event {
@@ -219,16 +220,13 @@ pub fn loop_turn(
         log::info!("fs_state_changed = true, recompute diagnostics");
         let analysis = global_state.analysis();
 
-        let mut files = vec![];
-        files.extend(loop_state.opened_files.files());
-        files.extend(analysis.db().module_files().keys());
-
-        // filter duplicates
-        let files = files
-            .into_iter()
-            .collect::<HashSet<_>>()
-            .into_iter()
-            .collect::<Vec<_>>();
+        let files = loop_state
+            .opened_files
+            .files()
+            .iter()
+            .chain(analysis.db().module_files().keys())
+            .map(|f| f.to_string())
+            .collect::<HashSet<_>>();
 
         let cloned_task_sender = resp_events_sender.clone();
         pool.execute(move || compute_file_diagnostics(analysis, cloned_task_sender, files));
@@ -270,7 +268,7 @@ pub fn on_task(task: ResponseEvent, msg_sender: &Sender<Message>) {
         }
         ResponseEvent::Diagnostic(file_diags) => {
             for file_diag in file_diags {
-                let uri = Url::from_file_path(file_diag.fpath).unwrap();
+                let uri = Url::from_file_path(&file_diag.fpath).unwrap();
 
                 let mut diagnostics = vec![];
                 if file_diag.diagnostic.is_some() {
@@ -301,46 +299,42 @@ fn on_notification(
 ) -> Result<()> {
     let not = match notification_cast::<DidOpenTextDocument>(not) {
         Ok(params) => {
-            let uri = params.text_document.uri;
-            let fpath = uri
-                .to_file_path()
-                .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
-            let file = (leaked_fpath(&fpath), params.text_document.text);
+            let fpath = uri_to_str(params.text_document.uri)?;
+
+            let file = MoveFile::with_content(fpath.clone(), params.text_document.text);
             fs_events_sender
                 .send(FileSystemEvent::AddFile(file))
                 .unwrap();
-            loop_state.opened_files.add(leaked_fpath(fpath));
+
+            loop_state.opened_files.add(fpath);
             return Ok(());
         }
         Err(not) => not,
     };
     let not = match notification_cast::<DidChangeTextDocument>(not) {
         Ok(mut params) => {
-            let uri = params.text_document.uri;
-            let fpath = uri
-                .to_file_path()
-                .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
+            let fpath = uri_to_str(params.text_document.uri)?;
+
             let new_text = params
                 .content_changes
                 .pop()
                 .ok_or_else(|| anyhow::anyhow!("empty changes".to_string()))?
                 .text;
-            let changed_file = (leaked_fpath(&fpath), new_text);
+
+            let changed_file = MoveFile::with_content(fpath.clone(), new_text);
             fs_events_sender
                 .send(FileSystemEvent::ChangeFile(changed_file))
                 .unwrap();
-            loop_state.opened_files.add(leaked_fpath(fpath));
+            loop_state.opened_files.add(fpath);
             return Ok(());
         }
         Err(not) => not,
     };
     let not = match notification_cast::<DidCloseTextDocument>(not) {
         Ok(params) => {
-            let uri = params.text_document.uri;
-            let fpath = uri
-                .to_file_path()
-                .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
-            loop_state.opened_files.remove(leaked_fpath(fpath));
+            loop_state
+                .opened_files
+                .remove(uri_to_str(params.text_document.uri)?);
             return Ok(());
         }
         Err(not) => not,
@@ -371,12 +365,8 @@ fn on_notification(
     let not = match notification_cast::<DidChangeWatchedFiles>(not) {
         Ok(params) => {
             for file_event in params.changes {
-                let uri = file_event.uri;
-                let fpath = uri
-                    .to_file_path()
-                    .map_err(|_| anyhow::anyhow!("invalid uri: {}", uri))?;
-                let fpath = leaked_fpath(fpath);
-                loop_state.opened_files.remove(fpath);
+                let fpath = uri_to_str(file_event.uri)?;
+                loop_state.opened_files.remove(fpath.clone());
                 fs_events_sender
                     .send(FileSystemEvent::RemoveFile(fpath))
                     .unwrap();
@@ -391,25 +381,27 @@ fn on_notification(
     Ok(())
 }
 
-pub fn compute_file_diagnostics(
+pub fn compute_file_diagnostics<I>(
     analysis: Analysis,
     task_sender: Sender<ResponseEvent>,
-    files: Vec<MoveFilePath>,
-) {
+    files: I,
+) where
+    I: IntoIterator<Item = String> + Debug,
+{
     log::info!("Computing diagnostics for files: {:#?}", files);
     let mut diagnostics = vec![];
     for fpath in files {
         // clear previous diagnostics for file
-        diagnostics.push(FileDiagnostic::new_empty(fpath));
+        diagnostics.push(FileDiagnostic::new_empty(&fpath));
 
-        let text = match analysis.db().available_files.get(fpath) {
+        let text = match analysis.db().available_files.get(&fpath) {
             Some(text) => text,
             None => {
                 log::warn!("Trying to check untracked file: {:?}", fpath);
                 continue;
             }
         };
-        if let Some(d) = analysis.check_file_with_compiler(fpath, text) {
+        if let Some(d) = analysis.check_file(MoveFile::with_content(fpath, text)) {
             diagnostics.push(d);
         }
     }
@@ -453,4 +445,14 @@ pub fn show_message(typ: MessageType, message: impl Into<String>, sender: &Sende
     let params = ShowMessageParams { typ, message };
     let not = notification_new::<ShowMessage>(params);
     sender.send(not.into()).unwrap();
+}
+
+fn uri_to_str(url: Url) -> Result<String> {
+    url.to_file_path()
+        .map_err(|_| anyhow::anyhow!("invalid uri: {}", url))
+        .and_then(|path| {
+            path.to_str()
+                .map(|s| s.to_owned())
+                .ok_or_else(|| anyhow::anyhow!("Failed to convert path: {:?}", path))
+        })
 }

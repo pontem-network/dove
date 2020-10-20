@@ -3,21 +3,24 @@ on:
   pull_request:
   push:
     branches:
-    - master
+      - master
 
 jobs:
   rust:
     name: Rust
     runs-on: ${{ matrix.os }}
 
+    defaults:
+      run:
+        shell: bash
+
     strategy:
       fail-fast: false
       matrix:
-        os: [
-          ubuntu-latest,
-          windows-latest,
-          macos-latest
-        ]
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -26,61 +29,55 @@ jobs:
       CARGO_NET_RETRY: 10
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    # We need to disable the existing toolchain to avoid updating rust-docs
-    # which takes a long time. The fastest way to do this is to rename the
-    # existing folder, as deleting it takes about as much time as not doing
-    # anything and just updating rust-docs.
-    - name: Rename existing rust toolchain (Windows)
-      if: matrix.os == 'windows-latest'
-      run: Rename-Item C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc.old
+      # We need to disable the existing toolchain to avoid updating rust-docs
+      # which takes a long time. The fastest way to do this is to rename the
+      # existing folder, as deleting it takes about as much time as not doing
+      # anything and just updating rust-docs.
+      - name: Rename existing rust toolchain (Windows)
+        if: matrix.os == 'windows-latest'
+        run: mv -f /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc.old
 
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        override: true
-        components: rustfmt, clippy
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: rustfmt, clippy
 
-    - if: matrix.os == 'ubuntu-latest'
-      run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+      - if: matrix.os == 'ubuntu-latest'
+        run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    - id: cargo-deps
-      name: (load cache) Download dependencies
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry/cache
-          ~/.cargo/git
-        key: cargo-deps-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+      - id: cargo-deps
+        name: (load cache) Download dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/git
+          key: cargo-deps-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
 
-    - if: ${{ steps.cargo-deps.outputs.cache-hit != 'true' }}
-      name: Download dependencies
-      run: cargo fetch --locked
+      - if: ${{ steps.cargo-deps.outputs.cache-hit != 'true' }}
+        name: Download dependencies
+        run: cargo fetch --locked
 
-#    - id: cargo-build
-#      name: (load cache) Build with --lib
-#      uses: actions/cache@v2
-#      with:
-#        path: ./target
-#        key: cargo-build-lib-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+      #    - id: cargo-build
+      #      name: (load cache) Build with --lib
+      #      uses: actions/cache@v2
+      #      with:
+      #        path: ./target
+      #        key: cargo-build-lib-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
 
-#    - if: ${{ steps.cargo-build.outputs.cache-hit != 'true' }}
-    - name: Build with --lib
-      run: cargo build --lib
+      #    - if: ${{ steps.cargo-build.outputs.cache-hit != 'true' }}
 
-    - name: Build
-      run: cargo build
+      - name: Check formatting
+        run: cargo fmt -- --check
 
-    - name: Check formatting
-      run: cargo fmt -- --check
+      - name: Test
+        run: cargo test --all --no-fail-fast
 
-    - name: Run clippy
-      run: cargo clippy --tests --examples -- -Dwarnings
-
-    - name: Test
-      run: cargo test --tests
-
+      - name: Run clippy
+        run: cargo clippy --tests --examples -- -Dwarnings

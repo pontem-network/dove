@@ -119,162 +119,171 @@ pub fn write_array<E: Encode, W: Write>(
     Ok(())
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use ds::MockDataSource;
-//     use libra::prelude::*;
-//     use libra::file_format::*;
-//     use crate::disassembler::{disasm_str, Config};
-//
-//     pub fn perform_test(source: &str) {
-//         let ds = MockDataSource::new();
-//         let compiler = Compiler::new(ds.clone());
-//         ds.publish_module(
-//             compiler
-//                 .compile(include_str!("assets/base.move"), Some(CORE_CODE_ADDRESS))
-//                 .unwrap(),
-//         )
-//         .unwrap();
-//
-//         ds.publish_module(
-//             compiler
-//                 .compile(include_str!("assets/tx.move"), Some(CORE_CODE_ADDRESS))
-//                 .unwrap(),
-//         )
-//         .unwrap();
-//
-//         let original_bytecode = compiler.compile(source, Some(CORE_CODE_ADDRESS)).unwrap();
-//
-//         let config = Config {
-//             light_version: false,
-//         };
-//         let restored_source = disasm_str(&original_bytecode, config).unwrap();
-//         println!("{}", restored_source);
-//
-//         let original_bytecode = CompiledModule::deserialize(&original_bytecode).unwrap();
-//         let restored_bytecode = compiler
-//             .compile(&restored_source, Some(CORE_CODE_ADDRESS))
-//             .unwrap();
-//
-//         compare_bytecode(
-//             original_bytecode,
-//             CompiledModule::deserialize(&restored_bytecode).unwrap(),
-//         );
-//     }
-//
-//     fn compare_bytecode(expected: CompiledModule, actual: CompiledModule) {
-//         let mut expected = expected.into_inner();
-//         let mut actual = actual.into_inner();
-//
-//         fn normalize_bytecode(bytecode: &mut CodeUnit) {
-//             bytecode.code = bytecode
-//                 .code
-//                 .iter()
-//                 .cloned()
-//                 .map(|mut bc| {
-//                     if let Bytecode::MoveLoc(i) = &bc {
-//                         bc = Bytecode::CopyLoc(*i);
-//                     }
-//
-//                     bc
-//                 })
-//                 .collect();
-//         }
-//
-//         fn normalize_f_def(func_def: &mut [FunctionDefinition]) {
-//             for def in func_def {
-//                 if let Some(code) = &mut def.code {
-//                     normalize_bytecode(code);
-//                 }
-//             }
-//         }
-//
-//         normalize_f_def(&mut expected.function_defs);
-//         normalize_f_def(&mut actual.function_defs);
-//
-//         assert_eq!(expected, actual);
-//     }
-//
-//     #[test]
-//     pub fn test_script() {
-//         perform_test(include_str!("assets/script.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_empty_module() {
-//         perform_test(include_str!("assets/empty.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_simple_struct() {
-//         perform_test(include_str!("assets/struct.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_function_signature() {
-//         perform_test(include_str!("assets/function_sign.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_abort() {
-//         perform_test(include_str!("assets/code/abort.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_call() {
-//         perform_test(include_str!("assets/code/call.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_arithmetic() {
-//         perform_test(include_str!("assets/code/arithmetic.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_values() {
-//         perform_test(include_str!("assets/code/values.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_fake_native() {
-//         perform_test(include_str!("assets/code/fake_native.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_let() {
-//         perform_test(include_str!("assets/code/let.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_pack() {
-//         perform_test(include_str!("assets/code/pack.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_unpack() {
-//         perform_test(include_str!("assets/code/unpack.move"));
-//     }
-//
-//     #[test]
-//     pub fn test_loc() {
-//         perform_test(include_str!("assets/code/loc.move"));
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     pub fn test_loop() {
-//         perform_test(include_str!("assets/code/loop.move"));
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     pub fn test_while() {
-//         perform_test(include_str!("assets/code/while.move"));
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     pub fn test_if() {
-//         perform_test(include_str!("assets/code/if.move"));
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use libra::prelude::*;
+    use libra::file_format::*;
+    use crate::disassembler::{disasm_str, Config};
+    use crate::builder::{MoveBuilder, Artifacts};
+    use crate::compiler::dialects::DialectName;
+    use crate::compiler::file::MoveFile;
+    use crate::compiler::ConstPool;
+    use move_lang::errors::report_errors_to_buffer;
+
+    fn compile(source: &str) -> Vec<u8> {
+        let _pool = ConstPool::new();
+        let dialect = DialectName::DFinance.get_dialect();
+
+        let sender = dialect.normalize_account_address("0x1").unwrap();
+        let deps = &[
+            MoveFile::with_content("assets/base.move", include_str!("assets/base.move")),
+            MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
+        ];
+        let target = &[MoveFile::with_content("target.move", source)];
+        let builder = MoveBuilder::new(dialect.as_ref(), Some(&sender));
+        let Artifacts { files, prog } = builder.build(target, deps);
+
+        match prog {
+            Ok(mut prog) => prog.remove(0).serialize(),
+            Err(errors) => {
+                panic!(
+                    "Failed to compile restored bytecode.{}",
+                    String::from_utf8(report_errors_to_buffer(files, errors)).unwrap()
+                );
+            }
+        }
+    }
+
+    pub fn perform_test(source: &str) {
+        let original_bytecode = compile(source);
+        let config = Config {
+            light_version: false,
+        };
+        let restored_source = disasm_str(&original_bytecode, config).unwrap();
+        println!("{}", restored_source);
+
+        let original_bytecode = CompiledModule::deserialize(&original_bytecode).unwrap();
+
+        let restored_bytecode = compile(&restored_source);
+        compare_bytecode(
+            original_bytecode,
+            CompiledModule::deserialize(&restored_bytecode).unwrap(),
+        );
+    }
+
+    fn compare_bytecode(expected: CompiledModule, actual: CompiledModule) {
+        let mut expected = expected.into_inner();
+        let mut actual = actual.into_inner();
+
+        fn normalize_bytecode(bytecode: &mut CodeUnit) {
+            bytecode.code = bytecode
+                .code
+                .iter()
+                .cloned()
+                .map(|mut bc| {
+                    if let Bytecode::MoveLoc(i) = &bc {
+                        bc = Bytecode::CopyLoc(*i);
+                    }
+
+                    bc
+                })
+                .collect();
+        }
+
+        fn normalize_f_def(func_def: &mut [FunctionDefinition]) {
+            for def in func_def {
+                if let Some(code) = &mut def.code {
+                    normalize_bytecode(code);
+                }
+            }
+        }
+
+        normalize_f_def(&mut expected.function_defs);
+        normalize_f_def(&mut actual.function_defs);
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    pub fn test_script() {
+        perform_test(include_str!("assets/script.move"));
+    }
+
+    #[test]
+    pub fn test_empty_module() {
+        perform_test(include_str!("assets/empty.move"));
+    }
+
+    #[test]
+    pub fn test_simple_struct() {
+        perform_test(include_str!("assets/struct.move"));
+    }
+
+    #[test]
+    pub fn test_function_signature() {
+        perform_test(include_str!("assets/function_sign.move"));
+    }
+
+    #[test]
+    pub fn test_abort() {
+        perform_test(include_str!("assets/code/abort.move"));
+    }
+
+    #[test]
+    pub fn test_call() {
+        perform_test(include_str!("assets/code/call.move"));
+    }
+
+    #[test]
+    pub fn test_arithmetic() {
+        perform_test(include_str!("assets/code/arithmetic.move"));
+    }
+
+    #[test]
+    pub fn test_values() {
+        perform_test(include_str!("assets/code/values.move"));
+    }
+
+    #[test]
+    pub fn test_fake_native() {
+        perform_test(include_str!("assets/code/fake_native.move"));
+    }
+
+    #[test]
+    pub fn test_let() {
+        perform_test(include_str!("assets/code/let.move"));
+    }
+
+    #[test]
+    pub fn test_pack() {
+        perform_test(include_str!("assets/code/pack.move"));
+    }
+
+    #[test]
+    pub fn test_unpack() {
+        perform_test(include_str!("assets/code/unpack.move"));
+    }
+
+    #[test]
+    pub fn test_loc() {
+        perform_test(include_str!("assets/code/loc.move"));
+    }
+
+    #[ignore]
+    #[test]
+    pub fn test_loop() {
+        perform_test(include_str!("assets/code/loop.move"));
+    }
+
+    #[ignore]
+    #[test]
+    pub fn test_while() {
+        perform_test(include_str!("assets/code/while.move"));
+    }
+
+    #[ignore]
+    #[test]
+    pub fn test_if() {
+        perform_test(include_str!("assets/code/if.move"));
+    }
+}
