@@ -18,6 +18,14 @@ fn module_path(name: &str) -> String {
     assets_dir().join(name).to_str().unwrap().to_owned()
 }
 
+pub fn stdlib_mod(name: &str) -> MoveFile {
+    MoveFile::load(assets_dir().join("stdlib").join(name)).unwrap()
+}
+
+pub fn modules_mod(name: &str) -> MoveFile {
+    MoveFile::load(assets_dir().join("modules").join(name)).unwrap()
+}
+
 #[test]
 fn test_show_compilation_errors() {
     let _pool = ConstPool::new();
@@ -94,8 +102,8 @@ script {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000001111111111111111",
-            vec!["Added type 00000000::Record::T: [U8(10)]".to_string()],
+            "0x1111111111111111",
+            vec!["Added type 00000002::Record::T: [U8(10)]".to_string()],
         )
     );
 }
@@ -139,8 +147,8 @@ fn missing_write_set_for_move_to_sender() {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000000000000000000001",
-            vec!["Added type 00000000::M::T: [U8(10)]".to_string()],
+            "0x1",
+            vec!["Added type 00000001::M::T: [U8(10)]".to_string()],
         )
     );
 }
@@ -228,8 +236,8 @@ fn test_pass_arguments_to_script() {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000000000000000000001",
-            vec!["Added type 00000000::Module::T: [true]".to_string()],
+            "0x1",
+            vec!["Added type 00000001::Module::T: [true]".to_string()],
         )
     );
 }
@@ -380,13 +388,10 @@ fn test_execute_script_with_custom_signer() {
     .unwrap()
     .effects();
     assert_eq!(effects.resources().len(), 1);
-    assert_eq!(
-        effects.resources()[0].address,
-        "0x0000000000000000000000000000000000000002"
-    );
+    assert_eq!(effects.resources()[0].address, "0x2");
     assert_eq!(
         effects.resources()[0].changes[0],
-        "Added type 00000000::Record::T: [U8(20)]"
+        "Added type 00000002::Record::T: [U8(20)]"
     );
 }
 
@@ -422,23 +427,17 @@ fn test_multiple_signers() {
     .unwrap()
     .effects();
     let account1_change = &effects.resources()[0];
-    assert_eq!(
-        account1_change.address,
-        "0x0000000000000000000000000000000000000001"
-    );
+    assert_eq!(account1_change.address, "0x1");
     assert_eq!(
         account1_change.changes[0],
-        "Added type 00000000::Record::T: [U8(10)]"
+        "Added type 00000002::Record::T: [U8(10)]"
     );
 
     let account2_change = &effects.resources()[1];
-    assert_eq!(
-        account2_change.address,
-        "0x0000000000000000000000000000000000000002"
-    );
+    assert_eq!(account2_change.address, "0x2");
     assert_eq!(
         account2_change.changes[0],
-        "Added type 00000000::Record::T: [U8(20)]"
+        "Added type 00000002::Record::T: [U8(20)]"
     );
 }
 
@@ -487,13 +486,10 @@ script {
     assert_eq!(effects.resources().len(), 1);
 
     let account1_change = &effects.resources()[0];
-    assert_eq!(
-        account1_change.address,
-        "0x0000000000000000000000000000000000000002"
-    );
+    assert_eq!(account1_change.address, "0x2");
     assert_eq!(
         account1_change.changes[0],
-        "Added type 00000000::Record::T: [U8(20)]"
+        "Added type 00000002::Record::T: [U8(20)]"
     );
 }
 
@@ -659,8 +655,8 @@ script {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0x0000000000000000000000000000000000000003",
-            vec!["Changed type 00000000::Record::T: [U8(11)]".to_string()],
+            "0x3",
+            vec!["Changed type 00000002::Record::T: [U8(11)]".to_string()],
         )
     );
 }
@@ -770,12 +766,4 @@ script {
     )
     .unwrap();
     assert_eq!(results.gas_spent, 10);
-}
-
-pub fn stdlib_mod(name: &str) -> MoveFile {
-    MoveFile::load(assets_dir().join("stdlib").join(name)).unwrap()
-}
-
-pub fn modules_mod(name: &str) -> MoveFile {
-    MoveFile::load(assets_dir().join("modules").join(name)).unwrap()
 }
