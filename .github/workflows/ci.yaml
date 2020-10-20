@@ -10,9 +10,9 @@ jobs:
     name: Rust
     runs-on: ${{ matrix.os }}
 
-    defaults:
-      run:
-        shell: bash
+    # defaults:
+    #   run:
+    #     shell: bash
 
     strategy:
       fail-fast: false
