@@ -85,6 +85,7 @@ fn main() -> Result<()> {
             println!("Gas used: {}", gas_spent);
 
             for (name, step_result) in step_results {
+                println!();
                 println!("{}: ", name);
                 match step_result {
                     StepExecutionResult::Error(error) => {
@@ -96,7 +97,7 @@ fn main() -> Result<()> {
                         }
                         if show_events {
                             for event in effects.events() {
-                                print!("{}", textwrap::indent(event, "    "));
+                                print!("{}", textwrap::indent(event, "        "));
                             }
                         }
                     }
