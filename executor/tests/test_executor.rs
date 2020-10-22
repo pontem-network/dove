@@ -1,6 +1,6 @@
 use move_executor::execute_script;
 
-use move_executor::explain::AddressResourceChanges;
+use move_executor::explain::{AddressResourceChanges, ResourceChange};
 use lang::compiler::ConstPool;
 use lang::compiler::file::MoveFile;
 use resources::assets_dir;
@@ -103,7 +103,10 @@ script {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x1111111111111111",
-            vec!["Added type 00000002::Record::T: [U8(10)]".to_string()],
+            vec![(
+                "Added".to_string(),
+                ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
+            )]
         )
     );
 }
@@ -148,7 +151,10 @@ fn missing_write_set_for_move_to_sender() {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x1",
-            vec!["Added type 00000001::M::T: [U8(10)]".to_string()],
+            vec![(
+                "Added".to_string(),
+                ResourceChange("0x1::M::T".to_string(), Some("[U8(10)]".to_string()))
+            )]
         )
     );
 }
@@ -191,7 +197,10 @@ fn test_run_with_non_default_dfinance_dialect() {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0xde5f86ce8ad7944f272d693cb4625a955b610150",
-            vec!["Added type de5f86ce::M::T: [U8(10)]".to_string()],
+            vec![(
+                "Added".to_string(),
+                ResourceChange("0xde5f86ce::M::T".to_string(), Some("[U8(10)]".to_string()))
+            )]
         )
     );
 }
@@ -237,7 +246,10 @@ fn test_pass_arguments_to_script() {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x1",
-            vec!["Added type 00000001::Module::T: [true]".to_string()],
+            vec![(
+                "Added".to_string(),
+                ResourceChange("0x1::Module::T".to_string(), Some("[true]".to_string()))
+            )]
         )
     );
 }
@@ -330,7 +342,7 @@ fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
         vec![],
     )
     .unwrap();
-    assert_eq!(res.gas_spent, 7);
+    assert_eq!(res.overall_gas_spent(), 7);
 }
 
 #[test]
@@ -390,8 +402,11 @@ fn test_execute_script_with_custom_signer() {
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(effects.resources()[0].address, "0x2");
     assert_eq!(
-        effects.resources()[0].changes[0],
-        "Added type 00000002::Record::T: [U8(20)]"
+        effects.resources()[0].changes,
+        vec![(
+            "Added".to_string(),
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
+        )]
     );
 }
 
@@ -429,15 +444,21 @@ fn test_multiple_signers() {
     let account1_change = &effects.resources()[0];
     assert_eq!(account1_change.address, "0x1");
     assert_eq!(
-        account1_change.changes[0],
-        "Added type 00000002::Record::T: [U8(10)]"
+        account1_change.changes,
+        vec![(
+            "Added".to_string(),
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
+        )]
     );
 
     let account2_change = &effects.resources()[1];
     assert_eq!(account2_change.address, "0x2");
     assert_eq!(
-        account2_change.changes[0],
-        "Added type 00000002::Record::T: [U8(20)]"
+        account2_change.changes,
+        vec![(
+            "Added".to_string(),
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
+        )]
     );
 }
 
@@ -488,8 +509,11 @@ script {
     let account1_change = &effects.resources()[0];
     assert_eq!(account1_change.address, "0x2");
     assert_eq!(
-        account1_change.changes[0],
-        "Added type 00000002::Record::T: [U8(20)]"
+        account1_change.changes,
+        vec![(
+            "Added".to_string(),
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
+        )]
     );
 }
 
@@ -656,7 +680,10 @@ script {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x3",
-            vec!["Changed type 00000002::Record::T: [U8(11)]".to_string()],
+            vec![(
+                "Changed".to_string(),
+                ResourceChange("0x2::Record::T".to_string(), Some("[U8(11)]".to_string()))
+            )]
         )
     );
 }
@@ -765,5 +792,5 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(results.gas_spent, 10);
+    assert_eq!(results.overall_gas_spent(), 10);
 }
