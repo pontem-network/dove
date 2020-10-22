@@ -14,20 +14,20 @@ use move_core_types::language_storage::{StructTag, TypeTag};
 
 #[derive(Debug)]
 pub struct PipelineExecutionResult {
-    pub step_results: Vec<(String, StepExecutionResult)>,
-    pub gas_spent: u64,
+    pub step_results: Vec<(String, u64, StepExecutionResult)>,
 }
 
 impl PipelineExecutionResult {
-    pub fn new(step_results: Vec<(String, StepExecutionResult)>, gas_spent: u64) -> Self {
-        PipelineExecutionResult {
-            step_results,
-            gas_spent,
-        }
+    pub fn new(step_results: Vec<(String, u64, StepExecutionResult)>) -> Self {
+        PipelineExecutionResult { step_results }
     }
 
     pub fn last(&self) -> Option<StepExecutionResult> {
-        self.step_results.last().map(|(_, r)| r.to_owned())
+        self.step_results.last().map(|(_, _, r)| r.to_owned())
+    }
+
+    pub fn overall_gas_spent(&self) -> u64 {
+        self.step_results.iter().map(|(_, gas, _)| gas).sum()
     }
 }
 

@@ -342,7 +342,7 @@ fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
         vec![],
     )
     .unwrap();
-    assert_eq!(res.gas_spent, 7);
+    assert_eq!(res.overall_gas_spent(), 7);
 }
 
 #[test]
@@ -792,5 +792,5 @@ script {
         vec![],
     )
     .unwrap();
-    assert_eq!(results.gas_spent, 10);
+    assert_eq!(results.overall_gas_spent(), 10);
 }

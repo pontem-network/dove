@@ -49,7 +49,6 @@ impl ExecutionSession {
         let mut data_store = FakeRemoteCache::new(self.modules())?;
         let mut script_args = script_args;
 
-        let mut overall_gas_spent = 0;
         let mut step_results = vec![];
         for (name, script, meta) in self.scripts() {
             let total_gas = 1_000_000;
@@ -65,18 +64,14 @@ impl ExecutionSession {
             script_args = vec![];
 
             let gas_spent = total_gas - cost_strategy.remaining_gas().get();
-            overall_gas_spent += gas_spent;
 
             let is_error = matches!(step_result, StepExecutionResult::Error(_));
-            step_results.push((name, step_result));
+            step_results.push((name, gas_spent, step_result));
             if is_error {
                 break;
             }
         }
-        Ok(PipelineExecutionResult::new(
-            step_results,
-            overall_gas_spent,
-        ))
+        Ok(PipelineExecutionResult::new(step_results))
     }
 
     fn modules(&self) -> Vec<CompiledModule> {

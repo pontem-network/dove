@@ -85,15 +85,12 @@ fn main() -> Result<()> {
     let res = execute_script(script, deps, dialect, sender, args);
     match res {
         Ok(exec_result) => {
-            let PipelineExecutionResult {
-                gas_spent,
-                step_results,
-            } = exec_result;
-            println!("Gas used: {}", gas_spent);
-
-            for (name, step_result) in step_results {
-                println!();
-                println!("{}: ", name);
+            let PipelineExecutionResult { step_results } = exec_result;
+            for (i, (name, gas, step_result)) in step_results.into_iter().enumerate() {
+                if i > 0 {
+                    println!();
+                }
+                println!("{}(gas: {}): ", name, gas);
                 let step_indent = "    ";
                 let content_indent = "        ";
                 match step_result {
