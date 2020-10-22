@@ -109,7 +109,7 @@ fn format_struct_tag(s: &StructTag) -> Result<String> {
     write!(f, "{}::{}::{}", short_address(&s.address), s.module, s.name)?;
     if let Some(first_ty) = s.type_params.first() {
         write!(f, "<")?;
-        write!(f, "{}", first_ty)?;
+        write!(f, "{}", format_type_tag(first_ty)?)?;
         for ty in s.type_params.iter().skip(1) {
             write!(f, ", {}", format_type_tag(ty)?)?;
         }
@@ -142,11 +142,10 @@ pub fn explain_effects(
 
     let mut explained_effects = ExplainedTransactionEffects::default();
     if !effects.events.is_empty() {
-        for (event_handle, event_sequence_number, _, _, event_data, _) in &effects.events {
-            explained_effects.events.push(format!(
-                "Emitted {:?} as the {}th event to stream {:?}",
-                event_data, event_sequence_number, event_handle
-            ));
+        for (_, _event_sequence_number, _, _, event_data, _) in &effects.events {
+            explained_effects
+                .events
+                .push(format!("Added event: {}", event_data));
         }
     }
     for (addr, writes) in &effects.resources {
