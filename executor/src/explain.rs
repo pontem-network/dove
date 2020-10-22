@@ -10,7 +10,6 @@ use vm::file_format::CompiledScript;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::transaction_argument::TransactionArgument;
 use vm::access::ScriptAccess;
-use serde::export::Formatter;
 use move_core_types::language_storage::{StructTag, TypeTag};
 
 #[derive(Debug)]
@@ -55,13 +54,16 @@ impl StepExecutionResult {
 }
 
 #[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
+pub struct ResourceChange(pub String, pub Option<String>);
+
+#[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct AddressResourceChanges {
     pub address: String,
-    pub changes: Vec<String>,
+    pub changes: Vec<(String, ResourceChange)>,
 }
 
 impl AddressResourceChanges {
-    pub fn new<S: ToString>(address: S, changes: Vec<String>) -> Self {
+    pub fn new<S: ToString>(address: S, changes: Vec<(String, ResourceChange)>) -> Self {
         AddressResourceChanges {
             address: address.to_string(),
             changes,
@@ -69,24 +71,14 @@ impl AddressResourceChanges {
     }
 }
 
-impl std::fmt::Display for AddressResourceChanges {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}", self.address).unwrap();
-        for change in &self.changes {
-            writeln!(f, "    {}", change).unwrap();
-        }
-        Ok(())
-    }
-}
-
 #[derive(Debug, Default, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct ExplainedTransactionEffects {
-    events: Vec<String>,
+    events: Vec<ResourceChange>,
     resources: Vec<AddressResourceChanges>,
 }
 
 impl ExplainedTransactionEffects {
-    pub fn events(&self) -> &Vec<String> {
+    pub fn events(&self) -> &Vec<ResourceChange> {
         &self.events
     }
     pub fn resources(&self) -> &Vec<AddressResourceChanges> {
@@ -97,11 +89,9 @@ impl ExplainedTransactionEffects {
 fn short_address(addr: &AccountAddress) -> String {
     let mut trimmed = addr.short_str();
     if trimmed == "00000000" {
-        let addr_bytes = addr.to_vec();
-        let len = addr_bytes.len();
-        trimmed = hex::encode(&addr_bytes[(len - 4)..len]);
+        trimmed = addr.to_string().trim_start_matches('0').to_string();
     }
-    trimmed
+    format!("0x{}", trimmed)
 }
 
 fn format_struct_tag(s: &StructTag) -> Result<String> {
@@ -137,35 +127,44 @@ pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
 ) -> Result<ExplainedTransactionEffects> {
-    // all module publishing happens via save_modules(), so effects shouldn't contain modules
+    // effects shouldn't contain modules
     assert!(effects.modules.is_empty());
 
     let mut explained_effects = ExplainedTransactionEffects::default();
     if !effects.events.is_empty() {
-        for (_, _event_sequence_number, _, _, event_data, _) in &effects.events {
+        for (_, _, ty, _, event_data, _) in &effects.events {
+            let formatted_ty = format_type_tag(ty)?;
             explained_effects
                 .events
-                .push(format!("Added event: {}", event_data));
+                .push(ResourceChange(formatted_ty, Some(event_data.to_string())));
         }
     }
     for (addr, writes) in &effects.resources {
         let mut changes = vec![];
         for (struct_tag, write_opt) in writes {
             let formatted_struct_tag = format_struct_tag(&struct_tag)?;
-            let change = match write_opt {
+            changes.push(match write_opt {
                 Some((_, value)) => {
                     if state
                         .get_resource_bytes(*addr, struct_tag.clone())
                         .is_some()
                     {
-                        format!("Changed type {}: {}", formatted_struct_tag, value)
+                        (
+                            "Changed".to_string(),
+                            ResourceChange(formatted_struct_tag, Some(value.to_string())),
+                        )
                     } else {
-                        format!("Added type {}: {}", formatted_struct_tag, value)
+                        (
+                            "Added".to_string(),
+                            ResourceChange(formatted_struct_tag, Some(value.to_string())),
+                        )
                     }
                 }
-                None => format!("Deleted type {}", formatted_struct_tag),
-            };
-            changes.push(change);
+                None => (
+                    "Added".to_string(),
+                    ResourceChange(formatted_struct_tag, None),
+                ),
+            });
         }
         let trimmed_address = format!("0x{}", addr.to_string().trim_start_matches('0'));
         let change = AddressResourceChanges::new(trimmed_address, changes);
