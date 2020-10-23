@@ -80,6 +80,33 @@ fn diagnostics_with_deps(
     global_state.analysis().check_file(script_file)
 }
 
+pub fn global_state_snapshot(
+    file: MoveFile,
+    config: Config,
+    additional_files: Vec<MoveFile>,
+) -> GlobalStateSnapshot {
+    let mut global_state = initialize_new_global_state(config);
+    let mut change = AnalysisChange::new();
+
+    for folder in &global_state.config().modules_folders {
+        for file in load_move_files(&[folder]).unwrap() {
+            let (fpath, text) = file.into();
+            change.add_file(fpath, text);
+        }
+    }
+
+    for file in additional_files {
+        let (fpath, text) = file.into();
+        change.add_file(fpath, text);
+    }
+
+    let (fpath, text) = file.into();
+    change.update_file(fpath, text);
+
+    global_state.apply_change(change);
+    global_state.snapshot()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -751,31 +778,17 @@ script {
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((3, 1), (3, 5)));
     }
-}
 
-pub fn global_state_snapshot(
-    file: MoveFile,
-    config: Config,
-    additional_files: Vec<MoveFile>,
-) -> GlobalStateSnapshot {
-    let mut global_state = initialize_new_global_state(config);
-    let mut change = AnalysisChange::new();
+    #[test]
+    fn test_docstrings_are_allowed_on_scripts() {
+        let _pool = ConstPool::new();
 
-    for folder in &global_state.config().modules_folders {
-        for file in load_move_files(&[folder]).unwrap() {
-            let (fpath, text) = file.into();
-            change.add_file(fpath, text);
-        }
+        let source = r"
+/// signer: 0x1
+script {
+    fun main(_: &signer) {}
+}";
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        assert!(errors.is_empty(), "{:#?}", errors);
     }
-
-    for file in additional_files {
-        let (fpath, text) = file.into();
-        change.add_file(fpath, text);
-    }
-
-    let (fpath, text) = file.into();
-    change.update_file(fpath, text);
-
-    global_state.apply_change(change);
-    global_state.snapshot()
 }
