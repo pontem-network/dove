@@ -15,6 +15,7 @@ pub struct ExecutionMeta {
     pub signers: Vec<AccountAddress>,
     pub max_gas: u64,
     pub oracle_prices: Vec<(StructTag, u128)>,
+    pub current_time: Option<u64>,
 }
 
 impl ExecutionMeta {
@@ -45,6 +46,7 @@ impl ExecutionMeta {
                 self.oracle_prices
                     .push((price_struct_tag, value.parse().unwrap()))
             }
+            "current_time" => self.current_time = Some(val.parse().unwrap()),
             _ => eprintln!("Unimplemented meta key, {:?}", key),
         }
     }
