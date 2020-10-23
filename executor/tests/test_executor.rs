@@ -794,3 +794,34 @@ script {
     .unwrap();
     assert_eq!(results.overall_gas_spent(), 10);
 }
+
+#[test]
+fn test_set_current_time() {
+    let _pool = ConstPool::new();
+
+    let text = r"
+/// current_time: 100
+script {
+    use 0x1::Time;
+
+    fun main() {
+        assert(false, Time::now());
+    }
+}
+    ";
+
+    let res = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("time.move")],
+        "libra",
+        "0x1",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap();
+    assert_eq!(
+        res.error(),
+        "Execution aborted with code 100 in transaction script"
+    );
+}
