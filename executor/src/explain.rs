@@ -176,11 +176,13 @@ pub fn explain_effects(
 // pub const ERROR_DESCRIPTIONS: &[u8] = include_bytes!("./error_descriptions/error_descriptions.errmap");
 
 fn explain_type_error(
+    text_representation: &mut String,
     script: &CompiledScript,
     signers: &[AccountAddress],
     txn_args: &[TransactionArgument],
 ) {
     use vm::file_format::SignatureToken::*;
+
     let script_params = script.signature_at(script.as_inner().parameters);
     let expected_num_signers = script_params
         .0
@@ -191,30 +193,37 @@ fn explain_type_error(
         })
         .count();
     if expected_num_signers != signers.len() {
-        println!(
+        writeln!(
+            text_representation,
             "Execution failed with incorrect number of signers: script expected {:?}, but found \
              {:?}",
             expected_num_signers,
             signers.len()
-        );
+        )
+        .unwrap();
         return;
     }
 
     // TODO: printing type(s) of missing arguments could be useful
     let expected_num_args = script_params.len() - signers.len();
     if expected_num_args != txn_args.len() {
-        println!(
+        writeln!(
+            text_representation,
             "Execution failed with incorrect number of arguments: script expected {:?}, but found \
              {:?}",
             expected_num_args,
             txn_args.len()
-        );
+        ).unwrap();
         return;
     }
 
     // TODO: print more helpful error message pinpointing the (argument, type)
     // pair that didn't match
-    println!("Execution failed with type error when binding type arguments to type parameters")
+    writeln!(
+        text_representation,
+        "Execution failed with type error when binding type arguments to type parameters"
+    )
+    .unwrap();
 }
 
 /// Explain an execution error
@@ -282,7 +291,9 @@ pub fn explain_error(
             )
             .unwrap();
         }
-        VMStatus::Error(StatusCode::TYPE_MISMATCH) => explain_type_error(script, signers, &[]),
+        VMStatus::Error(StatusCode::TYPE_MISMATCH) => {
+            explain_type_error(&mut text_representation, script, signers, &[])
+        }
         VMStatus::Error(status_code) => write!(
             &mut text_representation,
             "Execution failed with unexpected error {:?}",

@@ -48,3 +48,12 @@ pub fn oracle_metadata(first: &str, second: &str) -> StructTag {
         type_params: vec![currency_type(first), currency_type(second)],
     }
 }
+
+pub fn time_metadata() -> StructTag {
+    StructTag {
+        address: CORE_CODE_ADDRESS,
+        name: Identifier::new("CurrentTimestamp").expect("Valid module name."),
+        module: Identifier::new("Time").expect("Valid module name."),
+        type_params: vec![],
+    }
+}

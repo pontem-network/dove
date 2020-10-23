@@ -16,7 +16,7 @@ use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
 use crate::explain::{explain_effects, explain_error, StepExecutionResult};
 use crate::meta::ExecutionMeta;
-use crate::oracles::oracle_coins_module;
+use crate::oracles::{oracle_coins_module, time_metadata};
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -144,6 +144,7 @@ pub fn execute_script(
     let ExecutionMeta {
         signers,
         oracle_prices,
+        current_time,
         ..
     } = meta;
     if !oracle_prices.is_empty() {
@@ -154,10 +155,17 @@ pub fn execute_script(
             ));
         }
     }
+    let std_addr = AccountAddress::from_hex_literal("0x1").expect("Standart address");
+
+    if let Some(current_time) = current_time {
+        ds.resources.insert(
+            (std_addr, time_metadata()),
+            lcs::to_bytes(&current_time).unwrap(),
+        );
+    }
     for (price_tag, val) in oracle_prices {
-        let addr = AccountAddress::from_hex_literal("0x1").expect("Standart address");
         ds.resources
-            .insert((addr, price_tag), lcs::to_bytes(&val).unwrap());
+            .insert((std_addr, price_tag), lcs::to_bytes(&val).unwrap());
     }
 
     let res = execute_script_with_runtime_session(
