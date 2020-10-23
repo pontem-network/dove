@@ -28,6 +28,7 @@ use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
 use lang::compiler::file::MoveFile;
 use std::fmt::Debug;
+use move_lang::name_pool::ConstPool;
 
 #[derive(Debug)]
 pub struct LspError {
@@ -389,6 +390,8 @@ pub fn compute_file_diagnostics<I>(
     I: IntoIterator<Item = String> + Debug,
 {
     log::info!("Computing diagnostics for files: {:#?}", files);
+    let _pool = ConstPool::new();
+
     let mut diagnostics = vec![];
     for fpath in files {
         // clear previous diagnostics for file
