@@ -11,6 +11,8 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::transaction_argument::TransactionArgument;
 use vm::access::ScriptAccess;
 use move_core_types::language_storage::{StructTag, TypeTag};
+use move_vm_types::values::{ValueImpl, Container};
+use num_format::ToFormattedString;
 
 #[derive(Debug)]
 pub struct PipelineExecutionResult {
@@ -123,6 +125,72 @@ fn format_type_tag(type_tag: &TypeTag) -> Result<String> {
     Ok(f)
 }
 
+fn display_list_of_values<T, I, F>(items: I, format_value: F) -> Result<String>
+where
+    F: Fn(&T) -> Result<String>,
+    I: IntoIterator<Item = T>,
+{
+    let mut out = String::new();
+    write!(out, "[")?;
+    let mut items = items.into_iter();
+    if let Some(x) = items.next() {
+        write!(out, "{}", format_value(&x)?)?;
+        for x in items {
+            write!(out, ", {}", format_value(&x)?)?;
+        }
+    }
+    write!(out, "]")?;
+    Ok(out)
+}
+
+fn format_container(
+    container: Container,
+    num_custom_format: num_format::CustomFormat,
+) -> Result<String> {
+    match container {
+        Container::Locals(r)
+        | Container::VecC(r)
+        | Container::VecR(r)
+        | Container::StructC(r)
+        | Container::StructR(r) => display_list_of_values(r.borrow().iter(), format_value),
+        Container::VecU8(r) => display_list_of_values(r.borrow().iter(), |num| {
+            Ok(num.to_formatted_string(&num_custom_format))
+        }),
+        Container::VecU64(r) => display_list_of_values(r.borrow().iter(), |num| {
+            Ok(num.to_formatted_string(&num_custom_format))
+        }),
+        Container::VecU128(r) => display_list_of_values(r.borrow().iter(), |num| {
+            Ok(num.to_formatted_string(&num_custom_format))
+        }),
+        Container::VecBool(r) => {
+            display_list_of_values(r.borrow().iter(), |b| Ok(format!("{}", b)))
+        }
+        Container::VecAddress(r) => {
+            display_list_of_values(r.borrow().iter(), |b| Ok(short_address(b)))
+        }
+    }
+}
+
+fn format_value(value: &&ValueImpl) -> Result<String> {
+    let format = num_format::CustomFormat::builder().separator("").build()?;
+    let mut out = String::new();
+    match value {
+        ValueImpl::Invalid => write!(out, "Invalid"),
+
+        ValueImpl::U8(num) => write!(out, "U8({})", num.to_formatted_string(&format)),
+        ValueImpl::U64(num) => write!(out, "U64({})", num.to_formatted_string(&format)),
+        ValueImpl::U128(num) => write!(out, "U128({})", num.to_formatted_string(&format)),
+        ValueImpl::Bool(b) => write!(out, "{}", b),
+        ValueImpl::Address(addr) => write!(out, "Address({})", short_address(addr)),
+
+        ValueImpl::Container(r) => write!(out, "{}", format_container(r.clone(), format)?),
+
+        ValueImpl::ContainerRef(r) => write!(out, "{}", r),
+        ValueImpl::IndexedRef(r) => write!(out, "{}", r),
+    }?;
+    Ok(out)
+}
+
 pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
@@ -134,9 +202,10 @@ pub fn explain_effects(
     if !effects.events.is_empty() {
         for (_, _, ty, _, event_data, _) in &effects.events {
             let formatted_ty = format_type_tag(ty)?;
-            explained_effects
-                .events
-                .push(ResourceChange(formatted_ty, Some(event_data.to_string())));
+            explained_effects.events.push(ResourceChange(
+                formatted_ty,
+                Some(format_value(&&event_data.0)?),
+            ));
         }
     }
     for (addr, writes) in &effects.resources {
@@ -151,12 +220,12 @@ pub fn explain_effects(
                     {
                         (
                             "Changed".to_string(),
-                            ResourceChange(formatted_struct_tag, Some(value.to_string())),
+                            ResourceChange(formatted_struct_tag, Some(format_value(&&value.0)?)),
                         )
                     } else {
                         (
                             "Added".to_string(),
-                            ResourceChange(formatted_struct_tag, Some(value.to_string())),
+                            ResourceChange(formatted_struct_tag, Some(format_value(&&value.0)?)),
                         )
                     }
                 }
