@@ -63,12 +63,14 @@ impl FakeRemoteCache {
         .to_owned())
     }
 
-    pub fn merge_transaction_effects(&mut self, effects: TransactionEffects) {
+    pub fn merge_transaction_effects(&mut self, effects: TransactionEffects) -> usize {
+        let mut resources_write_size = 0;
         for (addr, changes) in effects.resources {
             for (struct_tag, val) in changes {
                 match val {
                     Some((layout, val)) => {
                         let serialized = val.simple_serialize(&layout).expect("Valid value.");
+                        resources_write_size += serialized.len();
                         self.resources.insert((addr, struct_tag), serialized);
                     }
                     None => {
@@ -77,6 +79,7 @@ impl FakeRemoteCache {
                 }
             }
         }
+        resources_write_size
     }
 }
 
@@ -178,10 +181,10 @@ pub fn execute_script(
     );
     Ok(match res {
         Ok(effects) => {
-            let explained = explain_effects(&effects, &ds)?;
-            let res = StepExecutionResult::Success(explained);
-            data_store.merge_transaction_effects(effects);
-            res
+            let mut explained = explain_effects(&effects, &ds)?;
+            let write_set_size = data_store.merge_transaction_effects(effects);
+            explained.set_write_set_size(write_set_size);
+            StepExecutionResult::Success(explained)
         }
         Err(vm_error) => {
             let error_as_string = explain_error(vm_error, data_store, &script, &signers);

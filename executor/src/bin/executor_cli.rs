@@ -86,11 +86,16 @@ fn main() -> Result<()> {
     match res {
         Ok(exec_result) => {
             let PipelineExecutionResult { step_results } = exec_result;
-            for (i, (name, gas, step_result)) in step_results.into_iter().enumerate() {
+            for (i, (name, gas, writeset_size, step_result)) in
+                step_results.into_iter().enumerate()
+            {
                 if i > 0 {
                     println!();
                 }
-                println!("{}(gas: {}): ", name, gas);
+                println!(
+                    "{}(gas: {}, writeset bytes: {}): ",
+                    name, gas, writeset_size
+                );
                 let step_indent = "    ";
                 let content_indent = "        ";
                 match step_result {

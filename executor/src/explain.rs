@@ -16,20 +16,20 @@ use num_format::ToFormattedString;
 
 #[derive(Debug)]
 pub struct PipelineExecutionResult {
-    pub step_results: Vec<(String, u64, StepExecutionResult)>,
+    pub step_results: Vec<(String, u64, usize, StepExecutionResult)>,
 }
 
 impl PipelineExecutionResult {
-    pub fn new(step_results: Vec<(String, u64, StepExecutionResult)>) -> Self {
+    pub fn new(step_results: Vec<(String, u64, usize, StepExecutionResult)>) -> Self {
         PipelineExecutionResult { step_results }
     }
 
     pub fn last(&self) -> Option<StepExecutionResult> {
-        self.step_results.last().map(|(_, _, r)| r.to_owned())
+        self.step_results.last().map(|(_, _, _, r)| r.to_owned())
     }
 
     pub fn overall_gas_spent(&self) -> u64 {
-        self.step_results.iter().map(|(_, gas, _)| gas).sum()
+        self.step_results.iter().map(|(_, gas, _, _)| gas).sum()
     }
 }
 
@@ -77,14 +77,24 @@ impl AddressResourceChanges {
 pub struct ExplainedTransactionEffects {
     events: Vec<ResourceChange>,
     resources: Vec<AddressResourceChanges>,
+    write_set_size: usize,
 }
 
 impl ExplainedTransactionEffects {
     pub fn events(&self) -> &Vec<ResourceChange> {
         &self.events
     }
+
     pub fn resources(&self) -> &Vec<AddressResourceChanges> {
         &self.resources
+    }
+
+    pub fn write_set_size(&self) -> usize {
+        self.write_set_size
+    }
+
+    pub fn set_write_set_size(&mut self, size: usize) {
+        self.write_set_size = size;
     }
 }
 
