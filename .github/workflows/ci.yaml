@@ -1,4 +1,4 @@
-name: CI
+name: Tests
 on:
   pull_request:
   push:
@@ -6,8 +6,8 @@ on:
       - master
 
 jobs:
-  rust:
-    name: Rust
+  tests:
+    name: Tests
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -81,3 +81,16 @@ jobs:
 
       - name: Run clippy
         run: cargo clippy --tests --examples -- -Dwarnings
+
+  rust:
+    name: Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: cargo-audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
