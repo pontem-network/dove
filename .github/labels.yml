@@ -1,0 +1,42 @@
+ci: .github/**
+
+test resources:
+  - any:
+    - &resources resources/**
+    - &assets resources/assets/**
+
+mls:
+  - any:
+      - language_server/**
+      - &dialects lang/src/compiler/dialects/**
+      - *assets
+
+executor:
+  - any:
+      - executor/**
+      - *dialects
+      - *assets
+
+compiler:
+  - &compiler lang/src/compiler/**
+
+movec:
+  - any:
+      - movec/**
+      - *compiler
+
+disassembler:
+  - lang/src/disassembler/**
+
+resource viewer:
+  - resource-viewer/**
+
+documentation:
+  - any:
+      - "*.md"
+      - "**/*.md"
+
+move:
+  - any:
+      - "*.move"
+      - "**/*.move"
