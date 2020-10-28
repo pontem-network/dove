@@ -322,7 +322,7 @@ fn test_bech32_address_and_sender_in_compiler_error() {
 }
 
 #[test]
-fn test_show_executor_gas_in_genesis_if_gas_flag_is_present() {
+fn test_show_executor_gas_spent() {
     let _pool = ConstPool::new();
 
     let text = r"
@@ -824,4 +824,32 @@ script {
         res.error(),
         "Execution aborted with code 100 in transaction script"
     );
+}
+
+#[test]
+fn test_shows_size_of_transaction_writeset() {
+    let _pool = ConstPool::new();
+
+    let text = r"
+script {
+    use 0x2::Record;
+
+    fun step_2(s: &signer) {
+        Record::create_record(s, 10);
+    }
+}
+    ";
+
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
+    assert_eq!(effects.write_set_size(), 1);
 }

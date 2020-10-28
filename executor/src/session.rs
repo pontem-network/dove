@@ -64,9 +64,14 @@ impl ExecutionSession {
             script_args = vec![];
 
             let gas_spent = total_gas - cost_strategy.remaining_gas().get();
+            let write_set_size = if let StepExecutionResult::Success(explained) = &step_result {
+                explained.write_set_size()
+            } else {
+                0
+            };
 
             let is_error = matches!(step_result, StepExecutionResult::Error(_));
-            step_results.push((name, gas_spent, step_result));
+            step_results.push((name, gas_spent, write_set_size, step_result));
             if is_error {
                 break;
             }
