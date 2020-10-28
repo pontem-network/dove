@@ -16,6 +16,7 @@ pub struct ExecutionMeta {
     pub max_gas: u64,
     pub oracle_prices: Vec<(StructTag, u128)>,
     pub current_time: Option<u64>,
+    pub aborts_with: Option<u64>,
 }
 
 impl ExecutionMeta {
@@ -47,6 +48,7 @@ impl ExecutionMeta {
                     .push((price_struct_tag, value.parse().unwrap()))
             }
             "current_time" => self.current_time = Some(val.parse().unwrap()),
+            "aborts_with" => self.aborts_with = Some(val.parse().unwrap()),
             _ => eprintln!("Unimplemented meta key, {:?}", key),
         }
     }

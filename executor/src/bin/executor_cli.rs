@@ -99,7 +99,8 @@ fn main() -> Result<()> {
                 let step_indent = "    ";
                 let content_indent = "        ";
                 match step_result {
-                    StepExecutionResult::Error(error) => {
+                    StepExecutionResult::Error(error)
+                    | StepExecutionResult::ExpectedError(error) => {
                         print!("{}", textwrap::indent(&error, step_indent));
                     }
                     StepExecutionResult::Success(effects) => {
