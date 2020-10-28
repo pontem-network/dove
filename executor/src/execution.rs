@@ -148,6 +148,7 @@ pub fn execute_script(
         signers,
         oracle_prices,
         current_time,
+        aborts_with,
         ..
     } = meta;
     if !oracle_prices.is_empty() {
@@ -187,8 +188,21 @@ pub fn execute_script(
             StepExecutionResult::Success(explained)
         }
         Err(vm_error) => {
-            let error_as_string = explain_error(vm_error, data_store, &script, &signers);
-            StepExecutionResult::Error(error_as_string)
+            let (abort_code, error_as_string) =
+                explain_error(vm_error, data_store, &script, &signers);
+            match aborts_with {
+                Some(expected_abort_code) => {
+                    if abort_code.is_some() && abort_code.unwrap() == expected_abort_code {
+                        StepExecutionResult::ExpectedError(format!(
+                            "Expected error: {}",
+                            error_as_string
+                        ))
+                    } else {
+                        StepExecutionResult::Error(error_as_string)
+                    }
+                }
+                None => StepExecutionResult::Error(error_as_string),
+            }
         }
     })
 }

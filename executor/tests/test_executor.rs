@@ -853,3 +853,33 @@ script {
     .effects();
     assert_eq!(effects.write_set_size(), 1);
 }
+
+#[test]
+fn test_aborts_with() {
+    let _pool = ConstPool::new();
+
+    let text = r"
+/// aborts_with: 101
+script {
+    fun main() {
+        assert(false, 101);
+    }
+}
+    ";
+
+    let error_string = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .expected_error();
+    assert_eq!(
+        error_string,
+        "Expected error: Execution aborted with code 101 in transaction script"
+    );
+}

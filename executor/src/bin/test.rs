@@ -106,7 +106,7 @@ pub fn main() -> Result<()> {
                     print!("{}", textwrap::indent(&error, "    "));
                     println!();
                 }
-                StepExecutionResult::Success(_) => {
+                StepExecutionResult::ExpectedError(_) | StepExecutionResult::Success(_) => {
                     print_test_status(test_name, "ok");
                 }
             },

@@ -36,6 +36,7 @@ impl PipelineExecutionResult {
 #[derive(Debug, Clone)]
 pub enum StepExecutionResult {
     Error(String),
+    ExpectedError(String),
     Success(ExplainedTransactionEffects),
 }
 
@@ -47,10 +48,19 @@ impl StepExecutionResult {
         }
     }
 
+    pub fn expected_error(self) -> String {
+        match self {
+            StepExecutionResult::ExpectedError(error) => error,
+            _ => panic!(),
+        }
+    }
+
     pub fn effects(self) -> ExplainedTransactionEffects {
         match self {
             StepExecutionResult::Success(effects) => effects,
-            StepExecutionResult::Error(msg) => panic!("{}", msg),
+            StepExecutionResult::Error(msg) | StepExecutionResult::ExpectedError(msg) => {
+                panic!("{}", msg)
+            }
         }
     }
 }
@@ -311,10 +321,11 @@ pub fn explain_error(
     remote_cache: &FakeRemoteCache,
     script: &CompiledScript,
     signers: &[AccountAddress],
-) -> String {
+) -> (Option<u64>, String) {
     let mut text_representation = String::new();
+    let mut abort_code = None;
     match error.into_vm_status() {
-        VMStatus::MoveAbort(AbortLocation::Module(id), abort_code) => {
+        VMStatus::MoveAbort(AbortLocation::Module(id), error_code) => {
             // try to use move-explain to explain the abort
             // TODO: this will only work for errors in the stdlib or Libra Framework. We should
             // add code to build an ErrorMapping for modules in move_lib as well
@@ -323,18 +334,20 @@ pub fn explain_error(
             write!(
                 &mut text_representation,
                 "Execution aborted with code {} in module {}.",
-                abort_code, id
+                error_code, id
             )
             .unwrap();
+            abort_code = Some(error_code);
         }
-        VMStatus::MoveAbort(AbortLocation::Script, abort_code) => {
+        VMStatus::MoveAbort(AbortLocation::Script, error_code) => {
             // TODO: map to source code location
             write!(
                 &mut text_representation,
                 "Execution aborted with code {} in transaction script",
-                abort_code
+                error_code
             )
             .unwrap();
+            abort_code = Some(error_code);
         }
         VMStatus::ExecutionFailure {
             status_code,
@@ -381,5 +394,5 @@ pub fn explain_error(
         .unwrap(),
         VMStatus::Executed => unreachable!(),
     };
-    text_representation
+    (abort_code, text_representation)
 }
