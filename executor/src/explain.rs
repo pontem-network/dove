@@ -109,7 +109,7 @@ impl ExplainedTransactionEffects {
 }
 
 fn short_address(addr: &AccountAddress) -> String {
-    let mut trimmed = addr.short_str();
+    let mut trimmed = addr.short_str().to_string();
     if trimmed == "00000000" {
         trimmed = addr.to_string().trim_start_matches('0').to_string();
     }
