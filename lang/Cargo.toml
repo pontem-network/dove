@@ -10,15 +10,15 @@ edition = "2018"
 publish = false
 
 [dependencies]
-libra = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-lang = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-vm = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+libra = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+move-lang = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 libra-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "master" }
-lcs = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-vm-genesis = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+lcs = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+vm-genesis = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 
 serde = "1.0.106"
 serde_derive = "1.0.106"

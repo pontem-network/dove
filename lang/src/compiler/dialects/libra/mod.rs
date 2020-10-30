@@ -3,10 +3,11 @@ mod addresses;
 use anyhow::Result;
 use libra_move_core_types::account_address::AccountAddress as LibraAccountAddress;
 use crate::compiler::dialects::Dialect;
-use move_core_types::gas_schedule::{CostTable, GasCost, GasConstants};
+use move_core_types::gas_schedule::{CostTable};
 use crate::compiler::source_map::FileOffsetMap;
 use crate::compiler::dialects::libra::addresses::replace_libra_address;
 use crate::compiler::address::ProvidedAccountAddress;
+use std::ops::Deref;
 
 #[derive(Default)]
 pub struct LibraDialect;
@@ -28,21 +29,9 @@ impl Dialect for LibraDialect {
     }
 
     fn cost_table(&self) -> CostTable {
-        let instructions_table_bytes = vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
-            .0
-            .clone();
-        let instruction_table: Vec<GasCost> = lcs::from_bytes(&instructions_table_bytes).unwrap();
-
-        let native_table_bytes = vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
-            .1
-            .clone();
-        let native_table: Vec<GasCost> = lcs::from_bytes(&native_table_bytes).unwrap();
-
-        CostTable {
-            instruction_table,
-            native_table,
-            gas_constants: GasConstants::default(),
-        }
+        vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
+            .deref()
+            .clone()
     }
 
     fn replace_addresses(&self, source_text: &str, source_map: &mut FileOffsetMap) -> String {

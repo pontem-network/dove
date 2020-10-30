@@ -26,5 +26,5 @@ hex = "0.4.2"
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 
-move-lang = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+move-lang = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }

@@ -17,6 +17,7 @@ use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 use crate::explain::{explain_effects, explain_error, StepExecutionResult};
 use crate::meta::ExecutionMeta;
 use crate::oracles::{oracle_coins_module, time_metadata};
+use move_vm_runtime::logging::NoContextLog;
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -132,7 +133,14 @@ fn execute_script_with_runtime_session<R: RemoteCache>(
     // first signer param -> first passed sender (otherwise reversed)
     let senders = senders.into_iter().rev().collect();
 
-    runtime_session.execute_script(script, ty_args, args, senders, cost_strategy)?;
+    runtime_session.execute_script(
+        script,
+        ty_args,
+        args,
+        senders,
+        cost_strategy,
+        &NoContextLog::new(),
+    )?;
     runtime_session.finish()
 }
 

@@ -196,7 +196,7 @@ fn test_run_with_non_default_dfinance_dialect() {
     assert_eq!(
         effects.resources()[0],
         AddressResourceChanges::new(
-            "0xde5f86ce8ad7944f272d693cb4625a955b610150",
+            "0xDE5F86CE8AD7944F272D693CB4625A955B610150",
             vec![(
                 "Added".to_string(),
                 ResourceChange("0xde5f86ce::M::T".to_string(), Some("[U8(10)]".to_string()))
@@ -441,13 +441,14 @@ fn test_multiple_signers() {
     .last()
     .unwrap()
     .effects();
+
     let account1_change = &effects.resources()[0];
     assert_eq!(account1_change.address, "0x1");
     assert_eq!(
         account1_change.changes,
         vec![(
             "Added".to_string(),
-            ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
         )]
     );
 
@@ -457,7 +458,7 @@ fn test_multiple_signers() {
         account2_change.changes,
         vec![(
             "Added".to_string(),
-            ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
         )]
     );
 }
