@@ -333,8 +333,10 @@ pub fn explain_error(
             //     lcs::from_bytes(ERROR_DESCRIPTIONS).unwrap();
             write!(
                 &mut text_representation,
-                "Execution aborted with code {} in module {}.",
-                error_code, id
+                "Execution aborted with code {} in module {}::{}.",
+                error_code,
+                short_address(id.address()),
+                id.name()
             )
             .unwrap();
             abort_code = Some(error_code);

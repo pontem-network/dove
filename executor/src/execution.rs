@@ -130,9 +130,6 @@ fn execute_script_with_runtime_session<R: RemoteCache>(
     let vm = MoveVM::new();
     let mut runtime_session = vm.new_session(data_store);
 
-    // first signer param -> first passed sender (otherwise reversed)
-    let senders = senders.into_iter().rev().collect();
-
     runtime_session.execute_script(
         script,
         ty_args,

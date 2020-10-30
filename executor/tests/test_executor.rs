@@ -378,7 +378,7 @@ fn test_execute_script_with_custom_signer() {
     let _pool = ConstPool::new();
 
     let text = r"
-    /// signer: 0x2
+    /// signers: 0x2
     script {
         use 0x2::Record;
 
@@ -415,8 +415,7 @@ fn test_multiple_signers() {
     let _pool = ConstPool::new();
 
     let text = r"
-    /// signer: 0x1
-    /// signer: 0x2
+    /// signers: 0x1, 0x2
     script {
         use 0x2::Record;
 
@@ -448,7 +447,7 @@ fn test_multiple_signers() {
         account1_change.changes,
         vec![(
             "Added".to_string(),
-            ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
         )]
     );
 
@@ -458,7 +457,7 @@ fn test_multiple_signers() {
         account2_change.changes,
         vec![(
             "Added".to_string(),
-            ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
+            ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
         )]
     );
 }
@@ -484,7 +483,7 @@ address 0x2 {
     }
 }
 
-/// signer: 0x2
+/// signers: 0x2
 script {
     use 0x2::Record;
 
@@ -570,7 +569,7 @@ fn test_script_starts_from_line_0() {
 fn test_doc_comment_starts_at_line_0() {
     let _pool = ConstPool::new();
 
-    let text = r"/// signer: 0x1
+    let text = r"/// signers: 0x1
 script { fun main(_: &signer) { assert(false, 401); } }";
     let res = execute_script(
         MoveFile::with_content(script_path(), text),
