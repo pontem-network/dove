@@ -10,6 +10,13 @@ fn split_around<'s>(s: &'s str, p: &str) -> (&'s str, &'s str) {
     (key, val)
 }
 
+fn split_signers(s: &str) -> Vec<AccountAddress> {
+    s.split(',')
+        .map(|s| s.trim())
+        .map(|addr| AccountAddress::from_hex_literal(addr).unwrap())
+        .collect()
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct ExecutionMeta {
     pub signers: Vec<AccountAddress>,
@@ -26,9 +33,7 @@ impl ExecutionMeta {
         }
         let (key, val) = split_around(&comment, ":");
         match key {
-            "signer" => self
-                .signers
-                .push(AccountAddress::from_hex_literal(val).unwrap()),
+            "signers" => self.signers = split_signers(val),
             "max_gas" => {
                 self.max_gas = val.parse().unwrap();
             }
