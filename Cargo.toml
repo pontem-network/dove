@@ -2,8 +2,16 @@
 members = [
     "language_server",
     "executor",
-    "lang",
     "movec",
+    "lang",
+    "lang/compat",
+    "lang/disassembler",
     "resources",
     "common/git-hash",
 ]
+
+[profile.release]
+lto = "thin"
+opt-level = 's'
+codegen-units = 1
+rpath = false

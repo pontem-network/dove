@@ -2,8 +2,8 @@ ci: .github/**
 
 test resources:
   - any:
-    - &resources resources/**
-    - &assets resources/assets/**
+      - &resources resources/**
+      - &assets resources/assets/**
 
 mls:
   - any:
@@ -25,8 +25,8 @@ movec:
       - movec/**
       - *compiler
 
-disassembler:
-  - lang/src/disassembler/**
+disassembler: lang/disassembler/**
+compat: lang/compat/**
 
 resource viewer:
   - resource-viewer/**

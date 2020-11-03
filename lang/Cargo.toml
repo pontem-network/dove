@@ -20,6 +20,9 @@ lcs = { package = "libra-canonical-serialization", git = "https://github.com/dfi
 vm-genesis = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 
+disassembler = { path = "disassembler" }
+compat = { path = "compat", package = "move-compat"}
+
 serde = "1.0.106"
 serde_derive = "1.0.106"
 serde_json = "1.0.52"
