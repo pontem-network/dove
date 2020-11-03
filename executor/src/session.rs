@@ -20,9 +20,8 @@ use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
-use move_lang::parser::ast::{Definition, ModuleMember, Exp_, Constant, Value_};
-use move_lang::shared::Identifier;
-use move_lang::parser::ast;
+
+use crate::constants::extract_error_constants;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
@@ -168,44 +167,6 @@ impl<'a> SessionBuilder<'a> {
         deps: &[MoveFile],
     ) -> Result<ExecutionSession, CompilerError> {
         compile(self.dialect, sources, deps, Some(&self.sender), self)
-    }
-}
-
-fn extract_integer_constant_value(constant: &Constant) -> Option<u128> {
-    match &constant.value.value {
-        Exp_::Value(val) => match val.value {
-            Value_::U8(num) => Some(num as u128),
-            Value_::U64(num) => Some(num as u128),
-            Value_::U128(num) => Some(num as u128),
-            _ => None,
-        },
-        Exp_::InferredNum(val) => Some(val.to_owned()),
-        _ => None,
-    }
-}
-
-fn extract_error_constants(program: &ast::Program, consts: &mut ConstsMap) {
-    let definitions = program
-        .source_definitions
-        .iter()
-        .chain(program.lib_definitions.iter());
-    for definition in definitions {
-        if let Definition::Address(_, address, modules) = definition {
-            for module in modules {
-                for member in &module.members {
-                    if let ModuleMember::Constant(constant) = member {
-                        if constant.name.value().starts_with("ERR_") {
-                            if let Some(val) = extract_integer_constant_value(constant) {
-                                consts.insert(
-                                    (format!("{}", address), module.name.value().to_owned(), val),
-                                    constant.name.value().to_owned(),
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
