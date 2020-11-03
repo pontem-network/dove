@@ -13,6 +13,8 @@ use vm::access::ScriptAccess;
 use move_core_types::language_storage::{StructTag, TypeTag};
 use move_vm_types::values::{ValueImpl, Container};
 use num_format::ToFormattedString;
+use crate::session::ConstsMap;
+use move_lang::shared::Address;
 
 #[derive(Debug)]
 pub struct PipelineExecutionResult {
@@ -321,20 +323,26 @@ pub fn explain_error(
     remote_cache: &FakeRemoteCache,
     script: &CompiledScript,
     signers: &[AccountAddress],
+    consts_map: &ConstsMap,
 ) -> (Option<u64>, String) {
     let mut text_representation = String::new();
     let mut abort_code = None;
     match error.into_vm_status() {
         VMStatus::MoveAbort(AbortLocation::Module(id), error_code) => {
-            // try to use move-explain to explain the abort
-            // TODO: this will only work for errors in the stdlib or Libra Framework. We should
-            // add code to build an ErrorMapping for modules in move_lib as well
-            // let error_descriptions: ErrorMapping =
-            //     lcs::from_bytes(ERROR_DESCRIPTIONS).unwrap();
+            let const_key = (
+                format!("{}", Address::new(id.address().to_u8())),
+                id.name().to_string(),
+                error_code as u128,
+            );
+            let const_name = consts_map.get(&const_key);
+            let error = match const_name {
+                Some(name) => format!("{}: {}", error_code, name),
+                None => format!("{}", error_code),
+            };
             write!(
                 &mut text_representation,
                 "Execution aborted with code {} in module {}::{}.",
-                error_code,
+                error,
                 short_address(id.address()),
                 id.name()
             )

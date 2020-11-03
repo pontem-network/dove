@@ -883,3 +883,35 @@ script {
         "Expected error: Execution aborted with code 101 in transaction script"
     );
 }
+
+#[test]
+fn test_extract_error_name_if_prefixed_with_err() {
+    let _pool = ConstPool::new();
+    let text = r"
+        script {
+            use 0x1::Signer;
+            use 0x2::Record;
+
+            fun main(s: &signer) {
+                let record = Record::get_record(Signer::address_of(s));
+                Record::save(s, record);
+            }
+        }
+    ";
+
+    let error_string = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .error();
+    assert_eq!(
+        error_string,
+        "Execution aborted with code 101: ERR_RECORD_DOES_NOT_EXIST in module 0x2::Record."
+    );
+}

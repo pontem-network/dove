@@ -2,17 +2,16 @@ address 0x2 {
     module Record {
         use 0x1::Signer;
 
+        const ERR_RECORD_DOES_NOT_EXIST: u64 = 101;
+
         resource struct T {
             age: u8
         }
 
         public fun get_record(addr: address): T acquires T {
+            assert(exists<T>(addr), ERR_RECORD_DOES_NOT_EXIST);
             move_from<T>(addr)
         }
-
-//        public fun get_record_of_account(s: &signer): &T acquires T {
-//            borrow_global<T>(Signer::address_of(s))
-//        }
 
         public fun record_age(s: &signer): u8 acquires T {
             let T { age } = move_from<T>(Signer::address_of(s));

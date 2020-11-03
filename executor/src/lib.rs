@@ -10,6 +10,7 @@ use crate::session::SessionBuilder;
 use lang::compiler::dialects::DialectName;
 use lang::compiler::file::MoveFile;
 
+pub mod constants;
 pub mod execution;
 pub mod explain;
 pub mod meta;

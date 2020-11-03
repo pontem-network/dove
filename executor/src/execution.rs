@@ -18,6 +18,7 @@ use crate::explain::{explain_effects, explain_error, StepExecutionResult};
 use crate::meta::ExecutionMeta;
 use crate::oracles::{oracle_coins_module, time_metadata};
 use move_vm_runtime::logging::NoContextLog;
+use crate::session::ConstsMap;
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -147,6 +148,7 @@ pub fn execute_script(
     script: CompiledScript,
     args: Vec<Value>,
     cost_strategy: &mut CostStrategy,
+    consts_map: &ConstsMap,
 ) -> Result<StepExecutionResult> {
     let mut ds = data_store.clone();
     let ExecutionMeta {
@@ -194,7 +196,7 @@ pub fn execute_script(
         }
         Err(vm_error) => {
             let (abort_code, error_as_string) =
-                explain_error(vm_error, data_store, &script, &signers);
+                explain_error(vm_error, data_store, &script, &signers, consts_map);
             match aborts_with {
                 Some(expected_abort_code) => {
                     if abort_code.is_some() && abort_code.unwrap() == expected_abort_code {
