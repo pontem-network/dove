@@ -16,7 +16,7 @@ fn extract_integer_constant_value(constant: &Constant) -> Option<u128> {
     }
 }
 
-fn constants(module: &ModuleDefinition) -> impl IntoIterator<Item = &Constant> {
+fn constants(module: &ModuleDefinition) -> impl Iterator<Item = &Constant> {
     module.members.iter().filter_map(|m| match m {
         ModuleMember::Constant(c) => Some(c),
         _ => None,
