@@ -14,12 +14,15 @@ use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
 use lang::compiler::address::ProvidedAccountAddress;
-use lang::compiler::parser::ParsingMeta;
+use lang::compiler::parser::{ParsingMeta, ParserArtifact};
 use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
 use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
+use move_lang::parser::ast::{Definition, ModuleMember, Exp_, Constant, Value_};
+use move_lang::shared::Identifier;
+use move_lang::parser::ast;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
@@ -29,6 +32,7 @@ pub enum ExecutionUnit {
 
 pub struct ExecutionSession {
     units: Vec<ExecutionUnit>,
+    consts: ConstsMap,
 }
 
 impl ExecutionSession {
@@ -39,6 +43,10 @@ impl ExecutionSession {
             }
         }
         false
+    }
+
+    pub fn consts(&self) -> &ConstsMap {
+        &self.consts
     }
 
     pub fn execute(
@@ -60,6 +68,7 @@ impl ExecutionSession {
                 script,
                 script_args,
                 &mut cost_strategy,
+                &self.consts,
             )?;
             script_args = vec![];
 
@@ -131,10 +140,13 @@ pub fn extract_script_doc_comments(
     doc_comments
 }
 
+pub type ConstsMap = BTreeMap<(String, String, u128), String>;
+
 pub struct SessionBuilder<'a> {
     dialect: &'a dyn Dialect,
     sender: &'a ProvidedAccountAddress,
     loc_map: Option<BTreeMap<String, Loc>>,
+    consts: ConstsMap,
 }
 
 impl<'a> SessionBuilder<'a> {
@@ -146,6 +158,7 @@ impl<'a> SessionBuilder<'a> {
             dialect,
             sender,
             loc_map: None,
+            consts: Default::default(),
         }
     }
 
@@ -158,7 +171,55 @@ impl<'a> SessionBuilder<'a> {
     }
 }
 
+fn extract_integer_constant_value(constant: &Constant) -> Option<u128> {
+    match &constant.value.value {
+        Exp_::Value(val) => match val.value {
+            Value_::U8(num) => Some(num as u128),
+            Value_::U64(num) => Some(num as u128),
+            Value_::U128(num) => Some(num as u128),
+            _ => None,
+        },
+        Exp_::InferredNum(val) => Some(val.to_owned()),
+        _ => None,
+    }
+}
+
+fn extract_error_constants(program: &ast::Program, consts: &mut ConstsMap) {
+    let definitions = program
+        .source_definitions
+        .iter()
+        .chain(program.lib_definitions.iter());
+    for definition in definitions {
+        if let Definition::Address(_, address, modules) = definition {
+            for module in modules {
+                for member in &module.members {
+                    if let ModuleMember::Constant(constant) = member {
+                        if constant.name.value().starts_with("ERR_") {
+                            if let Some(val) = extract_integer_constant_value(constant) {
+                                consts.insert(
+                                    (format!("{}", address), module.name.value().to_owned(), val),
+                                    constant.name.value().to_owned(),
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder<'a> {
+    fn after_parsing(
+        &mut self,
+        parser_artifact: ParserArtifact,
+    ) -> Step<Result<ExecutionSession, CompilerError>, ParserArtifact> {
+        if let Ok(program) = &parser_artifact.result {
+            extract_error_constants(program, &mut self.consts)
+        }
+        Step::Next(parser_artifact)
+    }
+
     fn after_check(
         &mut self,
         meta: ParsingMeta,
@@ -233,6 +294,7 @@ impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder
         });
         Ok(ExecutionSession {
             units: execution_units.into_iter().map(|(_, unit)| unit).collect(),
+            consts: self.consts.clone(),
         })
     }
 }

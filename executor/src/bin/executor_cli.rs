@@ -92,10 +92,14 @@ fn main() -> Result<()> {
                 if i > 0 {
                     println!();
                 }
-                println!(
-                    "{}(gas: {}, writeset bytes: {}): ",
-                    name, gas, writeset_size
-                );
+                let status = if matches!(step_result, StepExecutionResult::Error(_)) {
+                    "ERROR"
+                } else {
+                    "OK"
+                };
+                println!("{} ...... {}", name, status,);
+                println!("[gas: {}, writeset bytes: {}]", gas, writeset_size);
+
                 let step_indent = "    ";
                 let content_indent = "        ";
                 match step_result {
