@@ -6,7 +6,14 @@ use crate::explain::{
 };
 
 const STEP_INDENT: &str = "    ";
-const CONTENT_INDENT: &str = "        ";
+
+fn indent(num: usize) -> String {
+    let mut indent = String::new();
+    for _ in 0..num {
+        indent += STEP_INDENT;
+    }
+    indent
+}
 
 fn formatted_resource_change(change: &ResourceChange) -> String {
     let ResourceChange(ty, val) = change;
@@ -17,35 +24,32 @@ fn formatted_resource_change(change: &ResourceChange) -> String {
 }
 
 fn format_error(out: &mut String, error: String) {
-    write!(out, "{}", textwrap::indent(&error, STEP_INDENT)).unwrap()
+    write!(out, "{}", textwrap::indent(&error, &indent(1))).unwrap()
 }
 
 fn format_effects(out: &mut String, effects: ExplainedTransactionEffects) {
     for changes in effects.resources() {
         let AddressResourceChanges { address, changes } = changes;
-        write!(out, "{}", textwrap::indent(address, STEP_INDENT)).unwrap();
+        write!(out, "{}", textwrap::indent(address, &indent(1))).unwrap();
         for (operation, change) in changes {
             write!(
                 out,
                 "{}",
                 textwrap::indent(
                     &format!("{} {}", operation, formatted_resource_change(change)),
-                    CONTENT_INDENT
+                    &indent(2)
                 )
             )
             .unwrap();
         }
     }
     if !effects.events().is_empty() {
-        write!(out, "{}", textwrap::indent("Events:", CONTENT_INDENT)).unwrap();
+        write!(out, "{}", textwrap::indent("Events:", &indent(2))).unwrap();
         for event_change in effects.events() {
             write!(
                 out,
                 "{}",
-                textwrap::indent(
-                    &formatted_resource_change(event_change),
-                    &(CONTENT_INDENT.to_owned() + "    ")
-                )
+                textwrap::indent(&formatted_resource_change(event_change), &indent(3))
             )
             .unwrap();
         }
@@ -81,10 +85,7 @@ pub fn format_step_result(
     }
 
     match step_result {
-        StepExecutionResult::Error(error) => {
-            format_error(&mut out, error)
-            // write!(out, "{}", textwrap::indent(&error, STEP_INDENT)).unwrap();
-        }
+        StepExecutionResult::Error(error) => format_error(&mut out, error),
         StepExecutionResult::ExpectedError(error) => {
             if verbose {
                 format_error(&mut out, error)
