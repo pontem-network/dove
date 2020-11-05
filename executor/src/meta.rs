@@ -20,7 +20,6 @@ fn split_signers(s: &str) -> Vec<AccountAddress> {
 #[derive(Debug, Default, Clone)]
 pub struct ExecutionMeta {
     pub signers: Vec<AccountAddress>,
-    pub max_gas: u64,
     pub oracle_prices: Vec<(StructTag, u128)>,
     pub current_time: Option<u64>,
     pub aborts_with: Option<u64>,
@@ -35,9 +34,6 @@ impl ExecutionMeta {
         let (key, val) = split_around(&comment, ":");
         match key {
             "signers" => self.signers = split_signers(val),
-            "max_gas" => {
-                self.max_gas = val.parse().unwrap();
-            }
             "price" => {
                 if !val.contains(' ') {
                     eprintln!("Invalid ticker price doc comment: {}", comment);
