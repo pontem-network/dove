@@ -915,3 +915,50 @@ fn test_extract_error_name_if_prefixed_with_err() {
         "Execution aborted with code 101: ERR_RECORD_DOES_NOT_EXIST in module 0x2::Record."
     );
 }
+
+#[test]
+fn test_dry_run_do_not_apply_writeset_changes() {
+    let _pool = ConstPool::new();
+    let text = r"
+script {
+    use 0x2::Record;
+
+    fun step_1(s: &signer) {
+        Record::create_record(s, 10);
+    }
+}
+
+/// dry_run: true
+script {
+    use 0x2::Record;
+
+    fun step_2(s: &signer) {
+        Record::increment_record(s);
+    }
+}
+
+script {
+    use 0x2::Record;
+
+    fun step_3(s: &signer) {
+        Record::increment_record(s);
+    }
+}
+    ";
+
+    let effects = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("signer.move"), modules_mod("record.move")],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
+    assert_eq!(
+        effects.resources()[0].changes[0].1,
+        ResourceChange("0x2::Record::T".to_string(), Some("[U8(11)]".to_string()))
+    );
+}

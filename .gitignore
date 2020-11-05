@@ -8,3 +8,4 @@
 tests/_*
 /*.move
 execute.sh
+test.sh

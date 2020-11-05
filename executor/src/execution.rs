@@ -20,6 +20,8 @@ use crate::oracles::{oracle_coins_module, time_metadata};
 use move_vm_runtime::logging::NoContextLog;
 use crate::session::ConstsMap;
 
+pub type SerializedTransactionEffects = Vec<((AccountAddress, StructTag), Option<Vec<u8>>)>;
+
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
     modules: HashMap<ModuleId, Vec<u8>>,
@@ -65,23 +67,36 @@ impl FakeRemoteCache {
         .to_owned())
     }
 
-    pub fn merge_transaction_effects(&mut self, effects: TransactionEffects) -> usize {
+    pub fn serialize_effects(
+        &self,
+        effects: TransactionEffects,
+    ) -> (SerializedTransactionEffects, usize) {
         let mut resources_write_size = 0;
+        let mut resources = vec![];
         for (addr, changes) in effects.resources {
             for (struct_tag, val) in changes {
                 match val {
                     Some((layout, val)) => {
                         let serialized = val.simple_serialize(&layout).expect("Valid value.");
                         resources_write_size += serialized.len();
-                        self.resources.insert((addr, struct_tag), serialized);
+                        resources.push(((addr, struct_tag), Some(serialized)));
                     }
                     None => {
-                        self.resources.remove(&(addr, struct_tag));
+                        resources.push(((addr, struct_tag), None));
                     }
                 }
             }
         }
-        resources_write_size
+        (resources, resources_write_size)
+    }
+
+    pub fn merge_effects(&mut self, serialized_effects: SerializedTransactionEffects) {
+        for ((addr, struct_tag), val) in serialized_effects {
+            match val {
+                Some(val) => self.resources.insert((addr, struct_tag), val),
+                None => self.resources.remove(&(addr, struct_tag)),
+            };
+        }
     }
 }
 
@@ -156,6 +171,7 @@ pub fn execute_script(
         oracle_prices,
         current_time,
         aborts_with,
+        dry_run,
         ..
     } = meta;
     if !oracle_prices.is_empty() {
@@ -190,8 +206,12 @@ pub fn execute_script(
     Ok(match res {
         Ok(effects) => {
             let mut explained = explain_effects(&effects, &ds)?;
-            let write_set_size = data_store.merge_transaction_effects(effects);
-            explained.set_write_set_size(write_set_size);
+            let (serialized_effects, effects_writeset_size) =
+                data_store.serialize_effects(effects);
+            explained.set_write_set_size(effects_writeset_size);
+            if !dry_run {
+                data_store.merge_effects(serialized_effects);
+            }
             StepExecutionResult::Success(explained)
         }
         Err(vm_error) => {
