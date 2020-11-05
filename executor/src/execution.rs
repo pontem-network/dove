@@ -172,7 +172,6 @@ pub fn execute_script(
         current_time,
         aborts_with,
         dry_run,
-        ..
     } = meta;
     if !oracle_prices.is_empty() {
         // check if module exists, and fail with MISSING_DEPENDENCY if not
