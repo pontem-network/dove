@@ -16,13 +16,15 @@ use num_format::ToFormattedString;
 use crate::session::ConstsMap;
 use move_lang::shared::Address;
 
+pub type StepResultInfo = (String, u64, usize, StepExecutionResult);
+
 #[derive(Debug)]
 pub struct PipelineExecutionResult {
-    pub step_results: Vec<(String, u64, usize, StepExecutionResult)>,
+    pub step_results: Vec<StepResultInfo>,
 }
 
 impl PipelineExecutionResult {
-    pub fn new(step_results: Vec<(String, u64, usize, StepExecutionResult)>) -> Self {
+    pub fn new(step_results: Vec<StepResultInfo>) -> Self {
         PipelineExecutionResult { step_results }
     }
 

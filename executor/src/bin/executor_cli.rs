@@ -5,22 +5,12 @@ use anyhow::{Context, Result};
 use clap::{App, Arg};
 
 use move_executor::execute_script;
-use move_executor::explain::{
-    PipelineExecutionResult, StepExecutionResult, ResourceChange, AddressResourceChanges,
-};
 use move_lang::name_pool::ConstPool;
 use lang::compiler::file::MoveFile;
 use lang::compiler::file;
 use lang::compiler::error::CompilerError;
 use move_lang::errors::report_errors;
-
-fn formatted_resource_change(change: &ResourceChange) -> String {
-    let ResourceChange(ty, val) = change;
-    match val {
-        Some(val) => format!("{} =\n    {}", ty, val),
-        None => ty.to_string(),
-    }
-}
+use move_executor::format::format_step_result;
 
 fn cli() -> App<'static, 'static> {
     App::new("Move Executor")
@@ -85,60 +75,12 @@ fn main() -> Result<()> {
     let res = execute_script(script, deps, dialect, sender, args);
     match res {
         Ok(exec_result) => {
-            let PipelineExecutionResult { step_results } = exec_result;
-            for (i, (name, gas, writeset_size, step_result)) in
-                step_results.into_iter().enumerate()
-            {
+            let step_results = exec_result.step_results;
+            for (i, step_result) in step_results.into_iter().enumerate() {
                 if i > 0 {
                     println!();
                 }
-                let status = if matches!(step_result, StepExecutionResult::Error(_)) {
-                    "ERROR"
-                } else {
-                    "OK"
-                };
-                println!("{} ...... {}", name, status,);
-                println!("[gas: {}, writeset bytes: {}]", gas, writeset_size);
-
-                let step_indent = "    ";
-                let content_indent = "        ";
-                match step_result {
-                    StepExecutionResult::Error(error)
-                    | StepExecutionResult::ExpectedError(error) => {
-                        print!("{}", textwrap::indent(&error, step_indent));
-                    }
-                    StepExecutionResult::Success(effects) => {
-                        for changes in effects.resources() {
-                            let AddressResourceChanges { address, changes } = changes;
-                            print!("{}", textwrap::indent(address, step_indent));
-                            for (operation, change) in changes {
-                                print!(
-                                    "{}",
-                                    textwrap::indent(
-                                        &format!(
-                                            "{} {}",
-                                            operation,
-                                            formatted_resource_change(change)
-                                        ),
-                                        content_indent
-                                    )
-                                );
-                            }
-                        }
-                        if !effects.events().is_empty() {
-                            print!("{}", textwrap::indent("Events:", content_indent));
-                            for event_change in effects.events() {
-                                print!(
-                                    "{}",
-                                    textwrap::indent(
-                                        &formatted_resource_change(event_change),
-                                        &(content_indent.to_owned() + "    ")
-                                    )
-                                );
-                            }
-                        }
-                    }
-                }
+                print!("{}", format_step_result(step_result, true, true));
             }
             Ok(())
         }

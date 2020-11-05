@@ -6,10 +6,7 @@ use move_executor::explain::StepExecutionResult;
 use lang::compiler::{ConstPool, file};
 use lang::compiler::error::CompilerError;
 use move_lang::errors::report_errors;
-
-pub fn print_test_status(test_name: &str, status: &str) {
-    println!("{} ....... {}", test_name, status);
-}
+use move_executor::format::format_step_result;
 
 fn cli() -> App<'static, 'static> {
     App::new("Test runner")
@@ -96,18 +93,26 @@ pub fn main() -> Result<()> {
 
         match exec_result.last() {
             None => {
-                print_test_status(test_name, "NO_SCRIPT");
+                println!("{} ....... SCRIPT_NOT_FOUND", test_name);
             }
             Some(step_result) => match step_result {
-                StepExecutionResult::Error(error) => {
-                    print_test_status(test_name, "ERROR");
-
+                StepExecutionResult::Error(_) => {
                     has_failures = true;
-                    print!("{}", textwrap::indent(&error, "    "));
+                    println!("{} .......", test_name);
+
+                    for step_result in exec_result.step_results {
+                        print!(
+                            "{}",
+                            textwrap::indent(
+                                &format_step_result(step_result, true, false),
+                                "    "
+                            )
+                        );
+                    }
                     println!();
                 }
                 StepExecutionResult::ExpectedError(_) | StepExecutionResult::Success(_) => {
-                    print_test_status(test_name, "ok");
+                    println!("{} ....... ok", test_name);
                 }
             },
         }
