@@ -16,7 +16,7 @@ use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
 use crate::explain::{explain_effects, explain_error, StepExecutionResult};
 use crate::meta::ExecutionMeta;
-use crate::oracles::{oracle_coins_module, time_metadata};
+use crate::oracles::{oracle_coins_module, time_metadata, coin_balance_metadata};
 use move_vm_runtime::logging::NoContextLog;
 use crate::session::ConstsMap;
 
@@ -168,6 +168,7 @@ pub fn execute_script(
     let mut ds = data_store.clone();
     let ExecutionMeta {
         signers,
+        accounts_balance,
         oracle_prices,
         current_time,
         aborts_with,
@@ -192,6 +193,12 @@ pub fn execute_script(
     for (price_tag, val) in oracle_prices {
         ds.resources
             .insert((std_addr, price_tag), lcs::to_bytes(&val).unwrap());
+    }
+    for (account, coin, val) in accounts_balance {
+        ds.resources.insert(
+            (account, coin_balance_metadata(&coin)),
+            lcs::to_bytes(&val).unwrap(),
+        );
     }
 
     let res = execute_script_with_runtime_session(

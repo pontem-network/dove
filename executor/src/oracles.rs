@@ -5,6 +5,9 @@ use move_core_types::account_address::AccountAddress;
 const COIN_MODULE: &str = "Coins";
 const PRICE_STRUCT: &str = "Price";
 
+const ACCOUNT_MODULE: &str = "Account";
+const ACCOUNT_BALANCE_STRUCT: &str = "Balance";
+
 const XFI_MODULE: &str = "XFI";
 const XFI_RESOURCE: &str = "T";
 
@@ -20,15 +23,15 @@ fn currency_type(curr: &str) -> TypeTag {
     if curr == XFI_MODULE {
         TypeTag::Struct(StructTag {
             address: CORE_CODE_ADDRESS,
-            name: Identifier::new(XFI_RESOURCE).expect("Valid currency name."),
             module: Identifier::new(XFI_MODULE).expect("Valid module name."),
+            name: Identifier::new(XFI_RESOURCE).expect("Valid currency name."),
             type_params: vec![],
         })
     } else {
         TypeTag::Struct(StructTag {
             address: CORE_CODE_ADDRESS,
-            name: Identifier::new(curr).expect("Valid currency name."),
             module: Identifier::new(COIN_MODULE).expect("Valid module name."),
+            name: Identifier::new(curr).expect("Valid currency name."),
             type_params: vec![],
         })
     }
@@ -43,8 +46,8 @@ pub fn oracle_coins_module() -> ModuleId {
 pub fn oracle_metadata(first: &str, second: &str) -> StructTag {
     StructTag {
         address: CORE_CODE_ADDRESS,
-        name: Identifier::new(PRICE_STRUCT).expect("Valid struct name."),
         module: Identifier::new(COIN_MODULE).expect("Valid module name."),
+        name: Identifier::new(PRICE_STRUCT).expect("Valid struct name."),
         type_params: vec![currency_type(first), currency_type(second)],
     }
 }
@@ -52,8 +55,17 @@ pub fn oracle_metadata(first: &str, second: &str) -> StructTag {
 pub fn time_metadata() -> StructTag {
     StructTag {
         address: CORE_CODE_ADDRESS,
-        name: Identifier::new("CurrentTimestamp").expect("Valid module name."),
         module: Identifier::new("Time").expect("Valid module name."),
+        name: Identifier::new("CurrentTimestamp").expect("Valid module name."),
         type_params: vec![],
+    }
+}
+
+pub fn coin_balance_metadata(currency: &str) -> StructTag {
+    StructTag {
+        address: CORE_CODE_ADDRESS,
+        module: Identifier::new(ACCOUNT_MODULE).expect("Valid module name."),
+        name: Identifier::new(ACCOUNT_BALANCE_STRUCT).expect("Valid module name."),
+        type_params: vec![currency_type(currency)],
     }
 }
