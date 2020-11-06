@@ -20,6 +20,7 @@ fn split_signers(s: &str) -> Vec<AccountAddress> {
 #[derive(Debug, Default, Clone)]
 pub struct ExecutionMeta {
     pub signers: Vec<AccountAddress>,
+    pub accounts_balance: Vec<(AccountAddress, String, u128)>,
     pub oracle_prices: Vec<(StructTag, u128)>,
     pub current_time: Option<u64>,
     pub aborts_with: Option<u64>,
@@ -34,6 +35,23 @@ impl ExecutionMeta {
         let (key, val) = split_around(&comment, ":");
         match key {
             "signers" => self.signers = split_signers(val),
+            "balance" => {
+                if !val.contains(' ') {
+                    eprintln!("Invalid balance doc comment: {}", comment);
+                    return;
+                }
+                let (address, balance) = split_around(val, " ");
+                if !balance.contains(' ') {
+                    eprintln!("Invalid balance doc comment: {}", comment);
+                    return;
+                }
+                let (coin, num) = split_around(balance, " ");
+                self.accounts_balance.push((
+                    AccountAddress::from_hex_literal(address).unwrap(),
+                    coin.to_string(),
+                    num.parse().unwrap(),
+                ));
+            }
             "price" => {
                 if !val.contains(' ') {
                     eprintln!("Invalid ticker price doc comment: {}", comment);

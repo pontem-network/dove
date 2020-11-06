@@ -3,7 +3,7 @@ use move_executor::execute_script;
 use move_executor::explain::{AddressResourceChanges, ResourceChange};
 use lang::compiler::ConstPool;
 use lang::compiler::file::MoveFile;
-use resources::assets_dir;
+use resources::{assets_dir, stdlib_path, modules_path};
 use lang::compiler::error::CompilerError;
 
 fn script_path() -> String {
@@ -19,11 +19,11 @@ fn module_path(name: &str) -> String {
 }
 
 pub fn stdlib_mod(name: &str) -> MoveFile {
-    MoveFile::load(assets_dir().join("stdlib").join(name)).unwrap()
+    MoveFile::load(stdlib_path().join(name)).unwrap()
 }
 
 pub fn modules_mod(name: &str) -> MoveFile {
-    MoveFile::load(assets_dir().join("modules").join(name)).unwrap()
+    MoveFile::load(modules_path().join(name)).unwrap()
 }
 
 #[test]
@@ -961,4 +961,49 @@ script {
         effects.resources()[0].changes[0].1,
         ResourceChange("0x2::Record::T".to_string(), Some("[U8(11)]".to_string()))
     );
+}
+
+#[test]
+fn test_set_balance_via_meta() {
+    let _pool = ConstPool::new();
+    let text = r#"
+/// signers: 0x1
+script {
+    use 0x1::Dfinance;
+    use 0x1::Coins::ETH;
+
+    fun register_coins(standard_account: &signer) {
+        Dfinance::register_coin<ETH>(standard_account, b"eth", 18);
+    }
+}
+
+/// signers: 0x2
+/// balance: 0x2 eth 100
+script {
+    use 0x1::Account;
+    use 0x1::Coins::ETH;
+
+    fun main(s: &signer) {
+        assert(Account::balance<ETH>(s) == 100, 101);
+    }
+}
+    "#;
+
+    execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![
+            stdlib_mod("coins.move"),
+            stdlib_mod("event.move"),
+            stdlib_mod("dfinance.move"),
+            stdlib_mod("signer.move"),
+            stdlib_mod("account.move"),
+        ],
+        "libra",
+        "0x1",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
 }
