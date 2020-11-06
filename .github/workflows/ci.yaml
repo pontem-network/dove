@@ -79,6 +79,9 @@ jobs:
       - name: Test
         run: cargo test --all --no-fail-fast
 
+      - name: testrunner test
+        run: cargo run --bin testrunner -- --sender 0x1 --modules resources/assets/stdlib/ --modules resources/assets/modules/ resources/assets/runner_tests/
+
       - name: Run clippy
         run: cargo clippy --tests --examples -- -Dwarnings
 
