@@ -89,3 +89,25 @@ jobs:
         asset_path: ${{ github.workspace }}\target\release\executor_cli.exe
         asset_name: move-executor-${{ matrix.platform }}.exe
         asset_content_type: application/octet-stream
+
+    - name: Test Runner - upload binary as Release Asset (ubuntu, macos)
+      if: matrix.os != 'windows-latest'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./target/release/testrunner
+        asset_name: test-runner-${{ matrix.platform }}
+        asset_content_type: application/octet-stream
+
+    - name: Test Runner - upload binary as Release Asset (windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ github.workspace }}\target\release\testrunner.exe
+        asset_name: test-runner-${{ matrix.platform }}.exe
+        asset_content_type: application/octet-stream

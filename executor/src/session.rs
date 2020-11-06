@@ -35,15 +35,6 @@ pub struct ExecutionSession {
 }
 
 impl ExecutionSession {
-    pub fn is_executable(&self) -> bool {
-        for unit in &self.units {
-            if let ExecutionUnit::Script(_) = unit {
-                return true;
-            }
-        }
-        false
-    }
-
     pub fn consts(&self) -> &ConstsMap {
         &self.consts
     }
