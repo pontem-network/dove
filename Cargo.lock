@@ -2262,6 +2262,7 @@ dependencies = [
  "anyhow",
  "clap 2.33.3",
  "compiled-stdlib",
+ "enum-iterator",
  "errmapgen",
  "git-hash",
  "lang",

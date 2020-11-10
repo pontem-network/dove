@@ -1013,7 +1013,7 @@ fn test_fail_with_arithmetic_error() {
     let _pool = ConstPool::new();
 
     let text = r"
-/// status: 4017
+/// status: ARITHMETIC_ERROR
 script {
     fun main() {
         1 / 0;
