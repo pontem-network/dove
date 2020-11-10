@@ -1,8 +1,6 @@
 use anyhow::Result;
 use std::fmt::Write;
 
-use vm::errors::VMError;
-
 use move_vm_runtime::data_cache::TransactionEffects;
 use crate::execution::FakeRemoteCache;
 use libra_types::vm_status::{VMStatus, AbortLocation, StatusCode};
@@ -45,6 +43,14 @@ pub enum StepExecutionResult {
 }
 
 impl StepExecutionResult {
+    pub fn with_expected_error(s: String) -> StepExecutionResult {
+        StepExecutionResult::ExpectedError(format!("Expected error: {}", s))
+    }
+
+    pub fn with_error(s: String) -> StepExecutionResult {
+        StepExecutionResult::Error(s)
+    }
+
     pub fn error(self) -> String {
         match self {
             StepExecutionResult::Error(error) => error,
@@ -266,14 +272,11 @@ pub fn explain_effects(
     Ok(explained_effects)
 }
 
-// pub const ERROR_DESCRIPTIONS: &[u8] = include_bytes!("./error_descriptions/error_descriptions.errmap");
-
-fn explain_type_error(
-    text_representation: &mut String,
+pub fn explain_type_error(
     script: &CompiledScript,
     signers: &[AccountAddress],
     txn_args: &[TransactionArgument],
-) {
+) -> String {
     use vm::file_format::SignatureToken::*;
 
     let script_params = script.signature_at(script.as_inner().parameters);
@@ -286,50 +289,32 @@ fn explain_type_error(
         })
         .count();
     if expected_num_signers != signers.len() {
-        writeln!(
-            text_representation,
+        return format!(
             "Execution failed with incorrect number of signers: script expected {:?}, but found \
              {:?}",
             expected_num_signers,
             signers.len()
-        )
-        .unwrap();
-        return;
+        );
     }
 
     // TODO: printing type(s) of missing arguments could be useful
     let expected_num_args = script_params.len() - signers.len();
     if expected_num_args != txn_args.len() {
-        writeln!(
-            text_representation,
+        return format!(
             "Execution failed with incorrect number of arguments: script expected {:?}, but found \
              {:?}",
             expected_num_args,
             txn_args.len()
-        ).unwrap();
-        return;
+        );
     }
 
     // TODO: print more helpful error message pinpointing the (argument, type)
     // pair that didn't match
-    writeln!(
-        text_representation,
-        "Execution failed with type error when binding type arguments to type parameters"
-    )
-    .unwrap();
+    "Execution failed with type error when binding type arguments to type parameters".to_string()
 }
 
-/// Explain an execution error
-pub fn explain_error(
-    error: VMError,
-    remote_cache: &FakeRemoteCache,
-    script: &CompiledScript,
-    signers: &[AccountAddress],
-    consts_map: &ConstsMap,
-) -> (Option<u64>, String) {
-    let mut text_representation = String::new();
-    let mut abort_code = None;
-    match error.into_vm_status() {
+pub fn explain_abort(vm_status: VMStatus, consts_map: &ConstsMap) -> String {
+    match vm_status {
         VMStatus::MoveAbort(AbortLocation::Module(id), error_code) => {
             let const_key = (
                 format!("{}", Address::new(id.address().to_u8())),
@@ -341,26 +326,26 @@ pub fn explain_error(
                 Some(name) => format!("{}: {}", error_code, name),
                 None => format!("{}", error_code),
             };
-            write!(
-                &mut text_representation,
+            return format!(
                 "Execution aborted with code {} in module {}::{}.",
                 error,
                 short_address(id.address()),
                 id.name()
-            )
-            .unwrap();
-            abort_code = Some(error_code);
+            );
         }
         VMStatus::MoveAbort(AbortLocation::Script, error_code) => {
             // TODO: map to source code location
-            write!(
-                &mut text_representation,
+            return format!(
                 "Execution aborted with code {} in transaction script",
                 error_code
-            )
-            .unwrap();
-            abort_code = Some(error_code);
+            );
         }
+        _ => unreachable!(),
+    }
+}
+
+pub fn explain_execution_failure(vm_status: VMStatus, remote_cache: &FakeRemoteCache) -> String {
+    match vm_status {
         VMStatus::ExecutionFailure {
             status_code,
             location,
@@ -388,23 +373,11 @@ pub fn explain_error(
             // TODO: code offset is 1-indexed, but disassembler instruction numbering starts at zero
             // This is potentially confusing to someone trying to understand where something failed
             // by looking at a code offset + disassembled bytecode; we should fix it
-            write!(
-                &mut text_representation,
+            return format!(
                 "Execution failed with {} in {} at code offset {}",
                 status_explanation, location_explanation, code_offset
-            )
-            .unwrap();
+            );
         }
-        VMStatus::Error(StatusCode::TYPE_MISMATCH) => {
-            explain_type_error(&mut text_representation, script, signers, &[])
-        }
-        VMStatus::Error(status_code) => write!(
-            &mut text_representation,
-            "Execution failed with unexpected error {:?}",
-            status_code
-        )
-        .unwrap(),
-        VMStatus::Executed => unreachable!(),
-    };
-    (abort_code, text_representation)
+        _ => unreachable!(),
+    }
 }

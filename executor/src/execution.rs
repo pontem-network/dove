@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
-use move_core_types::vm_status::StatusCode;
+use move_core_types::vm_status::{StatusCode, VMStatus};
 use move_vm_runtime::data_cache::{RemoteCache, TransactionEffects};
 use move_vm_runtime::move_vm::MoveVM;
 use move_vm_types::gas_schedule::CostStrategy;
@@ -14,7 +14,10 @@ use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
-use crate::explain::{explain_effects, explain_error, StepExecutionResult};
+use crate::explain::{
+    explain_effects, StepExecutionResult, explain_abort, explain_execution_failure,
+    explain_type_error,
+};
 use crate::meta::ExecutionMeta;
 use crate::oracles::{oracle_coins_module, time_metadata, coin_balance_metadata};
 use move_vm_runtime::logging::NoContextLog;
@@ -172,6 +175,7 @@ pub fn execute_script(
         oracle_prices,
         current_time,
         aborts_with,
+        status,
         dry_run,
     } = meta;
     if !oracle_prices.is_empty() {
@@ -221,20 +225,41 @@ pub fn execute_script(
             StepExecutionResult::Success(explained)
         }
         Err(vm_error) => {
-            let (abort_code, error_as_string) =
-                explain_error(vm_error, data_store, &script, &signers, consts_map);
-            match aborts_with {
-                Some(expected_abort_code) => {
-                    if abort_code.is_some() && abort_code.unwrap() == expected_abort_code {
-                        StepExecutionResult::ExpectedError(format!(
-                            "Expected error: {}",
-                            error_as_string
-                        ))
+            let vm_status = vm_error.into_vm_status();
+            match vm_status {
+                VMStatus::MoveAbort(_, code) => {
+                    let error_message = explain_abort(vm_status, consts_map);
+                    if let Some(abort_code) = aborts_with {
+                        if code == abort_code {
+                            StepExecutionResult::with_expected_error(error_message)
+                        } else {
+                            StepExecutionResult::with_error(error_message)
+                        }
                     } else {
-                        StepExecutionResult::Error(error_as_string)
+                        StepExecutionResult::with_error(error_message)
                     }
                 }
-                None => StepExecutionResult::Error(error_as_string),
+                VMStatus::ExecutionFailure { status_code, .. } => {
+                    let status_code = status_code as u64;
+                    let error_message = explain_execution_failure(vm_status, data_store);
+                    if let Some(expected_status_code) = status {
+                        if status_code == expected_status_code {
+                            StepExecutionResult::with_expected_error(error_message)
+                        } else {
+                            StepExecutionResult::with_error(error_message)
+                        }
+                    } else {
+                        StepExecutionResult::with_error(error_message)
+                    }
+                }
+                VMStatus::Error(StatusCode::TYPE_MISMATCH) => {
+                    StepExecutionResult::with_error(explain_type_error(&script, &signers, &[]))
+                }
+                VMStatus::Error(status_code) => StepExecutionResult::with_error(format!(
+                    "Execution failed with unexpected error {:?}",
+                    status_code
+                )),
+                VMStatus::Executed => unreachable!(),
             }
         }
     })

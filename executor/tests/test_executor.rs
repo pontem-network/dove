@@ -1007,3 +1007,33 @@ script {
     .unwrap()
     .effects();
 }
+
+#[test]
+fn test_fail_with_arithmetic_error() {
+    let _pool = ConstPool::new();
+
+    let text = r"
+/// status: 4017
+script {
+    fun main() {
+        1 / 0;
+    }
+}
+    ";
+
+    let error_string = execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .expected_error();
+    assert_eq!(
+        error_string,
+        "Expected error: Execution failed with an arithmetic error (i.e., integer overflow/underflow, div/mod by zero, or invalid shift) in script at code offset 2"
+    );
+}
