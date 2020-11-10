@@ -81,7 +81,7 @@ impl ExecutionMeta {
             "current_time" => self.current_time = Some(val.parse().unwrap()),
             "aborts_with" => self.aborts_with = Some(val.parse().unwrap()),
             "status" => {
-                self.status = status_codes().get(val).cloned();
+                self.status = status_codes().get(val).copied();
                 if self.status.is_none() {
                     eprintln!("Unknown status code name: {:?}", val);
                 }
