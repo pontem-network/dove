@@ -13,6 +13,7 @@ serde_json = "1.0.52"
 clap = "2.33.1"
 textwrap = "0.12.1"
 num-format = { version = "0.4", features = ["std"] }
+enum-iterator = "0.6.0"
 
 libra-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["debug_module"] }
