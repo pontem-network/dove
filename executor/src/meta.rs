@@ -33,6 +33,7 @@ pub struct ExecutionMeta {
     pub accounts_balance: Vec<(AccountAddress, String, u128)>,
     pub oracle_prices: Vec<(StructTag, u128)>,
     pub current_time: Option<u64>,
+    pub block: Option<u64>,
     pub aborts_with: Option<u64>,
     pub status: Option<u64>,
     pub dry_run: bool,
@@ -86,6 +87,7 @@ impl ExecutionMeta {
                     eprintln!("Unknown status code name: {:?}", val);
                 }
             }
+            "block" => self.block = Some(val.parse().unwrap()),
             "dry_run" => self.dry_run = val.parse().unwrap(),
             _ => eprintln!("Unimplemented meta key, {:?}", key),
         }

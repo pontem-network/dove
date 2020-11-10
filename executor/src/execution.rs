@@ -19,7 +19,7 @@ use crate::explain::{
     explain_type_error,
 };
 use crate::meta::ExecutionMeta;
-use crate::oracles::{oracle_coins_module, time_metadata, coin_balance_metadata};
+use crate::oracles::{oracle_coins_module, time_metadata, coin_balance_metadata, block_metadata};
 use move_vm_runtime::logging::NoContextLog;
 use crate::session::ConstsMap;
 
@@ -176,6 +176,7 @@ pub fn execute_script(
         current_time,
         aborts_with,
         status,
+        block,
         dry_run,
     } = meta;
     if !oracle_prices.is_empty() {
@@ -194,6 +195,11 @@ pub fn execute_script(
             lcs::to_bytes(&current_time).unwrap(),
         );
     }
+    let block_height = block.unwrap_or(100);
+    ds.resources.insert(
+        (std_addr, block_metadata()),
+        lcs::to_bytes(&block_height).unwrap(),
+    );
     for (price_tag, val) in oracle_prices {
         ds.resources
             .insert((std_addr, price_tag), lcs::to_bytes(&val).unwrap());
