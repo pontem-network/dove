@@ -1037,3 +1037,56 @@ script {
         "Expected error: Execution failed with an arithmetic error (i.e., integer overflow/underflow, div/mod by zero, or invalid shift) in script at code offset 2"
     );
 }
+
+#[test]
+fn test_set_block_height() {
+    let _pool = ConstPool::new();
+
+    let text = r"
+/// block: 1024
+script {
+    use 0x1::Block;
+
+    fun success() {
+        assert(Block::get_current_block_height() == 1024, 1);
+    }
+}    ";
+
+    execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("block.move")],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
+}
+
+#[test]
+fn test_block_height_default_100() {
+    let _pool = ConstPool::new();
+
+    let text = r"
+script {
+    use 0x1::Block;
+
+    fun success() {
+        assert(Block::get_current_block_height() == 100, 1);
+    }
+}    ";
+
+    execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![stdlib_mod("block.move")],
+        "libra",
+        "0x3",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
+}

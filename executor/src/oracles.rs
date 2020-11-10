@@ -11,6 +11,8 @@ const ACCOUNT_BALANCE_STRUCT: &str = "Balance";
 const XFI_MODULE: &str = "XFI";
 const XFI_RESOURCE: &str = "T";
 
+const BLOCK_RESOURCE: &str = "BlockMetadata";
+
 /// Currency price.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Price {
@@ -49,6 +51,15 @@ pub fn oracle_metadata(first: &str, second: &str) -> StructTag {
         module: Identifier::new(COIN_MODULE).expect("Valid module name."),
         name: Identifier::new(PRICE_STRUCT).expect("Valid struct name."),
         type_params: vec![currency_type(first), currency_type(second)],
+    }
+}
+
+pub fn block_metadata() -> StructTag {
+    StructTag {
+        address: CORE_CODE_ADDRESS,
+        name: Identifier::new(BLOCK_RESOURCE).expect("Valid module name."),
+        module: Identifier::new("Block").expect("Valid module name."),
+        type_params: vec![],
     }
 }
 
