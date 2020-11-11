@@ -44,7 +44,7 @@ jobs:
         components: rustfmt
 
     - name: Build with --release
-      run: cargo build -v --release
+      run: cargo build --bins --release
 
     - name: Language Server - upload binary as Release Asset (ubuntu, macos)
       if: matrix.os != 'windows-latest'
@@ -75,7 +75,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./target/release/executor_cli
+        asset_path: ./target/release/executor
         asset_name: move-executor-${{ matrix.platform }}
         asset_content_type: application/octet-stream
 
@@ -86,7 +86,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ${{ github.workspace }}\target\release\executor_cli.exe
+        asset_path: ${{ github.workspace }}\target\release\executor.exe
         asset_name: move-executor-${{ matrix.platform }}.exe
         asset_content_type: application/octet-stream
 
