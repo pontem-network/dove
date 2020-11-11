@@ -1,0 +1,31 @@
+name: Crate Version
+description: "Get version of specified crate"
+author: "Alex Koz."
+inputs:
+  crate:
+    required: true
+    description: "Name of crate of interest"
+  pwd:
+    default: "./"
+    required: false
+    description: "Current working directory"
+outputs:
+  version:
+    description: "Version of specified crate"
+    value: ${{ steps.version.outputs.value }}
+runs:
+  using: "composite"
+  steps:
+    - id: version
+      shell: bash
+      run: |
+        cd ${{ inputs.pwd }}
+        CRATE_VER=`cargo tree --color=never -p ${{ inputs.crate }} -q 2>&1 \
+          | head -n 1 \
+          | awk '{print $2}' \
+          | sed 's/^v\(.*\)/\1/'`
+        echo "::set-output name=value::$CRATE_VER"
+        echo "${{ inputs.crate }} version: $CRATE_VER"
+branding:
+  icon: "package"
+  color: "orange"

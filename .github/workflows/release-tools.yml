@@ -1,0 +1,237 @@
+name: Build Release Tools
+on:
+  workflow_run:
+    workflows: [Create Release Page]
+    types: [completed]
+
+env:
+  RUSTFLAGS: -D warnings
+  CARGO_INCREMENTAL: 0
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_NET_RETRY: 10
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: get release info
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ${{ github.event.workflow_run.workflow_id }}
+          run_id: ${{ github.event.workflow_run.id }}
+          name: release assets url
+      - name: read release info
+        id: release
+        run: |
+          echo ::set-output name=tag::$(cat release-upload.url | cut -d \  -f 1)
+          echo ::set-output name=upload_url::$(cat release-upload.url | cut -d \  -f 2)
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+
+  build:
+    runs-on: ${{ matrix.os }}
+    needs: release
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: win # gnu,mingw64
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout (${{ needs.release.outputs.tag }}-${{ github.event.workflow_run.head_sha }})
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Build all executables
+        run: cargo build --release --all --bins
+
+      - id: mls
+        name: get version of move-language-server
+        uses: ./.github/actions/crate-version
+        with: { crate: move-language-server }
+
+      - id: movec
+        name: get version of movec
+        uses: ./.github/actions/crate-version
+        with: { crate: movec }
+
+      - id: executor
+        name: get version of move-executor
+        uses: ./.github/actions/crate-version
+        with: { crate: move-executor }
+
+      - id: disassembler
+        name: get version of disassembler
+        uses: ./.github/actions/crate-version
+        with: { crate: disassembler }
+
+      - if: ${{ matrix.platform == 'win' }}
+        name: set up standard executable ext for ${{ matrix.platform }}
+        run: |
+          echo "OS_BIN_EXT=.exe" >> $GITHUB_ENV
+          echo "::set-env name=OS_BIN_EXT::.exe"
+
+      - name: save build info
+        id: build-info
+        run: |
+          uname -a > build-info.txt
+          rustc -V >> build-info.txt
+          echo "::set-output name=arch::$(uname -m)"
+
+      - name: prepare dist dirs
+        id: dist
+        run: |
+          RELEASE_DIR=./target/release
+          DIST_DIR=$RELEASE_DIR/dist
+          mkdir -p $DIST_DIR
+          echo "::set-output name=build::$RELEASE_DIR"
+          echo "::set-output name=dist::$DIST_DIR"
+
+      - name: prepare toolchain
+        id: toolchain
+        run: |
+          echo "git-tag r '$GITHUB_REF'"
+          echo "git-tag d '$(git describe --tags)'"
+          echo "tag by release ${{ needs.release.outputs.tag }}"
+
+          ARCH="${{ steps.build-info.outputs.arch }}"
+          RELEASE_DIR=${{ steps.dist.outputs.build }}
+          DIST_DIR=${{ steps.dist.outputs.dist }}
+          PKG_NAME="move-toolchain-${{ needs.release.outputs.tag }}-${{ matrix.platform }}-$ARCH"
+          PKG_DIR=$DIST_DIR/$PKG_NAME
+          PKG_BIN_DIR=$PKG_DIR/bin
+
+          MLS_NAME=move-language-server$OS_BIN_EXT
+          MOVEC_NAME=movec$OS_BIN_EXT
+          EXECUTOR_NAME=move-executor$OS_BIN_EXT
+          TESTRUNNER_NAME=move-testrunner$OS_BIN_EXT
+          DISASSEMBLER_NAME=move-disassembler$OS_BIN_EXT
+
+          mkdir -p $PKG_BIN_DIR
+          cp build-info.txt $PKG_DIR/
+
+          cp $RELEASE_DIR/executor$OS_BIN_EXT $PKG_BIN_DIR/$EXECUTOR_NAME
+          cp $RELEASE_DIR/testrunner$OS_BIN_EXT $PKG_BIN_DIR/$TESTRUNNER_NAME
+          cp $RELEASE_DIR/disassembler$OS_BIN_EXT $PKG_BIN_DIR/$DISASSEMBLER_NAME
+          cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
+          cp $RELEASE_DIR/movec$OS_BIN_EXT $PKG_BIN_DIR/$MOVEC_NAME
+
+          echo "::set-output name=name::$PKG_NAME"
+          echo "::set-output name=path::$PKG_DIR"
+
+      - name: archive toolchain
+        id: archive
+        uses: ./.github/actions/archive
+        with:
+          name: ${{ steps.toolchain.outputs.name }}
+          path: ${{ steps.toolchain.outputs.path }}
+
+      - name: prepare standalone executables
+        id: artifact
+        run: |
+          ARCH="${{ steps.build-info.outputs.arch }}"
+          RELEASE_DIR=${{ steps.dist.outputs.build }}
+
+          MLS_NAME=move-language-server-${{ steps.mls.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+          MOVEC_NAME=movec-${{ steps.movec.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+          EXECUTOR_NAME=move-executor-${{ steps.executor.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+          TESTRUNNER_NAME=move-testrunner-${{ steps.executor.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+          DISASSEMBLER_NAME=move-disassembler-${{ steps.disassembler.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+          cd $RELEASE_DIR
+
+          mv executor$OS_BIN_EXT $EXECUTOR_NAME
+          mv testrunner$OS_BIN_EXT $TESTRUNNER_NAME
+          mv disassembler$OS_BIN_EXT $DISASSEMBLER_NAME
+          mv move-language-server$OS_BIN_EXT $MLS_NAME
+          mv movec$OS_BIN_EXT $MOVEC_NAME
+
+          echo "::set-output name=mls::$MLS_NAME"
+          echo "::set-output name=movec::$MOVEC_NAME"
+          echo "::set-output name=executor::$EXECUTOR_NAME"
+          echo "::set-output name=testrunner::$TESTRUNNER_NAME"
+          echo "::set-output name=disassembler::$DISASSEMBLER_NAME"
+          echo "::set-output name=mls_path::$RELEASE_DIR/$MLS_NAME"
+          echo "::set-output name=movec_path::$RELEASE_DIR/$MOVEC_NAME"
+          echo "::set-output name=executor_path::$RELEASE_DIR/$EXECUTOR_NAME"
+          echo "::set-output name=testrunner_path::$RELEASE_DIR/$TESTRUNNER_NAME"
+          echo "::set-output name=disassembler_path::$RELEASE_DIR/$DISASSEMBLER_NAME"
+
+      - name: upload Toolchain
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.archive.outputs.path }}
+          asset_name: ${{ steps.archive.outputs.name }}
+          asset_content_type: application/gzip
+
+      - name: upload MLS
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.artifact.outputs.mls_path }}
+          asset_name: ${{ steps.artifact.outputs.mls }}
+          asset_content_type: application/gzip
+
+      - name: upload Movec
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.artifact.outputs.movec_path }}
+          asset_name: ${{ steps.artifact.outputs.movec }}
+          asset_content_type: application/gzip
+
+      - name: upload Executor
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.artifact.outputs.executor_path }}
+          asset_name: ${{ steps.artifact.outputs.executor }}
+          asset_content_type: application/gzip
+
+      - name: upload TestRunner
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.artifact.outputs.testrunner_path }}
+          asset_name: ${{ steps.artifact.outputs.testrunner }}
+          asset_content_type: application/gzip
+
+      - name: upload Disassembler
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.artifact.outputs.disassembler_path }}
+          asset_name: ${{ steps.artifact.outputs.disassembler }}
+          asset_content_type: application/gzip

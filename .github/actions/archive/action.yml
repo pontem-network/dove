@@ -1,0 +1,95 @@
+name: Archive
+description: "Make archive with specified file or directory"
+author: "Alex Koz."
+inputs:
+  path:
+    required: true
+    description: "Path to file or directory to archive, relative to pwd or absolute"
+  name:
+    required: true
+    description: "Name of resulting archive without extension"
+  pwd:
+    default: "./"
+    required: false
+    description: "Current working directory"
+outputs:
+  type:
+    description: "Type of resulting file"
+    value: ${{ steps.compress.outputs.type }}
+  name:
+    description: "Name of resulting file with extension"
+    value: ${{ steps.compress.outputs.name }}
+  path:
+    description: "Path of resulting file as PWD/NAME.EXT"
+    value: ${{ steps.compress.outputs.path }}
+runs:
+  using: "composite"
+  steps:
+    - id: compress
+      shell: bash
+      run: |
+        ORIGPWD=$PWD
+        cd ${{ inputs.pwd }}
+        PARENTDIR=$(dirname -- "${{ inputs.path }}")
+        TARGETNAME=$(basename -- "${{ inputs.path }}")
+
+        if [[ -d "${{ inputs.path }}" ]]; then
+            echo "archiving directory"
+        elif [[ -f "${{ inputs.path }}" ]]; then
+            echo "archiving file"
+        else
+            echo "ERROR: target doesn't exits."
+            ls; exit 1
+        fi
+
+        ARCHTYPE=zip
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            ARCHTYPE="tar"
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+            ARCHTYPE="zip"
+        elif [[ "$OSTYPE" == "cygwin" ]]; then
+            # POSIX compatibility layer and Linux environment emulation for Windows
+            ARCHTYPE="zip"
+        elif [[ "$OSTYPE" == "msys" ]]; then
+            # Lightweight shell and GNU utilities compiled for Windows (part of MinGW)
+            ARCHTYPE="zip"
+        elif [[ "$OSTYPE" == "win32" ]]; then
+            # I'm not sure this can happen.
+            ARCHTYPE="zip"
+        elif [[ "$OSTYPE" == "freebsd"* ]]; then
+            ARCHTYPE="tar"
+        else
+            echo "ERROR: unknown OS '$OSTYPE'."
+            exit 1
+        fi
+
+        cd $PARENTDIR
+        ARCHEXT=.zip
+        if [[ "$ARCHTYPE" == "zip" ]]; then
+            ARCHEXT=.zip
+            if which zip; then
+                zip ${{ inputs.name }}$ARCHEXT -9oTyr $TARGETNAME
+            else
+                echo zip not found
+                if which pwsh; then
+                    pwsh -Command "& Compress-Archive -LiteralPath $TARGETNAME -DestinationPath ${{ inputs.name }}$ARCHEXT; "
+                    if [[ ! -f "${{ inputs.name }}$ARCHEXT" ]]; then
+                        echo "ERROR: unable to make archive."
+                        exit 1
+                    fi
+                else
+                    echo "ERROR: unable to make archive."
+                    exit 1
+                fi
+            fi
+        else
+            ARCHEXT=.tar.gz
+            tar -czf ${{ inputs.name }}$ARCHEXT $TARGETNAME
+        fi
+
+        echo "::set-output name=type::$ARCHTYPE"
+        echo "::set-output name=name::${{ inputs.name }}$ARCHEXT"
+        echo "::set-output name=path::${{ inputs.pwd }}/$PARENTDIR/${{ inputs.name }}$ARCHEXT"
+branding:
+  icon: "package"
+  color: "orange"

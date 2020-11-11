@@ -1,0 +1,78 @@
+name: Create Release Page
+on:
+  push:
+    tags:
+      - v?[0-9]+.[0-9]+.*
+
+jobs:
+  release:
+    name: Release page
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Extract the version tag
+        id: version
+        run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
+
+      # checkout needed for changelog only
+      - name: Checkout
+        uses: actions/checkout@v2
+        with: { fetch-depth: 0 }
+      - name: add things for changelog generator
+        run: npm init -y && sed -i 's/1\.0\.0/${{ steps.version.outputs.value }}/' ./package.json
+      - id: changelog
+        name: Generate Changelog
+        uses: ScottBrenner/generate-changelog-action@1.0.2
+        continue-on-error: true
+        env:
+          REPO: ${{ github.repository }}
+
+      - id: release
+        name: Create release ${{ steps.version.outputs.value }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          prerelease: true
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            __TODO: EDIT ME BEFORE PUBLISH__
+            ${{ steps.changelog.outputs.changelog }}
+
+      - name: Save release assets url for other workflows
+        run: echo "${{ steps.version.outputs.value }} ${{ steps.release.outputs.upload_url }}" > release-upload.url
+
+      - name: Set release assets url as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release assets url
+          path: release-upload.url
+          if-no-files-found: error
+          retention-days: 1
+
+    outputs:
+      tag: ${{ steps.version.outputs.value }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+#
+#     # example post-create-release job:
+#     build:
+#       needs: release
+#       runs-on: ${{ matrix.os }}
+#       strategy:
+#         fail-fast: false
+#         matrix:
+#           os:
+#             - ubuntu-latest
+#             - macos-latest
+#             - windows-latest
+#       defaults:
+#         run:
+#           shell: bash
+#       steps:
+#         - name: release url
+#           run: echo "${{ needs.release.outputs.upload_url }}"

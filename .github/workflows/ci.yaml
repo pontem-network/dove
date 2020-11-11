@@ -9,6 +9,7 @@ jobs:
   tests:
     name: Tests
     runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
 
     defaults:
       run:
@@ -79,9 +80,6 @@ jobs:
       - name: Test
         run: cargo test --all --no-fail-fast
 
-      - name: testrunner test
-        run: cargo run --bin testrunner -- --sender 0x1 --modules resources/assets/stdlib/ --modules resources/assets/modules/ resources/assets/runner_tests/
-
       - name: Run clippy
         run: cargo clippy --tests --examples -- -Dwarnings
 
@@ -147,7 +145,6 @@ jobs:
         run: |
           wasm-bindgen target/wasm32-unknown-unknown/release/${{ matrix.crate }}.wasm --out-dir ./dist_${{ matrix.crate }} --no-modules --no-modules-global ${{ matrix.crate }}
           wasm-bindgen target/wasm32-unknown-unknown/release/${{ matrix.crate }}.wasm --out-dir ./dist_${{ matrix.crate }}/js-modules
-
       # - name: Install wasm-pack toolchain
       #   run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       # - name: Test in Chrome
