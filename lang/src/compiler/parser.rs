@@ -75,7 +75,7 @@ pub fn parse_program(
     }
 }
 
-fn parse_file(
+pub fn parse_file(
     dialect: &dyn Dialect,
     files: &mut FilesSourceText,
     fname: &'static str,

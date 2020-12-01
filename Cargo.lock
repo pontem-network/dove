@@ -785,6 +785,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "dove"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bech32",
+ "dfibra",
+ "git-hash",
+ "git2",
+ "hex",
+ "http",
+ "itertools",
+ "lang",
+ "lazy_static",
+ "log",
+ "maplit",
+ "move-executor",
+ "once_cell",
+ "rand",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "structopt",
+ "termcolor",
+ "tiny-keccak",
+ "toml",
+ "twox-hash",
+ "walkdir",
+]
+
+[[package]]
 name = "dtoa"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1166,6 +1198,21 @@ name = "git-hash"
 version = "0.1.0"
 
 [[package]]
+name = "git2"
+version = "0.13.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca6f1a0238d7f8f8fd5ee642f4ebac4dbc03e03d1f78fbe7a3ede35dcf7e2224"
+dependencies = [
+ "bitflags",
+ "libc",
+ "libgit2-sys",
+ "log",
+ "openssl-probe",
+ "openssl-sys",
+ "url",
+]
+
+[[package]]
 name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1537,6 +1584,20 @@ name = "libc"
 version = "0.2.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d58d1b70b004888f764dfbf6a26a3b0342a1632d33968e4a179d8011c760614"
+
+[[package]]
+name = "libgit2-sys"
+version = "0.12.14+1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f25af58e6495f7caf2919d08f212de550cfa3ed2f5e744988938ea292b9f549"
+dependencies = [
+ "cc",
+ "libc",
+ "libssh2-sys",
+ "libz-sys",
+ "openssl-sys",
+ "pkg-config",
+]
 
 [[package]]
 name = "libra-canonical-serialization"
@@ -2006,6 +2067,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "libssh2-sys"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca46220853ba1c512fc82826d0834d87b06bcd3c2a42241b7de72f3d2fe17056"
+dependencies = [
+ "cc",
+ "libc",
+ "libz-sys",
+ "openssl-sys",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
+name = "libz-sys"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "602113192b08db8f38796c4e85c39e960c145965140e918018bcde1952429655"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
 name = "linked-hash-map"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2445,34 +2532,6 @@ dependencies = [
  "serde",
  "sha2 0.9.1",
  "vm",
-]
-
-[[package]]
-name = "movec"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bech32",
- "dfibra",
- "git-hash",
- "hex",
- "http",
- "itertools",
- "lang",
- "lazy_static",
- "log",
- "once_cell",
- "rand",
- "regex",
- "reqwest",
- "serde",
- "serde_derive",
- "structopt",
- "termcolor",
- "tiny-keccak",
- "toml",
- "twox-hash",
- "walkdir",
 ]
 
 [[package]]

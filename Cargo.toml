@@ -2,7 +2,7 @@
 members = [
     "language_server",
     "executor",
-    "movec",
+    "dove",
     "lang",
     "lang/compat",
     "lang/disassembler",

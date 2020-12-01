@@ -1,5 +1,5 @@
-mod dfinance;
-mod libra;
+pub mod dfinance;
+pub mod libra;
 pub mod line_endings;
 
 use anyhow::Result;

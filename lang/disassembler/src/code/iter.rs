@@ -20,7 +20,7 @@ impl<'a> BytecodeIterator<'a> {
 
     /// Returns current bytecode instruction index.
     pub fn index(&self) -> usize {
-        self.index.unwrap_or_else(|| 0)
+        self.index.unwrap_or(0)
     }
 
     /// Returns a reference to all bytecode instructions.
@@ -36,7 +36,7 @@ impl<'a> BytecodeIterator<'a> {
 
     /// Returns a bytecode instruction by absolute offset.
     pub fn absolute(&self, index: usize) -> &Bytecode {
-        &self.code.get(index).unwrap_or_else(|| &Bytecode::Nop)
+        &self.code.get(index).unwrap_or(&Bytecode::Nop)
     }
 
     /// Returns a bytecode instruction by relative offset.
@@ -44,7 +44,7 @@ impl<'a> BytecodeIterator<'a> {
         &self
             .code
             .get(self.index() + offset as usize)
-            .unwrap_or_else(|| &Bytecode::Nop)
+            .unwrap_or(&Bytecode::Nop)
     }
 }
 

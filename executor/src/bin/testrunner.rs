@@ -1,12 +1,10 @@
-use anyhow::Result;
+use anyhow::{Result, Context};
 use clap::{App, Arg};
-use move_executor::execute_script;
 use std::path::PathBuf;
-use move_executor::explain::StepExecutionResult;
 use lang::compiler::{ConstPool, file};
-use lang::compiler::error::CompilerError;
-use move_lang::errors::report_errors;
-use move_executor::format::format_step_result;
+use move_executor::executor::{Executor, render_test_result};
+use lang::compiler::dialects::DialectName;
+use std::str::FromStr;
 
 fn cli() -> App<'static, 'static> {
     App::new("Test runner")
@@ -67,15 +65,16 @@ pub fn main() -> Result<()> {
         );
     }
 
+    let dialect = DialectName::from_str("dfinance")?.get_dialect();
+    let sender = dialect
+        .normalize_account_address(sender)
+        .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
+
+    let executor = Executor::new(dialect.as_ref(), sender, deps);
+
     let mut has_failures = false;
     for test_file in test_files {
-        let test_file_name = PathBuf::from(test_file.name())
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
-        let test_name = test_file_name.strip_suffix(".move").unwrap();
+        let test_name = Executor::script_name(&test_file).unwrap();
 
         if let Some(pattern) = test_name_pattern {
             if !test_name.contains(pattern) {
@@ -83,38 +82,10 @@ pub fn main() -> Result<()> {
             }
         }
 
-        let exec_result = execute_script(test_file, deps.clone(), "dfinance", sender, vec![])
-            .map_err(|err| match err.downcast::<CompilerError>() {
-                Ok(compiler_error) => {
-                    report_errors(compiler_error.source_map, compiler_error.errors)
-                }
-                Err(error) => error,
-            })?;
-
-        match exec_result.last() {
-            None => {
-                println!("{} ....... SCRIPT_NOT_FOUND", test_name);
-            }
-            Some(step_result) => match step_result {
-                StepExecutionResult::Error(_) => {
-                    has_failures = true;
-                    println!("{} .......", test_name);
-
-                    for step_result in exec_result.step_results {
-                        print!(
-                            "{}",
-                            textwrap::indent(
-                                &format_step_result(step_result, true, false),
-                                "    "
-                            )
-                        );
-                    }
-                    println!();
-                }
-                StepExecutionResult::ExpectedError(_) | StepExecutionResult::Success(_) => {
-                    println!("{} ....... ok", test_name);
-                }
-            },
+        let is_test_fail =
+            render_test_result(&test_name, executor.execute_script(test_file, vec![]))?;
+        if is_test_fail {
+            has_failures = true;
         }
     }
 

@@ -1,100 +1,110 @@
-use anyhow::Result;
-use std::path::PathBuf;
-
+use anyhow::{Result, Error};
+use std::path::Path;
+use lang::compiler::parser::parse_file;
 use libra::{prelude::*, compiler::*};
 
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use termcolor::{StandardStream, ColorChoice};
-use std::process::exit;
-use crate::builder::convert_path;
+use lang::compiler::dialects::Dialect;
+use std::fs;
+use rand::random;
+use std::rc::Rc;
 
-/// Extract dependencies from source code.
-pub fn extract_dependencies_from_source(
-    targets: &[PathBuf],
+/// Extracts metadata form source code.
+pub fn source_meta(
+    file: &Path,
     address: Option<AccountAddress>,
-    print_err: bool,
-    shutdown_on_err: bool,
-) -> Result<HashSet<ModuleId>> {
-    let mut extractor = DefinitionUses::with_address(address);
-    let (files, pprog_and_comments_res) = parse_program(&convert_path(targets)?, &[])?;
-    match pprog_and_comments_res {
-        Ok((program, _)) => {
-            for def in program.source_definitions {
-                extractor.extract(&def)?;
+    dialect: &dyn Dialect,
+) -> Result<FileMeta, Error> {
+    let name = ConstPool::push(file.to_str().unwrap_or("source"));
+    let source = fs::read_to_string(file)?;
+
+    let (defs, _, errors, _) = parse_file(dialect, &mut HashMap::default(), name, &source, None);
+    if errors.is_empty() {
+        let mut metadata = Vec::new();
+        for def in defs {
+            for meta in DefinitionMeta::from_definition(def, address)
+                .map_err(|err| anyhow!("{} Path:{:?}", err, file))?
+            {
+                metadata.push(meta);
             }
         }
-        Err(errs) => {
-            if print_err {
-                let mut writer = StandardStream::stderr(ColorChoice::Auto);
-                errors::output_errors(&mut writer, files, errs);
-            }
-            if shutdown_on_err {
-                exit(1);
-            }
-        }
+
+        let path = Rc::from(
+            file.to_str()
+                .ok_or_else(|| anyhow!("Failed to convert source path:{:?}", file))?,
+        );
+
+        Ok(FileMeta {
+            path,
+            meta: metadata,
+        })
+    } else {
+        let mut files = HashMap::new();
+        files.insert(name, source);
+        let mut writer = StandardStream::stderr(ColorChoice::Auto);
+        errors::output_errors(&mut writer, files, errors);
+        Err(anyhow!("Failed to parse move file:{}", name))
     }
-
-    Ok(extractor.imports())
 }
 
-/// Extract dependencies from bytecode.
-pub fn extract_dependencies_from_bytecode(bytecode: &[u8]) -> Result<HashSet<ModuleId>> {
-    let mut extractor = BytecodeUses::default();
-    extractor.extract(
-        CompiledModule::deserialize(bytecode)
-            .map_err(|e| e.finish(Location::Undefined).into_vm_status())?,
-    )?;
-    Ok(extractor.imports())
+/// Move definition metadata.
+pub struct DefinitionMeta {
+    /// Module identifier.
+    pub module_id: ModuleId,
+    /// Module imports.
+    pub imports: HashSet<Rc<ModuleId>>,
 }
 
-/// Source definition dependencies extractor.
-#[derive(Default)]
-pub struct DefinitionUses {
-    imports: HashSet<ModuleId>,
-    modules: HashSet<ModuleId>,
-    address: Option<AccountAddress>,
+/// Move file metadata.
+pub struct FileMeta {
+    /// File path.
+    pub path: Rc<str>,
+    /// Modules metadata.
+    pub meta: Vec<DefinitionMeta>,
 }
 
-impl DefinitionUses {
-    /// Creates extractor with account address.
-    pub fn with_address(address: Option<AccountAddress>) -> DefinitionUses {
-        DefinitionUses {
-            imports: Default::default(),
-            modules: Default::default(),
-            address,
-        }
-    }
-
-    /// Extracts dependencies from definition.
-    pub fn extract(&mut self, def: &Definition) -> Result<()> {
+impl DefinitionMeta {
+    fn from_definition(
+        def: Definition,
+        address: Option<AccountAddress>,
+    ) -> Result<Vec<DefinitionMeta>> {
         match def {
-            Definition::Module(module) => self.module(
-                module,
-                self.address
-                    .ok_or_else(|| anyhow!("Expected account address."))?,
-            )?,
-            Definition::Address(_, addr, modules) => {
-                let addr = AccountAddress::new(addr.to_u8());
-                for module in modules {
-                    self.module(module, addr)?;
-                }
+            Definition::Module(module) => {
+                let addr = address.ok_or_else(|| {
+                    anyhow!("Address not defined for module {}", module.name.0.value)
+                })?;
+                Ok(vec![DefinitionMeta::module(&module, addr)?])
             }
-            Definition::Script(script) => self.script(script)?,
+            Definition::Address(_, address, modules) => {
+                let addr = AccountAddress::new(address.to_u8());
+                modules
+                    .iter()
+                    .map(|m| DefinitionMeta::module(m, addr))
+                    .collect()
+            }
+            Definition::Script(script) => Ok(vec![DefinitionMeta::script(
+                &script,
+                address.unwrap_or(CORE_CODE_ADDRESS),
+            )?]),
         }
-        Ok(())
     }
 
-    /// Extracts dependencies from module definition.
-    fn module(&mut self, module: &ModuleDefinition, address: AccountAddress) -> Result<()> {
+    fn module(module: &ModuleDefinition, address: AccountAddress) -> Result<DefinitionMeta> {
+        let mut meta = DefinitionMeta {
+            module_id: ModuleId::new(address, Identifier::new(module.name.0.value.to_owned())?),
+            imports: Default::default(),
+        };
+
         for member in &module.members {
             match member {
-                ModuleMember::Use(_use) => self.uses(_use)?,
-                ModuleMember::Function(func) => self.function(func)?,
+                ModuleMember::Use(_use) => meta.extract_uses(_use)?,
+                ModuleMember::Function(func) => meta.function(func)?,
                 ModuleMember::Struct(_struct) => {
                     match &_struct.fields {
                         StructFields::Defined(types) => {
                             for (_, t) in types {
-                                self.s_type_usages(&t.value)?;
+                                meta.s_type_usages(&t.value)?;
                             }
                         }
                         StructFields::Native(_) => {
@@ -106,34 +116,16 @@ impl DefinitionUses {
                     // no-op
                 }
                 ModuleMember::Constant(constant) => {
-                    self.constant(constant)?;
+                    meta.constant(constant)?;
                 }
             }
         }
-        self.modules.insert(ModuleId::new(
-            address,
-            Identifier::new(module.name.0.value.to_owned())?,
-        ));
 
-        Ok(())
-    }
-
-    /// Extracts dependencies from script.
-    fn script(&mut self, script: &Script) -> Result<()> {
-        for u in &script.uses {
-            self.uses(u)?;
-        }
-        self.function(&script.function)
-    }
-
-    /// Extracts dependencies from constant.
-    fn constant(&mut self, constant: &Constant) -> Result<()> {
-        self.type_usages(&constant.signature.value)?;
-        self.expresion_usages(&constant.value.value)
+        Ok(meta)
     }
 
     /// Extracts dependencies from use definition.
-    fn uses(&mut self, u: &Use) -> Result<()> {
+    fn extract_uses(&mut self, u: &Use) -> Result<()> {
         let ident = match u {
             Use::Members(ident, _) => ident,
             Use::Module(ident, _) => ident,
@@ -142,7 +134,7 @@ impl DefinitionUses {
         let ident = &ident.0.value;
         let name = Identifier::new(ident.name.0.value.to_owned())?;
         let address = AccountAddress::new(ident.address.clone().to_u8());
-        self.imports.insert(ModuleId::new(address, name));
+        self.imports.insert(Rc::new(ModuleId::new(address, name)));
         Ok(())
     }
 
@@ -261,10 +253,10 @@ impl DefinitionUses {
         match access {
             ModuleAccess_::QualifiedModuleAccess(ident, _name) => {
                 let ident = &ident.0.value;
-                self.imports.insert(ModuleId::new(
+                self.imports.insert(Rc::new(ModuleId::new(
                     AccountAddress::new(ident.address.clone().to_u8()),
                     Identifier::new(ident.name.0.value.to_owned())?,
-                ));
+                )));
             }
             ModuleAccess_::ModuleAccess(_, _) | ModuleAccess_::Name(_) => { /*no-op*/ }
         }
@@ -403,14 +395,55 @@ impl DefinitionUses {
         Ok(())
     }
 
-    /// Returns imports.
-    pub fn imports(mut self) -> HashSet<ModuleId> {
-        for module_id in self.modules {
-            self.imports.remove(&module_id);
-        }
-
-        self.imports
+    /// Extracts dependencies from constant.
+    fn constant(&mut self, constant: &Constant) -> Result<()> {
+        self.type_usages(&constant.signature.value)?;
+        self.expresion_usages(&constant.value.value)
     }
+
+    /// Extracts dependencies from use definition.
+    fn uses(&mut self, u: &Use) -> Result<()> {
+        let ident = match u {
+            Use::Members(ident, _) => ident,
+            Use::Module(ident, _) => ident,
+        };
+
+        let ident = &ident.0.value;
+        let name = Identifier::new(ident.name.0.value.to_owned())?;
+        let address = AccountAddress::new(ident.address.clone().to_u8());
+        self.imports.insert(Rc::new(ModuleId::new(address, name)));
+        Ok(())
+    }
+
+    fn script(script: &Script, address: AccountAddress) -> Result<DefinitionMeta> {
+        let mut meta = DefinitionMeta {
+            module_id: ModuleId::new(
+                address,
+                Identifier::new(format!(
+                    "scripts_{}_{}",
+                    script.function.name.0.value.to_owned(),
+                    random::<u32>()
+                ))?,
+            ),
+            imports: Default::default(),
+        };
+
+        for u in &script.uses {
+            meta.uses(u)?;
+        }
+        meta.function(&script.function)?;
+        Ok(meta)
+    }
+}
+
+/// Extract dependencies from bytecode.
+pub fn extract_bytecode_dependencies(bytecode: &[u8]) -> Result<HashSet<ModuleId>> {
+    let mut extractor = BytecodeUses::default();
+    extractor.extract(
+        CompiledModule::deserialize(bytecode)
+            .map_err(|e| e.finish(Location::Undefined).into_vm_status())?,
+    )?;
+    Ok(extractor.imports())
 }
 
 /// Bytecode dependencies extractor.

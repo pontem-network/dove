@@ -4,13 +4,12 @@ use anyhow::{Context, Result};
 
 use clap::{App, Arg};
 
-use move_executor::execute_script;
 use move_lang::name_pool::ConstPool;
 use lang::compiler::file::MoveFile;
 use lang::compiler::file;
-use lang::compiler::error::CompilerError;
-use move_lang::errors::report_errors;
-use move_executor::format::format_step_result;
+use lang::compiler::dialects::DialectName;
+use move_executor::executor::{Executor, render_execution_result};
+use std::str::FromStr;
 
 fn cli() -> App<'static, 'static> {
     App::new("Move Executor")
@@ -72,21 +71,12 @@ fn main() -> Result<()> {
         .map(String::from)
         .collect();
 
-    let res = execute_script(script, deps, dialect, sender, args);
-    match res {
-        Ok(exec_result) => {
-            let step_results = exec_result.step_results;
-            for (i, step_result) in step_results.into_iter().enumerate() {
-                if i > 0 {
-                    println!();
-                }
-                print!("{}", format_step_result(step_result, true, true));
-            }
-            Ok(())
-        }
-        Err(err) => match err.downcast::<CompilerError>() {
-            Ok(compiler_error) => report_errors(compiler_error.source_map, compiler_error.errors),
-            Err(error) => Err(error),
-        },
-    }
+    let dialect = DialectName::from_str(dialect)?.get_dialect();
+    let sender = dialect
+        .normalize_account_address(sender)
+        .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
+
+    let executor = Executor::new(dialect.as_ref(), sender, deps);
+
+    render_execution_result(executor.execute_script(script, args))
 }

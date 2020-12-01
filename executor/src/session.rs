@@ -20,7 +20,6 @@ use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
-
 use crate::constants::extract_error_constants;
 
 #[derive(Debug, Clone)]

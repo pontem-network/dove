@@ -6,11 +6,11 @@
 extern crate anyhow;
 extern crate log;
 
-/// Move builder.
-pub mod builder;
-/// Movec commands handler.
+/// Dove commands handler.
 pub mod cmd;
-/// Dependencies loader.
-pub mod dependence;
+/// Dove execution context.
+pub mod context;
+/// Dove modules index.
+pub mod index;
 /// Movec configuration.
 pub mod manifest;

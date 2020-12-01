@@ -1,10 +1,12 @@
-use move_executor::execute_script;
-
-use move_executor::explain::{AddressResourceChanges, ResourceChange};
+use move_executor::explain::{AddressResourceChanges, ResourceChange, PipelineExecutionResult};
 use lang::compiler::ConstPool;
 use lang::compiler::file::MoveFile;
 use resources::{assets_dir, stdlib_path, modules_path};
 use lang::compiler::error::CompilerError;
+use move_executor::executor::Executor;
+use anyhow::{Error, Context};
+use lang::compiler::dialects::DialectName;
+use std::str::FromStr;
 
 fn script_path() -> String {
     assets_dir()
@@ -24,6 +26,22 @@ pub fn stdlib_mod(name: &str) -> MoveFile {
 
 pub fn modules_mod(name: &str) -> MoveFile {
     MoveFile::load(modules_path().join(name)).unwrap()
+}
+
+fn execute_script(
+    script: MoveFile,
+    deps: Vec<MoveFile>,
+    dialect: &str,
+    address: &str,
+    args: Vec<String>,
+) -> Result<PipelineExecutionResult, Error> {
+    let dialect = DialectName::from_str(dialect)?.get_dialect();
+    let sender = dialect
+        .normalize_account_address(address)
+        .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), address))?;
+
+    let executor = Executor::new(dialect.as_ref(), sender, deps);
+    executor.execute_script(script, args)
 }
 
 #[test]
@@ -106,7 +124,7 @@ script {
             vec![(
                 "Added".to_string(),
                 ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
-            )]
+            )],
         )
     );
 }
@@ -154,7 +172,7 @@ fn missing_write_set_for_move_to_sender() {
             vec![(
                 "Added".to_string(),
                 ResourceChange("0x1::M::T".to_string(), Some("[U8(10)]".to_string()))
-            )]
+            )],
         )
     );
 }
@@ -200,7 +218,7 @@ fn test_run_with_non_default_dfinance_dialect() {
             vec![(
                 "Added".to_string(),
                 ResourceChange("0xde5f86ce::M::T".to_string(), Some("[U8(10)]".to_string()))
-            )]
+            )],
         )
     );
 }
@@ -249,7 +267,7 @@ fn test_pass_arguments_to_script() {
             vec![(
                 "Added".to_string(),
                 ResourceChange("0x1::Module::T".to_string(), Some("[true]".to_string()))
-            )]
+            )],
         )
     );
 }
@@ -683,7 +701,7 @@ script {
             vec![(
                 "Changed".to_string(),
                 ResourceChange("0x2::Record::T".to_string(), Some("[U8(11)]".to_string()))
-            )]
+            )],
         )
     );
 }
