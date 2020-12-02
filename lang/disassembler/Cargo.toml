@@ -3,7 +3,11 @@
 [package]
 name = "disassembler"
 version = "0.1.0"
-authors = ["Alex Koz. <a@koz.email>"]
+authors = [
+    "Alex Koz. <alexanderkozlovskii@wings.ai>",
+    "Dm. Yakushev <dmitryyakushev@wings.ai>",
+    "Maxim Kurnikov <maximkurnikov@wings.ai>"
+]
 edition = "2018"
 
 [lib]
