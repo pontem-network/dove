@@ -1,22 +1,22 @@
 extern crate structopt;
 
 use structopt::StructOpt;
-use std::env;
-use dove::{cmd::*};
-use std::process::exit;
 use anyhow::Error;
+use std::env;
+use std::process::exit;
+use lang::compiler::ConstPool;
+use dove::cmd::*;
 use dove::cmd::clean::Clean;
 use dove::cmd::init::Init;
 use dove::cmd::new::New;
 use dove::cmd::metadata::Metadata;
 use dove::cmd::fetch::Fetch;
-use lang::compiler::ConstPool;
 use dove::cmd::build::Build;
 use dove::cmd::test::Test;
 use dove::cmd::run::Run;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Move compiler.", version = git_hash::crate_version_with_git_hash_short ! ())]
+#[structopt(name = "Move compiler.", version = git_hash::crate_version_with_git_hash_short!())]
 enum Opt {
     #[structopt(about = "Init directory as move project")]
     Init {
@@ -80,7 +80,7 @@ fn handle_error<T>(res: Result<T, Error>) -> T {
     match res {
         Ok(t) => t,
         Err(err) => {
-            println!("error: {:?}.", err);
+            eprintln!("error: {:?}.", err);
             exit(1);
         }
     }
