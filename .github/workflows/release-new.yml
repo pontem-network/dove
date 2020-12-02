@@ -42,6 +42,20 @@ jobs:
           release_name: ${{ github.ref }}
           body: |
             __TODO: EDIT ME BEFORE PUBLISH__
+
+            [link-tools]: ${{ github.event.repository.html_url }}/actions?query=workflow%3A%22Build+Release+Tools%22
+            [link-ext]: ${{ github.event.repository.html_url }}/actions?query=workflow%3A%22Build+Release+Ext%22
+            [badge-tools]: ${{ github.event.repository.html_url }}/workflows/Build%20Release%20Tools/badge.svg?event=workflow_run (tools workflow)
+            [badge-ext]: ${{ github.event.repository.html_url }}/workflows/Build%20Release%20Ext/badge.svg?event=workflow_run "ext workflow"
+
+            __Please wait build completions for:__
+            - [![Build Release Tools][badge-tools]][link-tools]
+            - [![Build Release Ext][badge-ext]][link-ext]
+
+            - - -
+
+            ### Changelog
+
             ${{ steps.changelog.outputs.changelog }}
 
       - name: Save release assets url for other workflows

@@ -20,9 +20,9 @@ executor:
 compiler:
   - &compiler lang/src/compiler/**
 
-movec:
+dove:
   - any:
-      - movec/**
+      - dove/**
       - *compiler
 
 disassembler: lang/disassembler/**
