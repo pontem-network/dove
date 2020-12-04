@@ -21,14 +21,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with: { fetch-depth: 0 }
-      - name: add things for changelog generator
-        run: npm init -y && sed -i 's/1\.0\.0/${{ steps.version.outputs.value }}/' ./package.json
+
       - id: changelog
         name: Generate Changelog
-        uses: ScottBrenner/generate-changelog-action@1.0.2
         continue-on-error: true
-        env:
-          REPO: ${{ github.repository }}
+        run: |
+          TAG_FIRST=$(git describe --abbrev=0 --tags $(git describe --abbrev=0)^)
+          TAG_SECOND=$(git describe --abbrev=0)
+          echo "Generating changelog between tags: $TAG_FIRST...$TAG_SECOND"
+
+          RESULT_FILE=generated-changelog.md
+          RESULT_LOG="$(git log $TAG_FIRST...$TAG_SECOND --pretty=format:'- %s [⃗](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
+
+          echo "
+          ## TODO: EDIT ME BEFORE PUBLISH
+
+          [link-tools]: ${{ github.event.repository.html_url }}/actions?query=workflow%3A%22Build+Release+Tools%22
+          [link-ext]: ${{ github.event.repository.html_url }}/actions?query=workflow%3A%22Build+Release+Ext%22
+          [badge-tools]: ${{ github.event.repository.html_url }}/workflows/Build%20Release%20Tools/badge.svg?event=workflow_run (tools workflow)
+          [badge-ext]: ${{ github.event.repository.html_url }}/workflows/Build%20Release%20Ext/badge.svg?event=workflow_run (ext workflow)
+
+          __Please wait build completions for:__
+          - [![Build Release Tools][badge-tools]][link-tools]
+          - [![Build Release Ext][badge-ext]][link-ext]
+
+          - - -
+
+          __Changelog ${TAG_FIRST}__…${TAG_SECOND}
+
+          $RESULT_LOG
+
+          <!-- Built with ♥️. -->
+          " > $RESULT_FILE
+
+          echo ::set-output name=tag_from::"$TAG_FIRST"
+          echo ::set-output name=tag_to::"$TAG_SECOND"
+          echo ::set-output name=file::"$RESULT_FILE"
+          echo ::set-output name=text::$RESULT_LOG
 
       - id: release
         name: Create release ${{ steps.version.outputs.value }}
@@ -40,23 +69,7 @@ jobs:
           prerelease: true
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
-          body: |
-            __TODO: EDIT ME BEFORE PUBLISH__
-
-            [link-tools]: ${{ github.event.repository.html_url }}/actions?query=workflow%3A%22Build+Release+Tools%22
-            [link-ext]: ${{ github.event.repository.html_url }}/actions?query=workflow%3A%22Build+Release+Ext%22
-            [badge-tools]: ${{ github.event.repository.html_url }}/workflows/Build%20Release%20Tools/badge.svg?event=workflow_run (tools workflow)
-            [badge-ext]: ${{ github.event.repository.html_url }}/workflows/Build%20Release%20Ext/badge.svg?event=workflow_run "ext workflow"
-
-            __Please wait build completions for:__
-            - [![Build Release Tools][badge-tools]][link-tools]
-            - [![Build Release Ext][badge-ext]][link-ext]
-
-            - - -
-
-            ### Changelog
-
-            ${{ steps.changelog.outputs.changelog }}
+          body_path: ${{ steps.changelog.outputs.file }}
 
       - name: Save release assets url for other workflows
         run: echo "${{ steps.version.outputs.value }} ${{ steps.release.outputs.upload_url }}" > release-upload.url
