@@ -68,20 +68,21 @@ impl BytecodeLoader for RestBytecodeLoader {
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct LoaderResponse {
     /// Result.
-    result: Response,
+    pub result: Response,
 }
 
 /// Success response.
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Response {
     /// Hex encoded bytecode.
-    value: String,
+    pub value: String,
 }
 
 ///Error response.
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct LoaderErrorResponse {
-    error: String,
+    /// Error message.
+    pub error: String,
 }
 
 /// Module loader.

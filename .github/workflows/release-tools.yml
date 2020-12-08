@@ -85,6 +85,11 @@ jobs:
         uses: ./.github/actions/crate-version
         with: { crate: disassembler }
 
+      - id: mrv
+        name: get version of resource-viewer
+        uses: ./.github/actions/crate-version
+        with: { crate: move-resource-viewer }
+
       - if: ${{ matrix.platform == 'win' }}
         name: set up standard executable ext for ${{ matrix.platform }}
         run: echo "OS_BIN_EXT=.exe" >> $GITHUB_ENV
@@ -119,8 +124,9 @@ jobs:
           PKG_DIR=$DIST_DIR/$PKG_NAME
           PKG_BIN_DIR=$PKG_DIR/bin
 
-          MLS_NAME=move-language-server$OS_BIN_EXT
           DOVE_NAME=dove$OS_BIN_EXT
+          MLS_NAME=move-language-server$OS_BIN_EXT
+          MRV_NAME=move-resource-viewer$OS_BIN_EXT
           EXECUTOR_NAME=move-executor$OS_BIN_EXT
           TESTRUNNER_NAME=move-testrunner$OS_BIN_EXT
           DISASSEMBLER_NAME=move-disassembler$OS_BIN_EXT
@@ -132,6 +138,7 @@ jobs:
           cp $RELEASE_DIR/testrunner$OS_BIN_EXT $PKG_BIN_DIR/$TESTRUNNER_NAME
           cp $RELEASE_DIR/disassembler$OS_BIN_EXT $PKG_BIN_DIR/$DISASSEMBLER_NAME
           cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
+          cp $RELEASE_DIR/move-resource-viewer$OS_BIN_EXT $PKG_BIN_DIR/$MRV_NAME
           cp $RELEASE_DIR/dove$OS_BIN_EXT $PKG_BIN_DIR/$DOVE_NAME
 
           echo "::set-output name=name::$PKG_NAME"
@@ -151,6 +158,7 @@ jobs:
           RELEASE_DIR=${{ steps.dist.outputs.build }}
 
           MLS_NAME=move-language-server-${{ steps.mls.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+          MRV_NAME=move-resource-viewer-${{ steps.mrv.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           DOVE_NAME=dove-${{ steps.dove.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           EXECUTOR_NAME=move-executor-${{ steps.executor.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           TESTRUNNER_NAME=move-testrunner-${{ steps.executor.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
@@ -161,14 +169,17 @@ jobs:
           mv testrunner$OS_BIN_EXT $TESTRUNNER_NAME
           mv disassembler$OS_BIN_EXT $DISASSEMBLER_NAME
           mv move-language-server$OS_BIN_EXT $MLS_NAME
+          mv move-resource-viewer$OS_BIN_EXT $MRV_NAME
           mv dove$OS_BIN_EXT $DOVE_NAME
 
           echo "::set-output name=mls::$MLS_NAME"
+          echo "::set-output name=mrv::$MRV_NAME"
           echo "::set-output name=dove::$DOVE_NAME"
           echo "::set-output name=executor::$EXECUTOR_NAME"
           echo "::set-output name=testrunner::$TESTRUNNER_NAME"
           echo "::set-output name=disassembler::$DISASSEMBLER_NAME"
           echo "::set-output name=mls_path::$RELEASE_DIR/$MLS_NAME"
+          echo "::set-output name=mrv_path::$RELEASE_DIR/$MRV_NAME"
           echo "::set-output name=dove_path::$RELEASE_DIR/$DOVE_NAME"
           echo "::set-output name=executor_path::$RELEASE_DIR/$EXECUTOR_NAME"
           echo "::set-output name=testrunner_path::$RELEASE_DIR/$TESTRUNNER_NAME"
@@ -192,6 +203,16 @@ jobs:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ${{ steps.artifact.outputs.mls_path }}
           asset_name: ${{ steps.artifact.outputs.mls }}
+          asset_content_type: application/gzip
+
+      - name: upload MRV
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.artifact.outputs.mrv_path }}
+          asset_name: ${{ steps.artifact.outputs.mrv }}
           asset_content_type: application/gzip
 
       - name: upload dove
