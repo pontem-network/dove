@@ -12,12 +12,15 @@ use libra::account::Identifier;
 use libra::prelude::*;
 
 #[derive(Debug)]
-pub struct TypeTagExt {
+pub struct TypeTagQuery {
     tt: TypeTag,
+
+    /// Index of vector
+    /// e.g.: `0x0::Mod::Res[i]`
     i: Option<u128>,
 }
 
-impl FromStr for TypeTagExt {
+impl FromStr for TypeTagQuery {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -25,13 +28,13 @@ impl FromStr for TypeTagExt {
     }
 }
 
-impl Into<(TypeTag, Option<u128>)> for TypeTagExt {
+impl Into<(TypeTag, Option<u128>)> for TypeTagQuery {
     fn into(self) -> (TypeTag, Option<u128>) {
         (self.tt, self.i)
     }
 }
 
-impl TypeTagExt {
+impl TypeTagQuery {
     pub fn into_inner(self) -> (TypeTag, Option<u128>) {
         self.into()
     }
@@ -111,7 +114,7 @@ fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
     unwrap_spanned_ty_(ty, None)
 }
 
-pub fn parse(s: &str) -> Result<TypeTagExt, Error> {
+pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
     let map_err = |err| anyhow!("{:?}", err);
     let mut lexer = Lexer::new(s, "query", Default::default());
     lexer.advance().map_err(map_err)?;
@@ -130,7 +133,7 @@ pub fn parse(s: &str) -> Result<TypeTagExt, Error> {
         }
     }
 
-    Ok(TypeTagExt { tt, i })
+    Ok(TypeTagQuery { tt, i })
 }
 
 #[cfg(test)]

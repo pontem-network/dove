@@ -1,7 +1,5 @@
-use libra::{
-    prelude::*,
-    vm::{StructTag},
-};
+use libra::prelude::*;
+use libra::vm::StructTag;
 use libra::account::Identifier;
 use rv::{AnnotatedMoveStruct, AnnotatedMoveValue};
 use serde::Serialize;
@@ -13,9 +11,13 @@ pub fn produce_json_schema() -> RootSchema {
 }
 
 #[derive(Serialize, JsonSchema)]
-pub struct AnnotatedMoveStructHelper(
-    #[serde(with = "AnnotatedMoveStructExt")] pub AnnotatedMoveStruct,
-);
+pub struct AnnotatedMoveStructWrapper {
+    /// Block number, current for the state
+    pub height: u128,
+
+    #[serde(with = "AnnotatedMoveStructExt")]
+    pub result: AnnotatedMoveStruct,
+}
 
 #[derive(Serialize, JsonSchema)]
 #[serde(remote = "rv::AnnotatedMoveStruct")]

@@ -31,14 +31,19 @@ struct Cfg {
     #[clap(long, short)]
     address: String,
 
-    /// Query in `TypeTag` format.
+    /// Query in `TypeTag` format,
+    /// one-line address+type description.
     /// Mainly, in most cases should be StructTag.
     /// Additionaly can contain index at the end.
     /// Query examples:
     /// "0x1::Account::Balance<0x1::XFI::T>",
     /// "0x1::Account::Balance<0x1::Coins::ETH>"
     #[clap(long, short)]
-    query: tte::TypeTagExt,
+    query: tte::TypeTagQuery,
+
+    /// Time: maximum block number
+    #[clap(long, short)]
+    height: Option<u128>,
 
     /// Output file path
     #[clap(long, short)]
@@ -63,23 +68,30 @@ struct Cfg {
     json_schema: Option<PathBuf>,
 }
 
-fn main() {
-    if let Err(err) = run() {
-        error!("{}", err)
-    } else {
-        info!("completed successfully")
-    }
+fn main() -> Result<(), Error> {
+    init_logger().map_err(|err| eprintln!("Err: {}", err)).ok();
+    run().map_err(|err| {
+        error!("{}", err);
+        err
+    })
+}
+
+fn init_logger() -> Result<(), impl std::error::Error> {
+    use env_logger::*;
+
+    let mut builder = Builder::from_env(Env::default());
+    builder.format_timestamp(None);
+    builder.try_init()
 }
 
 fn run() -> Result<(), Error> {
-    env_logger::init();
-
     let cfg = Cfg::parse();
 
     produce_json_schema(&cfg);
 
     let host = cfg.api;
     let output = cfg.output;
+    let height = cfg.height;
     let json = cfg.json.unwrap_or_else(|| {
         output
             .extension()
@@ -96,10 +108,11 @@ fn run() -> Result<(), Error> {
     match tte {
         TypeTag::Struct(st) => {
             let key = ResourceKey::new(addr, st.clone());
-            let res = net::get_resource(&key, &host);
-            res.map(|bytes| {
+            let res = net::get_resource(&key, &host, height);
+            res.map(|resp| {
+                let bytes = resp.as_bytes();
                 if !bytes.is_empty() {
-                    let client = net::client::DnodeRestClient::new(host);
+                    let client = net::client::DnodeRestClient::new(host, height);
 
                     // Internally produce FatStructType (with layout) for StructTag by
                     // resolving & de-.. entire deps-chain.
@@ -108,11 +121,10 @@ fn run() -> Result<(), Error> {
                     annotator
                         .view_resource(&st, &bytes)
                         .and_then(|result| {
-                            // debug!("result: {:#?}", result);
-
+                            let height = resp.block();
                             if json {
                                 serde_json::ser::to_string_pretty(
-                                    &ser::AnnotatedMoveStructHelper(result),
+                                    &ser::AnnotatedMoveStructWrapper { height, result },
                                 )
                                 .map_err(|err| anyhow!("{}", err))
                             } else {
@@ -127,14 +139,11 @@ fn run() -> Result<(), Error> {
             .and_then(|result| result)
         }
 
-        TypeTag::Vector(tt) => {
-            // TODO: query using index, seed
-            Err(anyhow!(
-                "Err: unsupported root type Vec<{}>{:?}",
-                tt,
-                index.map(|v| [v]).unwrap_or_default()
-            ))
-        }
+        TypeTag::Vector(tt) => Err(anyhow!(
+            "Err: unsupported root type Vec<{}>{:?}",
+            tt,
+            index.map(|v| [v]).unwrap_or_default()
+        )),
 
         _ => Err(anyhow!("Err: unsupported type {}", tte)),
     }

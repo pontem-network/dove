@@ -2529,7 +2529,7 @@ dependencies = [
 
 [[package]]
 name = "move-resource-viewer"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "clap 3.0.0-beta.2",

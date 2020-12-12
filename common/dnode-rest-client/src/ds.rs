@@ -1,10 +1,14 @@
 use serde::{Serialize, Deserialize};
 
+/// Block number
+pub type Block = u128;
+
 /// Data Api response
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Response {
     /// Current block number
-    pub height: String,
+    #[serde(deserialize_with = "block::deserialize")]
+    pub height: Block,
     #[serde(flatten)]
     pub body: ResponseBody,
 }
@@ -23,4 +27,18 @@ pub enum ResponseBody {
         #[serde(rename = "error")]
         message: String,
     },
+}
+
+mod block {
+    use super::Block;
+    use serde::{Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Block, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        String::deserialize(deserializer)?
+            .parse()
+            .map_err(serde::de::Error::custom)
+    }
 }
