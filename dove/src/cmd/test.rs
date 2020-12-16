@@ -1,6 +1,4 @@
-use crate::{
-    cmd::{Cmd, load_dependencies},
-};
+use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
