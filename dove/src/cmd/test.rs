@@ -1,4 +1,6 @@
-use crate::cmd::{Cmd, load_dependencies};
+use crate::{
+    cmd::{Cmd, load_dependencies},
+};
 use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
@@ -19,17 +21,29 @@ pub struct Test {
 
 impl Cmd for Test {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let script_dir = ctx.path_for(&ctx.manifest.layout.script_dir);
-        let module_dir = ctx.path_for(&ctx.manifest.layout.module_dir);
         let tests_dir = ctx.path_for(&ctx.manifest.layout.tests_dir);
+        if !tests_dir.exists() {
+            return Ok(());
+        }
+
+        let mut dirs: Vec<_> = vec![
+            &ctx.manifest.layout.script_dir,
+            &ctx.manifest.layout.module_dir,
+        ]
+        .iter()
+        .map(|d| ctx.path_for(&d))
+        .filter(|p| p.exists())
+        .collect();
+
+        dirs.push(tests_dir.clone());
 
         let mut index = Index::load(&ctx)?;
         index.build()?;
 
-        let dep_set = index.make_dependency_set(&[&script_dir, &module_dir, &tests_dir])?;
+        let dep_set = index.make_dependency_set(&dirs)?;
         let mut dep_list = load_dependencies(dep_set)?;
 
-        dep_list.extend(load_move_files(&[script_dir, module_dir])?);
+        dep_list.extend(load_move_files(&dirs[..dirs.len() - 1])?);
 
         let executor = Executor::new(ctx.dialect.as_ref(), ctx.account_address()?, dep_list);
 
