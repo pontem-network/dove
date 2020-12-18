@@ -97,7 +97,7 @@ pub mod client {
         fn get_module(&self, id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
             let res = get_module(id, &self.uri, self.height).map(|v| v.0).ok();
             if res.is_some() && res.as_ref().unwrap().is_empty() {
-                error!("Err: empty module for {}", id);
+                error!("Empty module for {}", id);
             }
             Ok(res)
         }
@@ -110,7 +110,7 @@ pub mod client {
             let key = ResourceKey::new(*addr, tag.to_owned());
             let res = get_resource(&key, &self.uri, self.height).map(|v| v.0).ok();
             if res.is_some() && res.as_ref().unwrap().is_empty() {
-                error!("Err: empty resource for {:?}", key);
+                error!("Empty resource for {:?}", key);
             }
             Ok(res)
         }

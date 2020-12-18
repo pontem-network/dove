@@ -69,7 +69,9 @@ struct Cfg {
 }
 
 fn main() -> Result<(), Error> {
-    init_logger().map_err(|err| eprintln!("Err: {}", err)).ok();
+    init_logger()
+        .map_err(|err| eprintln!("Error: {}", err))
+        .ok();
     run().map_err(|err| {
         error!("{}", err);
         err
@@ -133,19 +135,19 @@ fn run() -> Result<(), Error> {
                         })
                         .map(|result| write_output(&output, result))
                 } else {
-                    Err(anyhow!("Err: res is empty"))
+                    Err(anyhow!("Resource not found, result is empty"))
                 }
             })
             .and_then(|result| result)
         }
 
         TypeTag::Vector(tt) => Err(anyhow!(
-            "Err: unsupported root type Vec<{}>{:?}",
+            "Unsupported root type Vec<{}>{:?}",
             tt,
             index.map(|v| [v]).unwrap_or_default()
         )),
 
-        _ => Err(anyhow!("Err: unsupported type {}", tte)),
+        _ => Err(anyhow!("Unsupported type {}", tte)),
     }
 }
 
@@ -166,6 +168,6 @@ fn write_output(path: &Path, result: String) {
     use std::io::prelude::*;
     std::fs::File::create(path)
         .and_then(|mut f| f.write_all(result.as_bytes()))
-        .map_err(|err| error!("Err: cannot write output: {}", err))
+        .map_err(|err| error!("Cannot write output: {}", err))
         .ok();
 }
