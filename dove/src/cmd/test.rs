@@ -24,7 +24,7 @@ impl Cmd for Test {
             return Ok(());
         }
 
-        let mut dirs: Vec<_> = vec![
+        let mut dirs: Vec<_> = [
             &ctx.manifest.layout.script_dir,
             &ctx.manifest.layout.module_dir,
         ]

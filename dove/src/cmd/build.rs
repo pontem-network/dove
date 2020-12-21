@@ -19,7 +19,7 @@ pub struct Build {}
 
 impl Cmd for Build {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let dirs: Vec<_> = vec![
+        let dirs: Vec<_> = [
             &ctx.manifest.layout.script_dir,
             &ctx.manifest.layout.module_dir,
         ]
