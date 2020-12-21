@@ -1,9 +1,9 @@
 use std::path::{PathBuf, Path};
-use crate::manifest::{DoveToml, MANIFEST, read_manifest};
+use crate::manifest::{DoveToml, MANIFEST, read_manifest, default_dialect};
+use std::str::FromStr;
 use anyhow::{Result, anyhow};
 use std::env;
-use lang::compiler::dialects::Dialect;
-use lang::compiler::dialects::dfinance::DFinanceDialect;
+use lang::compiler::dialects::{Dialect, DialectName};
 use lang::compiler::address::ProvidedAccountAddress;
 
 /// Project context.
@@ -35,18 +35,33 @@ impl Context {
 
     /// Returns provided account address.
     pub fn account_address(&self) -> Result<ProvidedAccountAddress> {
-        self.dialect
-            .normalize_account_address(&format!("0x{}", &self.manifest.package.account_address))
+        let acc_addr = self
+            .manifest
+            .package
+            .account_address
+            .clone()
+            .ok_or_else(|| anyhow!("couldn't read account address from manifest"))?;
+
+        self.dialect.normalize_account_address(&acc_addr)
     }
 }
 
 /// Create a new context for the current directory.
 pub fn create_context() -> Result<Context> {
     let project_dir = env::current_dir()?;
+    let manifest = DoveToml::default();
+
+    let dialect_name = manifest
+        .package
+        .dialect
+        .clone()
+        .unwrap_or_else(default_dialect);
+    let dialect = DialectName::from_str(&dialect_name)?;
+
     Ok(Context {
         project_dir,
-        manifest: DoveToml::default(),
-        dialect: Box::new(DFinanceDialect::default()),
+        manifest,
+        dialect: dialect.get_dialect(),
     })
 }
 
@@ -55,10 +70,17 @@ pub fn get_context() -> Result<Context> {
     let project_dir = env::current_dir()?;
     let manifest = load_manifest(&project_dir)?;
 
+    let dialect_name = manifest
+        .package
+        .dialect
+        .clone()
+        .unwrap_or_else(default_dialect);
+    let dialect = DialectName::from_str(&dialect_name)?;
+
     Ok(Context {
         project_dir,
         manifest,
-        dialect: Box::new(DFinanceDialect::default()),
+        dialect: dialect.get_dialect(),
     })
 }
 

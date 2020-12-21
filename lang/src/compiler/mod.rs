@@ -6,6 +6,7 @@ pub mod file;
 pub mod location;
 pub mod parser;
 pub mod source_map;
+pub mod ss58;
 
 pub use anyhow::Result;
 pub use move_lang::name_pool::ConstPool;

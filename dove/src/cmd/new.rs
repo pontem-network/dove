@@ -26,6 +26,13 @@ pub struct New {
         short = "a"
     )]
     address: Option<String>,
+    #[structopt(
+        help = "Compiler dialect",
+        name = "Dialect",
+        long = "dialect",
+        short = "d"
+    )]
+    dialect: Option<String>,
 }
 
 impl Cmd for New {
@@ -44,7 +51,7 @@ impl Cmd for New {
         fs::create_dir(&project_dir)?;
 
         ctx.project_dir = project_dir;
-        let init = Init::new(self.repository, self.address);
+        let init = Init::new(self.repository, self.address, self.dialect);
         init.apply(ctx)
     }
 }

@@ -7,9 +7,6 @@ use serde::{
     de::{Visitor, SeqAccess, Error as DeError},
     ser::{Error as SerError},
 };
-use libra::prelude::AccountAddress;
-use lang::compiler::dialects::dfinance::DFinanceDialect;
-use lang::compiler::dialects::Dialect;
 use libra::prelude::CORE_CODE_ADDRESS;
 
 /// Dove manifest name.
@@ -30,10 +27,9 @@ pub struct DoveToml {
 pub struct Package {
     /// Project name.
     pub name: Option<String>,
-    /// Project AccountAddress.
+    /// Project account address.
     #[serde(default = "code_code_address")]
-    #[serde(deserialize_with = "from_str")]
-    pub account_address: AccountAddress,
+    pub account_address: Option<String>,
     /// Authors list.
     #[serde(default)]
     pub authors: Vec<String>,
@@ -41,18 +37,26 @@ pub struct Package {
     pub blockchain_api: Option<String>,
     /// Dependency list.
     pub dependencies: Option<Dependencies>,
+    /// Dialect
+    #[serde(default = "dialect")]
+    pub dialect: Option<String>,
 }
 
 impl Default for Package {
     fn default() -> Self {
         Package {
             name: None,
-            account_address: CORE_CODE_ADDRESS,
+            account_address: code_code_address(),
             authors: Default::default(),
             blockchain_api: None,
             dependencies: None,
+            dialect: None,
         }
     }
+}
+
+fn dialect() -> Option<String> {
+    Some(default_dialect())
 }
 
 fn module_dir() -> String {
@@ -87,8 +91,8 @@ fn index() -> String {
     ".Dove.man".to_owned()
 }
 
-fn code_code_address() -> AccountAddress {
-    CORE_CODE_ADDRESS
+fn code_code_address() -> Option<String> {
+    Some(format!("0x{}", CORE_CODE_ADDRESS))
 }
 
 /// Project layout.
@@ -234,30 +238,24 @@ impl Serialize for Dependencies {
     }
 }
 
-fn from_str<'de, D>(deserializer: D) -> Result<AccountAddress, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    DFinanceDialect::default()
-        .normalize_account_address(&String::deserialize(deserializer)?)
-        .map(|addr| addr.as_account_address())
-        .map_err(D::Error::custom)
-}
-
 /// Reads the manifest by path.
 pub fn read_manifest(path: &Path) -> Result<DoveToml, Error> {
     Ok(toml::from_str(&fs::read_to_string(path)?)?)
 }
 
+/// Default dialect name (dfinance).
+pub fn default_dialect() -> String {
+    "dfinance".to_owned()
+}
+
 #[cfg(test)]
 mod test {
     use crate::manifest::{Package, Dependence, Git, Dependencies, DepPath};
-    use libra::prelude::CORE_CODE_ADDRESS;
 
     fn package() -> Package {
         Package {
             name: Some("Foo".to_owned()),
-            account_address: CORE_CODE_ADDRESS,
+            account_address: Some("0x01".to_owned()),
             authors: vec![],
             blockchain_api: None,
             dependencies: Some(Dependencies {
@@ -277,6 +275,7 @@ mod test {
                     }),
                 ],
             }),
+            dialect: Some("dfinance".to_owned()),
         }
     }
 
@@ -290,7 +289,9 @@ mod test {
                             {git = \"https://github.com/dfinance/move-stdlib\"},
                             {git = \"https://github.com/dfinance/move-stdlib\", \
                             branch = \"master\", rev = \"969442fb28fc162c3e3de20ab0a3afdfa8d0f560\"}
-                        ]";
+                        ]
+                        dialect= \"dfinance\"
+                        ";
         assert_eq!(package(), toml::from_str::<Package>(deps).unwrap());
     }
 }

@@ -1,6 +1,7 @@
 pub mod dfinance;
 pub mod libra;
 pub mod line_endings;
+pub mod polkadot;
 
 use anyhow::Result;
 use move_core_types::gas_schedule::CostTable;
@@ -8,6 +9,7 @@ use crate::compiler::source_map::FileOffsetMap;
 use std::str::FromStr;
 use crate::compiler::dialects::libra::LibraDialect;
 use crate::compiler::dialects::dfinance::DFinanceDialect;
+use crate::compiler::dialects::polkadot::PolkadotDialect;
 use crate::compiler::address::ProvidedAccountAddress;
 
 pub trait Dialect {
@@ -25,6 +27,7 @@ pub trait Dialect {
 pub enum DialectName {
     Libra,
     DFinance,
+    Polkadot,
 }
 
 impl DialectName {
@@ -32,6 +35,7 @@ impl DialectName {
         match self {
             DialectName::Libra => Box::new(LibraDialect::default()),
             DialectName::DFinance => Box::new(DFinanceDialect::default()),
+            DialectName::Polkadot => Box::new(PolkadotDialect::default()),
         }
     }
 }
@@ -43,6 +47,7 @@ impl FromStr for DialectName {
         match s {
             "libra" => Ok(DialectName::Libra),
             "dfinance" => Ok(DialectName::DFinance),
+            "polkadot" => Ok(DialectName::Polkadot),
             _ => Err(anyhow::format_err!("Invalid dialect {:?}", s)),
         }
     }

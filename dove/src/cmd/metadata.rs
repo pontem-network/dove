@@ -4,7 +4,6 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::manifest::{Layout, Git, DoveToml, Package, Dependence};
 use serde::Serialize;
-use libra::prelude::AccountAddress;
 
 /// Metadata project command.
 #[derive(StructOpt, Debug)]
@@ -46,8 +45,7 @@ pub struct PackageJson {
     pub name: String,
     /// Project AccountAddress.
     #[serde(default = "code_code_address")]
-    #[serde(deserialize_with = "from_str")]
-    pub account_address: AccountAddress,
+    pub account_address: Option<String>,
     /// Authors list.
     #[serde(default)]
     pub authors: Vec<String>,

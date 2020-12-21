@@ -1,5 +1,5 @@
 use std::path::{PathBuf, Path};
-use crate::manifest::{Git, MANIFEST, read_manifest};
+use crate::manifest::{Git, MANIFEST, read_manifest, default_dialect};
 use crate::context::Context;
 use git2::build::RepoBuilder;
 use tiny_keccak::{Sha3, Hasher};
@@ -7,6 +7,8 @@ use anyhow::Error;
 use git2::{Repository, Oid};
 use crate::index::move_dir_iter;
 use libra::account::AccountAddress;
+use std::str::FromStr;
+use lang::compiler::dialects::{DialectName};
 use crate::index::meta::{source_meta, FileMeta};
 
 /// Git prefix.
@@ -70,7 +72,22 @@ fn get_dep_address(path: &Path) -> Result<Option<AccountAddress>, Error> {
     let manifest = path.join(MANIFEST);
     if manifest.exists() {
         let manifest = read_manifest(&manifest)?;
-        Ok(Some(manifest.package.account_address))
+
+        let dialect_name = manifest
+            .package
+            .dialect
+            .clone()
+            .unwrap_or_else(default_dialect);
+        let dialect = DialectName::from_str(&dialect_name)?.get_dialect();
+
+        let acc_addr = manifest
+            .package
+            .account_address
+            .ok_or_else(|| anyhow!("couldn't read account address from manifest"))?;
+
+        let provided_account_address = dialect.normalize_account_address(&acc_addr)?;
+
+        Ok(Some(provided_account_address.as_account_address()))
     } else {
         Ok(None)
     }

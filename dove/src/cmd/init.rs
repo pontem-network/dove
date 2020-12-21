@@ -25,14 +25,26 @@ pub struct Init {
         short = "a"
     )]
     address: Option<String>,
+    #[structopt(
+        help = "Compiler dialect",
+        name = "Dialect",
+        long = "dialect",
+        short = "d"
+    )]
+    dialect: Option<String>,
 }
 
 impl Init {
     /// Creates a new Init command.
-    pub fn new(repository: Option<Uri>, address: Option<String>) -> Init {
+    pub fn new(
+        repository: Option<Uri>,
+        address: Option<String>,
+        dialect: Option<String>,
+    ) -> Init {
         Init {
             repository,
             address,
+            dialect,
         }
     }
 }
@@ -72,6 +84,10 @@ impl Cmd for Init {
 
         if let Some(url) = &self.repository {
             writeln!(&mut f, "blockchain_api = \"{}\"", url)?;
+        }
+
+        if let Some(dialect) = &self.dialect {
+            writeln!(&mut f, "dialect = \"{}\"", dialect)?;
         }
 
         write!(
