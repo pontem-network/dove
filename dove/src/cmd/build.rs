@@ -19,16 +19,22 @@ pub struct Build {}
 
 impl Cmd for Build {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let script_dir = ctx.path_for(&ctx.manifest.layout.script_dir);
-        let module_dir = ctx.path_for(&ctx.manifest.layout.module_dir);
+        let dirs: Vec<_> = [
+            &ctx.manifest.layout.script_dir,
+            &ctx.manifest.layout.module_dir,
+        ]
+        .iter()
+        .map(|d| ctx.path_for(&d))
+        .filter(|p| p.exists())
+        .collect();
 
         let mut index = Index::load(&ctx)?;
         index.build()?;
 
-        let dep_set = index.make_dependency_set(&[&script_dir, &module_dir])?;
+        let dep_set = index.make_dependency_set(&dirs)?;
         let dep_list = load_dependencies(dep_set)?;
 
-        let source_list = load_move_files(&[script_dir, module_dir])?;
+        let source_list = load_move_files(&dirs)?;
 
         let sender = ctx.account_address()?;
         let Artifacts { files, prog } =
