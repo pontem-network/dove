@@ -27,14 +27,13 @@ pub fn ss58_to_libra(ss58: &str) -> Result<String> {
         bs58.len() == PUB_KEY_LENGTH + 3,
         format!("Address length must be equal {} bytes", PUB_KEY_LENGTH + 3)
     );
-    let mut addr = [0; 34];
     if bs58[PUB_KEY_LENGTH + 1..PUB_KEY_LENGTH + 3]
         != ss58hash(&bs58[0..PUB_KEY_LENGTH + 1]).as_bytes()[0..2]
     {
         return Err(anyhow!("Wrong address checksum"));
     }
-    addr[..2].copy_from_slice(&[bs58[0], 0]);
-    addr[2..].copy_from_slice(&bs58[1..PUB_KEY_LENGTH + 1]);
+    let mut addr = [0; PUB_KEY_LENGTH];
+    addr.copy_from_slice(&bs58[1..PUB_KEY_LENGTH + 1]);
     Ok(format!("0x{}", hex::encode_upper(addr)))
 }
 
@@ -66,7 +65,7 @@ pub fn replace_ss58_addresses(source: &str, file_source_map: &mut FileOffsetMap)
 #[cfg(test)]
 mod test {
     use crate::compiler::source_map::FileOffsetMap;
-    use super::{ss58_to_libra, ss58hash, replace_ss58_addresses};
+    use super::{PUB_KEY_LENGTH, replace_ss58_addresses, ss58_to_libra, ss58hash};
 
     #[test]
     fn test_ss58_to_libra() {
@@ -74,7 +73,12 @@ mod test {
         let libra_address = ss58_to_libra(&polka_address).unwrap();
 
         assert_eq!(
-            "0x02009C786090E2598AE884FF9D1F01D6A1A9BAF13A9E61F73633A8928F4D80BF7DFE",
+            hex::decode(&libra_address[2..]).unwrap().len(),
+            PUB_KEY_LENGTH
+        );
+
+        assert_eq!(
+            "0x9C786090E2598AE884FF9D1F01D6A1A9BAF13A9E61F73633A8928F4D80BF7DFE",
             libra_address
         );
     }
@@ -106,7 +110,7 @@ mod test {
             r"
             script {
                 use 0x01::Event;
-                use 0x00001CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F::Math;
+                use 0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F::Math;
 
                 fun main(account: &signer, a: u64, b: u64) {
                     let sum = Math::add(a, b);
