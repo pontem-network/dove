@@ -2,7 +2,7 @@ use crate::code::exp::{Exp, ExpLoc, SourceRange, find_range};
 use crate::code::translator::Context;
 use crate::types::FType;
 use crate::imports::Import;
-use crate::libra::file_format::{FunctionHandleIndex, SignatureIndex, StructDefinitionIndex};
+use vm::file_format::{FunctionHandleIndex, SignatureIndex, StructDefinitionIndex};
 use crate::{Encode, write_array};
 use anyhow::Error;
 use std::fmt::Write;

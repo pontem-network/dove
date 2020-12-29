@@ -1,7 +1,7 @@
 use anyhow::Result;
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
-use move_lang::errors::Error;
-use move_ir_types::location::Loc;
+use libra::move_lang::errors::Error;
+use libra::move_ir_types::location::Loc;
 
 use serde::export::fmt::Debug;
 use serde::export::Formatter;

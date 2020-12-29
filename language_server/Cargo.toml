@@ -26,5 +26,18 @@ hex = "0.4.2"
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 
-move-lang = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+libra = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+
+[features]
+libra_address = [
+    "lang/libra_address",
+    "libra/libra_address",
+]
+dfinance_address = [
+    "lang/dfinance_address",
+    "libra/dfinance_address",
+]
+ps_address = [
+    "lang/ps_address",
+    "libra/ps_address"
+]

@@ -1,7 +1,10 @@
 use anyhow::{Result, Error};
 use std::path::Path;
 use lang::compiler::parser::parse_file;
-use libra::{prelude::*, compiler::*};
+use libra::{prelude::*};
+use libra::{
+    move_lang::{errors, parser::ast::*, name_pool::ConstPool},
+};
 
 use std::collections::{HashSet, HashMap};
 use termcolor::{StandardStream, ColorChoice};

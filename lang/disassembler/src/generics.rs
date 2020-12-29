@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::collections::HashSet;
-use crate::libra::file_format::*;
+use vm::file_format::*;
 use crate::{Encode, write_array};
 use anyhow::Error;
 use std::fmt::Write;

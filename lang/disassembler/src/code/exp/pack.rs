@@ -4,7 +4,7 @@ use crate::code::exp::{ExpLoc, find_range, Exp, SourceRange};
 use crate::{Encode, write_array};
 use anyhow::Error;
 use crate::code::translator::Context;
-use crate::libra::file_format::*;
+use vm::file_format::*;
 use crate::unit::UnitAccess;
 use std::fmt::Write;
 

@@ -1,10 +1,11 @@
 use crate::code::exp::{Exp, SourceRange};
-use crate::libra::prelude::*;
-use crate::libra::file_format::ConstantPoolIndex;
+use vm::file_format::{ConstantPoolIndex, Bytecode};
 use crate::Encode;
 use anyhow::Error;
 use std::fmt::Write;
 use crate::unit::UnitAccess;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::value::MoveValue;
 
 /// Load literal or constant.
 #[derive(Debug)]

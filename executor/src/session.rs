@@ -1,13 +1,13 @@
 use std::collections::BTreeMap;
 
 use anyhow::Error;
-use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
-use move_ir_types::location::Loc;
-use move_lang::{compiled_unit::CompiledUnit, FileCommentMap};
-use move_vm_types::gas_schedule::CostStrategy;
-use move_vm_types::values::Value;
-use vm::CompiledModule;
-use vm::file_format::CompiledScript;
+use libra::move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
+use libra::move_ir_types::location::Loc;
+use libra::move_lang::{compiled_unit::CompiledUnit, FileCommentMap};
+use libra::move_vm_types::gas_schedule::CostStrategy;
+use libra::move_vm_types::values::Value;
+use libra::vm::CompiledModule;
+use libra::vm::file_format::CompiledScript;
 
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
@@ -16,7 +16,7 @@ use crate::meta::ExecutionMeta;
 use lang::compiler::address::ProvidedAccountAddress;
 use lang::compiler::parser::{ParsingMeta, ParserArtifact};
 use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
-use move_lang::errors::Errors;
+use libra::move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;

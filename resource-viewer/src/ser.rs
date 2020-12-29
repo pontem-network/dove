@@ -1,5 +1,6 @@
+use libra::rv;
 use libra::prelude::*;
-use libra::vm::StructTag;
+use libra::move_core_types::language_storage::StructTag;
 use libra::account::Identifier;
 use rv::{AnnotatedMoveStruct, AnnotatedMoveValue};
 use serde::Serialize;

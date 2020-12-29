@@ -6,12 +6,17 @@ use crate::index::Index;
 use lang::compiler::file::load_move_files;
 use lang::builder::{Artifacts, MoveBuilder};
 use termcolor::{StandardStream, ColorChoice};
-use libra::compiler::output_errors;
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::Write;
 use std::fs;
-use libra::{prelude::CompiledUnit, compiler::*};
+use libra::{
+    prelude::CompiledUnit,
+    move_lang::{
+        compiled_unit,
+        errors::{FilesSourceText, output_errors},
+    },
+};
 
 /// Build dependencies.
 #[derive(StructOpt, Debug)]

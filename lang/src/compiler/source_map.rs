@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use move_lang::errors::Errors;
-use move_ir_types::location::Loc;
+use libra::move_lang::errors::Errors;
+use libra::move_ir_types::location::Loc;
 use codespan::{Span, ByteIndex};
 
 pub fn len_difference(orig: &str, replacement: &str) -> isize {

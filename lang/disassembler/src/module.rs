@@ -1,12 +1,12 @@
 use crate::structs::StructDef;
 use anyhow::Error;
 use crate::{Encode, INDENT, Config};
-use crate::libra::prelude::*;
 use std::fmt::Write;
 use crate::generics::Generics;
 use crate::imports::Imports;
 use crate::functions::FunctionsDef;
 use crate::unit::{UnitAccess};
+use move_core_types::account_address::AccountAddress;
 
 /// Module representation.
 pub struct Module<'a> {

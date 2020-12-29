@@ -11,17 +11,10 @@ publish = false
 
 [dependencies]
 libra = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-lang = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 libra-move-core-types = { package = "move-core-types", git = "https://github.com/dfinance/libra.git", branch = "master" }
-lcs = { package = "libra-canonical-serialization", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-vm-genesis = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-ir-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 
-disassembler = { path = "disassembler" }
-compat = { path = "compat", package = "move-compat"}
+disassembler = { path = "disassembler", default-features = false }
+compat = { path = "compat", package = "move-compat", default-features = false }
 
 serde = "1.0.106"
 serde_derive = "1.0.106"
@@ -53,3 +46,19 @@ rust-base58 = "0.0.4"
 [dev-dependencies]
 include_dir = "0.6.0"
 
+[features]
+libra_address = [
+    "libra/libra_address",
+    "disassembler/libra_address",
+    "compat/libra_address",
+]
+dfinance_address = [
+    "libra/dfinance_address",
+    "disassembler/dfinance_address",
+    "compat/dfinance_address",
+]
+ps_address = [
+    "libra/ps_address",
+    "disassembler/ps_address",
+    "compat/ps_address"
+]

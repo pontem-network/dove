@@ -77,7 +77,7 @@ where
 
 pub mod client {
     use super::*;
-    use libra::vm::StructTag;
+    use libra::move_core_types::language_storage::StructTag;
 
     pub struct DnodeRestClient {
         uri: Uri,

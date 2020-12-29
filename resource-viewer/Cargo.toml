@@ -18,15 +18,35 @@ hex = "0.4.2"
 
 # move-lang deps:
 libra = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-rv = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", package = "resource-viewer" }
 
 lang = { path = "../lang" }
 git-hash = { path = "../common/git-hash" }
-compat = { path = "../lang/compat", package = "move-compat"}
+compat = { path = "../lang/compat", package = "move-compat" }
 dnclient = { path = "../common/dnode-rest-client", package = "dnode-rest-client" }
 
 # cli:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow = { version = "1.0", default-features = true }
-clap = { version = "3.0.0-beta.2", features = [ "default", "suggestions", "color" ] }
+clap = { version = "3.0.0-beta.2", features = ["default", "suggestions", "color"] }
 env_logger = "0.8.2"
+
+[features]
+default = [
+    "dfinance_address"
+]
+
+libra_address = [
+    "lang/libra_address",
+    "libra/libra_address",
+    "compat/libra_address",
+]
+dfinance_address = [
+    "lang/dfinance_address",
+    "libra/dfinance_address",
+    "compat/dfinance_address",
+]
+ps_address = [
+    "lang/ps_address",
+    "libra/ps_address",
+    "compat/ps_address",
+]

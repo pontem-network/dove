@@ -1,12 +1,12 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::source_map::FileOffsetMap;
 use anyhow::Context;
-use move_core_types::account_address::AccountAddress;
+use libra::move_core_types::account_address::AccountAddress;
 use anyhow::Result;
-use move_core_types::gas_schedule::{CostTable, GasCost};
-use move_vm_types::gas_schedule::new_from_instructions;
-use move_vm_types::gas_schedule::NativeCostIndex as N;
-use vm::{
+use libra::move_core_types::gas_schedule::{CostTable, GasCost};
+use libra::move_vm_types::gas_schedule::new_from_instructions;
+use libra::move_vm_types::gas_schedule::NativeCostIndex as N;
+use libra::vm::{
     file_format::{
         ConstantPoolIndex, FieldHandleIndex, FieldInstantiationIndex, FunctionHandleIndex,
         FunctionInstantiationIndex, StructDefInstantiationIndex, StructDefinitionIndex,
@@ -50,7 +50,7 @@ impl Dialect for DFinanceDialect {
 }
 
 pub fn dfinance_cost_table() -> CostTable {
-    use vm::file_format::Bytecode::*;
+    use libra::vm::file_format::Bytecode::*;
 
     let mut instrs = vec![
         (MoveTo(StructDefinitionIndex::new(0)), GasCost::new(825, 1)),

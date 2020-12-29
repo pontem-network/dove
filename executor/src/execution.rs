@@ -1,18 +1,18 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use move_core_types::account_address::AccountAddress;
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
-use move_core_types::vm_status::{StatusCode, VMStatus};
-use move_vm_runtime::data_cache::{RemoteCache, TransactionEffects};
-use move_vm_runtime::move_vm::MoveVM;
-use move_vm_types::gas_schedule::CostStrategy;
-use move_vm_types::values::Value;
-use vm::access::ModuleAccess;
-use vm::CompiledModule;
-use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
-use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
+use libra::move_core_types::account_address::AccountAddress;
+use libra::move_core_types::identifier::Identifier;
+use libra::move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
+use libra::move_core_types::vm_status::{StatusCode, VMStatus};
+use libra::move_vm_runtime::data_cache::{RemoteCache, TransactionEffects};
+use libra::move_vm_runtime::move_vm::MoveVM;
+use libra::move_vm_types::gas_schedule::CostStrategy;
+use libra::move_vm_types::values::Value;
+use libra::vm::access::ModuleAccess;
+use libra::vm::CompiledModule;
+use libra::vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
+use libra::vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
 use crate::explain::{
     explain_effects, StepExecutionResult, explain_abort, explain_execution_failure,
@@ -20,7 +20,7 @@ use crate::explain::{
 };
 use crate::meta::ExecutionMeta;
 use crate::oracles::{oracle_coins_module, time_metadata, coin_balance_metadata, block_metadata};
-use move_vm_runtime::logging::NoContextLog;
+use libra::move_vm_runtime::logging::NoContextLog;
 use crate::session::ConstsMap;
 
 pub type SerializedTransactionEffects = Vec<((AccountAddress, StructTag), Option<Vec<u8>>)>;
@@ -192,22 +192,22 @@ pub fn execute_script(
     if let Some(current_time) = current_time {
         ds.resources.insert(
             (std_addr, time_metadata()),
-            lcs::to_bytes(&current_time).unwrap(),
+            libra::lcs::to_bytes(&current_time).unwrap(),
         );
     }
     let block_height = block.unwrap_or(100);
     ds.resources.insert(
         (std_addr, block_metadata()),
-        lcs::to_bytes(&block_height).unwrap(),
+        libra::lcs::to_bytes(&block_height).unwrap(),
     );
     for (price_tag, val) in oracle_prices {
         ds.resources
-            .insert((std_addr, price_tag), lcs::to_bytes(&val).unwrap());
+            .insert((std_addr, price_tag), libra::lcs::to_bytes(&val).unwrap());
     }
     for (account, coin, val) in accounts_balance {
         ds.resources.insert(
             (account, coin_balance_metadata(&coin)),
-            lcs::to_bytes(&val).unwrap(),
+            libra::lcs::to_bytes(&val).unwrap(),
         );
     }
 

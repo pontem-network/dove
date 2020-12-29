@@ -11,13 +11,10 @@ authors = [
 edition = "2018"
 
 [lib]
-crate-type = [ "cdylib", "rlib" ]
+crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "disassembler"
-
-[features]
-cffi = []
 
 # lib, wasm, cffi:
 [dependencies]
@@ -29,8 +26,33 @@ libra-types = { git = "https://github.com/dfinance/libra.git", branch = "release
 move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
 lcs = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", package = "libra-canonical-serialization" }
 vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-compat = { path = "../compat", package = "move-compat"}
+compat = { path = "../compat", package = "move-compat" }
 git-hash = { path = "../../common/git-hash" }
+
+[features]
+default = [
+    "dfinance_address"
+]
+
+cffi = []
+libra_address = [
+    "libra-types/libra_address",
+    "move-core-types/libra_address",
+    "vm/libra_address",
+    "compat/libra_address",
+]
+dfinance_address = [
+    "libra-types/dfinance_address",
+    "move-core-types/dfinance_address",
+    "vm/dfinance_address",
+    "compat/dfinance_address",
+]
+ps_address = [
+    "libra-types/ps_address",
+    "move-core-types/ps_address",
+    "vm/ps_address",
+    "compat/ps_address",
+]
 
 # cli:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

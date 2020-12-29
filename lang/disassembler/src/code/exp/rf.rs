@@ -3,7 +3,7 @@ use crate::Encode;
 use anyhow::Error;
 use std::fmt::Write;
 use crate::code::translator::Context;
-use crate::libra::file_format::*;
+use vm::file_format::*;
 use crate::code::locals::Local;
 use crate::unit::UnitAccess;
 

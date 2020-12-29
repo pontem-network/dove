@@ -1,11 +1,11 @@
 use enum_iterator::IntoEnumIterator;
 
-use move_core_types::account_address::AccountAddress;
-use move_core_types::language_storage::StructTag;
+use libra::move_core_types::account_address::AccountAddress;
+use libra::move_core_types::language_storage::StructTag;
 
 use crate::oracles::oracle_metadata;
 use std::collections::HashMap;
-use move_core_types::vm_status::StatusCode;
+use libra::move_core_types::vm_status::StatusCode;
 
 fn status_codes() -> HashMap<String, u64> {
     StatusCode::into_enum_iter()

@@ -35,3 +35,23 @@ git-hash = { path = "../common/git-hash" }
 maplit = "1.0.2"
 serde_json = "1.0.52"
 git2 = "0.13"
+
+[features]
+default = [
+    "dfinance_address"
+]
+libra_address = [
+    "libra/libra_address",
+    "lang/libra_address",
+    "move-executor/libra_address",
+]
+dfinance_address = [
+    "libra/dfinance_address",
+    "lang/dfinance_address",
+    "move-executor/dfinance_address",
+]
+ps_address = [
+    "libra/ps_address",
+    "lang/ps_address",
+    "move-executor/ps_address",
+]

@@ -3,7 +3,7 @@ use crate::imports::{Imports, Import};
 use crate::generics::Generic;
 use crate::types::{extract_type_signature, FType};
 
-use crate::libra::file_format::*;
+use vm::file_format::*;
 
 use crate::code::locals::{Locals, Local};
 use crate::code::iter::BytecodeIterator;

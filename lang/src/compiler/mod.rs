@@ -9,14 +9,14 @@ pub mod source_map;
 pub mod ss58;
 
 pub use anyhow::Result;
-pub use move_lang::name_pool::ConstPool;
-use move_lang::compiled_unit::CompiledUnit;
-use move_lang::errors::Errors;
+pub use libra::move_lang::name_pool::ConstPool;
+use libra::move_lang::compiled_unit::CompiledUnit;
+use libra::move_lang::errors::Errors;
 use parser::parse_program;
 use crate::compiler::dialects::Dialect;
 use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MoveFile;
-use move_lang::{check_program, cfgir, to_bytecode};
+use libra::move_lang::{check_program, cfgir, to_bytecode};
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 
 pub type CheckerResult = Result<cfgir::ast::Program, Errors>;

@@ -3,8 +3,8 @@ use std::str::FromStr;
 use anyhow::{Result, Error, bail};
 
 use libra::{
-    compiler::{ModuleAccess_, ModuleIdent_, Type, Type_},
-    vm::StructTag,
+    move_lang::parser::ast::{ModuleAccess_, ModuleIdent_, Type, Type_},
+    move_core_types::language_storage::StructTag,
 };
 use libra::move_lang::parser::lexer::{Lexer, Tok};
 use libra::move_lang::parser::syntax::{parse_num, parse_type};

@@ -1,14 +1,14 @@
 use anyhow::Result;
-use move_lang::{strip_comments_and_verify, FileCommentMap, parser};
+use libra::move_lang::{strip_comments_and_verify, FileCommentMap, parser};
 
-use move_lang::name_pool::ConstPool;
+use libra::move_lang::name_pool::ConstPool;
 use std::collections::{HashMap, BTreeMap};
-use move_lang::parser::syntax::parse_file_string;
+use libra::move_lang::parser::syntax::parse_file_string;
 use crate::compiler::source_map::{FileOffsetMap, ProjectOffsetMap, len_difference};
 use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MoveFile;
-use move_lang::errors::{FilesSourceText, Errors};
+use libra::move_lang::errors::{FilesSourceText, Errors};
 
 pub type CommentsMap = BTreeMap<&'static str, FileCommentMap>;
 
