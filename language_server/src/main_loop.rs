@@ -178,15 +178,7 @@ pub fn loop_turn(
         }
         Event::Lsp(message) => {
             match message {
-                Message::Request(req) => {
-                    on_request(
-                        global_state,
-                        pool,
-                        resp_events_sender,
-                        &connection.sender,
-                        req,
-                    )?;
-                }
+                Message::Request(_) => {}
                 Message::Notification(not) => {
                     on_notification(&connection.sender, fs_events_sender, loop_state, not)?;
                 }
@@ -232,22 +224,6 @@ pub fn loop_turn(
         let cloned_task_sender = resp_events_sender.clone();
         pool.execute(move || compute_file_diagnostics(analysis, cloned_task_sender, files));
     }
-    Ok(())
-}
-
-#[allow(unused)]
-fn on_request(
-    global_state: &mut GlobalState,
-    pool: &ThreadPool,
-    task_sender: &Sender<ResponseEvent>,
-    msg_sender: &Sender<Message>,
-    req: Request,
-) -> Result<()> {
-    // let mut pool_dispatcher =
-    //     PoolDispatcher::new(req, pool, global_state, msg_sender, task_sender);
-    // pool_dispatcher
-    //     .on::<req::Completion>(handlers::handle_completion)?
-    //     .finish();
     Ok(())
 }
 

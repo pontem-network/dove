@@ -298,7 +298,7 @@ where
     let sorted_index_list = range_list
         .into_iter()
         .map(|p| p.source_range())
-        .filter_map(|p| p)
+        .flatten()
         .flat_map(|p| vec![p.0, p.1])
         .sorted()
         .collect::<Vec<_>>();

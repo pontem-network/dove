@@ -55,6 +55,7 @@ impl Default for Package {
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn dialect() -> Option<String> {
     Some(default_dialect())
 }
@@ -79,6 +80,10 @@ fn script_output() -> String {
     "target/scripts".to_owned()
 }
 
+fn transaction_output() -> String {
+    "target/transactions".to_owned()
+}
+
 fn target_deps() -> String {
     "target/.external".to_owned()
 }
@@ -91,6 +96,7 @@ fn index() -> String {
     ".Dove.man".to_owned()
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn code_code_address() -> Option<String> {
     Some(format!("0x{}", CORE_CODE_ADDRESS))
 }
@@ -118,6 +124,10 @@ pub struct Layout {
     #[serde(default = "script_output")]
     pub script_output: String,
 
+    /// Directory with transactions.
+    #[serde(default = "transaction_output")]
+    pub transaction_output: String,
+
     /// Directory with external dependencies.
     #[serde(default = "target_deps")]
     pub target_deps: String,
@@ -138,6 +148,7 @@ impl Default for Layout {
             tests_dir: tests_dir(),
             module_output: module_output(),
             script_output: script_output(),
+            transaction_output: transaction_output(),
             target_deps: target_deps(),
             target: target(),
             index: index(),

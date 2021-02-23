@@ -1,10 +1,11 @@
 use std::path::{PathBuf, Path};
 use crate::manifest::{DoveToml, MANIFEST, read_manifest, default_dialect};
 use std::str::FromStr;
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, Error};
 use std::env;
 use lang::compiler::dialects::{Dialect, DialectName};
 use lang::compiler::address::ProvidedAccountAddress;
+use crate::index::Index;
 
 /// Project context.
 pub struct Context {
@@ -20,6 +21,22 @@ impl Context {
     /// Create absolute path in project.
     pub fn path_for<P: AsRef<Path>>(&self, path: P) -> PathBuf {
         self.project_dir.join(path)
+    }
+
+    /// Create absolute paths in project.
+    pub fn paths_for<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<PathBuf> {
+        paths
+            .iter()
+            .map(|d| self.path_for(&d))
+            .filter(|p| p.exists())
+            .collect()
+    }
+
+    /// Build project index.
+    pub fn build_index(&self) -> Result<Index, Error> {
+        let mut index = Index::load(self)?;
+        index.build()?;
+        Ok(index)
     }
 
     /// Returns project name or default name `project` if the name is not defined.

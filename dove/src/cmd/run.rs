@@ -3,7 +3,6 @@ use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
 use lang::compiler::file::{MoveFile, load_move_files};
-use crate::index::Index;
 use move_executor::executor::{Executor, render_execution_result};
 
 /// Run script.
@@ -29,8 +28,7 @@ impl Cmd for Run {
         }
         let module_dir = ctx.path_for(&ctx.manifest.layout.module_dir);
 
-        let mut index = Index::load(&ctx)?;
-        index.build()?;
+        let mut index = ctx.build_index()?;
 
         let dep_set = index.make_dependency_set(&[&script, &module_dir])?;
         let mut dep_list = load_dependencies(dep_set)?;

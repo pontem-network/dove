@@ -7,8 +7,6 @@
 
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate anyhow;
 
 use std::path::{Path, PathBuf};
 use anyhow::{Result, Error, anyhow};
@@ -18,9 +16,7 @@ use libra::prelude::*;
 use lang::compiler::bech32::{bech32_into_libra, HRP};
 use dnclient::blocking as net;
 use libra::rv;
-
-mod ser;
-mod tte;
+use move_resource_viewer::{tte, ser};
 
 const VERSION: &str = git_hash::crate_version_with_git_hash_short!();
 const JSON_SCHEMA_STDOUT: &str = "-";

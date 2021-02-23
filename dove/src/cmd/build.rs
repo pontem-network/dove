@@ -2,11 +2,10 @@ use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
-use crate::index::Index;
 use lang::compiler::file::load_move_files;
 use lang::builder::{Artifacts, MoveBuilder};
 use termcolor::{StandardStream, ColorChoice};
-use std::path::PathBuf;
+use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use std::fs;
@@ -24,17 +23,12 @@ pub struct Build {}
 
 impl Cmd for Build {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let dirs: Vec<_> = [
+        let dirs = ctx.paths_for(&[
             &ctx.manifest.layout.script_dir,
             &ctx.manifest.layout.module_dir,
-        ]
-        .iter()
-        .map(|d| ctx.path_for(&d))
-        .filter(|p| p.exists())
-        .collect();
+        ]);
 
-        let mut index = Index::load(&ctx)?;
-        index.build()?;
+        let mut index = ctx.build_index()?;
 
         let dep_set = index.make_dependency_set(&dirs)?;
         let dep_list = load_dependencies(dep_set)?;
@@ -68,7 +62,7 @@ pub fn verify_and_store(
         .into_iter()
         .partition(|u| matches!(u, CompiledUnit::Module { .. }));
 
-    fn store(units: Vec<CompiledUnit>, base_dir: &PathBuf) -> Result<(), Error> {
+    fn store(units: Vec<CompiledUnit>, base_dir: &Path) -> Result<(), Error> {
         for (idx, unit) in units.into_iter().enumerate() {
             let mut path = base_dir.join(format!("{}_{}", idx, unit.name()));
             path.set_extension("mv");

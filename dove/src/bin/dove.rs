@@ -14,6 +14,7 @@ use dove::cmd::fetch::Fetch;
 use dove::cmd::build::Build;
 use dove::cmd::test::Test;
 use dove::cmd::run::Run;
+use dove::cmd::ct::CreateTransactionCmd;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Move compiler.", version = git_hash::crate_version_with_git_hash_short!())]
@@ -58,6 +59,11 @@ enum Opt {
         #[structopt(flatten)]
         cmd: Run,
     },
+    #[structopt(about = "Create transaction")]
+    Ct {
+        #[structopt(flatten)]
+        cmd: CreateTransactionCmd,
+    },
 }
 
 fn main() {
@@ -73,6 +79,7 @@ fn main() {
         Opt::Build { cmd } => cmd.execute(),
         Opt::Test { cmd } => cmd.execute(),
         Opt::Run { cmd } => cmd.execute(),
+        Opt::Ct { cmd } => cmd.execute(),
     });
 }
 

@@ -2,7 +2,6 @@ use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
-use crate::index::Index;
 use lang::compiler::file::load_move_files;
 use move_executor::executor::{Executor, render_test_result};
 
@@ -24,19 +23,14 @@ impl Cmd for Test {
             return Ok(());
         }
 
-        let mut dirs: Vec<_> = [
+        let mut dirs = ctx.paths_for(&[
             &ctx.manifest.layout.script_dir,
             &ctx.manifest.layout.module_dir,
-        ]
-        .iter()
-        .map(|d| ctx.path_for(&d))
-        .filter(|p| p.exists())
-        .collect();
+        ]);
 
         dirs.push(tests_dir.clone());
 
-        let mut index = Index::load(&ctx)?;
-        index.build()?;
+        let mut index = ctx.build_index()?;
 
         let dep_set = index.make_dependency_set(&dirs)?;
         let mut dep_list = load_dependencies(dep_set)?;

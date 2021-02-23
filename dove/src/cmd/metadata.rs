@@ -57,18 +57,18 @@ pub struct PackageJson {
     pub local_dependencies: Vec<String>,
 }
 
-impl Into<DoveJson> for DoveToml {
-    fn into(self) -> DoveJson {
+impl From<DoveToml> for DoveJson {
+    fn from(toml: DoveToml) -> Self {
         DoveJson {
-            package: self.package.into(),
-            layout: self.layout,
+            package: toml.package.into(),
+            layout: toml.layout,
         }
     }
 }
 
-impl Into<PackageJson> for Package {
-    fn into(self) -> PackageJson {
-        let (locals, git) = if let Some(dependencies) = self.dependencies {
+impl From<Package> for PackageJson {
+    fn from(pac: Package) -> Self {
+        let (locals, git) = if let Some(dependencies) = pac.dependencies {
             dependencies.deps.into_iter().fold(
                 (Vec::new(), Vec::new()),
                 |(mut locals, mut gits), elt| {
@@ -84,10 +84,10 @@ impl Into<PackageJson> for Package {
         };
 
         PackageJson {
-            name: self.name.unwrap_or_default(),
-            account_address: self.account_address,
-            authors: self.authors,
-            blockchain_api: self.blockchain_api,
+            name: pac.name.unwrap_or_default(),
+            account_address: pac.account_address,
+            authors: pac.authors,
+            blockchain_api: pac.blockchain_api,
             git_dependencies: git,
             local_dependencies: locals,
         }

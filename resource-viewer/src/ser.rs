@@ -1,3 +1,5 @@
+#![allow(clippy::field_reassign_with_default)]
+
 use libra::rv;
 use libra::prelude::*;
 use libra::move_core_types::language_storage::StructTag;

@@ -63,10 +63,10 @@ impl<'a> Index<'a> {
             if !self.dep_names.contains(&name) {
                 if name.starts_with(git::PREFIX) {
                     let git = GitIndex::new(self.ctx, &path);
-                    self.store_meta(git.meta()?, SourceType::Git, name.clone())?;
+                    self.store_meta(git.meta()?, SourceType::Git, name.clone());
                 } else if name.starts_with(chain::PREFIX) {
                     let chain = ChainIndex::new(self.ctx, &path);
-                    self.store_meta(chain.meta()?, SourceType::Chain, name.clone())?;
+                    self.store_meta(chain.meta()?, SourceType::Chain, name.clone());
                     chain.meta()?;
                 }
                 new_deps.insert(name.clone());
@@ -184,7 +184,7 @@ impl<'a> Index<'a> {
                     }
                 }
 
-                self.store_meta(files_meta, SourceType::Chain, name)?;
+                self.store_meta(files_meta, SourceType::Chain, name);
 
                 if !resolve(self, import, deps)? {
                     return Err(anyhow!("Failed to resolve dependency:{:?}", import));
@@ -220,7 +220,7 @@ impl<'a> Index<'a> {
                 self.ctx.dialect.as_ref(),
             )?;
 
-            self.store_meta(vec![meta], SourceType::Local, dep_name.clone())?;
+            self.store_meta(vec![meta], SourceType::Local, dep_name.clone());
         }
         Ok(())
     }
@@ -257,12 +257,7 @@ impl<'a> Index<'a> {
         Ok(())
     }
 
-    fn store_meta(
-        &mut self,
-        f_meta: Vec<FileMeta>,
-        src_type: SourceType,
-        dep_name: Rc<str>,
-    ) -> Result<(), Error> {
+    fn store_meta(&mut self, f_meta: Vec<FileMeta>, src_type: SourceType, dep_name: Rc<str>) {
         for file in f_meta {
             for unit in file.meta {
                 let name = Rc::new(unit.module_id);
@@ -283,7 +278,6 @@ impl<'a> Index<'a> {
                 );
             }
         }
-        Ok(())
     }
 }
 

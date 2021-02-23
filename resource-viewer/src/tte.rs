@@ -28,9 +28,9 @@ impl FromStr for TypeTagQuery {
     }
 }
 
-impl Into<(TypeTag, Option<u128>)> for TypeTagQuery {
-    fn into(self) -> (TypeTag, Option<u128>) {
-        (self.tt, self.i)
+impl From<TypeTagQuery> for (TypeTag, Option<u128>) {
+    fn from(query: TypeTagQuery) -> Self {
+        (query.tt, query.i)
     }
 }
 
@@ -40,7 +40,7 @@ impl TypeTagQuery {
     }
 }
 
-fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
+pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
     fn unwrap_spanned_ty_(ty: Type, this: Option<AccountAddress>) -> Result<TypeTag, Error> {
         let st = match ty.value {
             Type_::Apply(ma, mut ty_params) => {
