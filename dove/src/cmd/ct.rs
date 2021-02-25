@@ -1,25 +1,28 @@
-use crate::cmd::{Cmd, load_dependencies};
-use crate::context::Context;
+use std::fmt::Debug;
+use std::fs;
+use std::str::FromStr;
+
 use anyhow::Error;
-use structopt::StructOpt;
-use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
-use lang::meta_extractor::{ScriptMetadata, Meta};
-use lang::builder::{Artifacts, MoveBuilder};
-use termcolor::{StandardStream, ColorChoice};
-use libra::move_core_types::language_storage::TypeTag;
-use serde::{Serialize, Deserialize};
+use libra::{
+    move_lang::{compiled_unit, errors::output_errors},
+    prelude::CompiledUnit,
+};
 use libra::account::AccountAddress;
+use libra::move_core_types::language_storage::TypeTag;
 use libra::move_lang::parser::lexer::{Lexer, Tok};
 use libra::move_lang::parser::syntax::parse_type;
-use libra::{
-    prelude::CompiledUnit,
-    move_lang::{compiled_unit, errors::output_errors},
-};
+use serde::{Deserialize, Serialize};
+use structopt::StructOpt;
+use termcolor::{ColorChoice, StandardStream};
+
+use lang::builder::{Artifacts, MoveBuilder};
+use lang::compiler::file::{find_move_files, load_move_files, MoveFile};
+use lang::compiler::ss58::{replace_ss58_addresses, ss58_to_libra};
+use lang::meta_extractor::{Meta, ScriptMetadata};
 use move_resource_viewer::tte::unwrap_spanned_ty;
-use std::fmt::Debug;
-use std::str::FromStr;
-use lang::compiler::ss58::{ss58_to_libra, replace_ss58_addresses};
-use std::fs;
+
+use crate::cmd::{Cmd, load_dependencies};
+use crate::context::Context;
 
 /// Create transaction.
 #[derive(StructOpt, Debug)]
@@ -552,11 +555,16 @@ pub struct Transaction {
 impl Transaction {
     /// Create a new transaction.
     pub fn new(
-        signers_count: u8,
+        mut signers_count: u8,
         code: Vec<u8>,
         args: Vec<ScriptArg>,
         type_args: Vec<TypeTag>,
     ) -> Transaction {
+        // At least 1 signer is always passed to the script.
+        if signers_count == 0 {
+            signers_count = 1;
+        }
+
         Transaction {
             signers_count,
             code,
@@ -644,10 +652,11 @@ impl FromStr for Address {
 
 #[cfg(test)]
 mod test {
-    use crate::cmd::ct::TransactionBuilder;
-    use libra::move_core_types::language_storage::{TypeTag, StructTag};
-    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
     use libra::move_core_types::identifier::Identifier;
+    use libra::move_core_types::language_storage::{StructTag, TypeTag};
+    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
+
+    use crate::cmd::ct::TransactionBuilder;
 
     #[test]
     fn test_parse_call() {
