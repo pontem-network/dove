@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
-use anyhow::{Result, Error, bail};
+use anyhow::{Result, Error, bail, anyhow};
 
+use libra::move_ir_types::location::Loc;
 use libra::{
     move_lang::parser::ast::{ModuleAccess_, ModuleIdent_, Type, Type_},
     move_core_types::language_storage::StructTag,
@@ -115,8 +116,30 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
 }
 
 pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
-    let map_err = |err| anyhow!("{:?}", err);
-    let mut lexer = Lexer::new(s, "query", Default::default());
+    let map_err = |err: Vec<(Loc, String)>| {
+        anyhow!("Query parsing error:\n\t{:}", {
+            let strs: Vec<_> = err
+                .into_iter()
+                .map(|(loc, msg)| format!("{}: {}", loc.span(), msg))
+                .collect();
+            strs.join("\n\t")
+        })
+    };
+
+    let q = {
+        #[cfg(feature = "ps_address")]
+        {
+            let res = lang::compiler::ss58::replace_ss58_addresses(&s, &mut Default::default());
+            log::debug!("in-query address decoded: {:}", res);
+            res
+        }
+        #[cfg(not(feature = "ps_address"))]
+        {
+            s
+        }
+    };
+
+    let mut lexer = Lexer::new(&q, "query", Default::default());
     lexer.advance().map_err(map_err)?;
 
     let ty = parse_type(&mut lexer).map_err(map_err)?;
@@ -154,6 +177,36 @@ mod tests {
             "0x1::Foo::Res<Vec<u128>>",
             "0x1::Foo::Res<Vec<u128>>[42]",
             "0x1::Foo::Bar::Ignored<Parts>",
+        ];
+
+        inputs
+            .iter()
+            .cloned()
+            .map(|inp| (inp, parse(inp)))
+            .for_each(|(inp, res)| {
+                assert!(res.is_ok(), "failed on '{}'", inp);
+                println!("{:?}", res.unwrap());
+            });
+    }
+
+    #[test]
+    #[cfg(feature = "ps_address")]
+    fn test_parse_ss58() {
+        // //Alice/ pub: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY =>
+        // 0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D
+        const ADDR: &str = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+        assert!(parse("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY::Foo").is_err());
+
+        let inputs = [
+            &format!("{}::Foo::Res", ADDR),
+            &format!("{}::Foo::Res<Bar::Struct>", ADDR),
+            &format!("{}::Foo::Res<{0:}::Bar::Struct>", ADDR),
+            &format!("{}::Foo::Res<{0:}::Bar::T>[42]", ADDR),
+            &format!("{}::Foo::Res<{0:}::Bar::T<u128>>[42]", ADDR),
+            &format!("{}::Foo::Res<Bar::T<u128>>", ADDR),
+            &format!("{}::Foo::Res<Vec<u128>>", ADDR),
+            &format!("{}::Foo::Res<Vec<u128>>[42]", ADDR),
+            &format!("{}::Foo::Bar::Ignored<Parts>", ADDR),
         ];
 
         inputs

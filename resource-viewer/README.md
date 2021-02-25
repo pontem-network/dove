@@ -22,6 +22,31 @@ cargo install --git https://github.com/dfinance/move-tools.git move-resource-vie
 [Rust]: https://www.rust-lang.org
 [Rustup]: https://rustup.rs
 
+
+### Build with optional features
+
+- `json-schema` - adds option to export json schema for output format
+- `dfinance_address` - support [DFinance][] node & address format
+- `libra_address` - support [Libra/Diem][] address format
+- `ps_address` - support Substrate node & [ss58][] address format
+
+[DFinance]: https://github.com/dfinance
+[Libra/Diem]: https://github.com/diem
+[ss58]: "https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)"
+
+Add shousen features as list to the command line:
+```bash
+cargo install --git https://github.com/dfinance/move-tools.git move-resource-viewer \
+    --no-default-features \
+    --features="feature, feature, feature"
+```
+
+For example To build Resource Viewer for Polkadot/Substrate use:
+```bash
+    --no-default-features --features="ps_address"
+```
+
+
 ## Usage example
 
 Query the user's ETH balance:
@@ -58,6 +83,13 @@ For more info check out `--help`.
 
 [dnode]: https://github.com/dfinance/dnode
 [bech32]: https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki
+
+
+### Substrate
+
+Additionally if Resource Viewer was built with `ps_address` feature,
+[ss58][]-addresses are acceptable for `--account` and `--query` parameters.
+
 
 ### Output
 

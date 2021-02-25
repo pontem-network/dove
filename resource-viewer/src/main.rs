@@ -14,12 +14,12 @@ use http::Uri;
 use clap::Clap;
 use libra::prelude::*;
 use lang::compiler::bech32::{bech32_into_libra, HRP};
-use dnclient::blocking as net;
 use libra::rv;
-use move_resource_viewer::{tte, ser};
+use move_resource_viewer::{tte, ser, net::*};
 
-const VERSION: &str = git_hash::crate_version_with_git_hash_short!();
+#[cfg(feature = "json-schema")]
 const JSON_SCHEMA_STDOUT: &str = "-";
+const VERSION: &str = git_hash::crate_version_with_git_hash_short!();
 
 #[derive(Clap, Debug)]
 #[clap(name = "Move resource viewer", version = VERSION)]
@@ -40,7 +40,10 @@ struct Cfg {
 
     /// Time: maximum block number
     #[clap(long, short)]
+    #[cfg(not(feature = "ps_address"))]
     height: Option<u128>,
+    #[cfg(feature = "ps_address")]
+    height: Option<sp_core::H256>,
 
     /// Output file path
     #[clap(long, short)]
@@ -61,6 +64,7 @@ struct Cfg {
 
     /// Export JSON schema for output format.
     /// Special value for write to stdout: "-"
+    #[cfg(feature = "json-schema")]
     #[clap(long = "json-schema")]
     json_schema: Option<PathBuf>,
 }
@@ -100,18 +104,24 @@ fn run() -> Result<(), Error> {
     let (tte, index) = cfg.query.into_inner();
     let addr = if cfg.address.starts_with(HRP) {
         AccountAddress::from_hex_literal(&bech32_into_libra(&cfg.address)?)
+    } else if cfg.address.starts_with("0x") {
+        AccountAddress::from_hex_literal(&cfg.address)
+    } else if let Ok(addr) = lang::compiler::ss58::ss58_to_libra(&cfg.address) {
+        debug!("address decoded: {:}", addr);
+        AccountAddress::from_hex_literal(&addr)
     } else {
+        // fail with from:
         AccountAddress::from_hex_literal(&cfg.address)
     }?;
 
     match tte {
         TypeTag::Struct(st) => {
             let key = ResourceKey::new(addr, st.clone());
-            let res = net::get_resource(&key, &host, height);
+            let res = get_resource(&key, &host, height);
             res.map(|resp| {
                 let bytes = resp.as_bytes();
                 if !bytes.is_empty() {
-                    let client = net::client::DnodeRestClient::new(host, height);
+                    let client = NodeClient::new(host, height);
 
                     // Internally produce FatStructType (with layout) for StructTag by
                     // resolving & de-.. entire deps-chain.
@@ -120,7 +130,18 @@ fn run() -> Result<(), Error> {
                     annotator
                         .view_resource(&st, &bytes)
                         .and_then(|result| {
-                            let height = resp.block();
+                            let height = {
+                                let height;
+                                #[cfg(feature = "ps_address")]
+                                {
+                                    height = format!("{:#x}", resp.block());
+                                }
+                                #[cfg(not(feature = "ps_address"))]
+                                {
+                                    height = resp.block();
+                                }
+                                height
+                            };
                             if json {
                                 serde_json::ser::to_string_pretty(
                                     &ser::AnnotatedMoveStructWrapper { height, result },
@@ -148,7 +169,9 @@ fn run() -> Result<(), Error> {
     }
 }
 
+#[allow(unused_variables)]
 fn produce_json_schema(cfg: &Cfg) {
+    #[cfg(feature = "json-schema")]
     if let Some(path) = cfg.json_schema.as_ref() {
         let schema = ser::produce_json_schema();
         let render = serde_json::to_string_pretty(&schema).unwrap();
