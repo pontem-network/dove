@@ -30,15 +30,19 @@ cargo install --git https://github.com/dfinance/move-tools.git move-resource-vie
 - `libra_address` - add option to support [Libra/Diem][] address format
 - `ps_address` - add option to support Substrate node & [ss58][] address format
 
+These three `.._address` options are mutually exclusive, so they conflicts with each other.
+
+
 [DFinance]: https://github.com/dfinance
 [Libra/Diem]: https://github.com/diem
 [ss58]: "https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)"
+
 
 Add several features as list to the command line, like:
 ```bash
 cargo install --git https://github.com/dfinance/move-tools.git move-resource-viewer \
     --no-default-features \
-    --features="json-schema, libra_address, ps_address"
+    --features="json-schema, libra_address"
 ```
 
 For example, to build Resource Viewer for Polkadot/Substrate use:
