@@ -25,23 +25,27 @@ cargo install --git https://github.com/dfinance/move-tools.git move-resource-vie
 
 ### Build with optional features
 
-- `json-schema` - adds option to export json schema for output format
-- `dfinance_address` - support [DFinance][] node & address format
-- `libra_address` - support [Libra/Diem][] address format
-- `ps_address` - support Substrate node & [ss58][] address format
+- `json-schema` - add option to export json schema for output format
+- `dfinance_address` - add option to support [DFinance][] node & address format
+- `libra_address` - add option to support [Libra/Diem][] address format
+- `ps_address` - add option to support Substrate node & [ss58][] address format
+
+These three `.._address` options are mutually exclusive, so they conflicts with each other.
+
 
 [DFinance]: https://github.com/dfinance
 [Libra/Diem]: https://github.com/diem
 [ss58]: "https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)"
 
-Add shousen features as list to the command line:
+
+Add several features as list to the command line, like:
 ```bash
 cargo install --git https://github.com/dfinance/move-tools.git move-resource-viewer \
     --no-default-features \
-    --features="feature, feature, feature"
+    --features="json-schema, libra_address"
 ```
 
-For example To build Resource Viewer for Polkadot/Substrate use:
+For example, to build Resource Viewer for Polkadot/Substrate use:
 ```bash
     --no-default-features --features="ps_address"
 ```
