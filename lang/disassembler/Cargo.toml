@@ -22,10 +22,10 @@ rand = "0.7"
 itertools = "0.9"
 hex = "0.4"
 anyhow = { version = "1.0", default-features = false }
-libra-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-lcs = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", package = "libra-canonical-serialization" }
-vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+diem-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
+move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
+bcs = "0.1.1"
+vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
 compat = { path = "../compat", package = "move-compat" }
 git-hash = { path = "../../common/git-hash" }
 
@@ -35,20 +35,20 @@ default = [
 ]
 
 cffi = []
-libra_address = [
-    "libra-types/libra_address",
-    "move-core-types/libra_address",
-    "vm/libra_address",
-    "compat/libra_address",
+diem_address = [
+    "diem-types/diem_address",
+    "move-core-types/diem_address",
+    "vm/diem_address",
+    "compat/diem_address",
 ]
 dfinance_address = [
-    "libra-types/dfinance_address",
+    "diem-types/dfinance_address",
     "move-core-types/dfinance_address",
     "vm/dfinance_address",
     "compat/dfinance_address",
 ]
 ps_address = [
-    "libra-types/ps_address",
+    "diem-types/ps_address",
     "move-core-types/ps_address",
     "vm/ps_address",
     "compat/ps_address",

@@ -3,12 +3,12 @@ extern crate anyhow;
 
 use std::io::Cursor;
 use anyhow::Result;
-use libra_types::account_address::AccountAddress;
-use move_core_types::vm_status::StatusCode;
-use vm::errors::{BinaryLoaderResult, PartialVMError};
-use vm::file_format_common::TableType;
-use vm::file_format::SignatureToken;
-use vm::deserializer::{check_binary, load_signature_token, load_constant_size};
+use diem::diem_types::account_address::AccountAddress;
+use diem::move_core_types::vm_status::StatusCode;
+use diem::vm::errors::{BinaryLoaderResult, PartialVMError};
+use diem::vm::file_format_common::TableType;
+use diem::vm::file_format::SignatureToken;
+use diem::vm::deserializer::{check_binary, load_signature_token, load_constant_size};
 
 mod context;
 mod mutator;

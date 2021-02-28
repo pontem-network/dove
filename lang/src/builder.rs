@@ -3,8 +3,8 @@ use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MoveFile;
 use crate::compiler::{CompileFlow, compile};
 use crate::compiler::parser::ParsingMeta;
-use libra::move_lang::compiled_unit::CompiledUnit;
-use libra::move_lang::errors::{Errors, FilesSourceText};
+use diem::move_lang::compiled_unit::CompiledUnit;
+use diem::move_lang::errors::{Errors, FilesSourceText};
 
 pub struct Artifacts {
     pub files: FilesSourceText,

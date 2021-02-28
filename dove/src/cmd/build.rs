@@ -9,7 +9,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use std::fs;
-use libra::{
+use diem::{
     prelude::CompiledUnit,
     move_lang::{
         compiled_unit,

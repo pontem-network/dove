@@ -1,8 +1,8 @@
 use anyhow::{Result, Error};
 use std::path::Path;
 use lang::compiler::parser::parse_file;
-use libra::{prelude::*};
-use libra::{
+use diem::{prelude::*};
+use diem::{
     move_lang::{errors, parser::ast::*, name_pool::ConstPool},
 };
 

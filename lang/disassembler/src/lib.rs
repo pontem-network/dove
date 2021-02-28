@@ -140,7 +140,7 @@ mod tests {
     use lang::compiler::dialects::DialectName;
     use lang::compiler::file::MoveFile;
     use lang::compiler::ConstPool;
-    use lang::libra::move_lang::errors::report_errors_to_buffer;
+    use lang::diem::move_lang::errors::report_errors_to_buffer;
     use vm::CompiledModule;
     use vm::file_format::{Bytecode, FunctionDefinition, CodeUnit};
 

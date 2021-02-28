@@ -6,7 +6,7 @@ use tiny_keccak::{Sha3, Hasher};
 use anyhow::Error;
 use git2::{Repository, Oid};
 use crate::index::move_dir_iter;
-use libra::account::AccountAddress;
+use diem::account::AccountAddress;
 use std::str::FromStr;
 use lang::compiler::dialects::{DialectName};
 use crate::index::meta::{source_meta, FileMeta};

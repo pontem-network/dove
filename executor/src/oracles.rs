@@ -1,6 +1,6 @@
-use libra::move_core_types::language_storage::{StructTag, CORE_CODE_ADDRESS, TypeTag, ModuleId};
-use libra::move_core_types::identifier::Identifier;
-use libra::move_core_types::account_address::AccountAddress;
+use diem::move_core_types::language_storage::{StructTag, CORE_CODE_ADDRESS, TypeTag, ModuleId};
+use diem::move_core_types::identifier::Identifier;
+use diem::move_core_types::account_address::AccountAddress;
 
 const COIN_MODULE: &str = "Coins";
 const PRICE_STRUCT: &str = "Price";

@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate anyhow;
 
-pub extern crate libra;
+pub extern crate diem;
 pub extern crate compat;
 pub extern crate disassembler;
 

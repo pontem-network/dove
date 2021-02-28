@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use libra::move_lang::shared::Address;
-use libra::move_core_types::account_address::AccountAddress;
+use diem::move_lang::shared::Address;
+use diem::move_core_types::account_address::AccountAddress;
 
 #[derive(Debug, Clone)]
 pub struct ProvidedAccountAddress {

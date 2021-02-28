@@ -2,15 +2,15 @@ use std::str::FromStr;
 
 use anyhow::{Result, Error, bail, anyhow};
 
-use libra::move_ir_types::location::Loc;
-use libra::{
+use diem::move_ir_types::location::Loc;
+use diem::{
     move_lang::parser::ast::{ModuleAccess_, ModuleIdent_, Type, Type_},
     move_core_types::language_storage::StructTag,
 };
-use libra::move_lang::parser::lexer::{Lexer, Tok};
-use libra::move_lang::parser::syntax::{parse_num, parse_type};
-use libra::account::Identifier;
-use libra::prelude::*;
+use diem::move_lang::parser::lexer::{Lexer, Tok};
+use diem::move_lang::parser::syntax::{parse_num, parse_type};
+use diem::account::Identifier;
+use diem::prelude::*;
 
 #[derive(Debug)]
 pub struct TypeTagQuery {

@@ -20,7 +20,7 @@ use crate::index::meta::{source_meta, FileMeta};
 use resolver::{git};
 use crate::index::resolver::chain;
 use crate::index::resolver::chain::ChainIndex;
-use libra::prelude::*;
+use diem::prelude::*;
 
 /// Modules index.
 pub type ModulesIndex = HashMap<Rc<ModuleId>, HashMap<SourceType, Module>>;

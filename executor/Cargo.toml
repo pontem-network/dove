@@ -15,18 +15,18 @@ textwrap = "0.12.1"
 num-format = { version = "0.4", features = ["std"] }
 enum-iterator = "0.6.0"
 
-libra = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+diem = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 git-hash = { path = "../common/git-hash" }
 
 [features]
-libra_address = [
-    "libra/libra_address"
+diem_address = [
+    "diem/diem_address"
 ]
 dfinance_address = [
-    "libra/dfinance_address"
+    "diem/dfinance_address"
 ]
 ps_address = [
-    "libra/ps_address"
+    "diem/ps_address"
 ]

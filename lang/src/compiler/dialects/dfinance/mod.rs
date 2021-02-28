@@ -1,12 +1,12 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::source_map::FileOffsetMap;
 use anyhow::Context;
-use libra::move_core_types::account_address::AccountAddress;
+use diem::move_core_types::account_address::AccountAddress;
 use anyhow::Result;
-use libra::move_core_types::gas_schedule::{CostTable, GasCost};
-use libra::move_vm_types::gas_schedule::new_from_instructions;
-use libra::move_vm_types::gas_schedule::NativeCostIndex as N;
-use libra::vm::{
+use diem::move_core_types::gas_schedule::{CostTable, GasCost};
+use diem::move_vm_types::gas_schedule::new_from_instructions;
+use diem::move_vm_types::gas_schedule::NativeCostIndex as N;
+use diem::vm::{
     file_format::{
         ConstantPoolIndex, FieldHandleIndex, FieldInstantiationIndex, FunctionHandleIndex,
         FunctionInstantiationIndex, StructDefInstantiationIndex, StructDefinitionIndex,
@@ -50,7 +50,7 @@ impl Dialect for DFinanceDialect {
 }
 
 pub fn dfinance_cost_table() -> CostTable {
-    use libra::vm::file_format::Bytecode::*;
+    use diem::vm::file_format::Bytecode::*;
 
     let mut instrs = vec![
         (MoveTo(StructDefinitionIndex::new(0)), GasCost::new(825, 1)),
@@ -168,7 +168,7 @@ pub fn dfinance_cost_table() -> CostTable {
         (N::SHA3_256, GasCost::new(64, 1)),
         (N::ED25519_VERIFY, GasCost::new(61, 1)),
         (N::ED25519_THRESHOLD_VERIFY, GasCost::new(3351, 1)),
-        (N::LCS_TO_BYTES, GasCost::new(181, 1)),
+        (N::BCS_TO_BYTES, GasCost::new(181, 1)),
         (N::LENGTH, GasCost::new(98, 1)),
         (N::EMPTY, GasCost::new(84, 1)),
         (N::BORROW, GasCost::new(1334, 1)),

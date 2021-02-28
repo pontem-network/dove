@@ -17,7 +17,7 @@ schemars = { version = "0.8", features = ["default", "derive", "preserve_order"]
 hex = "0.4.2"
 
 # move-lang deps:
-libra = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+diem = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
 
 lang = { path = "../lang" }
 git-hash = { path = "../common/git-hash" }
@@ -49,21 +49,21 @@ default = [
     "dfinance_address",
 ]
 
-libra_address = [
-    "lang/libra_address",
-    "libra/libra_address",
-    "compat/libra_address",
+diem_address = [
+    "lang/diem_address",
+    "diem/diem_address",
+    "compat/diem_address",
     "dnclient",
 ]
 dfinance_address = [
     "lang/dfinance_address",
-    "libra/dfinance_address",
+    "diem/dfinance_address",
     "compat/dfinance_address",
     "dnclient",
 ]
 ps_address = [
     "lang/ps_address",
-    "libra/ps_address",
+    "diem/ps_address",
     "compat/ps_address",
     "substrate-api-client",
     "keyring",

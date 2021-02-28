@@ -1,3 +1,16 @@
+pub use anyhow::Result;
+use diem::move_lang::{cfgir, move_continue_up_to, Pass, PassResult};
+use diem::move_lang::compiled_unit::CompiledUnit;
+use diem::move_lang::errors::Errors;
+pub use diem::move_lang::name_pool::ConstPool;
+
+use parser::parse_program;
+
+use crate::compiler::address::ProvidedAccountAddress;
+use crate::compiler::dialects::Dialect;
+use crate::compiler::file::MoveFile;
+use crate::compiler::parser::{ParserArtifact, ParsingMeta};
+
 pub mod address;
 pub mod bech32;
 pub mod dialects;
@@ -7,17 +20,6 @@ pub mod location;
 pub mod parser;
 pub mod source_map;
 pub mod ss58;
-
-pub use anyhow::Result;
-pub use libra::move_lang::name_pool::ConstPool;
-use libra::move_lang::compiled_unit::CompiledUnit;
-use libra::move_lang::errors::Errors;
-use parser::parse_program;
-use crate::compiler::dialects::Dialect;
-use crate::compiler::address::ProvidedAccountAddress;
-use crate::compiler::file::MoveFile;
-use libra::move_lang::{check_program, cfgir, to_bytecode};
-use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 
 pub type CheckerResult = Result<cfgir::ast::Program, Errors>;
 
@@ -63,10 +65,27 @@ pub fn compile<A>(
     } = parser_result;
 
     let sender = sender.map(|addr| addr.as_address());
-    let (meta, check_result) = match flow.after_check(meta, check_program(pprog_res, sender)) {
+
+    let check_result = pprog_res
+        .and_then(|pprog| move_continue_up_to(PassResult::Parser(sender, pprog), Pass::CFGIR))
+        .map(|res| match res {
+            PassResult::CFGIR(cfgir) => cfgir,
+            _ => unreachable!(),
+        });
+
+    let (meta, check_result) = match flow.after_check(meta, check_result) {
         Step::Stop(artifact) => return artifact,
         Step::Next(res) => res,
     };
 
-    flow.after_translate(meta, check_result.and_then(to_bytecode::translate::program))
+    let units = check_result
+        .and_then(|check_result| {
+            move_continue_up_to(PassResult::CFGIR(check_result), Pass::Compilation)
+        })
+        .map(|res| match res {
+            PassResult::Compilation(units) => units,
+            _ => unreachable!(),
+        });
+
+    flow.after_translate(meta, units)
 }
