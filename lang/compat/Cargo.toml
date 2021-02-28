@@ -16,18 +16,26 @@ crate-type = ["cdylib", "rlib"]
 # lib, wasm, cffi:
 [dependencies]
 anyhow = { version = "1.0", default-features = false }
-diem = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
+vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
+diem-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
+move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow = "1.0"
 
 [features]
 diem_address = [
-    "diem/diem_address",
+    "vm/diem_address",
+    "diem-types/diem_address",
+    "move-core-types/diem_address",
 ]
 dfinance_address = [
-    "diem/dfinance_address",
+    "vm/dfinance_address",
+    "diem-types/dfinance_address",
+    "move-core-types/dfinance_address",
 ]
 ps_address = [
-    "diem/ps_address",
+    "vm/ps_address",
+    "diem-types/ps_address",
+    "move-core-types/ps_address",
 ]

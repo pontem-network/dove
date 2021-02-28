@@ -3464,7 +3464,9 @@ name = "move-compat"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "dfibra",
+ "diem-types",
+ "move-core-types 0.1.0 (git+https://github.com/dfinance/libra.git?branch=release-1.1.4)",
+ "vm",
 ]
 
 [[package]]
