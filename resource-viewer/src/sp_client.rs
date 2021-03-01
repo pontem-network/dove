@@ -43,12 +43,12 @@ pub fn data_request_with(
 }
 
 pub fn get_resource(
-    key: &ResourceKey,
+    key: ResourceKey,
     host: &Uri,
     height: Option<Block>,
 ) -> Result<BytesForBlock> {
     let mut client = Api::new(host.to_string());
-    get_resource_with(&mut client, key, height)
+    get_resource_with(&mut client, &key, height)
 }
 
 pub fn get_resource_with(
