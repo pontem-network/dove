@@ -57,7 +57,7 @@ See `./target/` folder to get scripts/modules binaries.
 
 ### Arguments
 
-Command `ct` allows you to create transactions for `polkadot` chain with move vm palette. 
+Command `ct` allows you to create transactions for `polkadot` chain with [Move Pallete](https://github.com/pontem-network/sp-move). 
 
 `ct` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
 
@@ -124,6 +124,7 @@ dove ct 'store_u64()' -a [10, 1024] 10 0x01
 dove ct -n store_u64 -a [10, 1024] 10 0x01
 ```
 
+**Script name**
 
 You can define or override script names by using '--name' or '-n' parameter.
 
@@ -139,6 +140,8 @@ Define script name:
 dove ct -n store_u126
 ```
 
+**Script file**
+
 You can define the file name by using '--file' or '-f' parameter.
 
 With this option 'ct' searches in a specified file. It may be useful when there is more than one script with the same name in different files. 
@@ -152,6 +155,8 @@ dove ct 'store_u64(60)' -n store_u126 -f script.move
 ```shell script
 dove ct -n store_u126 -f script
 ```
+
+**Types**
 
 You can define or override script type parameters by using '--type' or '-t' parameter.
 
