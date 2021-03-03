@@ -4,7 +4,7 @@ pub mod line_endings;
 pub mod polkadot;
 
 use anyhow::Result;
-use ::libra::move_core_types::gas_schedule::CostTable;
+use ::diem::move_core_types::gas_schedule::CostTable;
 use crate::compiler::source_map::FileOffsetMap;
 use std::str::FromStr;
 use crate::compiler::dialects::libra::LibraDialect;

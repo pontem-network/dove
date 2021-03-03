@@ -28,7 +28,7 @@ use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
 use lang::compiler::file::MoveFile;
 use std::fmt::Debug;
-use libra::move_lang::name_pool::ConstPool;
+use diem::move_lang::name_pool::ConstPool;
 
 #[derive(Debug)]
 pub struct LspError {

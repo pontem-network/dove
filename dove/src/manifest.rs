@@ -7,7 +7,7 @@ use serde::{
     de::{Visitor, SeqAccess, Error as DeError},
     ser::{Error as SerError},
 };
-use libra::prelude::CORE_CODE_ADDRESS;
+use diem::prelude::CORE_CODE_ADDRESS;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";

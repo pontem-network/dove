@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use anyhow::Result;
 
-use libra::prelude::*;
+use diem::prelude::*;
 
 use tiny_keccak::{Hasher, Sha3};
 use std::fs::{File, OpenOptions};
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// Module loader.
 pub trait BytecodeLoader: Clone {
     /// Loads module bytecode by it module id.
-    fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>>;
+    fn load(&self, module_id: ModuleId) -> Result<Vec<u8>>;
 }
 
 /// Empty module loader.
@@ -21,7 +21,7 @@ pub trait BytecodeLoader: Clone {
 pub struct ZeroLoader;
 
 impl BytecodeLoader for ZeroLoader {
-    fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
+    fn load(&self, module_id: ModuleId) -> Result<Vec<u8>> {
         Err(anyhow!("Module {:?} not found", module_id))
     }
 }
@@ -40,7 +40,7 @@ impl RestBytecodeLoader {
 }
 
 impl BytecodeLoader for RestBytecodeLoader {
-    fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
+    fn load(&self, module_id: ModuleId) -> Result<Vec<u8>> {
         let path = AccessPath::code_access_path(module_id);
         let url = format!(
             "{base_url}vm/data/{address}/{path}",
@@ -115,7 +115,7 @@ where
                 f.read_to_end(&mut bytecode)?;
                 Ok(bytecode)
             } else {
-                let bytecode = self.source.load(module_id)?;
+                let bytecode = self.source.load(module_id.to_owned())?;
                 let mut f = OpenOptions::new()
                     .create(true)
                     .write(true)
@@ -124,7 +124,7 @@ where
                 Ok(bytecode)
             }
         } else {
-            self.source.load(module_id)
+            self.source.load(module_id.to_owned())
         }
     }
 

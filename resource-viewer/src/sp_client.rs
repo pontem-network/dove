@@ -2,9 +2,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use log::*;
 use keyring::sr25519::sr25519::Pair;
-use libra::move_core_types::language_storage::StructTag;
+use diem::move_core_types::language_storage::StructTag;
 use substrate_api_client::Api;
-use libra::prelude::*;
+use diem::prelude::*;
 use anyhow::{Error, Result};
 use http::Uri;
 
@@ -43,12 +43,12 @@ pub fn data_request_with(
 }
 
 pub fn get_resource(
-    key: &ResourceKey,
+    key: ResourceKey,
     host: &Uri,
     height: Option<Block>,
 ) -> Result<BytesForBlock> {
     let mut client = Api::new(host.to_string());
-    get_resource_with(&mut client, key, height)
+    get_resource_with(&mut client, &key, height)
 }
 
 pub fn get_resource_with(
@@ -56,7 +56,7 @@ pub fn get_resource_with(
     key: &ResourceKey,
     height: Option<Block>,
 ) -> Result<BytesForBlock> {
-    let path = AccessPath::resource_access_path(key).path;
+    let path = AccessPath::resource_access_path(key.to_owned()).path;
     data_request_with(client, path, height)
 }
 

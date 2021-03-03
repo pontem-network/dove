@@ -6,12 +6,12 @@ use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
 use lang::meta_extractor::{ScriptMetadata, Meta};
 use lang::builder::{Artifacts, MoveBuilder};
 use termcolor::{StandardStream, ColorChoice};
-use libra::move_core_types::language_storage::TypeTag;
+use diem::move_core_types::language_storage::TypeTag;
 use serde::{Serialize, Deserialize};
-use libra::account::AccountAddress;
-use libra::move_lang::parser::lexer::{Lexer, Tok};
-use libra::move_lang::parser::syntax::parse_type;
-use libra::{
+use diem::account::AccountAddress;
+use diem::move_lang::parser::lexer::{Lexer, Tok};
+use diem::move_lang::parser::syntax::parse_type;
+use diem::{
     prelude::CompiledUnit,
     move_lang::{compiled_unit, errors::output_errors},
 };
@@ -623,7 +623,7 @@ fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), E
         fs::remove_file(&tx_file)?;
     }
     println!("Store transaction:{:?}", tx_file);
-    Ok(fs::write(&tx_file, libra::lcs::to_bytes(&tx)?)?)
+    Ok(fs::write(&tx_file, diem::bcs::to_bytes(&tx)?)?)
 }
 
 struct Address {
@@ -645,9 +645,9 @@ impl FromStr for Address {
 #[cfg(test)]
 mod test {
     use crate::cmd::ct::TransactionBuilder;
-    use libra::move_core_types::language_storage::{TypeTag, StructTag};
-    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
-    use libra::move_core_types::identifier::Identifier;
+    use diem::move_core_types::language_storage::{TypeTag, StructTag};
+    use diem::move_core_types::language_storage::CORE_CODE_ADDRESS;
+    use diem::move_core_types::identifier::Identifier;
 
     #[test]
     fn test_parse_call() {

@@ -1,6 +1,7 @@
-use http::Uri;
 use anyhow::Result;
-use libra::prelude::*;
+use diem::prelude::*;
+use http::Uri;
+
 use crate::ds::*;
 
 pub type BlockOpt = Option<Block>;
@@ -25,7 +26,7 @@ impl BytesForBlock {
     }
 }
 
-pub fn get_module<'a, T>(module_id: &ModuleId, url: T, height: BlockOpt) -> Result<BytesForBlock>
+pub fn get_module<'a, T>(module_id: ModuleId, url: T, height: BlockOpt) -> Result<BytesForBlock>
 where
     T: Into<&'a Uri>,
 {
@@ -33,7 +34,7 @@ where
     data_request(&path, url, height)
 }
 
-pub fn get_resource<'a, T>(res: &ResourceKey, url: T, height: BlockOpt) -> Result<BytesForBlock>
+pub fn get_resource<'a, T>(res: ResourceKey, url: T, height: BlockOpt) -> Result<BytesForBlock>
 where
     T: Into<&'a Uri>,
 {
@@ -76,8 +77,9 @@ where
 }
 
 pub mod client {
+    use diem::move_core_types::language_storage::StructTag;
+
     use super::*;
-    use libra::move_core_types::language_storage::StructTag;
 
     pub struct DnodeRestClient {
         uri: Uri,
@@ -95,7 +97,9 @@ pub mod client {
 
     impl RemoteCache for DnodeRestClient {
         fn get_module(&self, id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
-            let res = get_module(id, &self.uri, self.height).map(|v| v.0).ok();
+            let res = get_module(id.to_owned(), &self.uri, self.height)
+                .map(|v| v.0)
+                .ok();
             if res.is_some() && res.as_ref().unwrap().is_empty() {
                 error!("Empty module for {}", id);
             }
@@ -108,9 +112,9 @@ pub mod client {
             tag: &StructTag,
         ) -> PartialVMResult<Option<Vec<u8>>> {
             let key = ResourceKey::new(*addr, tag.to_owned());
-            let res = get_resource(&key, &self.uri, self.height).map(|v| v.0).ok();
+            let res = get_resource(key, &self.uri, self.height).map(|v| v.0).ok();
             if res.is_some() && res.as_ref().unwrap().is_empty() {
-                error!("Empty resource for {:?}", key);
+                error!("Empty resource for {:?}::{:?}", addr, tag);
             }
             Ok(res)
         }

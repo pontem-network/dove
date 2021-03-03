@@ -4,7 +4,7 @@ use anyhow::Error;
 use crate::index::meta::{source_meta, FileMeta, extract_bytecode_dependencies};
 use tiny_keccak::{Sha3, Hasher};
 use loader::{RestBytecodeLoader, BytecodeLoader};
-use libra::prelude::ModuleId;
+use diem::prelude::ModuleId;
 use lang::disassembler::{Config, Disassembler, unit::CompiledUnit as Unit};
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -40,7 +40,7 @@ fn load_tree(
     loader: &RestBytecodeLoader,
     module_id: &ModuleId,
 ) -> Result<(), Error> {
-    let bytecode = loader.load(module_id)?;
+    let bytecode = loader.load(module_id.to_owned())?;
     for import in extract_bytecode_dependencies(&bytecode)? {
         load_tree(ctx, loader, &import)?;
     }

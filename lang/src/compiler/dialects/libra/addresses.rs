@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use libra_move_core_types::account_address::AccountAddress as LibraAccountAddress;
+use diem_move_core_types::account_address::AccountAddress as LibraAccountAddress;
 use crate::compiler::source_map::FileOffsetMap;
 
 lazy_static! {

@@ -8,7 +8,7 @@ use serde::{Serialize, Deserialize};
 use crate::index::Index;
 use std::rc::Rc;
 use std::collections::{HashMap, HashSet};
-use libra::prelude::ModuleId;
+use diem::prelude::ModuleId;
 
 /// Modules holder.
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]

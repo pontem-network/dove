@@ -3,7 +3,7 @@ use http::Uri;
 use std::fs;
 use crate::cmd::Cmd;
 use crate::context::{Context, create_context};
-use libra::prelude::*;
+use diem::prelude::*;
 use crate::cmd::init::Init;
 use structopt::StructOpt;
 

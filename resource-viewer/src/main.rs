@@ -12,9 +12,9 @@ use std::path::{Path, PathBuf};
 use anyhow::{Result, Error, anyhow};
 use http::Uri;
 use clap::Clap;
-use libra::prelude::*;
+use diem::prelude::*;
 use lang::compiler::bech32::{bech32_into_libra, HRP};
-use libra::rv;
+use diem::rv;
 use move_resource_viewer::{tte, ser, net::*};
 
 #[cfg(feature = "json-schema")]
@@ -117,7 +117,7 @@ fn run() -> Result<(), Error> {
     match tte {
         TypeTag::Struct(st) => {
             let key = ResourceKey::new(addr, st.clone());
-            let res = get_resource(&key, &host, height);
+            let res = get_resource(key, &host, height);
             res.map(|resp| {
                 let bytes = resp.as_bytes();
                 if !bytes.is_empty() {

@@ -9,7 +9,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use std::fs;
-use libra::{
+use diem::{
     prelude::CompiledUnit,
     move_lang::{
         compiled_unit,
@@ -19,7 +19,14 @@ use libra::{
 
 /// Build dependencies.
 #[derive(StructOpt, Debug)]
-pub struct Build {}
+pub struct Build {
+    #[structopt(
+        help = "Builds and stores the dependencies to the folder with artifacts.",
+        short = "a",
+        long = "all"
+    )]
+    all: bool,
+}
 
 impl Cmd for Build {
     fn apply(self, ctx: Context) -> Result<(), Error> {
@@ -31,9 +38,14 @@ impl Cmd for Build {
         let mut index = ctx.build_index()?;
 
         let dep_set = index.make_dependency_set(&dirs)?;
-        let dep_list = load_dependencies(dep_set)?;
+        let mut dep_list = load_dependencies(dep_set)?;
 
-        let source_list = load_move_files(&dirs)?;
+        let mut source_list = load_move_files(&dirs)?;
+
+        if self.all {
+            source_list.extend(dep_list);
+            dep_list = vec![];
+        }
 
         let sender = ctx.account_address()?;
         let Artifacts { files, prog } =

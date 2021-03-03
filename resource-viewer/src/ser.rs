@@ -1,9 +1,9 @@
 #![allow(clippy::field_reassign_with_default)]
 
-use libra::rv;
-use libra::prelude::*;
-use libra::move_core_types::language_storage::StructTag;
-use libra::account::Identifier;
+use diem::rv;
+use diem::prelude::*;
+use diem::move_core_types::language_storage::StructTag;
+use diem::account::Identifier;
 use serde::Serialize;
 use rv::{AnnotatedMoveStruct, AnnotatedMoveValue};
 

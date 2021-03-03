@@ -1,9 +1,9 @@
 mod addresses;
 
 use anyhow::Result;
-use libra_move_core_types::account_address::AccountAddress as LibraAccountAddress;
+use diem_move_core_types::account_address::AccountAddress as LibraAccountAddress;
 use crate::compiler::dialects::Dialect;
-use libra::move_core_types::gas_schedule::{CostTable};
+use diem::move_core_types::gas_schedule::{CostTable};
 use crate::compiler::source_map::FileOffsetMap;
 use crate::compiler::dialects::libra::addresses::replace_libra_address;
 use crate::compiler::address::ProvidedAccountAddress;
@@ -29,7 +29,7 @@ impl Dialect for LibraDialect {
     }
 
     fn cost_table(&self) -> CostTable {
-        libra::vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
+        diem::vm_genesis::genesis_gas_schedule::INITIAL_GAS_SCHEDULE
             .deref()
             .clone()
     }

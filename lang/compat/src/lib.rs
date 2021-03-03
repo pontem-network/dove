@@ -3,7 +3,7 @@ extern crate anyhow;
 
 use std::io::Cursor;
 use anyhow::Result;
-use libra_types::account_address::AccountAddress;
+use diem_types::account_address::AccountAddress;
 use move_core_types::vm_status::StatusCode;
 use vm::errors::{BinaryLoaderResult, PartialVMError};
 use vm::file_format_common::TableType;
