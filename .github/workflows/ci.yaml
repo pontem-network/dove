@@ -65,15 +65,6 @@ jobs:
         name: Download dependencies
         run: cargo fetch --locked
 
-      #    - id: cargo-build
-      #      name: (load cache) Build with --lib
-      #      uses: actions/cache@v2
-      #      with:
-      #        path: ./target
-      #        key: cargo-build-lib-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
-
-      #    - if: ${{ steps.cargo-build.outputs.cache-hit != 'true' }}
-
       - name: Check formatting
         run: cargo fmt -- --check
 
@@ -83,18 +74,64 @@ jobs:
       - name: Run clippy
         run: cargo clippy --tests --examples -- -Dwarnings
 
-  audit:
-    name: Audit
-    runs-on: ubuntu-latest
+  coverage:
+    name: "Coverage"
+    runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: cargo-audit
-        uses: actions-rs/audit-check@v1
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          toolchain: nightly
+          profile: minimal
+          override: true
+
+      - name: cargo clean
+        run: cargo clean
+
+      - name: cargo build tests +profile
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all --all-features --no-fail-fast
+        env:
+          SKIP_WASM_BUILD: 1
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests"
+          RUSTDOCFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests"
+
+      - id: coverage
+        name: coverage grcov
+        uses: actions-rs/grcov@v0.1
+        with:
+          config: .github/grcov.yml
+
+      - name: make artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: code-coverage-report
+          path: ${{ steps.coverage.outputs.report }}
+
+      - name: upload to Coveralls
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ${{ steps.coverage.outputs.report }}
 
   wasm:
     name: Wasm
