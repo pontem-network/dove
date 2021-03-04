@@ -11,6 +11,8 @@ use diem::prelude::CORE_CODE_ADDRESS;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
+/// Index name.
+pub const INDEX_FILE: &str = ".Dove.man";
 
 /// Movec manifest.
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
@@ -93,7 +95,7 @@ fn target() -> String {
 }
 
 fn index() -> String {
-    ".Dove.man".to_owned()
+    INDEX_FILE.to_owned()
 }
 
 #[allow(clippy::unnecessary_wraps)]
