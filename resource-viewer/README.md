@@ -72,6 +72,7 @@ move-resource-viewer -a wallet1n9w22mvaq7uuswr4j53usd0spd2mznphq3q3zp \
 
 - `-a` / `--account` can be in Dfinance [bech32][] or hex `0x…{16-20 bytes}` encoding formats
 - `-q` / `--query` resource type-path, e.g.:
+    - `0x1::Account::Balance<0x1::PONT::T>`
     - `0x1::Account::Balance<0x1::XFI::T>`
     - `0x1::Account::Balance<0x1::Coins::ETH>`
     - In general: `0xDEADBEEF::Module::Struct< 0xBADBEEF::Mod::Struct<...>, ... >`
