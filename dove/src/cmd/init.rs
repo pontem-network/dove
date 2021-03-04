@@ -94,7 +94,7 @@ impl Cmd for Init {
             &mut f,
             "\
 dependencies = [
-    {{ git = \"https://github.com/dfinance/move-stdlib\" }}
+    {{ git = \"https://github.com/pontem-network/move-stdlib\" }}
 ]
 "
         )?;
