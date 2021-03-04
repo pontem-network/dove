@@ -1,13 +1,15 @@
-use anyhow::Error;
+use std::{fmt, fs};
+use std::convert::TryFrom;
 use std::path::Path;
-use std::{fs, fmt};
-use toml::Value;
-use serde::{Deserializer, Serializer, Serialize, Deserialize};
-use serde::{
-    de::{Visitor, SeqAccess, Error as DeError},
-    ser::{Error as SerError},
-};
+
+use anyhow::Error;
 use diem::prelude::CORE_CODE_ADDRESS;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{
+    de::{Error as DeError, SeqAccess, Visitor},
+    ser::Error as SerError,
+};
+use toml::Value;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -167,6 +169,80 @@ pub struct Git {
     pub branch: Option<String>,
     /// Commit hash.
     pub rev: Option<String>,
+    /// Tag.
+    pub tag: Option<String>,
+}
+
+/// Type of git dependency check out.
+#[derive(Debug, PartialEq, Eq)]
+pub enum CheckoutParams<'a> {
+    /// Checkout branch.
+    Branch {
+        /// Repository git url.
+        repo: &'a str,
+        /// Branch name to checkout.
+        branch: Option<&'a String>,
+    },
+    /// Checkout revision.
+    Rev {
+        /// Repository git url.
+        repo: &'a str,
+        /// Commit hash to checkout.
+        rev: &'a str,
+    },
+    /// Checkout tag.
+    Tag {
+        /// Repository git url.
+        repo: &'a str,
+        /// Tag to checkout.
+        tag: &'a str,
+    },
+}
+
+impl CheckoutParams<'_> {
+    /// Returns repository url.
+    pub fn repo(&self) -> &str {
+        match self {
+            CheckoutParams::Branch { repo, branch: _ } => repo,
+            CheckoutParams::Rev { repo, rev: _ } => repo,
+            CheckoutParams::Tag { repo, tag: _ } => repo,
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Git> for CheckoutParams<'a> {
+    type Error = Error;
+
+    fn try_from(dep: &'a Git) -> Result<Self, Self::Error> {
+        fn error(git: &str) -> Error {
+            anyhow!("dependency ({}) specification is ambiguous. Only one of `branch`, `tag` or `rev` is allowed.", git)
+        }
+
+        if let Some(tag) = &dep.tag {
+            if dep.branch.is_some() || dep.rev.is_some() {
+                Err(error(&dep.git))
+            } else {
+                Ok(CheckoutParams::Tag {
+                    repo: &dep.git,
+                    tag,
+                })
+            }
+        } else if let Some(rev) = &dep.rev {
+            if dep.branch.is_some() {
+                Err(error(&dep.git))
+            } else {
+                Ok(CheckoutParams::Rev {
+                    repo: &dep.git,
+                    rev,
+                })
+            }
+        } else {
+            Ok(CheckoutParams::Branch {
+                repo: &dep.git,
+                branch: dep.branch.as_ref(),
+            })
+        }
+    }
 }
 
 /// Local dependencies path.
@@ -263,7 +339,7 @@ pub fn default_dialect() -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::manifest::{Package, Dependence, Git, Dependencies, DepPath};
+    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package};
 
     fn package() -> Package {
         Package {
@@ -280,11 +356,13 @@ mod test {
                         git: "https://github.com/dfinance/move-stdlib".to_owned(),
                         branch: None,
                         rev: None,
+                        tag: None,
                     }),
                     Dependence::Git(Git {
                         git: "https://github.com/dfinance/move-stdlib".to_owned(),
                         branch: Some("master".to_owned()),
                         rev: Some("969442fb28fc162c3e3de20ab0a3afdfa8d0f560".to_owned()),
+                        tag: None,
                     }),
                 ],
             }),

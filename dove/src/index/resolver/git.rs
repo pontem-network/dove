@@ -1,15 +1,20 @@
-use std::path::{PathBuf, Path};
-use crate::manifest::{Git, MANIFEST, read_manifest, default_dialect};
-use crate::context::Context;
-use git2::build::RepoBuilder;
-use tiny_keccak::{Sha3, Hasher};
-use anyhow::Error;
-use git2::{Repository, Oid};
-use crate::index::move_dir_iter;
-use diem::account::AccountAddress;
+use std::convert::TryFrom;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use lang::compiler::dialects::{DialectName};
-use crate::index::meta::{source_meta, FileMeta};
+
+use anyhow::Error;
+use diem::account::AccountAddress;
+use git2::{Oid, Repository};
+use git2::build::RepoBuilder;
+use tiny_keccak::{Hasher, Sha3};
+
+use lang::compiler::dialects::DialectName;
+
+use crate::context::Context;
+use crate::index::meta::{FileMeta, source_meta};
+use crate::index::move_dir_iter;
+use crate::manifest::{CheckoutParams, default_dialect, Git, MANIFEST, read_manifest};
 
 /// Git prefix.
 pub const PREFIX: &str = "git";
@@ -17,33 +22,78 @@ pub const PREFIX: &str = "git";
 /// Returns module path by its identifier.
 /// Downloads a modules from git if it is not in the cache.
 pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
+    let checkout_params = CheckoutParams::try_from(git)?;
+
     let deps = ctx.path_for(&ctx.manifest.layout.target_deps);
     let repo_path = deps.join(make_local_name(&git));
-    if !repo_path.exists() {
-        let repo = clone(&git, &repo_path)?;
-        if let Some(branch_name) = &git.branch {
-            let head = repo.head()?;
-            let oid = head
-                .target()
-                .ok_or_else(|| anyhow!("Failed to take repo {} head.", git.git))?;
-            let commit = repo.find_commit(oid)?;
 
-            repo.branch(branch_name, &commit, false)?;
-            let obj = repo.revparse_single(&("refs/heads/".to_owned() + branch_name))?;
-            repo.checkout_tree(&obj, None)?;
-            repo.set_head(&("refs/heads/".to_owned() + branch_name))?;
-        } else if let Some(rev) = &git.rev {
+    if !repo_path.exists() {
+        if let Err(err) = checkout(checkout_params, &repo_path) {
+            fs::remove_dir_all(&repo_path)?;
+            return Err(err);
+        }
+    }
+
+    Ok(repo_path)
+}
+
+fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
+    let repo = clone(&params, path)?;
+    match params {
+        CheckoutParams::Branch { repo: _, branch } => {
+            if let Some(branch_name) = branch {
+                let refs = format!("refs/remotes/origin/{}", branch_name);
+
+                let head = repo.head()?;
+                let oid = head
+                    .target()
+                    .ok_or_else(|| anyhow!("Failed to take repo {} head.", params.repo()))?;
+                let commit = repo.find_commit(oid)?;
+
+                repo.branch(branch_name, &commit, false)?;
+                let obj = repo.revparse_single(&refs)?;
+                repo.checkout_tree(&obj, None)?;
+                repo.set_head(&refs)?;
+            }
+        }
+        CheckoutParams::Rev { repo: _, rev } => {
             let oid = Oid::from_str(rev)?;
             let commit = repo.find_commit(oid)?;
 
             repo.branch(rev, &commit, false)?;
 
-            let obj = repo.revparse_single(&("refs/heads/".to_owned() + rev))?;
+            let refs = format!("refs/heads/{}", rev);
+
+            let obj = repo.revparse_single(&refs)?;
             repo.checkout_tree(&obj, None)?;
-            repo.set_head(&("refs/heads/".to_owned() + rev))?;
+            repo.set_head(&refs)?;
+        }
+        CheckoutParams::Tag {
+            repo: _,
+            tag: tg_name,
+        } => {
+            let references = repo.references()?;
+
+            let refs = format!("refs/tags/{}", tg_name);
+
+            for reference in references.flatten() {
+                if reference.is_tag() {
+                    if let Some(tag_ref) = reference.name() {
+                        if tag_ref == refs {
+                            let commit = reference.peel_to_commit()?;
+                            repo.branch(tg_name, &commit, false)?;
+                            let obj = repo.revparse_single(&refs)?;
+                            repo.checkout_tree(&obj, None)?;
+                            repo.set_head(&refs)?;
+                            return Ok(());
+                        }
+                    }
+                }
+            }
+            return Err(anyhow!("Tag {} not found.", tg_name));
         }
     }
-    Ok(repo_path)
+    Ok(())
 }
 
 /// Index of git dependencies.
@@ -107,9 +157,9 @@ fn make_local_name(git: &Git) -> String {
     format!("{}_{}", PREFIX, hex::encode(&output))
 }
 
-fn clone(git: &Git, path: &Path) -> Result<Repository, Error> {
-    println!("Download:[{}]", git.git);
+fn clone(git: &CheckoutParams, path: &Path) -> Result<Repository, Error> {
+    println!("Download:[{}]", git.repo());
     RepoBuilder::new()
-        .clone(&git.git, path)
-        .map_err(|err| anyhow!("Failed to clone repository :[{}]:{}", git.git, err))
+        .clone(&git.repo(), path)
+        .map_err(|err| anyhow!("Failed to clone repository :[{}]:{}", git.repo(), err))
 }
