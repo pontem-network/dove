@@ -8,8 +8,8 @@ const PRICE_STRUCT: &str = "Price";
 const ACCOUNT_MODULE: &str = "Account";
 const ACCOUNT_BALANCE_STRUCT: &str = "Balance";
 
-const XFI_MODULE: &str = "XFI";
-const XFI_RESOURCE: &str = "T";
+const PONT_MODULE: &str = "PONT";
+const PONT_RESOURCE: &str = "T";
 
 const BLOCK_RESOURCE: &str = "BlockMetadata";
 
@@ -22,11 +22,11 @@ pub struct Price {
 
 fn currency_type(curr: &str) -> TypeTag {
     let curr = curr.to_uppercase();
-    if curr == XFI_MODULE {
+    if curr == PONT_MODULE {
         TypeTag::Struct(StructTag {
             address: CORE_CODE_ADDRESS,
-            module: Identifier::new(XFI_MODULE).expect("Valid module name."),
-            name: Identifier::new(XFI_RESOURCE).expect("Valid currency name."),
+            module: Identifier::new(PONT_MODULE).expect("Valid module name."),
+            name: Identifier::new(PONT_RESOURCE).expect("Valid currency name."),
             type_params: vec![],
         })
     } else {

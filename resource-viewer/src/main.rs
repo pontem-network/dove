@@ -1,4 +1,5 @@
 // Simple querie examples:
+// "0x1::Account::Balance<0x1::PONT::T>"
 // "0x1::Account::Balance<0x1::XFI::T>",
 // "0x1::Account::Balance<0x1::Coins::ETH>",
 // "0x1::Account::Balance<0x1::Coins::BTC>",

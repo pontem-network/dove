@@ -9,6 +9,7 @@ use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
     ser::Error as SerError,
 };
+use diem::prelude::CORE_CODE_ADDRESS;
 use toml::Value;
 
 /// Dove manifest name.
