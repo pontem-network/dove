@@ -52,19 +52,6 @@ jobs:
       - if: matrix.os == 'ubuntu-latest'
         run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-      - id: cargo-deps
-        name: (load cache) Download dependencies
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry/cache
-            ~/.cargo/git
-          key: cargo-deps-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
-
-      - if: ${{ steps.cargo-deps.outputs.cache-hit != 'true' }}
-        name: Download dependencies
-        run: cargo fetch --locked
-
       - name: Check formatting
         run: cargo fmt -- --check
 
