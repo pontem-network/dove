@@ -9,13 +9,9 @@ use git2::{Oid, Repository};
 use git2::build::RepoBuilder;
 use tiny_keccak::{Hasher, Sha3};
 
-use lang::compiler::dialects::DialectName;
-
 use crate::context::Context;
-use crate::index::meta::{FileMeta, source_meta};
+
 use crate::index::move_dir_iter;
-use diem::account::AccountAddress;
-use std::str::FromStr;
 use lang::compiler::dialects::{DialectName};
 use crate::index::meta::{source_meta, FileMeta};
 use crate::manifest::{CheckoutParams, default_dialect, Git, MANIFEST, read_manifest};
