@@ -110,7 +110,17 @@ jobs:
           rm grcov-linux-x86_64.tar.bz2
 
       - name: cargo build tests +profile
-        run: cargo test --no-fail-fast --all
+        run: |
+          cargo test --no-fail-fast -p=git-hash
+          cargo test --no-fail-fast -p=resources
+          cargo test --no-fail-fast -p=dnode-rest-client
+          cargo test --no-fail-fast -p=move-executor
+          cargo test --no-fail-fast -p=move-compat
+          cargo test --no-fail-fast -p=disassembler
+          cargo test --no-fail-fast -p=lang
+          cargo test --no-fail-fast -p=dove
+          cargo test --no-fail-fast -p=move-resource-viewer
+          cargo test --no-fail-fast -p=move-language-server
 
       - id: coverage
         name: coverage analysis with grcov
