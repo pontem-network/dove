@@ -110,10 +110,7 @@ jobs:
           rm grcov-linux-x86_64.tar.bz2
 
       - name: cargo build tests +profile
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-fail-fast --all
+        run: cargo test --no-fail-fast --all
 
       - id: coverage
         name: coverage analysis with grcov
