@@ -70,7 +70,7 @@ move-resource-viewer -a wallet1n9w22mvaq7uuswr4j53usd0spd2mznphq3q3zp \
 
 ### Input parameters
 
-- `-a` / `--account` can be in Dfinance [bech32][] or hex `0x…{16-20 bytes}` encoding formats
+- `-a` / `--account` can be in Dfinance [bech32][] or hex `0x…{16-20 bytes}`, or Substrate's [ss58][] encoding formats
 - `-q` / `--query` resource type-path, e.g.:
     - `0x1::Account::Balance<0x1::PONT::T>`
     - `0x1::Account::Balance<0x1::XFI::T>`
