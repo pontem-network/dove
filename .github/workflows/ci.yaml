@@ -48,7 +48,7 @@ jobs:
           profile: minimal
           override: true
           components: rustfmt, clippy
-          target: x86_64-pc-windows-gnu
+          # target: x86_64-pc-windows-gnu
 
       - if: matrix.os == 'ubuntu-latest'
         run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
@@ -56,12 +56,19 @@ jobs:
       - name: Check formatting
         run: cargo fmt -- --check
 
-      - name: Test
+      - name: install vcpkg
         if: matrix.os == 'windows-latest'
-        run: cargo test --all --no-fail-fast --target=x86_64-pc-windows-gnu
+        uses: lukka/run-vcpkg@v7.1
+        with:
+          setupOnly: true
+
+      - name: run vcpkg, install openssl
+        if: matrix.os == 'windows-latest'
+        run: |
+          $VCPKG_ROOT/vcpkg install openssl:windows-x64
+          setx VCPKGRS_DYNAMIC 1
 
       - name: Test
-        if: matrix.os != 'windows-latest'
         run: cargo test --all --no-fail-fast
 
       - name: Run clippy
