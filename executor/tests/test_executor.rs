@@ -217,7 +217,10 @@ fn test_run_with_non_default_dfinance_dialect() {
             "0xDE5F86CE8AD7944F272D693CB4625A955B610150",
             vec![(
                 "Added".to_string(),
-                ResourceChange("0xde5f86ce::M::T".to_string(), Some("[U8(10)]".to_string()))
+                ResourceChange(
+                    "0xDE5F86CE8AD7944F272D693CB4625A955B610150::M::T".to_string(),
+                    Some("[U8(10)]".to_string())
+                )
             )],
         )
     );
