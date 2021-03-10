@@ -65,7 +65,7 @@ jobs:
       - name: run vcpkg, install openssl
         if: matrix.os == 'windows-latest'
         run: |
-          $VCPKG_ROOT/vcpkg install openssl:windows-x64
+          $VCPKG_ROOT/vcpkg --triplet x64-windows-static install openssl
           setx VCPKGRS_DYNAMIC 1
 
       - name: Test
