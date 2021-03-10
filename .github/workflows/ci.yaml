@@ -62,20 +62,8 @@ jobs:
 
       - name: Test on Win
         if: matrix.os == 'windows-latest'
-        run: >
-          cargo test --no-fail-fast
-          -p=dnode-rest-client
-          -p=git-hash
-          -p=dove
-          -p=move-executor
-          -p=lang
-          -p=move-compat
-          -p=disassembler
-          -p=move-language-server
-          -p=resources
-      - name: Test on Win (Resource Viewer)
-        if: matrix.os == 'windows-latest'
         run: |
+          cargo test --no-fail-fast -p=move-language-server
           pushd resource-viewer
           cargo test -p=move-resource-viewer --no-default-features --features="dfinance_address, json-schema"
           popd
