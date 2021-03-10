@@ -39,7 +39,7 @@ git2 = "0.13"
 
 [features]
 default = [
-    "dfinance_address"
+    "ps_address"
 ]
 diem_address = [
     "diem/diem_address",

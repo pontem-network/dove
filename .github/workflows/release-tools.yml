@@ -42,8 +42,8 @@ jobs:
             platform: linux
           - os: macos-latest
             platform: mac
-          - os: windows-latest
-            platform: win # gnu,mingw64
+          # TODO: - os: windows-latest
+          #   platform: win # gnu,mingw64
 
     defaults:
       run:
@@ -63,7 +63,16 @@ jobs:
           override: true
 
       - name: Build all executables
+        if: matrix.os != 'windows-latest'
         run: cargo build --release --all --bins
+      - name: Build all executables
+        if: matrix.os == 'windows-latest'
+        run: >
+          cargo build --release --bins
+          -p=dove
+          -p=move-executor
+          -p=disassembler
+          -p=move-language-server
 
       - id: mls
         name: get version of move-language-server
@@ -86,6 +95,7 @@ jobs:
         with: { crate: disassembler }
 
       - id: mrv
+        if: matrix.os != 'windows-latest'
         name: get version of resource-viewer
         uses: ./.github/actions/crate-version
         with: { crate: move-resource-viewer }
@@ -206,6 +216,7 @@ jobs:
           asset_content_type: application/gzip
 
       - name: upload MRV
+        if: matrix.os != 'windows-latest'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

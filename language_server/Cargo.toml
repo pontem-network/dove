@@ -29,6 +29,10 @@ lang = { path = "../lang" }
 diem = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
 
 [features]
+default = [
+    "ps_address",
+]
+
 diem_address = [
     "lang/diem_address",
     "diem/diem_address",

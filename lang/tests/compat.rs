@@ -8,6 +8,7 @@ static MODULES_TESTS_DIR: Dir = include_dir!("tests/libra_std/modules");
 static SCRIPTS_TESTS_DIR: Dir = include_dir!("tests/libra_std/scripts");
 
 #[test]
+#[cfg_attr(feature = "ps_address", ignore)]
 pub fn custom_module() {
     let mut content = include_bytes!("libra_std/modules/3_U.mv").to_vec();
     adapt(&mut content).expect("Valid bytecode.");
@@ -15,6 +16,7 @@ pub fn custom_module() {
 }
 
 #[test]
+#[cfg_attr(feature = "ps_address", ignore)]
 pub fn test_adapter() {
     for_each(MODULES_TESTS_DIR, UnitType::Module);
     for_each(SCRIPTS_TESTS_DIR, UnitType::Script);
