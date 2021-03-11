@@ -56,8 +56,11 @@ pub fn get_resource_with(
     key: &ResourceKey,
     height: Option<Block>,
 ) -> Result<BytesForBlock> {
-    let path = AccessPath::resource_access_path(key.to_owned()).path;
-    data_request_with(client, path, height)
+    let path = AccessPath::resource_access_path(key.to_owned());
+    let mut key = Vec::with_capacity(AccountAddress::LENGTH + path.path.len());
+    key.extend_from_slice(&path.address.to_u8());
+    key.extend_from_slice(&path.path);
+    data_request_with(client, key, height)
 }
 
 #[allow(dead_code)]
