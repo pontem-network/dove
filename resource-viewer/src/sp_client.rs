@@ -10,6 +10,7 @@ use http::Uri;
 
 /// Block number
 pub type Block = sp_core::H256;
+#[derive(Debug)]
 pub struct BytesForBlock(Vec<u8>, Block);
 
 pub const MODULE: &str = "Mvm";
@@ -17,29 +18,33 @@ pub const STORAGE: &str = "VMStorage";
 
 pub fn data_request_with(
     client: &mut Api<Pair>,
+    address: &AccountAddress,
     path: Vec<u8>,
     height: Option<Block>,
 ) -> Result<BytesForBlock> {
+    let path = [&address.to_u8()[..], &path].concat();
+    debug!("data request: path: {:?}", path);
+
     let storagekey = client
         .metadata
         .storage_map_key::<Vec<u8>, Vec<u8>>(MODULE, STORAGE, path)
         .unwrap();
 
-    if height.is_some() {
-        warn!("Requests with block height doesn't supported yet.");
-    }
-
-    let head = client
-        .get_finalized_head()
+    let height = height
+        .or_else(|| {
+            trace!("request actual height");
+            client.get_finalized_head()
+        })
         .ok_or_else(|| Error::msg("Cannot get finalized head"))?;
+    debug!("height: {:?}", height);
 
     debug!("storage key: 0x{}", hex::encode(storagekey.0.clone()));
-    let result: Option<Vec<u8>> = client.get_storage_by_key_hash(storagekey, None);
+    let result: Option<Vec<u8>> = client.get_storage_by_key_hash(storagekey, Some(height));
     debug!("data: {:?}", result);
 
     result
         .ok_or_else(|| Error::msg("not found"))
-        .map(|result| BytesForBlock(result, head))
+        .map(|result| BytesForBlock(result, height))
 }
 
 pub fn get_resource(
@@ -56,8 +61,11 @@ pub fn get_resource_with(
     key: &ResourceKey,
     height: Option<Block>,
 ) -> Result<BytesForBlock> {
-    let path = AccessPath::resource_access_path(key.to_owned()).path;
-    data_request_with(client, path, height)
+    let path = AccessPath::resource_access_path(key.to_owned());
+    debug!("get resource: {}", path);
+    let res = data_request_with(client, &path.address, path.path, height);
+    debug!("get resource result: {:?}", res);
+    res
 }
 
 #[allow(dead_code)]
@@ -77,7 +85,10 @@ pub fn get_module_with(
 ) -> Result<BytesForBlock> {
     // same as AccessPath::code_access_path(module_id)
     let path = module_id.access_vector();
-    data_request_with(client, path, height)
+    debug!("get module: {} path: {:?}", module_id, path);
+    let res = data_request_with(client, module_id.address(), path, height);
+    debug!("get module result: {:?}", res);
+    res
 }
 
 #[allow(dead_code)]
