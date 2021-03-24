@@ -1,5 +1,4 @@
-use std::io::Cursor;
-pub use vm::file_format_common::*;
+use vm::cursor::Cursor;
 
 #[derive(Debug)]
 pub struct TableContext<'a, 'b> {
