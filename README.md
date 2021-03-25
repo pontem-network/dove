@@ -16,7 +16,7 @@ Supported projects and dialects:
 Clone this repository and follow documentation:
 
 ```shell script
-git clone git@github.com:dfinance/move-tools.git
+git clone git@github.com:pontem-network/move-tools.git
 cd move-tools
 ```
 

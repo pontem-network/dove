@@ -16,7 +16,7 @@ Requirements:
 Using cargo:
 
 ```bash
-cargo install --git https://github.com/dfinance/move-tools.git move-resource-viewer
+cargo install --git https://github.com/pontem-network/move-tools.git move-resource-viewer
 ```
 
 [Rust]: https://www.rust-lang.org
@@ -40,9 +40,9 @@ These three `.._address` options are mutually exclusive, so they conflicts with 
 
 Add several features as list to the command line, like:
 ```bash
-cargo install --git https://github.com/dfinance/move-tools.git move-resource-viewer \
+cargo install --git https://github.com/pontem-network/move-tools.git move-resource-viewer \
     --no-default-features \
-    --features="json-schema, libra_address"
+    --features="json-schema, ps_address"
 ```
 
 For example, to build Resource Viewer for Polkadot/Substrate use:
