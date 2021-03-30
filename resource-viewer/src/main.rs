@@ -190,7 +190,7 @@ fn write_output(path: &Path, result: &str, name: &str) {
         std::fs::File::create(path)
             .and_then(|mut f| f.write_all(result.as_bytes()))
             .map_err(|err| error!("Cannot write output: {}", err))
-            .ok()
-            .map(|_| info!("File with {} was written successfully", name));
+            .map(|_| info!("File with {} was written successfully", name))
+            .ok();
     }
 }
