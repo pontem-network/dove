@@ -19,7 +19,7 @@ use diem::rv;
 use move_resource_viewer::{tte, ser, net::*};
 
 #[cfg(feature = "json-schema")]
-const JSON_SCHEMA_STDOUT: &str = "-";
+const STDOUT_PATH: &str = "-";
 const VERSION: &str = git_hash::crate_version_with_git_hash_short!();
 
 #[derive(Clap, Debug)]
@@ -46,8 +46,10 @@ struct Cfg {
     #[cfg(feature = "ps_address")]
     height: Option<sp_core::H256>,
 
-    /// Output file path
+    /// Output file path.
+    /// Special value for write to stdout: "-"
     #[clap(long, short)]
+    #[clap(default_value = STDOUT_PATH)]
     output: PathBuf,
 
     /// Sets output format to JSON.
@@ -152,7 +154,7 @@ fn run() -> Result<(), Error> {
                                 Ok(format!("{}", result))
                             }
                         })
-                        .map(|result| write_output(&output, result))
+                        .map(|result| write_output(&output, &result, "result"))
                 } else {
                     Err(anyhow!("Resource not found, result is empty"))
                 }
@@ -176,19 +178,19 @@ fn produce_json_schema(cfg: &Cfg) {
     if let Some(path) = cfg.json_schema.as_ref() {
         let schema = ser::produce_json_schema();
         let render = serde_json::to_string_pretty(&schema).unwrap();
-        if path.as_os_str() == JSON_SCHEMA_STDOUT {
-            println!("{}", &render);
-        } else {
-            write_output(&path, render);
-            info!("schema generated successfully");
-        }
+        write_output(&path, &render, "schema");
     }
 }
 
-fn write_output(path: &Path, result: String) {
+fn write_output(path: &Path, result: &str, name: &str) {
     use std::io::prelude::*;
-    std::fs::File::create(path)
-        .and_then(|mut f| f.write_all(result.as_bytes()))
-        .map_err(|err| error!("Cannot write output: {}", err))
-        .ok();
+    if path.as_os_str() == STDOUT_PATH {
+        println!("{}", &result);
+    } else {
+        std::fs::File::create(path)
+            .and_then(|mut f| f.write_all(result.as_bytes()))
+            .map_err(|err| error!("Cannot write output: {}", err))
+            .map(|_| info!("File with {} was written successfully", name))
+            .ok();
+    }
 }
