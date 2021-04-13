@@ -360,7 +360,7 @@ dependencies = [
  "async-io",
  "async-lock",
  "async-process",
- "crossbeam-utils 0.8.2",
+ "crossbeam-utils",
  "futures-channel",
  "futures-core",
  "futures-io",
@@ -448,12 +448,6 @@ name = "base58"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5024ee8015f02155eee35c711107ddd9a9bf3cb689cf2a9089c97e79b6e1ae83"
-
-[[package]]
-name = "base64"
-version = "0.12.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
 
 [[package]]
 name = "base64"
@@ -990,22 +984,12 @@ checksum = "dcb25d077389e53838a8158c8e99174c5a9d902dee4904320db714f3c653ffba"
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.4.4"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b153fe7cbef478c567df0f972e02e6d736db11affe43dfc9c56a9374d1adfb87"
-dependencies = [
- "crossbeam-utils 0.7.2",
- "maybe-uninit",
-]
-
-[[package]]
-name = "crossbeam-channel"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dca26ee1f8d361640700bde38b2c37d8c22b3ce2d360e1fc1c74ea4b0aa7d775"
+checksum = "06ed27e177f16d65f0f0c22a213e17c696ace5dd64b14258b52f9417ccb52db4"
 dependencies = [
  "cfg-if 1.0.0",
- "crossbeam-utils 0.8.2",
+ "crossbeam-utils",
 ]
 
 [[package]]
@@ -1016,7 +1000,7 @@ checksum = "94af6efb46fef72616855b036a624cf27ba656ffc9be1b9a3c931cfc7749a9a9"
 dependencies = [
  "cfg-if 1.0.0",
  "crossbeam-epoch",
- "crossbeam-utils 0.8.2",
+ "crossbeam-utils",
 ]
 
 [[package]]
@@ -1026,22 +1010,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d60ab4a8dba064f2fbb5aa270c28da5cf4bbd0e72dae1140a6b0353a779dbe00"
 dependencies = [
  "cfg-if 1.0.0",
- "crossbeam-utils 0.8.2",
+ "crossbeam-utils",
  "lazy_static",
  "loom",
  "memoffset",
  "scopeguard",
-]
-
-[[package]]
-name = "crossbeam-utils"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3c7c73a2d1e9fc0886a08b93e98eb643461230d5f1925e4036204d5f2e261a8"
-dependencies = [
- "autocfg 1.0.1",
- "cfg-if 0.1.10",
- "lazy_static",
 ]
 
 [[package]]
@@ -2943,7 +2916,7 @@ name = "libra-network-address-encryption"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=release-1.0#96b5343016c0fd54cdb359882dc77182801c3377"
 dependencies = [
- "base64 0.13.0",
+ "base64",
  "libra-canonical-serialization 0.1.0 (git+https://github.com/dfinance/libra.git?branch=release-1.0)",
  "libra-global-constants",
  "libra-infallible",
@@ -3003,7 +2976,7 @@ name = "libra-secure-storage"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=release-1.0#96b5343016c0fd54cdb359882dc77182801c3377"
 dependencies = [
- "base64 0.13.0",
+ "base64",
  "chrono",
  "consensus-types",
  "enum_dispatch",
@@ -3106,7 +3079,7 @@ name = "libra-vault-client"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=release-1.0#96b5343016c0fd54cdb359882dc77182801c3377"
 dependencies = [
- "base64 0.13.0",
+ "base64",
  "chrono",
  "libra-crypto 0.1.0 (git+https://github.com/dfinance/libra.git?branch=release-1.0)",
  "libra-types",
@@ -3289,11 +3262,11 @@ dependencies = [
 
 [[package]]
 name = "lsp-server"
-version = "0.3.4"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87fce8851309a325974ec76efe7c9d954d152c9ff4fded6520eb3c96d0aa3a96"
+checksum = "69b18dfe0e4a380b872aa79d8e0ee6c3d7a9682466e84b83ad807c88b3545f79"
 dependencies = [
- "crossbeam-channel 0.4.4",
+ "crossbeam-channel",
  "log",
  "serde",
  "serde_json",
@@ -3301,11 +3274,10 @@ dependencies = [
 
 [[package]]
 name = "lsp-types"
-version = "0.74.2"
+version = "0.89.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b360754e89e0e13c114245131382ba921d4ff1efabb918e549422938aaa8d392"
+checksum = "07731ecd4ee0654728359a5b95e2a254c857876c04b85225496a35d60345daa7"
 dependencies = [
- "base64 0.12.3",
  "bitflags",
  "serde",
  "serde_json",
@@ -3348,12 +3320,6 @@ checksum = "916806ba0031cd542105d916a97c8572e1fa6dd79c9c51e7eb43a09ec2dd84c1"
 dependencies = [
  "rawpointer",
 ]
-
-[[package]]
-name = "maybe-uninit"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
 
 [[package]]
 name = "memchr"
@@ -3650,7 +3616,7 @@ dependencies = [
  "codespan 0.9.5",
  "codespan-reporting 0.8.0",
  "codespan-reporting 0.9.5",
- "crossbeam-channel 0.4.4",
+ "crossbeam-channel",
  "dfibra",
  "env_logger 0.7.1",
  "hex",
@@ -4875,9 +4841,9 @@ version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ab346ac5921dc62ffa9f89b7a773907511cdfa5490c572ae9be1be33e8afa4a"
 dependencies = [
- "crossbeam-channel 0.5.0",
+ "crossbeam-channel",
  "crossbeam-deque",
- "crossbeam-utils 0.8.2",
+ "crossbeam-utils",
  "lazy_static",
  "num_cpus",
 ]
@@ -4969,7 +4935,7 @@ version = "0.10.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0718f81a8e14c4dbb3b34cf23dc6aaf9ab8a0dfec160c534b3dbca1aaa21f47c"
 dependencies = [
- "base64 0.13.0",
+ "base64",
  "bytes 0.5.6",
  "encoding_rs",
  "futures-core",
@@ -6656,7 +6622,7 @@ version = "1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "294b85ef5dbc3670a72e82a89971608a1fcc4ed5c7c5a2895230d31a95f0569b"
 dependencies = [
- "base64 0.13.0",
+ "base64",
  "chunked_transfer",
  "log",
  "native-tls",

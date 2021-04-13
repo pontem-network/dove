@@ -15,7 +15,7 @@ use lang::compiler::file::MoveFile;
 use lang::compiler::ConstPool;
 use resources::assets_dir;
 
-const SHUTDOWN_REQ_ID: u64 = 10;
+const SHUTDOWN_REQ_ID: i32 = 10;
 
 #[allow(deprecated)]
 fn client_initialize_params() -> InitializeParams {
@@ -29,12 +29,13 @@ fn client_initialize_params() -> InitializeParams {
         root_uri: None,
         trace: None,
         workspace_folders: None,
+        locale: None,
     }
 }
 
-fn initialize_req(req_id: usize) -> Message {
+fn initialize_req(req_id: i32) -> Message {
     let req =
-        request_new::<Initialize>(RequestId::from(req_id as u64), client_initialize_params());
+        request_new::<Initialize>(RequestId::from(req_id), client_initialize_params());
     Message::Request(req)
 }
 
@@ -50,8 +51,8 @@ where
     Message::Notification(notification_new::<N>(params))
 }
 
-fn response(req_id: usize, contents: serde_json::Value) -> Message {
-    Message::Response(Response::new_ok(RequestId::from(req_id as u64), contents))
+fn response(req_id: i32, contents: serde_json::Value) -> Message {
+    Message::Response(Response::new_ok(RequestId::from(req_id), contents))
 }
 
 trait MessageType {

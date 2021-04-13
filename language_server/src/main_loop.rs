@@ -136,7 +136,7 @@ pub fn main_loop(global_state: &mut GlobalState, connection: &Connection) -> Res
 
 #[derive(Debug, Default)]
 pub struct LoopState {
-    next_request_id: u64,
+    next_request_id: i32,
     opened_files: OpenedFiles,
     configuration_request_id: Option<RequestId>,
 }
