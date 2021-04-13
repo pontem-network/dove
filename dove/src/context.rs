@@ -83,8 +83,7 @@ pub fn create_context() -> Result<Context> {
 }
 
 /// Returns project context.
-pub fn get_context() -> Result<Context> {
-    let project_dir = env::current_dir()?;
+pub fn get_context(project_dir: PathBuf) -> Result<Context> {
     let manifest = load_manifest(&project_dir)?;
 
     let dialect_name = manifest
