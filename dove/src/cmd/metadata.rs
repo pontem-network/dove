@@ -111,6 +111,8 @@ mod tests {
         let context = get_context(move_project_dir.clone()).unwrap();
 
         let dove_json = serialize_ctx_manifest_to_json(context);
+        //
+        assert_eq!(dove_json.package.local_dependencies.len(), 1);
         assert_eq!(
             dove_json.package.local_dependencies[0],
             fs::canonicalize(move_project_dir.join("stdlib"))
