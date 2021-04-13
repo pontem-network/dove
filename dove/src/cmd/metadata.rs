@@ -11,7 +11,7 @@ fn into_metadata(ctx: Context) -> DoveMetadata {
     let Context {
         project_dir,
         manifest,
-        dialect: _,
+        dialect,
     } = ctx;
     let DoveToml { package, layout } = manifest;
 
@@ -35,6 +35,7 @@ fn into_metadata(ctx: Context) -> DoveMetadata {
         blockchain_api: package.blockchain_api,
         git_dependencies: git_deps,
         local_dependencies: local_deps,
+        dialect: dialect.name().to_string(),
     };
     DoveMetadata {
         package: package_metadata,
@@ -84,6 +85,8 @@ pub struct PackageMetadata {
     pub git_dependencies: Vec<Git>,
     /// Local dependency list.
     pub local_dependencies: Vec<String>,
+    /// Dialect used in the project.
+    pub dialect: String,
 }
 
 #[cfg(test)]
@@ -102,11 +105,14 @@ mod tests {
             .join("test_move_project");
         let context = get_context(move_project_dir.clone()).unwrap();
 
-        let dove_json = into_metadata(context);
-        //
-        assert_eq!(dove_json.package.local_dependencies.len(), 1);
+        let metadata = into_metadata(context);
+
+        assert_eq!(metadata.package.dialect, "dfinance".to_string());
+
+        // non-existent paths ain't present in the metadata
+        assert_eq!(metadata.package.local_dependencies.len(), 1);
         assert_eq!(
-            dove_json.package.local_dependencies[0],
+            metadata.package.local_dependencies[0],
             fs::canonicalize(move_project_dir.join("stdlib"))
                 .unwrap()
                 .into_os_string()
