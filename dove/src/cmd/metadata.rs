@@ -6,7 +6,7 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::manifest::{Dependence, DoveToml, Git, Layout};
 
-fn serialize_ctx_manifest_to_json(ctx: Context) -> DoveJson {
+fn into_dove_json(ctx: Context) -> DoveJson {
     let project_name = ctx.project_name();
     let Context {
         project_dir,
@@ -52,7 +52,7 @@ pub struct Metadata {
 impl Cmd for Metadata {
     fn apply(self, ctx: Context) -> Result<(), Error> {
         if self.json {
-            let manifest_as_json = serialize_ctx_manifest_to_json(ctx);
+            let manifest_as_json = into_dove_json(ctx);
             println!(
                 "{}",
                 serde_json::to_string_pretty::<DoveJson>(&manifest_as_json)?
@@ -110,7 +110,7 @@ mod tests {
             .join("test_move_project");
         let context = get_context(move_project_dir.clone()).unwrap();
 
-        let dove_json = serialize_ctx_manifest_to_json(context);
+        let dove_json = into_dove_json(context);
         //
         assert_eq!(dove_json.package.local_dependencies.len(), 1);
         assert_eq!(
