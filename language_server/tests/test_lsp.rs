@@ -34,8 +34,7 @@ fn client_initialize_params() -> InitializeParams {
 }
 
 fn initialize_req(req_id: i32) -> Message {
-    let req =
-        request_new::<Initialize>(RequestId::from(req_id), client_initialize_params());
+    let req = request_new::<Initialize>(RequestId::from(req_id), client_initialize_params());
     Message::Request(req)
 }
 
