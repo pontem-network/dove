@@ -18,11 +18,9 @@ pub const STORAGE: &str = "VMStorage";
 
 pub fn data_request_with(
     client: &mut Api<Pair>,
-    address: &AccountAddress,
     path: Vec<u8>,
     height: Option<Block>,
 ) -> Result<BytesForBlock> {
-    let path = [&address.to_u8()[..], &path].concat();
     debug!("data request: path: {:?}", path);
 
     let storagekey = client
@@ -63,7 +61,8 @@ pub fn get_resource_with(
 ) -> Result<BytesForBlock> {
     let path = AccessPath::resource_access_path(key.to_owned());
     debug!("get resource: {}", path);
-    let res = data_request_with(client, &path.address, path.path, height);
+    let path = [path.address.as_ref(), &path.path].concat();
+    let res = data_request_with(client, path, height);
     debug!("get resource result: {:?}", res);
     res
 }
@@ -86,7 +85,7 @@ pub fn get_module_with(
     // same as AccessPath::code_access_path(module_id)
     let path = module_id.access_vector();
     debug!("get module: {} path: {:?}", module_id, path);
-    let res = data_request_with(client, module_id.address(), path, height);
+    let res = data_request_with(client, path, height);
     debug!("get module result: {:?}", res);
     res
 }
