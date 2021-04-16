@@ -1,13 +1,9 @@
 use alloc::vec::Vec;
 
-use anyhow::Result;
-use vm::cursor::Cursor;
-use vm::deserializer::{check_binary, load_constant_size, load_signature_token};
+use anyhow::{Result, Error};
+use vm::deserializer::{load_constant_size, load_signature_token};
 use vm::file_format::SignatureToken;
-use vm::file_format_common::{
-    BinaryData, read_u8, read_uleb128_as_u64, TableType, write_u64_as_uleb128,
-};
-
+use vm::file_format_common::{BinaryData, TableType, write_u64_as_uleb128, VersionedCursor};
 use crate::context::TableContext;
 use crate::mutator::Mutator;
 
@@ -49,27 +45,28 @@ impl AddressAdaptation {
             return Ok(());
         }
 
-        let mut cur = Cursor::new(bytes.as_slice());
+        let mut cursor = VersionedCursor::new(bytes.as_slice())
+            .map_err(|err| Error::msg(format!("{:?}", err)))?;
+
         let mut mutator = Mutator::new();
-        check_binary(&mut cur).map_err(|err| anyhow!("{:?}", err))?;
-        self.calc_diff(&mut cur, &mut mutator)?;
+        self.calc_diff(&mut cursor, &mut mutator)?;
         mutator.mutate(bytes);
         Ok(())
     }
 
-    fn calc_diff(&self, cur: &mut Cursor<&[u8]>, mutator: &mut Mutator) -> Result<()> {
-        let table_len = read_uleb128_as_u64(cur)?;
+    fn calc_diff(&self, cur: &mut VersionedCursor, mutator: &mut Mutator) -> Result<()> {
+        let table_len = cur.read_uleb128_as_u64()?;
 
         let header_len = cur.position() as u32;
         let header_size = self.calc_header_size(cur, table_len)?;
 
         let mut additional_offset: i32 = 0;
         for _ in 0..table_len {
-            let kind = read_u8(cur)?;
+            let kind = cur.read_u8()?;
 
             let offset = if additional_offset != 0 {
                 let start_pos = cur.position();
-                let offset = read_uleb128_as_u64(cur)? as u32;
+                let offset = cur.read_uleb128_as_u64()? as u32;
                 self.make_uleb128_diff(
                     start_pos,
                     cur.position(),
@@ -78,11 +75,11 @@ impl AddressAdaptation {
                 )?;
                 offset
             } else {
-                read_uleb128_as_u64(cur)? as u32
+                cur.read_uleb128_as_u64()? as u32
             };
 
             let t_len_start_pos = cur.position();
-            let t_len = read_uleb128_as_u64(cur)? as u32;
+            let t_len = cur.read_uleb128_as_u64()? as u32;
             let t_len_end_pos = cur.position();
 
             let offset_diff = if kind == TableType::ADDRESS_IDENTIFIERS as u8 {
@@ -115,13 +112,13 @@ impl AddressAdaptation {
         Ok(())
     }
 
-    fn calc_header_size(&self, cur: &mut Cursor<&[u8]>, table_len: u64) -> Result<u32> {
+    fn calc_header_size(&self, cur: &mut VersionedCursor, table_len: u64) -> Result<u32> {
         let start = cur.position() as u32;
 
         for _ in 0..table_len {
-            read_u8(cur)?;
-            read_uleb128_as_u64(cur)?;
-            read_uleb128_as_u64(cur)?;
+            cur.read_u8()?;
+            cur.read_uleb128_as_u64()?;
+            cur.read_uleb128_as_u64()?;
         }
 
         let end = cur.position() as u32;
