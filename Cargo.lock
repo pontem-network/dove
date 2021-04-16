@@ -513,6 +513,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "borrow-graph"
+version = "0.0.1"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "diem-workspace-hack",
+ "mirai-annotations",
+]
+
+[[package]]
 name = "bs58"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -551,6 +560,36 @@ name = "byte-tools"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
+
+[[package]]
+name = "bytecode-source-map"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-workspace-hack",
+ "move-core-types",
+ "move-ir-types",
+ "serde",
+ "vm",
+]
+
+[[package]]
+name = "bytecode-verifier"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "anyhow",
+ "borrow-graph",
+ "diem-workspace-hack",
+ "mirai-annotations",
+ "move-core-types",
+ "petgraph",
+ "vm",
+]
 
 [[package]]
 name = "byteorder"
@@ -695,6 +734,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52899426b69706219a1aaee2e95868fd01a0bd8006bb163f069578a0af5b5bb2"
 dependencies = [
+ "serde",
  "unicode-segmentation",
 ]
 
@@ -1088,6 +1128,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "difference"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
+
+[[package]]
 name = "digest"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1346,6 +1392,15 @@ name = "fake-simd"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
+
+[[package]]
+name = "fallible"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "diem-workspace-hack",
+ "thiserror",
+]
 
 [[package]]
 name = "fastrand"
@@ -2206,6 +2261,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47be2f14c678be2fdcab04ab1171db51b2762ce6f0a8ee87c8dd4a04ed216135"
 
 [[package]]
+name = "ir-to-bytecode"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "anyhow",
+ "bytecode-source-map",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-workspace-hack",
+ "ir-to-bytecode-syntax",
+ "log",
+ "move-core-types",
+ "move-ir-types",
+ "rental",
+ "thiserror",
+ "vm",
+]
+
+[[package]]
+name = "ir-to-bytecode-syntax"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "anyhow",
+ "codespan 0.8.0",
+ "diem-workspace-hack",
+ "hex",
+ "move-core-types",
+ "move-ir-types",
+]
+
+[[package]]
 name = "itertools"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2365,7 +2452,6 @@ dependencies = [
  "codespan 0.9.5",
  "codespan-reporting 0.8.0",
  "codespan-reporting 0.9.5",
- "disassembler",
  "env_logger 0.7.1",
  "hex",
  "include_dir",
@@ -2373,13 +2459,17 @@ dependencies = [
  "lazy_static",
  "log",
  "lsp-types",
- "move-compat",
+ "move-core-types",
+ "move-ir-types",
+ "move-lang",
+ "move-vm-types",
  "rand 0.7.3",
  "regex",
  "rust-base58",
  "serde",
  "serde_derive",
  "serde_json",
+ "vm",
  "walkdir",
 ]
 
@@ -2838,6 +2928,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "move-ir-types"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "anyhow",
+ "codespan 0.8.0",
+ "diem-workspace-hack",
+ "hex",
+ "move-core-types",
+ "once_cell",
+ "serde",
+]
+
+[[package]]
+name = "move-lang"
+version = "0.0.1"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "borrow-graph",
+ "bytecode-source-map",
+ "bytecode-verifier",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-workspace-hack",
+ "difference",
+ "fallible",
+ "hex",
+ "ir-to-bytecode",
+ "move-core-types",
+ "move-ir-types",
+ "once_cell",
+ "petgraph",
+ "regex",
+ "structopt",
+ "tempfile",
+ "vm",
+ "walkdir",
+]
+
+[[package]]
 name = "move-language-server"
 version = "0.4.0"
 dependencies = [
@@ -2879,6 +3011,23 @@ dependencies = [
  "serde_json",
  "sp-keyring",
  "substrate-api-client",
+]
+
+[[package]]
+name = "move-vm-types"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#e175c536566c9b66ce53fcd288a95c8dc9590f57"
+dependencies = [
+ "bcs",
+ "diem-crypto",
+ "diem-workspace-hack",
+ "mirai-annotations",
+ "move-core-types",
+ "once_cell",
+ "serde",
+ "sha2 0.9.3",
+ "smallvec",
+ "vm",
 ]
 
 [[package]]
@@ -4017,6 +4166,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "rental"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8545debe98b2b139fb04cad8618b530e9b07c152d99a5de83c860b877d67847f"
+dependencies = [
+ "rental-impl",
+ "stable_deref_trait",
+]
+
+[[package]]
+name = "rental-impl"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "475e68978dc5b743f2f40d8e0a8fdc83f1c5e78cbf4b8fa5e74e73beebc340de"
+dependencies = [
+ "proc-macro2 1.0.26",
+ "quote 1.0.9",
+ "syn 1.0.69",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.10.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4989,6 +5159,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
+name = "stable_deref_trait"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
+
+[[package]]
 name = "standback"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5596,7 +5772,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04f8ab788026715fa63b31960869617cba39117e520eb415b0139543e325ab59"
 dependencies = [
  "cfg-if 0.1.10",
- "rand 0.7.3",
+ "rand 0.4.6",
  "static_assertions",
 ]
 

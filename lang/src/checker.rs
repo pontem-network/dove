@@ -3,8 +3,8 @@ use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MoveFile;
 use crate::compiler::{CompileFlow, Step, compile, CheckerResult};
 use crate::compiler::parser::{ParsingMeta, ParserArtifact};
-use diem::move_lang::compiled_unit::CompiledUnit;
-use diem::move_lang::errors::Errors;
+use move_lang::compiled_unit::CompiledUnit;
+use move_lang::errors::Errors;
 
 pub struct MoveChecker<'a> {
     dialect: &'a dyn Dialect,

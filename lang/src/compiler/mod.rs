@@ -1,8 +1,8 @@
 pub use anyhow::Result;
-use diem::move_lang::{cfgir, move_continue_up_to, Pass, PassResult};
-use diem::move_lang::compiled_unit::CompiledUnit;
-use diem::move_lang::errors::Errors;
-pub use diem::move_lang::name_pool::ConstPool;
+use move_lang::{cfgir, move_continue_up_to, Pass, PassResult};
+use move_lang::compiled_unit::CompiledUnit;
+use move_lang::errors::Errors;
+pub use move_lang::name_pool::ConstPool;
 
 use parser::parse_program;
 

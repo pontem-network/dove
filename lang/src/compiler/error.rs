@@ -1,4 +1,4 @@
-use diem::move_lang::errors::{Errors, FilesSourceText};
+use move_lang::errors::{Errors, FilesSourceText};
 use std::error::Error;
 use std::fmt;
 

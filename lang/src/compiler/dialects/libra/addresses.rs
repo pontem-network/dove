@@ -1,11 +1,9 @@
 use lazy_static::lazy_static;
 use regex::Regex;
-
-use diem_move_core_types::account_address::AccountAddress as LibraAccountAddress;
 use crate::compiler::source_map::FileOffsetMap;
 
 lazy_static! {
-    static ref LIBRA_16_BYTES_REGEX: Regex = Regex::new(r"(0x[0-9a-f]{1,32})[^0-9a-f]").unwrap();
+    static ref LIBRA_32_BYTES_REGEX: Regex = Regex::new(r"(0x[0-9a-f]{1,64})[^0-9a-f]").unwrap();
 }
 
 pub fn replace_libra_address(source: &str, file_source_map: &mut FileOffsetMap) -> String {

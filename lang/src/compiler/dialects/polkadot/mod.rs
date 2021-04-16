@@ -1,9 +1,9 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::source_map::FileOffsetMap;
-use diem::move_core_types::account_address::AccountAddress;
+use move_core_types::account_address::AccountAddress;
 use anyhow::Context;
 use anyhow::Result;
-use diem::move_core_types::gas_schedule::CostTable;
+use move_core_types::gas_schedule::CostTable;
 use std::ops::Deref;
 use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::ss58::{replace_ss58_addresses, ss58_to_libra};
