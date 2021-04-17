@@ -1,13 +1,5 @@
-#![no_std]
-
-#[macro_use]
-extern crate alloc;
-#[macro_use]
-extern crate alloc;
 #[macro_use]
 extern crate anyhow;
-
-use alloc::vec::Vec;
 
 use anyhow::Result;
 use crate::adapt::AddressAdaptation;

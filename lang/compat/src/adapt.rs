@@ -1,5 +1,3 @@
-use alloc::vec::Vec;
-
 use anyhow::{Result, Error};
 use vm::deserializer::{load_constant_size, load_signature_token};
 use vm::file_format::SignatureToken;
