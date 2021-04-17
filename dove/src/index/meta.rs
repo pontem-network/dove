@@ -21,8 +21,15 @@ pub fn source_meta(
 ) -> Result<FileMeta, Error> {
     let name = ConstPool::push(file.to_str().unwrap_or("source"));
     let source = fs::read_to_string(file)?;
+    let sender = dialect.normalize_account_address(&address.unwrap().short_str_lossless())?;
 
-    let (defs, _, errors, _) = parse_file(dialect, &mut HashMap::default(), name, &source, None);
+    let (defs, _, errors, _) = parse_file(
+        dialect,
+        &mut HashMap::default(),
+        name,
+        &source,
+        Some(&sender),
+    );
     if errors.is_empty() {
         let mut metadata = Vec::new();
         for def in defs {
