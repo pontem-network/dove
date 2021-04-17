@@ -135,7 +135,7 @@ impl AddressAdaptation {
     ) -> Result<()> {
         let mut binary = BinaryData::new();
         write_u64_as_uleb128(&mut binary, new_offset as u64)?;
-        mutator.make_diff(start_pos as usize, end_pos as usize, binary.into_inner());
+        mutator.add_patch(start_pos as usize, end_pos as usize, binary.into_inner());
         Ok(())
     }
 
@@ -147,10 +147,10 @@ impl AddressAdaptation {
                 let index = ctx.position() + idx as usize;
                 if self.is_source_bigger() {
                     offset_diff -= diff as i32;
-                    mutator.make_diff(index, index + diff, vec![]);
+                    mutator.add_patch(index, index + diff, vec![]);
                 } else {
                     offset_diff += diff as i32;
-                    mutator.make_diff(index, index, vec![0x0; diff]);
+                    mutator.add_patch(index, index, vec![0x0; diff]);
                 }
             }
             offset_diff
@@ -181,9 +181,9 @@ impl AddressAdaptation {
                 additional_offset += diff_size as i32;
                 let index = ctx.cursor.position() as usize;
                 if self.is_source_bigger() {
-                    mutator.make_diff(index, index + diff_size.abs() as usize, vec![]);
+                    mutator.add_patch(index, index + diff_size.abs() as usize, vec![]);
                 } else {
-                    mutator.make_diff(index, index, vec![0x0; diff_size.abs() as usize]);
+                    mutator.add_patch(index, index, vec![0x0; diff_size.abs() as usize]);
                 }
                 ctx.cursor.set_position(ctx.cursor.position() + size as u64);
             } else {
