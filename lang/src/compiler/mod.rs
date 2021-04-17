@@ -18,6 +18,7 @@ pub mod file;
 pub mod location;
 pub mod parser;
 pub mod source_map;
+pub mod mut_string;
 
 pub type CheckerResult = Result<cfgir::ast::Program, Errors>;
 
