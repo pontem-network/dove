@@ -129,7 +129,10 @@ pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
     let q = {
         #[cfg(feature = "ps_address")]
         {
-            let res = lang::compiler::ss58::replace_ss58_addresses(&s, &mut Default::default());
+            let res = lang::compiler::address::ss58::replace_ss58_addresses(
+                &s,
+                &mut Default::default(),
+            );
             log::debug!("in-query address decoded: {:}", res);
             res
         }

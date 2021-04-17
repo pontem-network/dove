@@ -1,25 +1,31 @@
 pub mod dfinance;
-pub mod libra;
+pub mod diem;
 pub mod line_endings;
-pub mod polkadot;
+pub mod pontem;
 
 use anyhow::Result;
 use move_core_types::gas_schedule::CostTable;
 use crate::compiler::source_map::FileOffsetMap;
 use std::str::FromStr;
-use crate::compiler::dialects::libra::LibraDialect;
+use crate::compiler::dialects::diem::DiemDialect;
 use crate::compiler::dialects::dfinance::DFinanceDialect;
-use crate::compiler::dialects::polkadot::PolkadotDialect;
-use crate::compiler::address::ProvidedAccountAddress;
+use crate::compiler::dialects::pontem::PontemDialect;
+use move_core_types::account_address::AccountAddress;
 
 pub trait Dialect {
     fn name(&self) -> &str;
 
-    fn normalize_account_address(&self, addr: &str) -> Result<ProvidedAccountAddress>;
+    /// Returns the bytecode in the dialect format.
+    fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()>;
+
+    /// Returns the bytecode in the basis format.
+    fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()>;
+
+    fn normalize_account_address(&self, addr: &str) -> Result<AccountAddress>;
 
     fn cost_table(&self) -> CostTable;
 
-    fn replace_addresses(&self, source_text: &str, source_map: &mut FileOffsetMap) -> String;
+    fn replace_addresses(&self, source_text: String, source_map: &mut FileOffsetMap) -> String;
 }
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -33,9 +39,9 @@ pub enum DialectName {
 impl DialectName {
     pub fn get_dialect(&self) -> Box<dyn Dialect> {
         match self {
-            DialectName::Libra => Box::new(LibraDialect::default()),
+            DialectName::Libra => Box::new(DiemDialect::default()),
             DialectName::DFinance => Box::new(DFinanceDialect::default()),
-            DialectName::Polkadot => Box::new(PolkadotDialect::default()),
+            DialectName::Polkadot => Box::new(PontemDialect::default()),
         }
     }
 }

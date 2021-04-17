@@ -5,7 +5,8 @@ use move_lang::errors::Errors;
 use crate::compiler::error::CompilerError;
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
-use move_lang::parser::ast::{Script, Type, Type_, ModuleAccess_};
+use move_lang::parser::ast::{Script, Type, Type_, ModuleAccess_, Definition};
+use move_lang::compiled_unit::CompiledUnit;
 
 pub struct ScriptMetadata;
 
@@ -86,8 +87,8 @@ fn extract_type_name(tp: Type) -> String {
                     format!("{}::{}", module.0.value, name.value)
                 }
                 ModuleAccess_::QualifiedModuleAccess(module, name) => {
-                    let module = module.0.value;
-                    format!("{}::{}::{}", module.address, module.name.0, name.value)
+                    let (address, m_name) = module.value;
+                    format!("{}::{}::{}", address, m_name, name.value)
                 }
             };
             if !types.is_empty() {

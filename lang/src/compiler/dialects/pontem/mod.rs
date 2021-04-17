@@ -1,36 +1,33 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::source_map::FileOffsetMap;
-use anyhow::Context;
 use move_core_types::account_address::AccountAddress;
+use anyhow::Context;
 use anyhow::Result;
 use move_core_types::gas_schedule::CostTable;
-use crate::compiler::address::bech32::{HRP, replace_bech32_addresses, bech32_into_address};
+use std::ops::Deref;
+use crate::compiler::address::ss58::{replace_ss58_addresses, ss58_to_address};
 
 #[derive(Default)]
-pub struct DFinanceDialect;
+pub struct PontemDialect;
 
-impl Dialect for DFinanceDialect {
+impl Dialect for PontemDialect {
     fn name(&self) -> &str {
-        "dfinance"
+        "pontem"
     }
 
-    fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()> {
-        compat::adapt_from_basis(bytecode, compat::SourceType::Dfninance)
+    fn adapt_to_target(&self, _: &mut Vec<u8>) -> Result<()> {
+        // No-op
+        Ok(())
     }
 
-    fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()> {
-        compat::adapt_to_basis(bytecode, compat::SourceType::Dfninance)
+    fn adapt_to_basis(&self, _: &mut Vec<u8>) -> Result<()> {
+        // No-op
+        Ok(())
     }
 
     fn normalize_account_address(&self, addr: &str) -> Result<AccountAddress> {
-        let address_res = if addr.starts_with(HRP) {
-            bech32_into_address(addr)
-        } else if addr.starts_with("0x") {
-            AccountAddress::from_hex_literal(addr).map_err(|err| err.into())
-        } else {
-            Err(anyhow::anyhow!("Does not start with either wallet1 or 0x"))
-        };
-        address_res.with_context(|| format!("Address {:?} is not a valid dfinance address", addr))
+        ss58_to_address(addr)
+            .with_context(|| format!("Address {:?} is not a valid libra/polkadot address", addr))
     }
 
     fn cost_table(&self) -> CostTable {
@@ -38,14 +35,12 @@ impl Dialect for DFinanceDialect {
     }
 
     fn replace_addresses(&self, source_text: String, source_map: &mut FileOffsetMap) -> String {
-        replace_bech32_addresses(source_text, source_map)
+        replace_ss58_addresses(source_text, source_map)
     }
 }
 
 use once_cell::sync::Lazy;
 use move_core_types::gas_schedule::GasCost;
-use std::ops::Deref;
-
 pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
     use move_vm_types::gas_schedule::{self, NativeCostIndex as N};
     use vm::{
@@ -54,10 +49,9 @@ pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
             FunctionHandleIndex, FunctionInstantiationIndex, StructDefInstantiationIndex,
             StructDefinitionIndex,
         },
-        file_format_common::instruction_key,
     };
     use Bytecode::*;
-    let mut instrs = vec![
+    let instrs = vec![
         (MoveTo(StructDefinitionIndex::new(0)), GasCost::new(825, 1)),
         (
             MoveToGeneric(StructDefInstantiationIndex::new(0)),
@@ -167,8 +161,6 @@ pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
         ),
         (Nop, GasCost::new(10, 1)),
     ];
-    // Note that the DiemVM is expecting the table sorted by instruction order.
-    instrs.sort_by_key(|cost| instruction_key(&cost.0));
 
     let mut native_table = vec![
         (N::SHA2_256, GasCost::new(21, 1)),
@@ -199,6 +191,9 @@ pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
         (N::U256_DIV, GasCost::new(10, 1)),
         (N::U256_SUB, GasCost::new(10, 1)),
         (N::U256_ADD, GasCost::new(10, 1)),
+        (N::DEPOSIT, GasCost::new(706, 1)),
+        (N::WITHDRAW, GasCost::new(706, 1)),
+        (N::GET_BALANCE, GasCost::new(353, 1)),
     ];
     native_table.sort_by_key(|cost| cost.0 as u64);
     let raw_native_table = native_table

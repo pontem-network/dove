@@ -18,7 +18,7 @@ use diem::{
 use move_resource_viewer::tte::unwrap_spanned_ty;
 use std::fmt::Debug;
 use std::str::FromStr;
-use lang::compiler::ss58::{ss58_to_libra, replace_ss58_addresses};
+use lang::compiler::address::ss58::{ss58_to_diem, replace_ss58_addresses};
 use std::fs;
 
 /// Create transaction.
@@ -634,7 +634,7 @@ impl FromStr for Address {
     type Err = Error;
 
     fn from_str(addr: &str) -> Result<Self, Self::Err> {
-        let addr = match ss58_to_libra(addr) {
+        let addr = match ss58_to_diem(addr) {
             Ok(addr) => AccountAddress::from_hex_literal(&addr)?,
             Err(_) => AccountAddress::from_hex_literal(&addr)?,
         };

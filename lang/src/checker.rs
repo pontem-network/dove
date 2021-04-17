@@ -1,21 +1,18 @@
 use crate::compiler::dialects::Dialect;
-use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MoveFile;
 use crate::compiler::{CompileFlow, Step, compile, CheckerResult};
 use crate::compiler::parser::{ParsingMeta, ParserArtifact};
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
+use move_core_types::account_address::AccountAddress;
 
 pub struct MoveChecker<'a> {
     dialect: &'a dyn Dialect,
-    sender: Option<&'a ProvidedAccountAddress>,
+    sender: Option<AccountAddress>,
 }
 
 impl<'a> MoveChecker<'a> {
-    pub fn new(
-        dialect: &'a dyn Dialect,
-        sender: Option<&'a ProvidedAccountAddress>,
-    ) -> MoveChecker<'a> {
+    pub fn new(dialect: &'a dyn Dialect, sender: Option<AccountAddress>) -> MoveChecker<'a> {
         MoveChecker { dialect, sender }
     }
 

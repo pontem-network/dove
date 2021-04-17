@@ -3,6 +3,7 @@ use anyhow::{anyhow, ensure, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
 use crate::compiler::source_map::FileOffsetMap;
+use move_core_types::account_address::AccountAddress;
 
 const SS58_PREFIX: &[u8] = b"SS58PRE";
 const PUB_KEY_LENGTH: usize = 32;
@@ -18,7 +19,7 @@ fn ss58hash(data: &[u8]) -> blake2_rfc::blake2b::Blake2bResult {
     context.finalize()
 }
 
-pub fn ss58_to_libra(ss58: &str) -> Result<String> {
+pub fn ss58_to_address(ss58: &str) -> Result<AccountAddress> {
     let bs58 = match ss58.from_base58() {
         Ok(bs58) => bs58,
         Err(_) => return Err(anyhow!("Wrong base58")),
@@ -34,13 +35,17 @@ pub fn ss58_to_libra(ss58: &str) -> Result<String> {
     }
     let mut addr = [0; PUB_KEY_LENGTH];
     addr.copy_from_slice(&bs58[1..PUB_KEY_LENGTH + 1]);
-    Ok(format!("0x{}", hex::encode_upper(addr)))
+    Ok(AccountAddress::new(addr))
 }
 
-pub fn replace_ss58_addresses(source: &str, file_source_map: &mut FileOffsetMap) -> String {
-    let mut transformed_source = source.to_string();
+pub fn ss58_to_diem(ss58: &str) -> Result<String> {
+    Ok(format!("{:#X}", ss58_to_address(ss58)?))
+}
 
-    for mat in SS58_REGEX.captures_iter(source).into_iter() {
+pub fn replace_ss58_addresses(source: String, file_source_map: &mut FileOffsetMap) -> String {
+    let mut transformed_source: Option<String> = None;
+
+    for mat in SS58_REGEX.captures_iter(&source).into_iter() {
         let item = mat
             .get(0)
             .expect("can't extract match from SS58 regex capture");
@@ -50,27 +55,31 @@ pub fn replace_ss58_addresses(source: &str, file_source_map: &mut FileOffsetMap)
             // libra match, don't replace
             continue;
         }
-        if let Ok(libra_address) = ss58_to_libra(orig_address) {
+        if let Ok(diem_address) = ss58_to_diem(orig_address) {
+            transformed_source = Some(match transformed_source {
+                Some(source) => source.replace(orig_address, &diem_address),
+                None => source.replace(orig_address, &diem_address),
+            });
+
             file_source_map.insert_address_layer(
                 item.end(),
                 orig_address.to_owned(),
-                libra_address.clone(),
+                diem_address,
             );
-            transformed_source = transformed_source.replace(orig_address, &libra_address);
         }
     }
-    transformed_source
+    transformed_source.unwrap_or_else(|| source)
 }
 
 #[cfg(test)]
 mod test {
     use crate::compiler::source_map::FileOffsetMap;
-    use super::{PUB_KEY_LENGTH, replace_ss58_addresses, ss58_to_libra, ss58hash};
+    use super::{PUB_KEY_LENGTH, replace_ss58_addresses, ss58_to_diem, ss58hash};
 
     #[test]
     fn test_ss58_to_libra() {
         let polka_address = "G7UkJAutjbQyZGRiP8z5bBSBPBJ66JbTKAkFDq3cANwENyX";
-        let libra_address = ss58_to_libra(&polka_address).unwrap();
+        let libra_address = ss58_to_diem(&polka_address).unwrap();
 
         assert_eq!(
             hex::decode(&libra_address[2..]).unwrap().len(),
@@ -105,7 +114,7 @@ mod test {
             }
         ";
 
-        let res = replace_ss58_addresses(source, &mut FileOffsetMap::default());
+        let res = replace_ss58_addresses(source.to_owned(), &mut FileOffsetMap::default());
         assert_eq!(
             r"
             script {

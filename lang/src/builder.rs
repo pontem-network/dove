@@ -1,10 +1,10 @@
 use crate::compiler::dialects::Dialect;
-use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MoveFile;
 use crate::compiler::{CompileFlow, compile};
 use crate::compiler::parser::ParsingMeta;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::{Errors, FilesSourceText};
+use move_core_types::account_address::AccountAddress;
 
 pub struct Artifacts {
     pub files: FilesSourceText,
@@ -13,14 +13,11 @@ pub struct Artifacts {
 
 pub struct MoveBuilder<'a> {
     dialect: &'a dyn Dialect,
-    sender: Option<&'a ProvidedAccountAddress>,
+    sender: Option<AccountAddress>,
 }
 
 impl<'a> MoveBuilder<'a> {
-    pub fn new(
-        dialect: &'a dyn Dialect,
-        sender: Option<&'a ProvidedAccountAddress>,
-    ) -> MoveBuilder<'a> {
+    pub fn new(dialect: &'a dyn Dialect, sender: Option<AccountAddress>) -> MoveBuilder<'a> {
         MoveBuilder { dialect, sender }
     }
 

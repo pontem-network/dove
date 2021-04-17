@@ -9,7 +9,10 @@ pub struct Mutator {
 
 impl Mutator {
     pub fn new() -> Mutator {
-        Mutator { buffer_diff: vec![], length_diff: 0 }
+        Mutator {
+            buffer_diff: vec![],
+            length_diff: 0,
+        }
     }
 
     pub fn make_diff(&mut self, start_offset: usize, end_offset: usize, new_value: Vec<u8>) {

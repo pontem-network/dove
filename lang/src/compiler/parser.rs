@@ -6,9 +6,9 @@ use std::collections::{HashMap, BTreeMap};
 use move_lang::parser::syntax::parse_file_string;
 use crate::compiler::source_map::{FileOffsetMap, ProjectOffsetMap, len_difference};
 use crate::compiler::dialects::{Dialect, line_endings};
-use crate::compiler::address::ProvidedAccountAddress;
 use crate::compiler::file::MoveFile;
 use move_lang::errors::{FilesSourceText, Errors};
+use move_core_types::account_address::AccountAddress;
 
 pub type CommentsMap = BTreeMap<&'static str, FileCommentMap>;
 
@@ -27,7 +27,7 @@ pub fn parse_program(
     dialect: &dyn Dialect,
     targets: &[MoveFile],
     deps: &[MoveFile],
-    sender: Option<&ProvidedAccountAddress>,
+    sender: Option<AccountAddress>,
 ) -> ParserArtifact {
     let mut files: FilesSourceText = HashMap::new();
     let mut source_definitions = Vec::new();
@@ -80,7 +80,7 @@ pub fn parse_file(
     files: &mut FilesSourceText,
     fname: &'static str,
     source_buffer: &str,
-    sender: Option<&ProvidedAccountAddress>,
+    sender: Option<AccountAddress>,
 ) -> (
     Vec<parser::ast::Definition>,
     FileCommentMap,
@@ -107,36 +107,29 @@ pub fn parse_file(
 fn normalize_source_text(
     dialect: &dyn Dialect,
     source_text: &str,
-    sender: Option<&ProvidedAccountAddress>,
+    sender: Option<AccountAddress>,
 ) -> (String, FileOffsetMap) {
     let (mut source_text, mut file_source_map) = line_endings::normalize(source_text);
     if let Some(sender) = sender {
-        source_text = replace_sender_placeholder(
-            source_text,
-            &sender.normalized_original,
-            &mut file_source_map,
-        );
+        source_text = replace_sender_placeholder(source_text, sender, &mut file_source_map);
     }
-    source_text = dialect.replace_addresses(&source_text, &mut file_source_map);
+    source_text = dialect.replace_addresses(source_text, &mut file_source_map);
     (source_text, file_source_map)
 }
 
 /// replace {{sender}} and {{ sender }} inside source code
 fn replace_sender_placeholder(
     s: String,
-    sender: &str,
+    sender: AccountAddress,
     file_source_map: &mut FileOffsetMap,
 ) -> String {
-    assert!(
-        sender.len() > 12,
-        "Sender address length is too short: {}",
-        sender.len()
-    );
+    let address = format!("{:#x}", sender);
+
     let mut new_s = s;
     for template in &["{{sender}}", "{{ sender }}"] {
         while let Some(pos) = new_s.find(template) {
-            new_s.replace_range(pos..pos + template.len(), sender);
-            file_source_map.insert_layer(pos + sender.len(), len_difference(template, sender));
+            new_s.replace_range(pos..pos + template.len(), &address);
+            file_source_map.insert_layer(pos + sender.len(), len_difference(template, &address));
         }
     }
     new_s
