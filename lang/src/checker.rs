@@ -1,7 +1,7 @@
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use crate::compiler::{CompileFlow, Step, compile, CheckerResult};
-use crate::compiler::parser::{ParsingMeta, ParserArtifact};
+use crate::compiler::parser::ParsingMeta;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
 use move_core_types::account_address::AccountAddress;
@@ -24,10 +24,10 @@ impl<'a> MoveChecker<'a> {
 impl<'a> CompileFlow<Result<(), Errors>> for MoveChecker<'a> {
     fn after_parsing(
         &mut self,
-        parser_artifact: ParserArtifact,
-    ) -> Step<Result<(), Errors>, ParserArtifact> {
+        parser_artifact: ParserProgArtifact,
+    ) -> Step<Result<(), Errors>, ParserProgArtifact> {
         if parser_artifact.result.is_err() {
-            let ParserArtifact { meta, result } = parser_artifact;
+            let ParserProgArtifact { meta, result } = parser_artifact;
             Step::Stop(
                 result
                     .map(|_| ())

@@ -1,14 +1,16 @@
-use anyhow::Result;
-use move_lang::{strip_comments_and_verify, FileCommentMap, parser};
+use std::collections::{BTreeMap, HashMap};
 
+use anyhow::Result;
+use move_core_types::account_address::AccountAddress;
+use move_lang::{FileCommentMap, parser, strip_comments_and_verify};
+use move_lang::errors::{Errors, FilesSourceText};
 use move_lang::name_pool::ConstPool;
-use std::collections::{HashMap, BTreeMap};
 use move_lang::parser::syntax::parse_file_string;
-use crate::compiler::source_map::{FileOffsetMap, ProjectOffsetMap, len_difference};
+
 use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::file::MoveFile;
-use move_lang::errors::{FilesSourceText, Errors};
-use move_core_types::account_address::AccountAddress;
+use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
+use crate::compiler::mut_string::MutString;
 
 pub type CommentsMap = BTreeMap<&'static str, FileCommentMap>;
 
@@ -21,6 +23,47 @@ pub struct ParsingMeta {
     pub source_map: FilesSourceText,
     pub offsets_map: ProjectOffsetMap,
     pub comments: CommentsMap,
+}
+
+pub fn parse_target(
+    dialect: &dyn Dialect,
+    targets: &[MoveFile],
+    sender: Option<AccountAddress>,
+) -> ParserArtifact {
+    let mut files: FilesSourceText = HashMap::new();
+    let mut source_definitions = Vec::new();
+    let mut comment_map = CommentsMap::new();
+
+    let mut project_offsets_map = ProjectOffsetMap::default();
+    let mut errors: Errors = Vec::new();
+
+    for target in targets {
+        let name = ConstPool::push(target.name());
+        let (defs, comments, es, offsets_map) =
+            parse_file(dialect, &mut files, name, target.content(), sender);
+        source_definitions.extend(defs);
+        comment_map.insert(name, comments);
+        project_offsets_map.0.insert(name, offsets_map);
+        errors.extend(es);
+    }
+
+    let res = if errors.is_empty() {
+        Ok(parser::ast::Program {
+            source_definitions,
+            lib_definitions: vec![],
+        })
+    } else {
+        Err(errors)
+    };
+
+    ParserArtifact {
+        meta: ParsingMeta {
+            source_map: files,
+            offsets_map: project_offsets_map,
+            comments: comment_map,
+        },
+        result: res,
+    }
 }
 
 pub fn parse_program(
@@ -87,34 +130,38 @@ pub fn parse_file(
     Errors,
     FileOffsetMap,
 ) {
-    let (source_buffer, file_source_map) = normalize_source_text(dialect, source_buffer, sender);
-    let (no_comments_buffer, comment_map) = match strip_comments_and_verify(fname, &source_buffer)
-    {
-        Err(errors) => {
-            files.insert(fname, source_buffer);
-            return (vec![], Default::default(), errors, file_source_map);
-        }
-        Ok(result) => result,
-    };
-
-    files.insert(fname, source_buffer);
-    match parse_file_string(fname, &no_comments_buffer, FileCommentMap::default()) {
-        Ok((defs, _)) => (defs, comment_map, Vec::default(), file_source_map),
-        Err(errors) => (vec![], comment_map, errors, file_source_map),
-    }
+    todo!()
+    // let mut mut_source = MutString::new(source_buffer);
+    //
+    // let (source_buffer, file_source_map) = normalize_source_text(dialect, mut_source, sender);
+    // let (no_comments_buffer, comment_map) = match strip_comments_and_verify(fname, &source_buffer)
+    // {
+    //     Err(errors) => {
+    //         files.insert(fname, source_buffer);
+    //         return (vec![], Default::default(), errors, file_source_map);
+    //     }
+    //     Ok(result) => result,
+    // };
+    //
+    // files.insert(fname, source_buffer);
+    // match parse_file_string(fname, &no_comments_buffer, FileCommentMap::default()) {
+    //     Ok((defs, _)) => (defs, comment_map, Vec::default(), file_source_map),
+    //     Err(errors) => (vec![], comment_map, errors, file_source_map),
+    // }
 }
 
 fn normalize_source_text(
     dialect: &dyn Dialect,
-    source_text: &str,
+    source_text: &mut MutString,
     sender: Option<AccountAddress>,
-) -> (String, FileOffsetMap) {
-    let (mut source_text, mut file_source_map) = line_endings::normalize(source_text);
-    if let Some(sender) = sender {
-        source_text = replace_sender_placeholder(source_text, sender, &mut file_source_map);
-    }
-    source_text = dialect.replace_addresses(source_text, &mut file_source_map);
-    (source_text, file_source_map)
+) -> FileOffsetMap {
+    todo!()
+    // let (mut source_text, mut file_source_map) = line_endings::normalize(source_text);
+    // if let Some(sender) = sender {
+    //     source_text = replace_sender_placeholder(source_text, sender, &mut file_source_map);
+    // }
+    // source_text = dialect.replace_addresses(source_text, &mut file_source_map);
+    // file_source_map
 }
 
 /// replace {{sender}} and {{ sender }} inside source code

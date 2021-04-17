@@ -7,7 +7,7 @@ pub fn len_difference(orig: &str, replacement: &str) -> isize {
     orig.len() as isize - replacement.len() as isize
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Layer {
     pub pos: usize,
     pub offset: isize,
@@ -23,7 +23,7 @@ impl Layer {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FileOffsetMap {
     layers: Vec<Layer>,
     address_replacements: Vec<(String, String)>,

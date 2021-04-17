@@ -154,7 +154,7 @@ mod tests {
             MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
         ];
         let target = &[MoveFile::with_content("target.move", source)];
-        let builder = MoveBuilder::new(dialect.as_ref(), Some(&sender));
+        let builder = MoveBuilder::new(dialect.as_ref(), Some(sender));
         let Artifacts { files, prog } = builder.build(target, deps);
 
         match prog {

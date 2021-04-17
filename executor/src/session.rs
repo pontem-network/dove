@@ -14,7 +14,7 @@ use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
 use lang::compiler::address::ProvidedAccountAddress;
-use lang::compiler::parser::{ParsingMeta, ParserArtifact};
+use lang::compiler::parser::{ParsingMeta, ParserProgArtifact};
 use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
 use diem::move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
@@ -163,8 +163,8 @@ impl<'a> SessionBuilder<'a> {
 impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder<'a> {
     fn after_parsing(
         &mut self,
-        parser_artifact: ParserArtifact,
-    ) -> Step<Result<ExecutionSession, CompilerError>, ParserArtifact> {
+        parser_artifact: ParserProgArtifact,
+    ) -> Step<Result<ExecutionSession, CompilerError>, ParserProgArtifact> {
         if let Ok(program) = &parser_artifact.result {
             extract_error_constants(program, &mut self.consts)
         }
