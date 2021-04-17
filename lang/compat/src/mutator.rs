@@ -3,29 +3,37 @@ use alloc::vec::Vec;
 
 #[derive(Debug)]
 pub struct Mutator {
-    diff: Vec<Diff>,
+    buffer_diff: Vec<Diff>,
+    length_diff: isize,
 }
 
 impl Mutator {
     pub fn new() -> Mutator {
-        Mutator { diff: vec![] }
+        Mutator { buffer_diff: vec![], length_diff: 0 }
     }
 
     pub fn make_diff(&mut self, start_offset: usize, end_offset: usize, new_value: Vec<u8>) {
-        self.diff.push(Diff {
+        let current_len = (end_offset - start_offset) as isize;
+        let patch_len = new_value.len() as isize;
+        self.length_diff += patch_len - current_len;
+        self.buffer_diff.push(Diff {
             source_range: start_offset..end_offset,
             value: new_value,
         });
     }
 
     pub fn mutate(mut self, buffer: &mut Vec<u8>) {
-        self.diff
+        if self.length_diff > 0 {
+            buffer.reserve_exact(self.length_diff as usize);
+        }
+
+        self.buffer_diff
             .sort_by(|a, b| a.source_range.start.cmp(&b.source_range.start));
 
         let origin_len = buffer.len();
 
         let mut offset_diff = 0;
-        for mutation in self.diff {
+        for mutation in self.buffer_diff {
             let mutation_diff_len = mutation.offset_diff();
 
             if mutation.source_range.start >= origin_len {
