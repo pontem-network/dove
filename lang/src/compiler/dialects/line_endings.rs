@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::str::Chars;
 
 use crate::compiler::mut_string::{MutString, NewValue};
@@ -31,7 +30,6 @@ mod test {
     use crate::compiler::dialects::line_endings::normalize;
     use crate::compiler::mut_string::MutString;
     use crate::compiler::source_map::FileOffsetMap;
-    use std::str::Chars;
 
     #[test]
     pub fn test_line_ending() {

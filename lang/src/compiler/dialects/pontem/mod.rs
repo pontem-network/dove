@@ -34,13 +34,20 @@ impl Dialect for PontemDialect {
         INITIAL_GAS_SCHEDULE.deref().clone()
     }
 
-    fn replace_addresses(&self, source_text: String, source_map: &mut FileOffsetMap) -> String {
-        replace_ss58_addresses(source_text, source_map)
+    fn replace_addresses(
+        &self,
+        source_text: &str,
+        mut_str: &mut MutString,
+        source_map: &mut FileOffsetMap,
+    ) {
+        replace_ss58_addresses(source_text, mut_str, source_map)
     }
 }
 
 use once_cell::sync::Lazy;
 use move_core_types::gas_schedule::GasCost;
+use crate::compiler::mut_string::MutString;
+
 pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
     use move_vm_types::gas_schedule::{self, NativeCostIndex as N};
     use vm::{

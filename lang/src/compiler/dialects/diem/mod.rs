@@ -29,14 +29,15 @@ impl Dialect for DiemDialect {
         INITIAL_GAS_SCHEDULE.deref().clone()
     }
 
-    fn replace_addresses(&self, source_text: String, _: &mut FileOffsetMap) -> String {
+    fn replace_addresses(&self, _: &str, _: &mut MutString, _: &mut FileOffsetMap) {
         // No-op
-        source_text
     }
 }
 
 use once_cell::sync::Lazy;
 use move_core_types::gas_schedule::GasCost;
+use crate::compiler::mut_string::MutString;
+
 pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
     use move_vm_types::gas_schedule::{self, NativeCostIndex as N};
     use vm::{

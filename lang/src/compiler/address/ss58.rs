@@ -4,6 +4,8 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use crate::compiler::source_map::FileOffsetMap;
 use move_core_types::account_address::AccountAddress;
+use crate::compiler::mut_string::{MutString, NewValue};
+use std::rc::Rc;
 
 const SS58_PREFIX: &[u8] = b"SS58PRE";
 const PUB_KEY_LENGTH: usize = 32;
@@ -42,10 +44,12 @@ pub fn ss58_to_diem(ss58: &str) -> Result<String> {
     Ok(format!("{:#X}", ss58_to_address(ss58)?))
 }
 
-pub fn replace_ss58_addresses(source: String, file_source_map: &mut FileOffsetMap) -> String {
-    let mut transformed_source: Option<String> = None;
-
-    for mat in SS58_REGEX.captures_iter(&source).into_iter() {
+pub fn replace_ss58_addresses(
+    source_text: &str,
+    mut_str: &mut MutString,
+    file_source_map: &mut FileOffsetMap,
+) {
+    for mat in SS58_REGEX.captures_iter(source_text).into_iter() {
         let item = mat
             .get(0)
             .expect("can't extract match from SS58 regex capture");
@@ -56,10 +60,8 @@ pub fn replace_ss58_addresses(source: String, file_source_map: &mut FileOffsetMa
             continue;
         }
         if let Ok(diem_address) = ss58_to_diem(orig_address) {
-            transformed_source = Some(match transformed_source {
-                Some(source) => source.replace(orig_address, &diem_address),
-                None => source.replace(orig_address, &diem_address),
-            });
+            let diem_address = Rc::new(diem_address);
+            mut_str.make_patch(item.start(), item.end(), NewValue::Rc(diem_address.clone()));
 
             file_source_map.insert_address_layer(
                 item.end(),
@@ -68,13 +70,13 @@ pub fn replace_ss58_addresses(source: String, file_source_map: &mut FileOffsetMa
             );
         }
     }
-    transformed_source.unwrap_or_else(|| source)
 }
 
 #[cfg(test)]
 mod test {
     use crate::compiler::source_map::FileOffsetMap;
     use super::{PUB_KEY_LENGTH, replace_ss58_addresses, ss58_to_diem, ss58hash};
+    use crate::compiler::mut_string::MutString;
 
     #[test]
     fn test_ss58_to_libra() {
@@ -114,7 +116,8 @@ mod test {
             }
         ";
 
-        let res = replace_ss58_addresses(source.to_owned(), &mut FileOffsetMap::default());
+        let mut mut_str = MutString::new(source);
+        replace_ss58_addresses(source, &mut mut_str, &mut FileOffsetMap::default());
         assert_eq!(
             r"
             script {
@@ -127,7 +130,7 @@ mod test {
                 }
             }
         ",
-            res
+            mut_str.freeze()
         );
     }
 }

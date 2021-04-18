@@ -1,16 +1,19 @@
+use std::str::FromStr;
+
+use anyhow::Result;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::gas_schedule::CostTable;
+
+use crate::compiler::dialects::dfinance::DFinanceDialect;
+use crate::compiler::dialects::diem::DiemDialect;
+use crate::compiler::dialects::pontem::PontemDialect;
+use crate::compiler::mut_string::MutString;
+use crate::compiler::source_map::FileOffsetMap;
+
 pub mod dfinance;
 pub mod diem;
 pub mod line_endings;
 pub mod pontem;
-
-use anyhow::Result;
-use move_core_types::gas_schedule::CostTable;
-use crate::compiler::source_map::FileOffsetMap;
-use std::str::FromStr;
-use crate::compiler::dialects::diem::DiemDialect;
-use crate::compiler::dialects::dfinance::DFinanceDialect;
-use crate::compiler::dialects::pontem::PontemDialect;
-use move_core_types::account_address::AccountAddress;
 
 pub trait Dialect {
     fn name(&self) -> &str;
@@ -25,7 +28,12 @@ pub trait Dialect {
 
     fn cost_table(&self) -> CostTable;
 
-    fn replace_addresses(&self, source_text: String, source_map: &mut FileOffsetMap) -> String;
+    fn replace_addresses(
+        &self,
+        source_text: &str,
+        mut_str: &mut MutString,
+        source_map: &mut FileOffsetMap,
+    );
 }
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]

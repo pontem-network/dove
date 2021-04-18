@@ -6,6 +6,8 @@ use move_core_types::account_address::AccountAddress;
 use regex::Regex;
 
 use crate::compiler::source_map::FileOffsetMap;
+use crate::compiler::mut_string::{MutString, NewValue};
+use std::rc::Rc;
 
 pub static HRP: &str = "wallet";
 
@@ -60,11 +62,12 @@ pub fn libra_into_bech32(diem_address: &str) -> Result<String> {
     Ok(bech32::encode(&HRP, data)?)
 }
 
-// TODO optimization required.
-pub fn replace_bech32_addresses(source: String, file_source_map: &mut FileOffsetMap) -> String {
-    let mut transformed_source: Option<String> = None;
-
-    for mat in BECH32_REGEX.captures_iter(&source).into_iter() {
+pub fn replace_bech32_addresses(
+    source_text: &str,
+    mut_str: &mut MutString,
+    file_source_map: &mut FileOffsetMap,
+) {
+    for mat in BECH32_REGEX.captures_iter(source_text).into_iter() {
         let item = mat.get(1).unwrap();
 
         let orig_address = item.as_str();
@@ -72,10 +75,8 @@ pub fn replace_bech32_addresses(source: String, file_source_map: &mut FileOffset
             continue;
         }
         if let Ok(diem_address) = bech32_into_diem(orig_address) {
-            transformed_source = Some(match transformed_source {
-                Some(source) => source.replace(orig_address, &diem_address),
-                None => source.replace(orig_address, &diem_address),
-            });
+            let diem_address = Rc::new(diem_address);
+            mut_str.make_patch(item.start(), item.end(), NewValue::Rc(diem_address.clone()));
 
             file_source_map.insert_address_layer(
                 item.end(),
@@ -84,5 +85,4 @@ pub fn replace_bech32_addresses(source: String, file_source_map: &mut FileOffset
             );
         }
     }
-    transformed_source.unwrap_or_else(|| source)
 }
