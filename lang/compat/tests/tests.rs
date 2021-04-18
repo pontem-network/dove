@@ -1,5 +1,5 @@
 use vm::CompiledModule;
-use move_compat::{adapt_to_basis, adapt_from_basis, SourceType};
+use move_compat::{adapt_to_basis, adapt_from_basis, AddressType};
 use vm::file_format::CompiledScript;
 
 const DFI_FOO: &[u8] = include_bytes!("assets/dfi/1_Foo.mv");
@@ -44,33 +44,33 @@ fn success_load_pont() {
 #[test]
 fn test_adapt_dfi() {
     let mut module = DFI_FOO.to_vec();
-    adapt_to_basis(&mut module, SourceType::Dfninance).unwrap();
+    adapt_to_basis(&mut module, AddressType::Dfninance).unwrap();
     CompiledModule::deserialize(&module).unwrap();
     assert_eq!(PONT_FOO, module.as_slice());
-    adapt_from_basis(&mut module, SourceType::Dfninance).unwrap();
+    adapt_from_basis(&mut module, AddressType::Dfninance).unwrap();
     assert_eq!(DFI_FOO, module.as_slice());
 
     let mut script = DFI_SCRIPT.to_vec();
-    adapt_to_basis(&mut script, SourceType::Dfninance).unwrap();
+    adapt_to_basis(&mut script, AddressType::Dfninance).unwrap();
     CompiledModule::deserialize(&script).unwrap();
     assert_eq!(PONT_SCRIPT, script.as_slice());
-    adapt_from_basis(&mut script, SourceType::Dfninance).unwrap();
+    adapt_from_basis(&mut script, AddressType::Dfninance).unwrap();
     assert_eq!(DFI_SCRIPT, script.as_slice());
 }
 
 #[test]
 fn test_adapt_diem() {
     let mut module = DIEM_FOO.to_vec();
-    adapt_to_basis(&mut module, SourceType::Diem).unwrap();
+    adapt_to_basis(&mut module, AddressType::Diem).unwrap();
     CompiledModule::deserialize(&module).unwrap();
     assert_eq!(PONT_FOO, module.as_slice());
-    adapt_from_basis(&mut module, SourceType::Diem).unwrap();
+    adapt_from_basis(&mut module, AddressType::Diem).unwrap();
     assert_eq!(DIEM_FOO, module.as_slice());
 
     let mut script = DIEM_SCRIPT.to_vec();
-    adapt_to_basis(&mut script, SourceType::Diem).unwrap();
+    adapt_to_basis(&mut script, AddressType::Diem).unwrap();
     CompiledModule::deserialize(&script).unwrap();
     assert_eq!(PONT_SCRIPT, script.as_slice());
-    adapt_from_basis(&mut script, SourceType::Diem).unwrap();
+    adapt_from_basis(&mut script, AddressType::Diem).unwrap();
     assert_eq!(DIEM_SCRIPT, script.as_slice());
 }

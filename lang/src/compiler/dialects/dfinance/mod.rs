@@ -15,11 +15,11 @@ impl Dialect for DFinanceDialect {
     }
 
     fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()> {
-        compat::adapt_from_basis(bytecode, compat::SourceType::Dfninance)
+        compat::adapt_from_basis(bytecode, compat::AddressType::Dfninance)
     }
 
     fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()> {
-        compat::adapt_to_basis(bytecode, compat::SourceType::Dfninance)
+        compat::adapt_to_basis(bytecode, compat::AddressType::Dfninance)
     }
 
     fn normalize_account_address(&self, addr: &str) -> Result<AccountAddress> {

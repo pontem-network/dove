@@ -1,14 +1,15 @@
 use std::fmt::Write;
+use std::rc::Rc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use lazy_static::lazy_static;
 use move_core_types::account_address::AccountAddress;
 use regex::Regex;
 
-use crate::compiler::source_map::FileOffsetMap;
+use compat::AddressType;
+
 use crate::compiler::mut_string::{MutString, NewValue};
-use std::rc::Rc;
-use std::cmp::Ordering;
+use crate::compiler::source_map::FileOffsetMap;
 
 pub static HRP: &str = "wallet";
 
@@ -22,19 +23,17 @@ lazy_static! {
 pub fn bech32_into_address(address: &str) -> Result<AccountAddress> {
     let (_, data_bytes) = bech32::decode(address)?;
     let data = bech32::convert_bits(&data_bytes, 5, 8, true)?;
-
-    match data.len().cmp(&AccountAddress::LENGTH) {
-        Ordering::Less => {
-            let mut address_buff = [0u8; AccountAddress::LENGTH];
-            let pudding = data.len() - AccountAddress::LENGTH;
-            address_buff[pudding..].copy_from_slice(&data);
-            Ok(AccountAddress::new(address_buff))
-        }
-        Ordering::Equal => Ok(AccountAddress::from_bytes(data)?),
-        Ordering::Greater => {
-            let prefix_to_skip = AccountAddress::LENGTH - data.len();
-            Ok(AccountAddress::from_bytes(&data[prefix_to_skip..])?)
-        }
+    if data.len() != AddressType::Dfninance as usize {
+        Err(anyhow!(
+            "Invalid dfinance address length [{}]. Expected {} bytes.",
+            address,
+            AddressType::Dfninance as usize
+        ))
+    } else {
+        let mut address_buff = [0u8; AccountAddress::LENGTH];
+        address_buff[AccountAddress::LENGTH - AddressType::Dfninance as usize..]
+            .copy_from_slice(&data);
+        Ok(AccountAddress::new(address_buff))
     }
 }
 
@@ -87,5 +86,23 @@ pub fn replace_bech32_addresses(
                 diem_address,
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use move_core_types::account_address::AccountAddress;
+
+    use crate::compiler::address::bech32::bech32_into_address;
+
+    #[test]
+    pub fn test_bech32_into_address() {
+        assert_eq!(
+            bech32_into_address("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh").unwrap(),
+            AccountAddress::from_hex(
+                "000000000000000000000000DE5F86CE8AD7944F272D693CB4625A955B610150"
+            )
+            .unwrap()
+        )
     }
 }
