@@ -75,6 +75,10 @@ impl<'a> NewValue<'a> {
             NewValue::Rc(val) => val.len(),
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl<'a> AsRef<str> for NewValue<'a> {

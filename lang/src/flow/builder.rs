@@ -3,7 +3,7 @@ use move_lang::FullyCompiledProgram;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::{Errors, FilesSourceText};
 
-use crate::compiler::{compile, CompileFlow, Step};
+use crate::compiler::{compile, CompileFlow, Step, SourceDeps};
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
@@ -42,7 +42,7 @@ impl<'a, R: DependencyResolver> CompileFlow<Artifacts> for MoveBuilder<'a, R> {
     fn after_parse_target(
         &mut self,
         parser_artifact: ParserArtifact,
-    ) -> Step<Artifacts, (ParserArtifact, Option<Vec<MoveFile<'static, 'static>>>)> {
+    ) -> Step<Artifacts, (ParserArtifact, Option<SourceDeps>)> {
         if let Ok(ast) = parser_artifact.result.as_ref() {
             match self.resolver.resolve_source_deps(&ast.source_definitions) {
                 Ok(deps) => Step::Next((parser_artifact, deps)),

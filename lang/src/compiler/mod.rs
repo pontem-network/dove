@@ -21,8 +21,10 @@ pub mod mut_string;
 pub mod parser;
 pub mod source_map;
 
+pub type SourceDeps = Vec<MoveFile<'static, 'static>>;
+
 pub type CheckerResult = Result<cfgir::ast::Program, Errors>;
-pub type SourceWithDeps = (ParserArtifact, Option<Vec<MoveFile<'static, 'static>>>);
+pub type SourceWithDeps = (ParserArtifact, Option<SourceDeps>);
 
 pub trait CompileFlow<A> {
     fn init(&mut self, _dialect: &dyn Dialect, _sender: Option<AccountAddress>) {}

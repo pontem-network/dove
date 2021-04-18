@@ -2,7 +2,7 @@ use move_core_types::account_address::AccountAddress;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
 use move_lang::FullyCompiledProgram;
-use crate::compiler::{CheckerResult, compile, CompileFlow, Step};
+use crate::compiler::{CheckerResult, compile, CompileFlow, Step, SourceDeps};
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
@@ -36,7 +36,7 @@ impl<'a, R: DependencyResolver> CompileFlow<Result<(), Errors>> for MoveChecker<
     fn after_parse_target(
         &mut self,
         parser_artifact: ParserArtifact,
-    ) -> Step<Result<(), Errors>, (ParserArtifact, Option<Vec<MoveFile<'static, 'static>>>)> {
+    ) -> Step<Result<(), Errors>, (ParserArtifact, Option<SourceDeps>)> {
         let ParserArtifact { meta, result } = parser_artifact;
         match result {
             Ok(ast) => match self.resolver.resolve_source_deps(&ast.source_definitions) {

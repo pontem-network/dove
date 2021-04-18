@@ -1,4 +1,4 @@
-use crate::compiler::{CompileFlow, Step, compile};
+use crate::compiler::{CompileFlow, Step, compile, SourceDeps};
 use anyhow::Error;
 use crate::compiler::parser::{ParsingMeta, ParserArtifact};
 use move_lang::errors::Errors;
@@ -20,8 +20,7 @@ impl CompileFlow<Result<Vec<Meta>, Error>> for ScriptMetadata {
     fn after_parse_target(
         &mut self,
         parser_artifact: ParserArtifact,
-    ) -> Step<Result<Vec<Meta>, Error>, (ParserArtifact, Option<Vec<MoveFile<'static, 'static>>>)>
-    {
+    ) -> Step<Result<Vec<Meta>, Error>, (ParserArtifact, Option<SourceDeps>)> {
         let result = parser_artifact.result;
         let source_map = parser_artifact.meta.source_map;
         let offsets_map = parser_artifact.meta.offsets_map;

@@ -8,6 +8,7 @@ use regex::Regex;
 use crate::compiler::source_map::FileOffsetMap;
 use crate::compiler::mut_string::{MutString, NewValue};
 use std::rc::Rc;
+use std::cmp::Ordering;
 
 pub static HRP: &str = "wallet";
 
@@ -22,16 +23,18 @@ pub fn bech32_into_address(address: &str) -> Result<AccountAddress> {
     let (_, data_bytes) = bech32::decode(address)?;
     let data = bech32::convert_bits(&data_bytes, 5, 8, true)?;
 
-    if data.len() == AccountAddress::LENGTH {
-        Ok(AccountAddress::from_bytes(data)?)
-    } else if data.len() > AccountAddress::LENGTH {
-        let prefix_to_skip = AccountAddress::LENGTH - data.len();
-        Ok(AccountAddress::from_bytes(&data[prefix_to_skip..])?)
-    } else {
-        let mut address_buff = [0u8; AccountAddress::LENGTH];
-        let pudding = data.len() - AccountAddress::LENGTH;
-        address_buff[pudding..].copy_from_slice(&data);
-        Ok(AccountAddress::new(address_buff))
+    match data.len().cmp(&AccountAddress::LENGTH) {
+        Ordering::Less => {
+            let mut address_buff = [0u8; AccountAddress::LENGTH];
+            let pudding = data.len() - AccountAddress::LENGTH;
+            address_buff[pudding..].copy_from_slice(&data);
+            Ok(AccountAddress::new(address_buff))
+        }
+        Ordering::Equal => Ok(AccountAddress::from_bytes(data)?),
+        Ordering::Greater => {
+            let prefix_to_skip = AccountAddress::LENGTH - data.len();
+            Ok(AccountAddress::from_bytes(&data[prefix_to_skip..])?)
+        }
     }
 }
 

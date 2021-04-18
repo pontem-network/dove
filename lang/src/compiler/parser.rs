@@ -124,58 +124,6 @@ pub fn parse_program(
     }
 }
 
-// pub fn parse_program(
-//     dialect: &dyn Dialect,
-//     targets: &[MoveFile],
-//     deps: &[MoveFile],
-//     sender: Option<AccountAddress>,
-// ) -> ParserArtifact {
-//     let mut files: FilesSourceText = HashMap::new();
-//     let mut source_definitions = Vec::new();
-//     let mut comment_map = CommentsMap::new();
-//
-//     let mut lib_definitions = Vec::new();
-//     let mut project_offsets_map = ProjectOffsetMap::default();
-//     let mut errors: Errors = Vec::new();
-//
-//     for target in targets {
-//         let name = ConstPool::push(target.name());
-//         let (defs, comments, es, offsets_map) =
-//             parse_file(dialect, &mut files, name, target.content(), sender);
-//         source_definitions.extend(defs);
-//         comment_map.insert(name, comments);
-//         project_offsets_map.0.insert(name, offsets_map);
-//         errors.extend(es);
-//     }
-//
-//     for dep in deps {
-//         let name = ConstPool::push(&dep.name());
-//         let (defs, _, es, offsets_map) =
-//             parse_file(dialect, &mut files, name, dep.content(), sender);
-//         project_offsets_map.0.insert(name, offsets_map);
-//         lib_definitions.extend(defs);
-//         errors.extend(es);
-//     }
-//
-//     let res = if errors.is_empty() {
-//         Ok(parser::ast::Program {
-//             source_definitions,
-//             lib_definitions,
-//         })
-//     } else {
-//         Err(errors)
-//     };
-//
-//     ParserArtifact {
-//         meta: ParsingMeta {
-//             source_map: files,
-//             offsets_map: project_offsets_map,
-//             comments: comment_map,
-//         },
-//         result: res,
-//     }
-// }
-
 pub fn parse_file(
     dialect: &dyn Dialect,
     files: &mut FilesSourceText,
@@ -228,7 +176,7 @@ fn normalize_source_text<'a, 'b>(
 /// replace {{sender}} and {{ sender }} inside source code
 fn replace_sender_placeholder<'a, 'b>(
     mut_str: &mut MutString<'a, 'b>,
-    sender: &'b String,
+    sender: &'b str,
     file_source_map: &mut FileOffsetMap,
 ) {
     for template in &["{{sender}}", "{{ sender }}"] {
