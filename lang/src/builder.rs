@@ -1,32 +1,90 @@
+use move_core_types::account_address::AccountAddress;
+use move_lang::{FullyCompiledProgram, parser};
+use move_lang::compiled_unit::CompiledUnit;
+use move_lang::errors::{Error, Errors, FilesSourceText};
+use move_lang::parser::ast::Definition;
+
+use crate::compiler::{compile, CompileFlow, Step};
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
-use crate::compiler::{CompileFlow, compile};
-use crate::compiler::parser::ParsingMeta;
-use move_lang::compiled_unit::CompiledUnit;
-use move_lang::errors::{Errors, FilesSourceText};
-use move_core_types::account_address::AccountAddress;
+use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 
 pub struct Artifacts {
     pub files: FilesSourceText,
     pub prog: Result<Vec<CompiledUnit>, Errors>,
 }
 
-pub struct MoveBuilder<'a> {
+pub trait DependencyResolver {
+    fn resolve_source_deps(
+        &mut self,
+        ast: &[Definition],
+    ) -> Result<Option<Vec<MoveFile<'static, 'static>>>, Error>;
+
+    fn resolve_precompiled(
+        &mut self,
+        ast: &parser::ast::Program,
+    ) -> Result<Option<FullyCompiledProgram>, Error>;
+}
+
+pub struct MoveBuilder<'a, R: DependencyResolver> {
     dialect: &'a dyn Dialect,
     sender: Option<AccountAddress>,
+    resolver: R,
 }
 
-impl<'a> MoveBuilder<'a> {
-    pub fn new(dialect: &'a dyn Dialect, sender: Option<AccountAddress>) -> MoveBuilder<'a> {
-        MoveBuilder { dialect, sender }
+impl<'a, R: DependencyResolver> MoveBuilder<'a, R> {
+    pub fn new(
+        dialect: &'a dyn Dialect,
+        sender: Option<AccountAddress>,
+        resolver: R,
+    ) -> MoveBuilder<'a, R> {
+        MoveBuilder {
+            dialect,
+            sender,
+            resolver,
+        }
     }
 
-    pub fn build(self, targets: &[MoveFile], deps: &[MoveFile]) -> Artifacts {
-        compile(self.dialect, targets, deps, self.sender, self)
+    pub fn build(self, targets: &[MoveFile]) -> Artifacts {
+        compile(self.dialect, targets, self.sender, self)
     }
 }
 
-impl<'a> CompileFlow<Artifacts> for MoveBuilder<'a> {
+impl<'a, R: DependencyResolver> CompileFlow<Artifacts> for MoveBuilder<'a, R> {
+    fn after_parse_target(
+        &mut self,
+        parser_artifact: ParserArtifact,
+    ) -> Step<Artifacts, (ParserArtifact, Option<Vec<MoveFile<'static, 'static>>>)> {
+        if let Ok(ast) = parser_artifact.result.as_ref() {
+            match self.resolver.resolve_source_deps(&ast.source_definitions) {
+                Ok(deps) => Step::Next((parser_artifact, deps)),
+                Err(error) => Step::Stop(Artifacts {
+                    files: parser_artifact.meta.source_map,
+                    prog: Err(vec![error]),
+                }),
+            }
+        } else {
+            Step::Next((parser_artifact, None))
+        }
+    }
+
+    fn after_parse_program(
+        &mut self,
+        parser_artifact: ParserArtifact,
+    ) -> Step<Artifacts, (ParserArtifact, Option<FullyCompiledProgram>)> {
+        if let Ok(ast) = parser_artifact.result.as_ref() {
+            match self.resolver.resolve_precompiled(ast) {
+                Ok(precompiled) => Step::Next((parser_artifact, precompiled)),
+                Err(error) => Step::Stop(Artifacts {
+                    files: parser_artifact.meta.source_map,
+                    prog: Err(vec![error]),
+                }),
+            }
+        } else {
+            Step::Next((parser_artifact, None))
+        }
+    }
+
     fn after_translate(
         &mut self,
         meta: ParsingMeta,

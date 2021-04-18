@@ -73,12 +73,13 @@ pub fn parse_program(
     sender: Option<AccountAddress>,
 ) -> ParserArtifact {
     let ParserArtifact {
-        meta: ParsingMeta {
-            mut source_map,
-            offsets_map,
-            comments
-        },
-        result
+        meta:
+            ParsingMeta {
+                mut source_map,
+                offsets_map,
+                comments,
+            },
+        result,
     } = parser_artifact;
     let mut project_offsets_map = offsets_map;
 
@@ -112,16 +113,14 @@ pub fn parse_program(
                 result,
             }
         }
-        Err(errors) => {
-            ParserArtifact {
-                meta: ParsingMeta {
-                    source_map,
-                    offsets_map: project_offsets_map,
-                    comments,
-                },
-                result: Err(errors),
-            }
-        }
+        Err(errors) => ParserArtifact {
+            meta: ParsingMeta {
+                source_map,
+                offsets_map: project_offsets_map,
+                comments,
+            },
+            result: Err(errors),
+        },
     }
 }
 

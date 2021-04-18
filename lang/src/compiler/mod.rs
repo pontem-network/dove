@@ -22,10 +22,7 @@ pub mod parser;
 pub mod source_map;
 
 pub type CheckerResult = Result<cfgir::ast::Program, Errors>;
-pub type SourceWithDeps = (
-    ParserArtifact,
-    Option<Vec<MoveFile<'static, 'static>>>,
-);
+pub type SourceWithDeps = (ParserArtifact, Option<Vec<MoveFile<'static, 'static>>>);
 
 pub trait CompileFlow<A> {
     fn init(&mut self, _dialect: &dyn Dialect, _sender: Option<AccountAddress>) {}
@@ -69,7 +66,7 @@ pub fn compile<A>(
     // Parse target.
     let (ast, deps) = match flow.after_parse_target(parse_target(dialect, targets, sender)) {
         Step::Stop(artifact) => return artifact,
-        Step::Next(target_with_deps) => target_with_deps
+        Step::Next(target_with_deps) => target_with_deps,
     };
 
     // Parse program.
@@ -91,7 +88,11 @@ pub fn compile<A>(
     // Check program.
     let check_result = pprog_res
         .and_then(|pprog| {
-            move_continue_up_to(precompiled.as_ref(), PassResult::Parser(sender, pprog), Pass::CFGIR)
+            move_continue_up_to(
+                precompiled.as_ref(),
+                PassResult::Parser(sender, pprog),
+                Pass::CFGIR,
+            )
         })
         .map(|res| match res {
             PassResult::CFGIR(cfgir) => cfgir,
@@ -106,7 +107,11 @@ pub fn compile<A>(
     // Translate program.
     let units = check_result
         .and_then(|check_result| {
-            move_continue_up_to(precompiled.as_ref(), PassResult::CFGIR(check_result), Pass::Compilation)
+            move_continue_up_to(
+                precompiled.as_ref(),
+                PassResult::CFGIR(check_result),
+                Pass::Compilation,
+            )
         })
         .map(|res| match res {
             PassResult::Compilation(units) => units,
