@@ -1,6 +1,6 @@
 use crate::compiler::{CompileFlow, Step, compile};
 use anyhow::Error;
-use crate::compiler::parser::ParsingMeta;
+use crate::compiler::parser::{ParsingMeta, ParserArtifact};
 use move_lang::errors::Errors;
 use crate::compiler::error::CompilerError;
 use crate::compiler::dialects::Dialect;
@@ -11,16 +11,17 @@ use move_lang::compiled_unit::CompiledUnit;
 pub struct ScriptMetadata;
 
 impl ScriptMetadata {
-    pub fn extract(dialect: &dyn Dialect, script: &MoveFile) -> Result<Vec<Meta>, Error> {
-        compile(dialect, &[script.to_owned()], &[], None, ScriptMetadata)
+    pub fn extract(dialect: &dyn Dialect, scripts: &[MoveFile]) -> Result<Vec<Meta>, Error> {
+        compile(dialect, scripts, None, ScriptMetadata)
     }
 }
 
 impl CompileFlow<Result<Vec<Meta>, Error>> for ScriptMetadata {
-    fn after_parsing(
+    fn after_parse_target(
         &mut self,
-        parser_artifact: ParserProgArtifact,
-    ) -> Step<Result<Vec<Meta>, Error>, ParserProgArtifact> {
+        parser_artifact: ParserArtifact,
+    ) -> Step<Result<Vec<Meta>, Error>, (ParserArtifact, Option<Vec<MoveFile<'static, 'static>>>)>
+    {
         let result = parser_artifact.result;
         let source_map = parser_artifact.meta.source_map;
         let offsets_map = parser_artifact.meta.offsets_map;

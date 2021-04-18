@@ -136,7 +136,7 @@ pub fn write_array<E: Encode, W: Write>(
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
     use crate::{disasm_str, Config};
-    use lang::builder::{MoveBuilder, Artifacts};
+    use lang::flow::builder::{MoveBuilder, Artifacts};
     use lang::compiler::dialects::DialectName;
     use lang::compiler::file::MoveFile;
     use lang::compiler::ConstPool;

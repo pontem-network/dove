@@ -1,29 +1,17 @@
 use move_core_types::account_address::AccountAddress;
-use move_lang::{FullyCompiledProgram, parser};
+use move_lang::FullyCompiledProgram;
 use move_lang::compiled_unit::CompiledUnit;
-use move_lang::errors::{Error, Errors, FilesSourceText};
-use move_lang::parser::ast::Definition;
+use move_lang::errors::{Errors, FilesSourceText};
 
 use crate::compiler::{compile, CompileFlow, Step};
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
+use crate::flow::DependencyResolver;
 
 pub struct Artifacts {
     pub files: FilesSourceText,
     pub prog: Result<Vec<CompiledUnit>, Errors>,
-}
-
-pub trait DependencyResolver {
-    fn resolve_source_deps(
-        &mut self,
-        ast: &[Definition],
-    ) -> Result<Option<Vec<MoveFile<'static, 'static>>>, Error>;
-
-    fn resolve_precompiled(
-        &mut self,
-        ast: &parser::ast::Program,
-    ) -> Result<Option<FullyCompiledProgram>, Error>;
 }
 
 pub struct MoveBuilder<'a, R: DependencyResolver> {

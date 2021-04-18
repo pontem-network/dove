@@ -3,7 +3,7 @@ use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
 use lang::compiler::file::load_move_files;
-use lang::builder::{Artifacts, MoveBuilder};
+use lang::flow::builder::{Artifacts, MoveBuilder};
 use termcolor::{StandardStream, ColorChoice};
 use std::path::Path;
 use std::fs::File;

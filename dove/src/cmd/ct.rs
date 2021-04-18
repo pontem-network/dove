@@ -4,7 +4,7 @@ use anyhow::Error;
 use structopt::StructOpt;
 use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
 use lang::meta_extractor::{ScriptMetadata, Meta};
-use lang::builder::{Artifacts, MoveBuilder};
+use lang::flow::builder::{Artifacts, MoveBuilder};
 use termcolor::{StandardStream, ColorChoice};
 use diem::move_core_types::language_storage::TypeTag;
 use serde::{Serialize, Deserialize};
