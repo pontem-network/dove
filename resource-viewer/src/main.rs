@@ -10,13 +10,19 @@
 extern crate log;
 
 use std::path::{Path, PathBuf};
-use anyhow::{Result, Error, anyhow};
-use http::Uri;
+use std::str::FromStr;
+
+use anyhow::{anyhow, Error, Result};
 use clap::Clap;
+use http::Uri;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::language_storage::{ResourceKey, TypeTag};
+
 use diem::prelude::*;
-use lang::compiler::address::bech32::{bech32_into_diem, HRP};
 use diem::rv;
-use move_resource_viewer::{tte, ser, net::*};
+use lang::compiler::address::bech32::{bech32_into_diem, HRP};
+use lang::compiler::dialects::DialectName;
+use move_resource_viewer::{Dialect, net::*, ser, tte};
 
 #[cfg(feature = "json-schema")]
 const STDOUT_PATH: &str = "-";
@@ -28,6 +34,8 @@ struct Cfg {
     /// Owner's address
     #[clap(long, short)]
     address: String,
+    #[clap(default_value = "pont")]
+    dialect: String,
 
     /// Query in `TypeTag` format,
     /// one-line address+type description.
@@ -93,6 +101,8 @@ fn init_logger() -> Result<(), impl std::error::Error> {
 fn run() -> Result<(), Error> {
     let cfg = Cfg::parse();
 
+    let dialect = Dialect::from_str(&cfg.dialect)?;
+
     produce_json_schema(&cfg);
 
     let host = cfg.api;
@@ -136,20 +146,20 @@ fn run() -> Result<(), Error> {
                             let height = {
                                 let height;
                                 #[cfg(feature = "ps_address")]
-                                {
-                                    height = format!("{:#x}", resp.block());
-                                }
+                                    {
+                                        height = format!("{:#x}", resp.block());
+                                    }
                                 #[cfg(not(feature = "ps_address"))]
-                                {
-                                    height = resp.block();
-                                }
+                                    {
+                                        height = resp.block();
+                                    }
                                 height
                             };
                             if json {
                                 serde_json::ser::to_string_pretty(
                                     &ser::AnnotatedMoveStructWrapper { height, result },
                                 )
-                                .map_err(|err| anyhow!("{}", err))
+                                    .map_err(|err| anyhow!("{}", err))
                             } else {
                                 Ok(format!("{}", result))
                             }
@@ -159,7 +169,7 @@ fn run() -> Result<(), Error> {
                     Err(anyhow!("Resource not found, result is empty"))
                 }
             })
-            .and_then(|result| result)
+                .and_then(|result| result)
         }
 
         TypeTag::Vector(tt) => Err(anyhow!(

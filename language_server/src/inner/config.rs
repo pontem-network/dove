@@ -30,10 +30,10 @@ impl Debug for Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            dialect_name: DialectName::Libra,
+            dialect_name: DialectName::Diem,
             stdlib_folder: None,
             modules_folders: vec![],
-            sender_address: DialectName::Libra
+            sender_address: DialectName::Diem
                 .get_dialect()
                 .normalize_account_address("0x1")
                 .unwrap(),

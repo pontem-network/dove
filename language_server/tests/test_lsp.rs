@@ -154,7 +154,7 @@ fn test_server_config_change() {
     );
 
     let mut global_state = global_state(Config::default());
-    assert_eq!(global_state.config().dialect_name, DialectName::Libra);
+    assert_eq!(global_state.config().dialect_name, DialectName::Diem);
 
     main_loop(&mut global_state, &server_conn).unwrap();
 

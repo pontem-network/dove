@@ -2,11 +2,11 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use log::*;
 use keyring::sr25519::sr25519::Pair;
-use diem::move_core_types::language_storage::StructTag;
 use substrate_api_client::Api;
-use diem::prelude::*;
 use anyhow::{Error, Result};
 use http::Uri;
+use move_core_types::language_storage::{ResourceKey, StructTag, ModuleId};
+use move_core_types::account_address::AccountAddress;
 
 /// Block number
 pub type Block = sp_core::H256;

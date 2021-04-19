@@ -6,7 +6,7 @@ use move_core_types::gas_schedule::CostTable;
 
 use crate::compiler::dialects::dfinance::DFinanceDialect;
 use crate::compiler::dialects::diem::DiemDialect;
-use crate::compiler::dialects::pontem::PontemDialect;
+use crate::compiler::dialects::pontem::PontDialect;
 use crate::compiler::mut_string::MutString;
 use crate::compiler::source_map::FileOffsetMap;
 
@@ -39,17 +39,17 @@ pub trait Dialect {
 #[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DialectName {
-    Libra,
+    Diem,
     DFinance,
-    Polkadot,
+    Pont,
 }
 
 impl DialectName {
     pub fn get_dialect(&self) -> Box<dyn Dialect> {
         match self {
-            DialectName::Libra => Box::new(DiemDialect::default()),
+            DialectName::Diem => Box::new(DiemDialect::default()),
             DialectName::DFinance => Box::new(DFinanceDialect::default()),
-            DialectName::Polkadot => Box::new(PontemDialect::default()),
+            DialectName::Pont => Box::new(PontDialect::default()),
         }
     }
 }
@@ -59,9 +59,9 @@ impl FromStr for DialectName {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "libra" => Ok(DialectName::Libra),
+            "diem" => Ok(DialectName::Diem),
             "dfinance" => Ok(DialectName::DFinance),
-            "polkadot" => Ok(DialectName::Polkadot),
+            "pont" => Ok(DialectName::Pont),
             _ => Err(anyhow::format_err!("Invalid dialect {:?}", s)),
         }
     }

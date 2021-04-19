@@ -8,11 +8,11 @@ use std::ops::Deref;
 use crate::compiler::address::ss58::{replace_ss58_addresses, ss58_to_address};
 
 #[derive(Default)]
-pub struct PontemDialect;
+pub struct PontDialect;
 
-impl Dialect for PontemDialect {
+impl Dialect for PontDialect {
     fn name(&self) -> &str {
-        "pontem"
+        "pont"
     }
 
     fn adapt_to_target(&self, _: &mut Vec<u8>) -> Result<()> {

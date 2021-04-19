@@ -1,14 +1,13 @@
 #![allow(clippy::field_reassign_with_default)]
 
-use diem::rv;
-use diem::prelude::*;
-use diem::move_core_types::language_storage::StructTag;
-use diem::account::Identifier;
 use serde::Serialize;
-use rv::{AnnotatedMoveStruct, AnnotatedMoveValue};
+use resource_viewer::{AnnotatedMoveStruct, AnnotatedMoveValue};
 
 #[cfg(feature = "json-schema")]
 use schemars::{JsonSchema, schema_for, schema::RootSchema};
+use move_core_types::identifier::Identifier;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::language_storage::StructTag;
 
 #[cfg(feature = "json-schema")]
 pub fn produce_json_schema() -> RootSchema {
@@ -140,6 +139,7 @@ mod schema_support {
         gen::SchemaGenerator,
         schema::{ArrayValidation, InstanceType, Schema, SchemaObject, SingleOrVec},
     };
+    use move_core_types::language_storage::TypeTag;
 
     #[derive(Serialize, JsonSchema)]
     #[serde(remote = "StructTag")]

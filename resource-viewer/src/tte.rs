@@ -2,15 +2,11 @@ use std::str::FromStr;
 
 use anyhow::{Result, Error, bail, anyhow};
 
-use diem::move_ir_types::location::Loc;
-use diem::{
-    move_lang::parser::ast::{ModuleAccess_, ModuleIdent_, Type, Type_},
-    move_core_types::language_storage::StructTag,
-};
-use diem::move_lang::parser::lexer::{Lexer, Tok};
-use diem::move_lang::parser::syntax::{parse_num, parse_type};
-use diem::account::Identifier;
-use diem::prelude::*;
+use move_ir_types::location::Loc;
+use move_core_types::language_storage::{TypeTag, StructTag};
+use move_core_types::account_address::AccountAddress;
+use move_core_types::identifier::Identifier;
+use move_ir_types::ast::Type;
 
 #[derive(Debug)]
 pub struct TypeTagQuery {
@@ -43,7 +39,20 @@ impl TypeTagQuery {
 
 pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
     fn unwrap_spanned_ty_(ty: Type, this: Option<AccountAddress>) -> Result<TypeTag, Error> {
-        let st = match ty.value {
+        match ty {
+            Type::Address => {}
+            Type::Signer => {}
+            Type::U8 => {}
+            Type::U64 => {}
+            Type::U128 => {}
+            Type::Bool => {}
+            Type::Vector(_) => {}
+            Type::Struct(_, _) => {}
+            Type::Reference(_, _) => {}
+            Type::TypeParameter(_) => {}
+        }
+
+        let st = match ty {
             Type_::Apply(ma, mut ty_params) => {
                 match (ma.value, this) {
                     // N
@@ -193,7 +202,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "ps_address")]
     fn test_parse_ss58() {
         // //Alice/ pub: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY =>
         // 0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D
