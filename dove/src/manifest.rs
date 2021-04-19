@@ -253,7 +253,7 @@ pub struct DepPath {
 }
 
 /// Project dependencies.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Dependencies {
     /// Vector of project dependencies.
     pub deps: Vec<Dependence>,
