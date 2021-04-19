@@ -35,7 +35,7 @@ fn script_path<'a>() -> impl Into<Cow<'a, str>> {
         .to_string()
 }
 
-fn range(start: (u64, u64), end: (u64, u64)) -> Range {
+fn range(start: (u32, u32), end: (u32, u32)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
 }
 

@@ -1,0 +1,6 @@
+[package]
+name = "move_project"
+dependencies = [
+    { path = "./stdlib" },
+    { path = "./modules" }
+]
