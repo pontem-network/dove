@@ -1,29 +1,29 @@
 use lang::compiler::dialects::Dialect;
-use lang::compiler::address::ProvidedAccountAddress;
 use lang::compiler::file::MoveFile;
 use anyhow::Error;
 use std::path::PathBuf;
 use anyhow::anyhow;
 use anyhow::Result;
-use diem::move_core_types::parser::parse_transaction_argument;
-use diem::move_core_types::transaction_argument::TransactionArgument;
-use diem::move_vm_types::values::Value;
+use move_core_types::parser::parse_transaction_argument;
+use move_core_types::transaction_argument::TransactionArgument;
+use move_vm_types::values::Value;
 use crate::explain::{PipelineExecutionResult, StepExecutionResult};
 use crate::session::SessionBuilder;
 use lang::compiler::error::CompilerError;
-use diem::move_lang::errors::report_errors;
+use move_lang::errors::report_errors;
 use crate::format::format_step_result;
+use move_core_types::account_address::AccountAddress;
 
 pub struct Executor<'d, 'n, 'c> {
     dialect: &'d dyn Dialect,
-    sender: ProvidedAccountAddress,
+    sender: AccountAddress,
     deps: Vec<MoveFile<'n, 'c>>,
 }
 
 impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
     pub fn new(
         dialect: &'d dyn Dialect,
-        sender: ProvidedAccountAddress,
+        sender: AccountAddress,
         deps: Vec<MoveFile<'n, 'c>>,
     ) -> Executor<'d, 'n, 'c> {
         Executor {

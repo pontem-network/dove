@@ -18,3 +18,11 @@ enum-iterator = "0.6.0"
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 git-hash = { path = "../common/git-hash" }
+
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+bcs = "0.1.2"

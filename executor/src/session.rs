@@ -1,22 +1,21 @@
 use std::collections::BTreeMap;
 
 use anyhow::Error;
-use diem::move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
-use diem::move_ir_types::location::Loc;
-use diem::move_lang::{compiled_unit::CompiledUnit, FileCommentMap};
-use diem::move_vm_types::gas_schedule::CostStrategy;
-use diem::move_vm_types::values::Value;
-use diem::vm::CompiledModule;
-use diem::vm::file_format::CompiledScript;
+use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
+use move_ir_types::location::Loc;
+use move_lang::{compiled_unit::CompiledUnit, FileCommentMap};
+use move_vm_types::gas_schedule::CostStrategy;
+use move_vm_types::values::Value;
+use vm::CompiledModule;
+use vm::file_format::CompiledScript;
 
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
-use lang::compiler::address::ProvidedAccountAddress;
-use lang::compiler::parser::{ParsingMeta, ParserProgArtifact};
+use lang::compiler::parser::{ParsingMeta, ParserArtifact};
 use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
-use diem::move_lang::errors::Errors;
+use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
@@ -164,7 +163,7 @@ impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder
     fn after_parsing(
         &mut self,
         parser_artifact: ParserProgArtifact,
-    ) -> Step<Result<ExecutionSession, CompilerError>, ParserProgArtifact> {
+    ) -> Step<Result<ExecutionSession, CompilerError>, ParserArtifact> {
         if let Ok(program) = &parser_artifact.result {
             extract_error_constants(program, &mut self.consts)
         }

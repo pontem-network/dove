@@ -2972,15 +2972,22 @@ name = "move-executor"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bcs",
  "clap 2.33.3",
  "enum-iterator",
  "git-hash",
  "lang",
+ "move-core-types",
+ "move-ir-types",
+ "move-lang",
+ "move-vm-runtime",
+ "move-vm-types",
  "num-format",
  "resources",
  "serde",
  "serde_json",
  "textwrap 0.12.1",
+ "vm",
 ]
 
 [[package]]

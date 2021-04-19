@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 
 use clap::{App, Arg};
 
-use diem::move_lang::name_pool::ConstPool;
+use move_lang::name_pool::ConstPool;
 use lang::compiler::file::MoveFile;
 use lang::compiler::file;
 use lang::compiler::dialects::DialectName;
