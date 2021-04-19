@@ -15,6 +15,7 @@ move-core-types = { git = "https://github.com/pontem-network/diem.git", branch =
 vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+ir-to-bytecode-syntax = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 
 compat = { path = "compat", package = "move-compat" }
 

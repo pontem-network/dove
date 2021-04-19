@@ -7,6 +7,7 @@ use move_core_types::language_storage::{TypeTag, StructTag};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_ir_types::ast::Type;
+use lang::lexer::unwrap_spanned_ty;
 
 #[derive(Debug)]
 pub struct TypeTagQuery {
@@ -35,93 +36,6 @@ impl TypeTagQuery {
     pub fn into_inner(self) -> (TypeTag, Option<u128>) {
         self.into()
     }
-}
-
-pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
-    fn unwrap_spanned_ty_(ty: Type, this: Option<AccountAddress>) -> Result<TypeTag, Error> {
-        match ty {
-            Type::Address => {}
-            Type::Signer => {}
-            Type::U8 => {}
-            Type::U64 => {}
-            Type::U128 => {}
-            Type::Bool => {}
-            Type::Vector(_) => {}
-            Type::Struct(_, _) => {}
-            Type::Reference(_, _) => {}
-            Type::TypeParameter(_) => {}
-        }
-
-        let st = match ty {
-            Type_::Apply(ma, mut ty_params) => {
-                match (ma.value, this) {
-                    // N
-                    (ModuleAccess_::Name(name), this) => match name.value.as_ref() {
-                        "bool" => TypeTag::Bool,
-                        "u8" => TypeTag::U8,
-                        "u64" => TypeTag::U64,
-                        "u128" => TypeTag::U128,
-                        "address" => TypeTag::Address,
-                        "signer" => TypeTag::Signer,
-                        "Vec" if ty_params.len() == 1 => TypeTag::Vector(
-                            unwrap_spanned_ty_(ty_params.pop().unwrap(), this)
-                                .unwrap()
-                                .into(),
-                        ),
-                        _ => bail!(
-                            "Could not parse input: type without struct name & module address"
-                        ),
-                    },
-                    // M.S
-                    (ModuleAccess_::ModuleAccess(_module, _struct_name), None) => {
-                        bail!("Could not parse input: type without module address");
-                    }
-                    // M.S + parent address
-                    (ModuleAccess_::ModuleAccess(name, struct_name), Some(this)) => {
-                        TypeTag::Struct(StructTag {
-                            address: this,
-                            module: Identifier::new(name.0.value)?,
-                            name: Identifier::new(struct_name.value)?,
-                            type_params: ty_params
-                                .into_iter()
-                                .map(|ty| unwrap_spanned_ty_(ty, Some(this)))
-                                .map(|res| match res {
-                                    Ok(st) => st,
-                                    Err(err) => panic!("{:?}", err),
-                                })
-                                .collect(),
-                        })
-                    }
-
-                    // OxADDR.M.S
-                    (ModuleAccess_::QualifiedModuleAccess(module_id, struct_name), _) => {
-                        let ModuleIdent_ { name, address } = module_id.0.value;
-                        let address = AccountAddress::new(address.to_u8());
-                        TypeTag::Struct(StructTag {
-                            address,
-                            module: Identifier::new(name.0.value)?,
-                            name: Identifier::new(struct_name.value)?,
-                            type_params: ty_params
-                                .into_iter()
-                                .map(|ty| unwrap_spanned_ty_(ty, Some(address)))
-                                .map(|res| match res {
-                                    Ok(st) => st,
-                                    Err(err) => panic!("{:?}", err),
-                                })
-                                .collect(),
-                        })
-                    }
-                }
-            }
-            _ => {
-                bail!("Could not parse input: unsupported type");
-            }
-        };
-
-        Ok(st)
-    }
-
-    unwrap_spanned_ty_(ty, None)
 }
 
 pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {

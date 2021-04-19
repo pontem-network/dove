@@ -9,8 +9,8 @@ use lang::compiler::dialects::{dfinance::DFinanceDialect, DialectName, pontem::P
 use crate::compiler::dialects::Dialect as DialectTrait;
 
 pub mod ser;
-pub mod tte;
 mod sp_client;
+pub mod tte;
 
 pub mod net {
     #[cfg(any(feature = "dfinance_address", feature = "libra_address"))]

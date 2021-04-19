@@ -146,20 +146,20 @@ fn run() -> Result<(), Error> {
                             let height = {
                                 let height;
                                 #[cfg(feature = "ps_address")]
-                                    {
-                                        height = format!("{:#x}", resp.block());
-                                    }
+                                {
+                                    height = format!("{:#x}", resp.block());
+                                }
                                 #[cfg(not(feature = "ps_address"))]
-                                    {
-                                        height = resp.block();
-                                    }
+                                {
+                                    height = resp.block();
+                                }
                                 height
                             };
                             if json {
                                 serde_json::ser::to_string_pretty(
                                     &ser::AnnotatedMoveStructWrapper { height, result },
                                 )
-                                    .map_err(|err| anyhow!("{}", err))
+                                .map_err(|err| anyhow!("{}", err))
                             } else {
                                 Ok(format!("{}", result))
                             }
@@ -169,7 +169,7 @@ fn run() -> Result<(), Error> {
                     Err(anyhow!("Resource not found, result is empty"))
                 }
             })
-                .and_then(|result| result)
+            .and_then(|result| result)
         }
 
         TypeTag::Vector(tt) => Err(anyhow!(
