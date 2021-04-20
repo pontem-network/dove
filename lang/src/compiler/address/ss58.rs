@@ -24,7 +24,7 @@ fn ss58hash(data: &[u8]) -> blake2_rfc::blake2b::Blake2bResult {
 pub fn ss58_to_address(ss58: &str) -> Result<AccountAddress> {
     let bs58 = match ss58.from_base58() {
         Ok(bs58) => bs58,
-        Err(_) => return Err(anyhow!("Wrong base58")),
+        Err(err) => return Err(anyhow!("Wrong base58:{}", err)),
     };
     ensure!(
         bs58.len() == PUB_KEY_LENGTH + 3,

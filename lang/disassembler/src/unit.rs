@@ -52,7 +52,7 @@ pub trait UnitAccess: Debug {
     fn is_script(&self) -> bool;
 
     /// Returns script-specific data.
-    fn script_info(&self) -> Option<(&CodeUnit, &Vec<Kind>, SignatureIndex)>;
+    fn script_info(&self) -> Option<(&CodeUnit, &Vec<AbilitySet>, SignatureIndex)>;
 
     /// Returns unit id.
     fn self_id(&self) -> ModuleId;
@@ -120,7 +120,7 @@ impl UnitAccess for CompiledUnit {
         }
     }
 
-    fn script_info(&self) -> Option<(&CodeUnit, &Vec<Kind>, SignatureIndex)> {
+    fn script_info(&self) -> Option<(&CodeUnit, &Vec<AbilitySet>, SignatureIndex)> {
         match self {
             CompiledUnit::Script(s) => Some((
                 s.code(),

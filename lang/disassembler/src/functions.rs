@@ -12,7 +12,7 @@ use crate::unit::{UnitAccess};
 
 /// Function representation.
 pub struct FunctionsDef<'a> {
-    is_public: bool,
+    is_public: Visibility,
     is_native: bool,
     name: &'a str,
     type_params: Vec<Generic>,
@@ -44,7 +44,7 @@ impl<'a> FunctionsDef<'a> {
 
         if config.light_version {
             FunctionsDef {
-                is_public: def.is_public(),
+                is_public: def.visibility,
                 is_native: def.is_native(),
                 name,
                 type_params,
@@ -67,7 +67,7 @@ impl<'a> FunctionsDef<'a> {
                 .collect();
 
             FunctionsDef {
-                is_public: def.is_public(),
+                is_public: def.visibility,
                 is_native: def.is_native(),
                 name,
                 type_params,

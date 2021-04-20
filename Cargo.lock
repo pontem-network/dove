@@ -1223,7 +1223,6 @@ dependencies = [
  "log",
  "maplit",
  "move-executor",
- "move-resource-viewer",
  "once_cell",
  "rand 0.7.3",
  "regex",
