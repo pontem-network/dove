@@ -5,25 +5,26 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
 use move_core_types::vm_status::{StatusCode, VMStatus};
-use move_vm_runtime::data_cache::{RemoteCache};
+use move_vm_runtime::data_cache::RemoteCache;
+use move_vm_runtime::logging::NoContextLog;
 use move_vm_runtime::move_vm::MoveVM;
 use move_vm_types::gas_schedule::CostStrategy;
-use move_vm_types::values::Value;
 use vm::access::ModuleAccess;
 use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
 use crate::explain::{
-    explain_effects, StepExecutionResult, explain_abort, explain_execution_failure,
-    explain_type_error,
+    explain_abort, explain_effects, explain_execution_failure, explain_type_error,
+    StepExecutionResult,
 };
 use crate::meta::ExecutionMeta;
-use crate::oracles::{oracle_coins_module, time_metadata, coin_balance_metadata, block_metadata};
-use move_vm_runtime::logging::NoContextLog;
+use crate::oracles::{block_metadata, coin_balance_metadata, oracle_coins_module, time_metadata};
 use crate::session::ConstsMap;
+use move_core_types::effects::{ChangeSet, Event};
 
 pub type SerializedTransactionEffects = Vec<((AccountAddress, StructTag), Option<Vec<u8>>)>;
+pub type TransactionEffects = (ChangeSet, Vec<Event>);
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -76,18 +77,13 @@ impl FakeRemoteCache {
     ) -> (SerializedTransactionEffects, usize) {
         let mut resources_write_size = 0;
         let mut resources = vec![];
-        for (addr, changes) in effects.resources {
-            for (struct_tag, val) in changes {
-                match val {
-                    Some((layout, val)) => {
-                        let serialized = val.simple_serialize(&layout).expect("Valid value.");
-                        resources_write_size += serialized.len();
-                        resources.push(((addr, struct_tag), Some(serialized)));
-                    }
-                    None => {
-                        resources.push(((addr, struct_tag), None));
-                    }
+        let change_set = effects.0;
+        for (addr, changes) in change_set.accounts {
+            for (struct_tag, val) in changes.resources {
+                if let Some(val) = &val {
+                    resources_write_size += val.len();
                 }
+                resources.push(((addr, struct_tag), val));
             }
         }
         (resources, resources_write_size)
@@ -141,7 +137,7 @@ pub fn serialize_script(script: &CompiledScript) -> Result<Vec<u8>> {
 fn execute_script_with_runtime_session<R: RemoteCache>(
     data_store: &R,
     script: Vec<u8>,
-    args: Vec<Value>,
+    args: Vec<Vec<u8>>,
     ty_args: Vec<TypeTag>,
     senders: Vec<AccountAddress>,
     cost_strategy: &mut CostStrategy,
@@ -164,7 +160,7 @@ pub fn execute_script(
     meta: ExecutionMeta,
     data_store: &mut FakeRemoteCache,
     script: CompiledScript,
-    args: Vec<Value>,
+    args: Vec<Vec<u8>>,
     cost_strategy: &mut CostStrategy,
     consts_map: &ConstsMap,
 ) -> Result<StepExecutionResult> {

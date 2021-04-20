@@ -1,6 +1,4 @@
-use move_lang::parser::ast::{
-    Constant, Exp_, Value_, ModuleDefinition, ModuleMember, Definition,
-};
+use move_lang::parser::ast::{Constant, Exp_, Value_, ModuleDefinition, ModuleMember, Definition};
 use move_lang::shared::{Address, Identifier};
 use crate::session::ConstsMap;
 use move_lang::parser::ast;

@@ -57,7 +57,7 @@ script {
     let errors = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![],
-        "libra",
+        "diem",
         "0x1111111111111111",
         vec![],
     )
@@ -77,14 +77,14 @@ fn test_execute_custom_script_with_stdlib_module() {
     script {
         use 0x1::Signer;
 
-        fun main(s: &signer) {
-            let _ = Signer::address_of(s);
+        fun main(s: signer) {
+            let _ = Signer::address_of(&s);
         }
     }";
     execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move")],
-        "libra",
+        "diem",
         "0x1111111111111111",
         vec![],
     )
@@ -99,16 +99,16 @@ fn test_execute_script_and_record_resource_changes() {
 script {
     use 0x2::Record;
 
-    fun main(s: &signer) {
+    fun main(s: signer) {
         let record = Record::create(10);
-        Record::save(s, record);
+        Record::save(&s, record);
     }
 }";
 
     let effects = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
-        "libra",
+        "diem",
         "0x1111111111111111",
         vec![],
     )
@@ -136,7 +136,7 @@ fn missing_write_set_for_move_to_sender() {
     let module_text = r"
     address 0x1 {
         module M {
-            resource struct T { value: u8 }
+           struct T has store, key { value: u8 }
 
             public fun get_t(s: &signer, v: u8) {
                 move_to<T>(s, T { value: v })
@@ -146,8 +146,8 @@ fn missing_write_set_for_move_to_sender() {
         ";
     let script_text = r"
     script {
-        fun main(s: &signer) {
-            0x1::M::get_t(s, 10);
+        fun main(s: signer) {
+            0x1::M::get_t(&s, 10);
         }
     }
         ";
@@ -156,7 +156,7 @@ fn missing_write_set_for_move_to_sender() {
     let effects = execute_script(
         MoveFile::with_content(script_path(), script_text),
         deps,
-        "libra",
+        "diem",
         "0x1",
         vec![],
     )
@@ -253,7 +253,7 @@ fn test_pass_arguments_to_script() {
     let effects = execute_script(
         MoveFile::with_content(script_path(), script_text),
         vec![MoveFile::with_content(module_path("m.move"), module_text)],
-        "libra",
+        "diem",
         "0x1",
         vec![String::from("true")],
     )
@@ -301,7 +301,7 @@ fn test_sender_string_in_script() {
             module_path("debug.move"),
             module_text,
         )],
-        "libra",
+        "diem",
         "0x1",
         vec![],
     )
@@ -338,7 +338,7 @@ fn test_bech32_address_and_sender_in_compiler_error() {
     assert_eq!(errors.len(), 1);
     assert_eq!(
         errors[0][0].1,
-        "Unbound module \'wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8::Unknown\'"
+        "Unbound module \'0x98099327C7F17DE48E9C2DCA87A55DA48C1C24D::Unknown\'"
     );
 }
 
@@ -350,15 +350,15 @@ fn test_show_executor_gas_spent() {
     script {
         use 0x1::Signer;
 
-        fun main(s: &signer) {
-            let _ = Signer::address_of(s);
+        fun main(s: signer) {
+            let _ = Signer::address_of(&s);
         }
     }";
 
     let res = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move")],
-        "libra",
+        "diem",
         "0x1111111111111111",
         vec![],
     )
@@ -403,9 +403,9 @@ fn test_execute_script_with_custom_signer() {
     script {
         use 0x2::Record;
 
-        fun test_create_record(s1: &signer) {
+        fun test_create_record(s1: signer) {
             let r1 = Record::create(20);
-            Record::save(s1, r1);
+            Record::save(&s1, r1);
         }
     }
     ";
@@ -440,12 +440,12 @@ fn test_multiple_signers() {
     script {
         use 0x2::Record;
 
-        fun test_multiple_signers(s1: &signer, s2: &signer) {
+        fun test_multiple_signers(s1: signer, s2: signer) {
             let r1 = Record::create(10);
-            Record::save(s1, r1);
+            Record::save(&s1, r1);
 
             let r2 = Record::create(20);
-            Record::save(s2, r2);
+            Record::save(&s2, r2);
         }
     }
     ";
@@ -490,7 +490,7 @@ fn test_execute_script_with_module_in_the_same_file() {
     let text = r"
 address 0x2 {
     module Record {
-        resource struct T {
+        struct T has store, key {
             age: u8
         }
 
@@ -508,9 +508,9 @@ address 0x2 {
 script {
     use 0x2::Record;
 
-    fun test_create_record(s1: &signer) {
+    fun test_create_record(s1: signer) {
         let r1 = Record::create(20);
-        Record::save(s1, r1);
+        Record::save(&s1, r1);
     }
 }
     ";
@@ -591,7 +591,7 @@ fn test_doc_comment_starts_at_line_0() {
     let _pool = ConstPool::new();
 
     let text = r"/// signers: 0x1
-script { fun main(_: &signer) { assert(false, 401); } }";
+script { fun main(_: signer) { assert(false, 401); } }";
     let res = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![],
@@ -688,7 +688,7 @@ script {
     let effects = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )
@@ -730,7 +730,7 @@ script {
     let res = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
-        "libra",
+        "diem",
         "0x1",
         vec![],
     )
@@ -764,7 +764,7 @@ script {
     let res = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
-        "libra",
+        "diem",
         "0x1",
         vec![],
     )
@@ -808,7 +808,7 @@ script {
     let results = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("coins.move")],
-        "libra",
+        "diem",
         "0x1",
         vec![],
     )
@@ -834,7 +834,7 @@ script {
     let res = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("time.move")],
-        "libra",
+        "diem",
         "0x1",
         vec![],
     )
@@ -855,8 +855,8 @@ fn test_shows_size_of_transaction_writeset() {
 script {
     use 0x2::Record;
 
-    fun step_2(s: &signer) {
-        Record::create_record(s, 10);
+    fun step_2(s: signer) {
+        Record::create_record(&s, 10);
     }
 }
     ";
@@ -864,7 +864,7 @@ script {
     let effects = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )
@@ -891,7 +891,7 @@ script {
     let error_string = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )
@@ -913,9 +913,9 @@ fn test_extract_error_name_if_prefixed_with_err() {
             use 0x1::Signer;
             use 0x2::Record;
 
-            fun main(s: &signer) {
-                let record = Record::get_record(Signer::address_of(s));
-                Record::save(s, record);
+            fun main(s: signer) {
+                let record = Record::get_record(Signer::address_of(&s));
+                Record::save(&s, record);
             }
         }
     ";
@@ -923,7 +923,7 @@ fn test_extract_error_name_if_prefixed_with_err() {
     let error_string = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )
@@ -944,8 +944,8 @@ fn test_dry_run_do_not_apply_writeset_changes() {
 script {
     use 0x2::Record;
 
-    fun step_1(s: &signer) {
-        Record::create_record(s, 10);
+    fun step_1(s: signer) {
+        Record::create_record(&s, 10);
     }
 }
 
@@ -953,16 +953,16 @@ script {
 script {
     use 0x2::Record;
 
-    fun step_2(s: &signer) {
-        Record::increment_record(s);
+    fun step_2(s: signer) {
+        Record::increment_record(&s);
     }
 }
 
 script {
     use 0x2::Record;
 
-    fun step_3(s: &signer) {
-        Record::increment_record(s);
+    fun step_3(s: signer) {
+        Record::increment_record(&s);
     }
 }
     ";
@@ -970,7 +970,7 @@ script {
     let effects = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )
@@ -993,7 +993,7 @@ script {
     use 0x1::Dfinance;
     use 0x1::Coins::ETH;
 
-    fun register_coins(standard_account: &signer) {
+    fun register_coins(standard_account: signer) {
         Dfinance::register_coin<ETH>(standard_account, b"eth", 18);
     }
 }
@@ -1004,7 +1004,7 @@ script {
     use 0x1::Account;
     use 0x1::Coins::ETH;
 
-    fun main(s: &signer) {
+    fun main(s: signer) {
         assert(Account::balance<ETH>(s) == 100, 101);
     }
 }
@@ -1019,7 +1019,7 @@ script {
             stdlib_mod("signer.move"),
             stdlib_mod("account.move"),
         ],
-        "libra",
+        "diem",
         "0x1",
         vec![],
     )
@@ -1045,7 +1045,7 @@ script {
     let error_string = execute_script(
         MoveFile::with_content(script_path(), text),
         vec![],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )
@@ -1076,7 +1076,7 @@ script {
     execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("block.move")],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )
@@ -1102,7 +1102,7 @@ script {
     execute_script(
         MoveFile::with_content(script_path(), text),
         vec![stdlib_mod("block.move")],
-        "libra",
+        "diem",
         "0x3",
         vec![],
     )

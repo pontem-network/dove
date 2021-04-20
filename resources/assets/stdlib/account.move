@@ -12,9 +12,9 @@ module Account {
     const ERR_ZERO_DEPOSIT: u64 = 7;
 
     /// holds account data, currently, only events
-    resource struct T {}
+    struct T has store {}
 
-    resource struct Balance<Token> {
+    struct Balance<Token> has store {
         coin: Dfinance::T<Token>
     }
 

@@ -1,7 +1,7 @@
 address 0x1 {
 module Time {
     // A singleton resource holding the current Unix time in seconds
-    resource struct CurrentTimestamp {
+    struct CurrentTimestamp has key, store {
         seconds: u64,
     }
 
