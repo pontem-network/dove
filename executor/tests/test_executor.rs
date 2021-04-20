@@ -184,7 +184,7 @@ fn test_run_with_non_default_dfinance_dialect() {
     let module_text = r"
     address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
         module M {
-            resource struct T { value: u8 }
+            struct T has store, key { value: u8 }
             public fun get_t(s: &signer, v: u8) {
                 move_to<T>(s, T { value: v })
             }
@@ -193,8 +193,8 @@ fn test_run_with_non_default_dfinance_dialect() {
     ";
     let script_text = r"
     script {
-        fun main(s: &signer) {
-            wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(s, 10);
+        fun main(s: signer) {
+            wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::M::get_t(&s, 10);
         }
     }
     ";
@@ -233,7 +233,7 @@ fn test_pass_arguments_to_script() {
     let module_text = r"
     address 0x1 {
         module Module {
-            resource struct T { value: bool }
+            struct T has store, key { value: bool }
             public fun create_t(s: &signer, v: bool) {
                 move_to<T>(s, T { value: v })
             }
@@ -244,8 +244,8 @@ fn test_pass_arguments_to_script() {
     script {
         use 0x1::Module;
 
-        fun main(s: &signer, val: bool) {
-            Module::create_t(s, val);
+        fun main(s: signer, val: bool) {
+            Module::create_t(&s, val);
         }
     }
     ";
@@ -660,7 +660,7 @@ script {
     .unwrap()
     .last()
     .unwrap();
-    assert!(res.effects().resources().is_empty());
+    assert_eq!(res.effects().write_set_size(), 0);
 }
 
 #[test]
@@ -671,16 +671,16 @@ fn test_run_scripts_in_sequential_order() {
 script {
     use 0x2::Record;
 
-    fun step_2(s: &signer) {
-        Record::create_record(s, 10);
+    fun step_2(s: signer) {
+        Record::create_record(&s, 10);
     }
 }
 
 script {
     use 0x2::Record;
 
-    fun step_1(s: &signer) {
-        Record::increment_record(s);
+    fun step_1(s: signer) {
+        Record::increment_record(&s);
     }
 }
     ";
@@ -994,7 +994,7 @@ script {
     use 0x1::Coins::ETH;
 
     fun register_coins(standard_account: signer) {
-        Dfinance::register_coin<ETH>(standard_account, b"eth", 18);
+        Dfinance::register_coin<ETH>(&standard_account, b"eth", 18);
     }
 }
 
@@ -1005,7 +1005,7 @@ script {
     use 0x1::Coins::ETH;
 
     fun main(s: signer) {
-        assert(Account::balance<ETH>(s) == 100, 101);
+        assert(Account::balance<ETH>(&s) == 100, 101);
     }
 }
     "#;

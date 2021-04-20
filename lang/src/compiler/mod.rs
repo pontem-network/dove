@@ -72,13 +72,13 @@ pub fn compile<A>(
     };
 
     // Parse program.
-    let (ast, precompiled) = if let Some(deps) = deps {
-        match flow.after_parse_program(parse_program(dialect, ast, &deps, sender)) {
-            Step::Stop(artifact) => return artifact,
-            Step::Next((ast, precompiled)) => (ast, precompiled),
-        }
-    } else {
-        (ast, None)
+    let program = match deps {
+        None => ast,
+        Some(deps) => parse_program(dialect, ast, &deps, sender),
+    };
+    let (ast, precompiled) = match flow.after_parse_program(program) {
+        Step::Stop(artifact) => return artifact,
+        Step::Next((ast, precompiled)) => (ast, precompiled),
     };
 
     let ParserArtifact {

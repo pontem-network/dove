@@ -14,11 +14,11 @@ module Dfinance {
     const ERR_AMOUNT_TOO_SMALL: u64 = 104;
     const ERR_NON_ZERO_DEPOSIT: u64 = 105;
 
-    resource struct T<Coin> {
+    struct T<Coin: key + store> has key, store {
         value: u128
     }
 
-    resource struct Info<Coin> {
+    struct Info<Coin: key + store> has key, store {
         denom: vector<u8>,
         decimals: u8,
 
@@ -28,36 +28,36 @@ module Dfinance {
         total_supply: u128
     }
 
-    public fun value<Coin>(coin: &T<Coin>): u128 {
+    public fun value<Coin: key + store>(coin: &T<Coin>): u128 {
         coin.value
     }
 
-    public fun zero<Coin>(): T<Coin> {
+    public fun zero<Coin: key + store>(): T<Coin> {
         T<Coin> { value: 0 }
     }
 
-    public fun split<Coin>(coin: T<Coin>, amount: u128): (T<Coin>, T<Coin>) {
+    public fun split<Coin: key + store>(coin: T<Coin>, amount: u128): (T<Coin>, T<Coin>) {
         let other = withdraw(&mut coin, amount);
         (coin, other)
     }
 
-    public fun join<Coin>(coin1: T<Coin>, coin2: T<Coin>): T<Coin> {
+    public fun join<Coin: key + store>(coin1: T<Coin>, coin2: T<Coin>): T<Coin> {
         deposit(&mut coin1, coin2);
         coin1
     }
 
-    public fun deposit<Coin>(coin: &mut T<Coin>, check: T<Coin>) {
+    public fun deposit<Coin: key + store>(coin: &mut T<Coin>, check: T<Coin>) {
         let T { value } = check; // destroy check
         coin.value = coin.value + value;
     }
 
-    public fun withdraw<Coin>(coin: &mut T<Coin>, amount: u128): T<Coin> {
+    public fun withdraw<Coin: key + store>(coin: &mut T<Coin>, amount: u128): T<Coin> {
         assert(coin.value >= amount, ERR_AMOUNT_TOO_SMALL);
         coin.value = coin.value - amount;
         T { value: amount }
     }
 
-    public fun destroy_zero<Coin>(coin: T<Coin>) {
+    public fun destroy_zero<Coin: key + store>(coin: T<Coin>) {
         let T { value } = coin;
         assert(value == 0, ERR_NON_ZERO_DEPOSIT)
     }
@@ -71,32 +71,32 @@ module Dfinance {
     ///     writing into main register (see above)
 
     /// getter for denom. reads denom information from 0x1 resource
-    public fun denom<Coin>(): vector<u8> acquires Info {
+    public fun denom<Coin: key + store>(): vector<u8> acquires Info {
         *&borrow_global<Info<Coin>>(0x1).denom
     }
 
     /// getter for currency decimals
-    public fun decimals<Coin>(): u8 acquires Info {
+    public fun decimals<Coin: key + store>(): u8 acquires Info {
         borrow_global<Info<Coin>>(0x1).decimals
     }
 
     /// getter for is_token property of Info
-    public fun is_token<Coin>(): bool acquires Info {
+    public fun is_token<Coin: key + store>(): bool acquires Info {
         borrow_global<Info<Coin>>(0x1).is_token
     }
 
     /// getter for total_supply property of Info
-    public fun total_supply<Coin>(): u128 acquires Info {
+    public fun total_supply<Coin: key + store>(): u128 acquires Info {
         borrow_global<Info<Coin>>(0x1).total_supply
     }
 
     /// getter for owner property of Info
-    public fun owner<Coin>(): address acquires Info {
+    public fun owner<Coin: key + store>(): address acquires Info {
         borrow_global<Info<Coin>>(0x1).owner
     }
 
     /// only 0x1 address and add denom descriptions, 0x1 holds information resource
-    public fun register_coin<Coin>(account: &signer, denom: vector<u8>, decimals: u8) {
+    public fun register_coin<Coin: key + store>(account: &signer, denom: vector<u8>, decimals: u8) {
         assert_can_register_coin(account);
 
         move_to<Info<Coin>>(account, Info {
@@ -121,11 +121,11 @@ module Dfinance {
     /// that first token creator must deploy a token module which will have
     /// empty type in it which should be then passed as type argument
     /// into Token::initialize() method.
-    resource struct Token<Tok: copyable> {}
+    struct Token<Tok: copy> has key, store {}
 
     /// This is the event data for TokenCreated event which can only be fired
     /// from this module, from Token::initialize() method.
-    struct TokenCreatedEvent<Tok> {
+    struct TokenCreatedEvent<Tok> has copy {
         creator: address,
         total_supply: u128,
         denom: vector<u8>,
@@ -134,7 +134,7 @@ module Dfinance {
 
     /// Initialize token. For this method to work user must provide custom
     /// resource type which he had previously created within his own module.
-    public fun create_token<Tok: copyable>(
+    public fun create_token<Tok: copy + store + key>(
         account: &signer,
         total_supply: u128,
         decimals: u8,
@@ -173,7 +173,7 @@ module Dfinance {
 
     /// Created Info resource must be attached to 0x1 address.
     /// Keeping this public until native function is ready.
-    fun register_token_info<Coin: copyable>(info: Info<Coin>) {
+    fun register_token_info<Coin: copy + store + key>(info: Info<Coin>) {
         let sig = create_signer(0x1);
         move_to<Info<Coin>>(&sig, info);
         destroy_signer(sig);
