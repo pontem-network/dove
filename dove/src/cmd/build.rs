@@ -25,11 +25,11 @@ use crate::context::Context;
 #[derive(StructOpt, Debug)]
 pub struct Build {
     #[structopt(
-        help = "Builds and stores the dependencies to the folder with artifacts.",
-        short = "a",
-        long = "all"
+        help = "Add transitive dependencies to the target.",
+        short = "t",
+        long = "tree"
     )]
-    all: bool,
+    tree: bool,
     #[structopt(
         help = "Package modules in a binary file.",
         short = "p",
@@ -39,7 +39,10 @@ pub struct Build {
     #[structopt(help = "File name of module package.", short = "o", long = "output")]
     output: Option<String>,
     #[structopt(
-        help = "Names of files to be excluded from the build process.",
+        help = "Names of files excluded from the build process. \
+        If the excluded name does not contain an extension '.move' is interpreted as the module name. \
+        This is useful when the 'tree' flag is used and transitive dependencies are added to target.\
+        In this case the dependencies listed in exclude will be excluded.",
         short = "e",
         long = "exclude"
     )]
@@ -64,8 +67,10 @@ impl Cmd for Build {
         let dep_set = index.make_dependency_set(&dirs)?;
         let mut dep_list = load_dependencies(dep_set)?;
 
-        let exclude_files = self
-            .exclude
+        let (exclude_files, exclude_modules): (Vec<_>, Vec<_>) =
+            self.exclude.iter().partition(|e| e.ends_with(".move"));
+
+        let exclude_files = exclude_files
             .iter()
             .map(|exclude| ctx.path_for(exclude))
             .collect::<Vec<_>>();
@@ -79,7 +84,7 @@ impl Cmd for Build {
             !exclude_files.contains(&path.as_os_str())
         })?;
 
-        if self.all {
+        if self.tree {
             source_list.extend(dep_list);
             dep_list = vec![];
         }
@@ -95,7 +100,9 @@ impl Cmd for Build {
                 output_errors(&mut writer, files, errors);
                 Err(anyhow!("could not compile:{}", ctx.project_name()))
             }
-            Ok(compiled_units) => self.verify_and_store(&ctx, files, compiled_units),
+            Ok(compiled_units) => {
+                self.verify_and_store(&ctx, files, compiled_units, &exclude_modules)
+            }
         }
     }
 }
@@ -107,10 +114,12 @@ impl Build {
         ctx: &Context,
         files: FilesSourceText,
         compiled_units: Vec<CompiledUnit>,
+        exclude_modules: &[&String],
     ) -> Result<(), Error> {
         let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
         let (modules, scripts): (Vec<_>, Vec<_>) = compiled_units
             .into_iter()
+            .filter(|u| !exclude_modules.contains(&&u.name()))
             .partition(|u| matches!(u, CompiledUnit::Module { .. }));
 
         self.store_modules(ctx, modules)?;
@@ -152,6 +161,11 @@ impl Build {
                     }
                 };
 
+                println!("Package content: ");
+                for unit in &units {
+                    println!("\t{}", unit.name());
+                }
+                println!("Store: '{:?}'", pac_file.as_os_str());
                 let package = ModulePackage::with_units(units);
                 File::create(&pac_file)?.write_all(&package.encode()?)?
             } else {
