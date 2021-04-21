@@ -88,6 +88,10 @@ fn transaction_output() -> String {
     "target/transactions".to_owned()
 }
 
+fn packages_output() -> String {
+    "target/packages".to_owned()
+}
+
 fn target_deps() -> String {
     "target/.external".to_owned()
 }
@@ -124,6 +128,10 @@ pub struct Layout {
     #[serde(default = "module_output")]
     pub module_output: String,
 
+    /// Directory with module package.
+    #[serde(default = "packages_output")]
+    pub packages_output: String,
+
     /// Directory with compiled scripts.
     #[serde(default = "script_output")]
     pub script_output: String,
@@ -151,6 +159,7 @@ impl Default for Layout {
             script_dir: script_dir(),
             tests_dir: tests_dir(),
             module_output: module_output(),
+            packages_output: packages_output(),
             script_output: script_output(),
             transaction_output: transaction_output(),
             target_deps: target_deps(),

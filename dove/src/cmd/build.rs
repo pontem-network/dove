@@ -136,24 +136,23 @@ impl Build {
 
     fn store_modules(&self, ctx: &Context, units: Vec<CompiledUnit>) -> Result<(), Error> {
         if !units.is_empty() {
-            let modules_dir = ctx.path_for(&ctx.manifest.layout.module_output);
-            if modules_dir.exists() {
-                fs::remove_dir_all(&modules_dir)?;
-            }
-            fs::create_dir_all(&modules_dir)?;
-
             if self.package {
+                let packages_dir = ctx.path_for(&ctx.manifest.layout.packages_output);
+                if !packages_dir.exists() {
+                    fs::create_dir_all(&packages_dir)?;
+                }
+
                 let pac_file = match &self.output {
                     None => {
                         let mut pac_file = match &ctx.manifest.package.name {
-                            None => modules_dir.join("modules"),
-                            Some(pac_name) => modules_dir.join(pac_name),
+                            None => packages_dir.join("modules"),
+                            Some(pac_name) => packages_dir.join(pac_name),
                         };
                         pac_file.set_extension("pac");
                         pac_file
                     }
                     Some(name) => {
-                        let mut pac_file = modules_dir.join(name);
+                        let mut pac_file = packages_dir.join(name);
                         if !name.to_lowercase().ends_with(".pac") {
                             pac_file.set_extension("pac");
                         }
@@ -165,10 +164,16 @@ impl Build {
                 for unit in &units {
                     println!("\t{}", unit.name());
                 }
-                println!("Store: '{:?}'", pac_file.as_os_str());
+                println!("Store: {:?}", pac_file.as_os_str());
                 let package = ModulePackage::with_units(units);
                 File::create(&pac_file)?.write_all(&package.encode()?)?
             } else {
+                let modules_dir = ctx.path_for(&ctx.manifest.layout.module_output);
+                if modules_dir.exists() {
+                    fs::remove_dir_all(&modules_dir)?;
+                }
+                fs::create_dir_all(&modules_dir)?;
+
                 self.store_units(units, &modules_dir)?;
             }
         }
