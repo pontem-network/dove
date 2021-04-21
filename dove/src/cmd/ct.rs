@@ -622,7 +622,7 @@ fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), E
     }
 
     let mut tx_file = tx_dir.join(name);
-    if !name.ends_with(".mvt") {
+    if !name.to_lowercase().ends_with(".mvt") {
         tx_file.set_extension("mvt");
     }
 
