@@ -55,8 +55,8 @@ where
             column: ColumnIndex::from(line_src.chars().count() as u32),
         };
         Ok(Position::new(
-            loc.line.to_usize() as u64,
-            loc.column.to_usize() as u64,
+            loc.line.to_usize() as u32,
+            loc.column.to_usize() as u32,
         ))
     }
 

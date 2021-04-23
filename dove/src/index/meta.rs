@@ -22,7 +22,18 @@ pub fn source_meta(
     let name = ConstPool::push(file.to_str().unwrap_or("source"));
     let source = fs::read_to_string(file)?;
 
-    let (defs, _, errors, _) = parse_file(dialect, &mut HashMap::default(), name, &source, None);
+    let sender = match address {
+        None => None,
+        Some(addr) => Some(dialect.normalize_account_address(&format!("0x{}", addr))?),
+    };
+
+    let (defs, _, errors, _) = parse_file(
+        dialect,
+        &mut HashMap::default(),
+        name,
+        &source,
+        sender.as_ref(),
+    );
     if errors.is_empty() {
         let mut metadata = Vec::new();
         for def in defs {
