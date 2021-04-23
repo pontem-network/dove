@@ -1,15 +1,19 @@
-use crate::cmd::{Cmd, load_dependencies};
-use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
-use lang::compiler::file::{MoveFile, load_move_files};
+
+use lang::compiler::file::{load_move_files, MoveFile};
 use move_executor::executor::{Executor, render_execution_result};
+
+use crate::cmd::{Cmd, load_dependencies};
+use crate::context::Context;
 
 /// Run script.
 #[derive(StructOpt, Debug)]
 pub struct Run {
     #[structopt(help = "Script file name.")]
     script: String,
+    #[structopt(name = "Script signers.", long = "signers", short = "s")]
+    signers: Vec<String>,
     #[structopt(
         help = r#"Number of script main() function arguments in quotes, e.g. "10 20 30""#,
         name = "Script args.",
@@ -34,9 +38,25 @@ impl Cmd for Run {
         let mut dep_list = load_dependencies(dep_set)?;
         dep_list.extend(load_move_files(&[module_dir])?);
 
-        let executor = Executor::new(ctx.dialect.as_ref(), ctx.account_address()?, dep_list);
+        let signers = self
+            .signers
+            .iter()
+            .map(|signer| {
+                ctx.dialect
+                    .normalize_account_address(signer)
+                    .map(|addr| addr.as_account_address())
+            })
+            .collect::<Result<Vec<_>, Error>>()?;
+
+        let sender = self
+            .signers
+            .get(0)
+            .map(|addr| ctx.dialect.normalize_account_address(addr))
+            .unwrap_or_else(|| ctx.account_address())?;
+
+        let executor = Executor::new(ctx.dialect.as_ref(), sender, dep_list);
         let script = MoveFile::load(script)?;
 
-        render_execution_result(executor.execute_script(script, self.args))
+        render_execution_result(executor.execute_script(script, Some(signers), self.args))
     }
 }

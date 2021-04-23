@@ -12,6 +12,7 @@ use crate::explain::{PipelineExecutionResult, StepExecutionResult};
 use crate::session::SessionBuilder;
 use lang::compiler::error::CompilerError;
 use diem::move_lang::errors::report_errors;
+use diem::account::AccountAddress;
 use crate::format::format_step_result;
 
 pub struct Executor<'d, 'n, 'c> {
@@ -45,6 +46,7 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
     pub fn execute_script(
         &self,
         script: MoveFile,
+        signers: Option<Vec<AccountAddress>>,
         args: Vec<String>,
     ) -> Result<PipelineExecutionResult, Error> {
         let script_args = parse_script_arguments(args)?;
@@ -54,7 +56,7 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
         sources.extend(self.deps.clone());
 
         let session = SessionBuilder::new(self.dialect, &self.sender).build(&sources, &[])?;
-        session.execute(script_args, self.dialect.cost_table())
+        session.execute(signers, script_args, self.dialect.cost_table())
     }
 }
 

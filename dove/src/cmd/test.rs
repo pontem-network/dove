@@ -49,7 +49,8 @@ impl Cmd for Test {
                 }
             }
 
-            let is_err = render_test_result(&test_name, executor.execute_script(test, vec![]))?;
+            let is_err =
+                render_test_result(&test_name, executor.execute_script(test, None, vec![]))?;
             if is_err {
                 has_failures = true;
             }
