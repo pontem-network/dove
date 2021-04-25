@@ -1,5 +1,4 @@
 use anyhow::Result;
-use diem::prelude::*;
 use http::Uri;
 
 use crate::ds::*;

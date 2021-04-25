@@ -57,7 +57,7 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
         sources.extend(self.deps.clone());
 
         let session = SessionBuilder::new(self.dialect, self.sender).build(&sources)?;
-        session.execute(script_args, self.dialect.cost_table())
+        session.execute(signers, script_args, self.dialect.cost_table())
     }
 }
 

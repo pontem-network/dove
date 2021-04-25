@@ -8,7 +8,6 @@ use move_vm_types::gas_schedule::CostStrategy;
 use vm::CompiledModule;
 use vm::file_format::CompiledScript;
 
-use diem::account::AccountAddress;
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
