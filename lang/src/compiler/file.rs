@@ -1,10 +1,11 @@
-use anyhow::{Result, Error};
+use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::fs::File;
 use std::io::Read;
-use std::path::{PathBuf, Path};
-use std::convert::TryFrom;
+use std::path::{Path, PathBuf};
+
+use anyhow::{Error, Result};
 use walkdir::DirEntry;
-use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MoveFile<'n, 'c> {
@@ -62,8 +63,16 @@ impl TryFrom<&PathBuf> for MoveFile<'static, 'static> {
         MoveFile::load(value)
     }
 }
+// TODO refactoring. Make iterator like api to work with move files.
 
-pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile<'static, 'static>>> {
+pub fn load_move_files_with_filter<P, F>(
+    paths: &[P],
+    filter: &F,
+) -> Result<Vec<MoveFile<'static, 'static>>>
+where
+    F: Fn(&Path) -> bool,
+    P: AsRef<Path>,
+{
     let mut module_files = vec![];
     for path in paths {
         let path = path.as_ref();
@@ -75,12 +84,16 @@ pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile<'stat
         if path.is_file() {
             module_files.push(MoveFile::load(path)?);
         } else {
-            for path in find_move_files(path)? {
+            for path in find_move_files_with_filter(path, filter)? {
                 module_files.push(MoveFile::load(path)?);
             }
         }
     }
     Ok(module_files)
+}
+
+pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile<'static, 'static>>> {
+    load_move_files_with_filter(paths, &|_| true)
 }
 
 fn is_move_file(entry: &DirEntry) -> bool {
@@ -97,19 +110,26 @@ fn is_move_file(entry: &DirEntry) -> bool {
             .unwrap_or(false)
 }
 
-pub fn find_move_files<P: AsRef<Path>>(path: P) -> Result<Vec<String>> {
+pub fn find_move_files_with_filter<P, F>(path: P, filter: &F) -> Result<Vec<String>>
+where
+    P: AsRef<Path>,
+    F: Fn(&Path) -> bool,
+{
     walkdir::WalkDir::new(path)
         .into_iter()
         .filter_map(|entry| match entry {
             Ok(entry) => {
                 if is_move_file(&entry) {
-                    Some(
-                        entry
-                            .into_path()
-                            .into_os_string()
-                            .into_string()
-                            .map_err(|path| anyhow!("Failed to convert path:{:?}", path)),
-                    )
+                    let path = entry.into_path();
+                    if filter(&path) {
+                        Some(
+                            path.into_os_string()
+                                .into_string()
+                                .map_err(|path| anyhow!("Failed to convert path:{:?}", path)),
+                        )
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }
@@ -117,4 +137,8 @@ pub fn find_move_files<P: AsRef<Path>>(path: P) -> Result<Vec<String>> {
             Err(err) => Some(Err(err.into())),
         })
         .collect()
+}
+
+pub fn find_move_files<P: AsRef<Path>>(path: P) -> Result<Vec<String>> {
+    find_move_files_with_filter(path, &|_| true)
 }
