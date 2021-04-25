@@ -1552,7 +1552,7 @@ dependencies = [
 
 [[package]]
 name = "dove"
-version = "1.1.3"
+version = "1.1.4"
 dependencies = [
  "anyhow",
  "bech32",
@@ -3418,7 +3418,7 @@ dependencies = [
 
 [[package]]
 name = "move-executor"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap 2.33.3",

@@ -9,6 +9,7 @@ use diem::move_vm_types::values::Value;
 use diem::vm::CompiledModule;
 use diem::vm::file_format::CompiledScript;
 
+use diem::account::AccountAddress;
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
@@ -40,6 +41,7 @@ impl ExecutionSession {
 
     pub fn execute(
         self,
+        signers: Option<Vec<AccountAddress>>,
         script_args: Vec<Value>,
         cost_table: CostTable,
     ) -> Result<PipelineExecutionResult, Error> {
@@ -47,7 +49,11 @@ impl ExecutionSession {
         let mut script_args = script_args;
 
         let mut step_results = vec![];
-        for (name, script, meta) in self.scripts() {
+        for (name, script, mut meta) in self.scripts() {
+            if let Some(signers) = &signers {
+                meta.signers = signers.clone();
+            }
+
             let total_gas = 1_000_000;
             let mut cost_strategy =
                 CostStrategy::transaction(&cost_table, GasUnits::new(total_gas));

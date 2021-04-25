@@ -78,5 +78,5 @@ fn main() -> Result<()> {
 
     let executor = Executor::new(dialect.as_ref(), sender, deps);
 
-    render_execution_result(executor.execute_script(script, args))
+    render_execution_result(executor.execute_script(script, None, args))
 }

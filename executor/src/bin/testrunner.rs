@@ -83,7 +83,7 @@ pub fn main() -> Result<()> {
         }
 
         let is_test_fail =
-            render_test_result(&test_name, executor.execute_script(test_file, vec![]))?;
+            render_test_result(&test_name, executor.execute_script(test_file, None, vec![]))?;
         if is_test_fail {
             has_failures = true;
         }
