@@ -4,7 +4,7 @@ module M {
         g : bool
     }
 
-    struct R1<T: resource> {
+    struct R1<T: key + store> {
         t: T,
     }
 
@@ -22,7 +22,7 @@ module M {
     //   r
     //}
 
-    public fun t3<T: resource>(t: T): R1<T> {
+    public fun t3<T: key + store>(t: T): R1<T> {
         R1<T> {t: t}
     }
 }

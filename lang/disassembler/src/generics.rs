@@ -1,9 +1,11 @@
-use std::rc::Rc;
 use std::collections::HashSet;
-use vm::file_format::*;
-use crate::{Encode, write_array};
-use anyhow::Error;
 use std::fmt::Write;
+use std::rc::Rc;
+
+use anyhow::Error;
+use vm::file_format::*;
+
+use crate::{Encode, write_array};
 use crate::unit::UnitAccess;
 
 const GENERICS_PREFIX: [&str; 22] = [
@@ -43,11 +45,11 @@ impl Generics {
     }
 
     /// Create generic.
-    pub fn create_generic(&self, index: usize, kind: Kind) -> Generic {
+    pub fn create_generic(&self, index: usize, abilities: AbilitySet) -> Generic {
         Generic {
             prefix: self.clone(),
             index,
-            kind,
+            abilities,
         }
     }
 }
@@ -57,7 +59,7 @@ impl Generics {
 pub struct Generic {
     prefix: Generics,
     index: usize,
-    kind: Kind,
+    abilities: AbilitySet,
 }
 
 impl Generic {
@@ -85,11 +87,39 @@ impl Encode for Generic {
             write!(w, "{}", self.index)?;
         }
 
-        match self.kind {
-            Kind::All => { /* no-op */ }
-            Kind::Resource => w.write_str(": resource")?,
-            Kind::Copyable => w.write_str(": copyable")?,
-        };
+        let abi = self.abilities;
+
+        if abi != AbilitySet::EMPTY {
+            w.write_str(":")?;
+
+            let mut is_first = true;
+
+            if abi.has_copy() {
+                write!(w, " copy")?;
+                is_first = false;
+            }
+
+            if abi.has_drop() {
+                if !is_first {
+                    w.write_str(" +")?;
+                }
+                write!(w, " drop")?;
+                is_first = false;
+            }
+            if abi.has_key() {
+                if !is_first {
+                    w.write_str(" +")?;
+                }
+                write!(w, " key")?;
+                is_first = false;
+            }
+            if abi.has_store() {
+                if !is_first {
+                    w.write_str(" +")?;
+                }
+                write!(w, " store")?;
+            }
+        }
         Ok(())
     }
 }
@@ -110,7 +140,7 @@ impl<'a> Encode for GenericName<'a> {
 }
 
 /// Extract type parameters.
-pub fn extract_type_params(params: &[Kind], generics: &Generics) -> Vec<Generic> {
+pub fn extract_type_params(params: &[AbilitySet], generics: &Generics) -> Vec<Generic> {
     params
         .iter()
         .enumerate()

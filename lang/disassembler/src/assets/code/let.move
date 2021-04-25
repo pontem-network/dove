@@ -1,5 +1,5 @@
 module M {
-    resource struct Pair { f: u64, g: u64}
+   struct Pair has key, store { f: u64, g: u64}
 
    public fun test_eq(addr1: address, addr2: address): bool acquires Pair {
        let p1 = borrow_global<Pair>(addr1);

@@ -1,13 +1,14 @@
 use move_core_types::account_address::AccountAddress;
 use move_lang::FullyCompiledProgram;
 use move_lang::compiled_unit::CompiledUnit;
-use move_lang::errors::{Errors, FilesSourceText};
+use move_lang::errors::{Errors, FilesSourceText, Error};
 
 use crate::compiler::{compile, CompileFlow, Step, SourceDeps};
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 use crate::flow::DependencyResolver;
+use move_lang::parser::ast::{Program, Definition};
 
 pub struct Artifacts {
     pub files: FilesSourceText,
@@ -83,5 +84,25 @@ impl<'a, R: DependencyResolver> CompileFlow<Artifacts> for MoveBuilder<'a, R> {
             files: meta.source_map,
             prog,
         }
+    }
+}
+
+pub struct StaticResolver {
+    pub deps: Vec<MoveFile<'static, 'static>>,
+}
+
+impl DependencyResolver for StaticResolver {
+    fn resolve_source_deps(
+        &mut self,
+        _: &[Definition],
+    ) -> Result<Option<Vec<MoveFile<'static, 'static>>>, Error> {
+        Ok(Some(self.deps.clone()))
+    }
+
+    fn resolve_precompiled(
+        &mut self,
+        _: &Program,
+    ) -> Result<Option<FullyCompiledProgram>, Error> {
+        Ok(None)
     }
 }

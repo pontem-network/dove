@@ -136,11 +136,11 @@ pub fn write_array<E: Encode, W: Write>(
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
     use crate::{disasm_str, Config};
-    use lang::flow::builder::{MoveBuilder, Artifacts};
+    use lang::flow::builder::{MoveBuilder, Artifacts, StaticResolver};
     use lang::compiler::dialects::DialectName;
     use lang::compiler::file::MoveFile;
     use lang::compiler::ConstPool;
-    use lang::diem::move_lang::errors::report_errors_to_buffer;
+    use move_lang::errors::report_errors_to_buffer;
     use vm::CompiledModule;
     use vm::file_format::{Bytecode, FunctionDefinition, CodeUnit};
 
@@ -153,9 +153,12 @@ mod tests {
             MoveFile::with_content("assets/base.move", include_str!("assets/base.move")),
             MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
         ];
+        let resolver = StaticResolver {
+            deps: deps.to_vec(),
+        };
         let target = &[MoveFile::with_content("target.move", source)];
-        let builder = MoveBuilder::new(dialect.as_ref(), Some(sender));
-        let Artifacts { files, prog } = builder.build(target, deps);
+        let builder = MoveBuilder::new(dialect.as_ref(), Some(sender), resolver);
+        let Artifacts { files, prog } = builder.build(target);
 
         match prog {
             Ok(mut prog) => prog.remove(0).serialize(),
@@ -174,7 +177,7 @@ mod tests {
             light_version: false,
         };
         let restored_source = disasm_str(&original_bytecode, config).unwrap();
-        println!("{}", restored_source);
+        println!("decompiled:\n{}", restored_source);
 
         let original_bytecode = CompiledModule::deserialize(&original_bytecode).unwrap();
 

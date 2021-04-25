@@ -3,24 +3,24 @@ module M {
 
     struct Vec<G> {g: vector<G>, t: vector<T> }
 
-    resource struct R { f: u64, g: u64, }
+    struct R has key, store { f: u64, g: u64, }
 
     native struct BarNative<K, V>;
 
-    resource struct Pool<AssetType: copyable> {
+    struct Pool<AssetType> has key, store{
         t: AssetType,
     }
 
-    resource struct Pool1<AssetType: resource> {
+    struct Pool1<AssetType: key + store> has key, store {
         t: AssetType,
     }
 
-    struct Bar<K: copyable, V> {
+    struct Bar<K: drop + copy, V> {
         key: K,
         value: V,
     }
 
     struct G {t: T}
 
-    resource struct B { t: 0x00000000000000000000000000000001::Base::Test }
+    struct B has key, store { t: 0x00000000000000000000000000000001::Base::Test }
 }

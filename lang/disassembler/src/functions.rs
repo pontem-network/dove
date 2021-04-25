@@ -12,7 +12,7 @@ use crate::unit::{UnitAccess};
 
 /// Function representation.
 pub struct FunctionsDef<'a> {
-    is_public: Visibility,
+    visibility: Visibility,
     is_native: bool,
     name: &'a str,
     type_params: Vec<Generic>,
@@ -44,7 +44,7 @@ impl<'a> FunctionsDef<'a> {
 
         if config.light_version {
             FunctionsDef {
-                is_public: def.visibility,
+                visibility: def.visibility,
                 is_native: def.is_native(),
                 name,
                 type_params,
@@ -67,7 +67,7 @@ impl<'a> FunctionsDef<'a> {
                 .collect();
 
             FunctionsDef {
-                is_public: def.visibility,
+                visibility: def.visibility,
                 is_native: def.is_native(),
                 name,
                 type_params,
@@ -97,7 +97,7 @@ impl<'a> FunctionsDef<'a> {
             };
 
         FunctionsDef {
-            is_public: false,
+            visibility: Visibility::Script,
             is_native: false,
             name: "main",
             type_params,
@@ -140,12 +140,19 @@ impl<'a> FunctionsDef<'a> {
 
 impl<'a> Encode for FunctionsDef<'a> {
     fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
+        let visibility = match self.visibility {
+            Visibility::Private => "",
+            Visibility::Public => "public ",
+            Visibility::Script => "",
+            Visibility::Friend => "public(friend) ",
+        };
+
         write!(
             w,
             "{s:width$}{native}{p}fun {name}",
             s = "",
             width = indent as usize,
-            p = if self.is_public { "public " } else { "" },
+            p = visibility,
             native = if self.is_native { "native " } else { "" },
             name = self.name,
         )?;

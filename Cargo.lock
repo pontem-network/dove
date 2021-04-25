@@ -1189,6 +1189,7 @@ dependencies = [
  "lang",
  "move-compat",
  "move-core-types",
+ "move-lang",
  "rand 0.7.3",
  "vm",
  "wasm-bindgen",

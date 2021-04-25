@@ -3,13 +3,13 @@ module M {
 
    struct B<G> {}
 
-   resource struct R {}
+   struct R has key, store {}
 
-   resource struct D {}
+   struct D has key, store {}
 
    native fun n1();
    native public fun n2();
-   native fun n3<T, G: resource, V: copyable>();
+   native fun n3<T, G: key + store, V>();
 
    native fun a1(): R acquires R, D;
 

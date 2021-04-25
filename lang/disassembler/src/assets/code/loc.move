@@ -1,5 +1,5 @@
 module M {
-    resource struct R { f: u64, g: u64}
+    struct R has key, store { f: u64, g: u64}
 
     struct R1<T> {
         t: T,

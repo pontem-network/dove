@@ -1,6 +1,6 @@
 module M {
     struct S {}
-    resource struct R {}
+    struct R has copy, drop, key, store {}
 
     fun t() {
         (0x1: address);

@@ -1,8 +1,9 @@
 extern crate clap;
 
-use std::fs::{File, canonicalize, read};
-use std::path::PathBuf;
+use std::fs::{canonicalize, File, read};
 use std::io::Write;
+use std::path::PathBuf;
+
 use anyhow::Error;
 use clap::Clap;
 
@@ -12,14 +13,13 @@ struct Opt {
     #[clap(about = "Path to input file", long, short)]
     /// Path to compiled Move binary
     input: PathBuf,
-
+    #[clap(about = "Dialect name", long, short, default_value = "pontem")]
+    /// Dialect name.
+    dialect: String,
     #[clap(about = "Path to output file", long, short)]
     /// Optional path to output file.
     /// Prints results to stdout by default.
     output: Option<PathBuf>,
-
-    #[clap(about = "Enables compatibility mode", long, short)]
-    compat: bool,
 }
 
 fn main() {
@@ -34,8 +34,16 @@ fn run() -> Result<(), Error> {
     let input = canonicalize(opts.input)?;
     let mut bytes = read(input)?;
 
-    if opts.compat {
-        compat::adapt(&mut bytes)?;
+    match opts.dialect.as_ref() {
+        "dfinance" => {
+            compat::adapt_to_basis(&mut bytes, compat::AddressType::Dfninance)?;
+        }
+        "diem" => {
+            compat::adapt_to_basis(&mut bytes, compat::AddressType::Diem)?;
+        }
+        _ => {
+            // no-op
+        }
     }
 
     let cfg = disassembler::Config {

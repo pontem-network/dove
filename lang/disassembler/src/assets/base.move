@@ -1,5 +1,5 @@
 module Base {
-    resource struct Test {
+    struct Test has key, store {
         val: u64,
     }
 

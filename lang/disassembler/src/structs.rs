@@ -9,7 +9,7 @@ use crate::unit::{UnitAccess};
 
 /// Struct representation.
 pub struct StructDef<'a> {
-    is_nominal_resource: bool,
+    abilities: AbilitySet,
     is_native: bool,
     name: &'a str,
     type_params: Vec<Generic>,
@@ -33,7 +33,7 @@ impl<'a> StructDef<'a> {
         let fields = Self::extract_fields(unit, &def.field_information, imports, &type_params);
 
         StructDef {
-            is_nominal_resource: handler.is_nominal_resource,
+            abilities: handler.abilities,
             is_native: def.field_information == StructFieldInformation::Native,
             name,
             type_params,
@@ -63,35 +63,58 @@ impl<'a> StructDef<'a> {
 
 impl<'a> Encode for StructDef<'a> {
     fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
-        let nominal_name = if self.is_nominal_resource {
-            "resource struct"
-        } else if self.is_native {
+        let nominal_name = if self.is_native {
             "native struct"
         } else {
             "struct"
         };
 
+        write!(
+            w,
+            "{s:width$}{nominal_name} {name}",
+            s = "",
+            width = indent as usize,
+            nominal_name = nominal_name,
+            name = self.name,
+        )?;
+
+        write_type_parameters(w, &self.type_params)?;
+
+        let abi = self.abilities;
+        if abi != AbilitySet::EMPTY {
+            write!(w, " has ")?;
+            let mut is_first = true;
+
+            if abi.has_copy() {
+                write!(w, " copy")?;
+                is_first = false;
+            }
+
+            if abi.has_drop() {
+                if !is_first {
+                    w.write_str(",")?;
+                }
+                write!(w, " drop")?;
+                is_first = false;
+            }
+            if abi.has_key() {
+                if !is_first {
+                    w.write_str(",")?;
+                }
+                write!(w, " key")?;
+                is_first = false;
+            }
+            if abi.has_store() {
+                if !is_first {
+                    w.write_str(",")?;
+                }
+                write!(w, " store")?;
+            }
+        }
+
         if self.is_native {
-            write!(
-                w,
-                "{s:width$}{nominal_name} {name}",
-                s = "",
-                width = indent as usize,
-                nominal_name = nominal_name,
-                name = self.name,
-            )?;
-            write_type_parameters(w, &self.type_params)?;
             write!(w, ";")?;
         } else {
-            write!(
-                w,
-                "{s:width$}{nominal_name} {name}",
-                s = "",
-                width = indent as usize,
-                nominal_name = nominal_name,
-                name = self.name,
-            )?;
-            write_type_parameters(w, &self.type_params)?;
             writeln!(w, " {{")?;
             for (index, field) in self.fields.iter().enumerate() {
                 field.encode(w, indent + INDENT)?;
