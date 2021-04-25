@@ -1,8 +1,12 @@
-use crate::context::{Context, get_context};
-use anyhow::{Result, Error};
-use lang::compiler::file::MoveFile;
 use std::collections::HashSet;
+use std::env;
 use std::rc::Rc;
+
+use anyhow::{Error, Result};
+
+use lang::compiler::file::MoveFile;
+
+use crate::context::{Context, get_context};
 
 /// Project builder.
 pub mod build;
@@ -28,7 +32,8 @@ pub trait Cmd {
     /// Returns project context.
     /// This function must be overridden if the command is used with a custom context.
     fn context(&self) -> Result<Context> {
-        get_context()
+        let project_dir = env::current_dir()?;
+        get_context(project_dir)
     }
 
     /// Apply command with given context.

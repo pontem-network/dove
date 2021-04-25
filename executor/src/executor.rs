@@ -47,6 +47,7 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
     pub fn execute_script(
         &self,
         script: MoveFile,
+        signers: Option<Vec<AccountAddress>>,
         args: Vec<String>,
     ) -> Result<PipelineExecutionResult, Error> {
         let script_args = parse_script_arguments(args)?;

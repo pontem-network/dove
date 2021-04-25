@@ -41,7 +41,7 @@ fn execute_script(
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), address))?;
 
     let executor = Executor::new(dialect.as_ref(), sender, deps);
-    executor.execute_script(script, args)
+    executor.execute_script(script, None, args)
 }
 
 #[test]

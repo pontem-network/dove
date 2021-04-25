@@ -29,6 +29,8 @@ pub struct CreateTransactionCmd {
     call: Option<String>,
     #[structopt(help = "Script name.", long = "name", short = "n")]
     script_name: Option<String>,
+    #[structopt(help = "Output file name.", long = "output", short = "o")]
+    output: Option<String>,
     #[structopt(help = "Script file name.", long = "file", short = "f")]
     file_name: Option<String>,
     #[structopt(
@@ -48,10 +50,13 @@ pub struct CreateTransactionCmd {
 }
 
 impl Cmd for CreateTransactionCmd {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
+    fn apply(mut self, ctx: Context) -> Result<(), Error> {
+        let output_filename = self.output.take();
+
         let builder = TransactionBuilder::new(self, &ctx)?;
         let (script_name, transaction) = builder.build()?;
-        store_transaction(&ctx, &script_name, transaction)
+
+        store_transaction(&ctx, &output_filename.unwrap_or(script_name), transaction)
     }
 }
 
@@ -617,7 +622,9 @@ fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), E
     }
 
     let mut tx_file = tx_dir.join(name);
-    tx_file.set_extension("mvt");
+    if !name.to_lowercase().ends_with(".mvt") {
+        tx_file.set_extension("mvt");
+    }
 
     if tx_file.exists() {
         fs::remove_file(&tx_file)?;
