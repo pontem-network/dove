@@ -7,12 +7,17 @@ use crate::compiler::error::CompilerError;
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use diem::move_lang::parser::ast::{Script, Type, Type_, ModuleAccess_};
+use crate::compiler::address::ProvidedAccountAddress;
 
 pub struct ScriptMetadata;
 
 impl ScriptMetadata {
-    pub fn extract(dialect: &dyn Dialect, script: &MoveFile) -> Result<Vec<Meta>, Error> {
-        compile(dialect, &[script.to_owned()], &[], None, ScriptMetadata)
+    pub fn extract(
+        dialect: &dyn Dialect,
+        sender: Option<&ProvidedAccountAddress>,
+        script: &MoveFile,
+    ) -> Result<Vec<Meta>, Error> {
+        compile(dialect, &[script.to_owned()], &[], sender, ScriptMetadata)
     }
 }
 
