@@ -53,7 +53,7 @@ impl<'a> Locals<'a> {
     }
 
     /// Returns the empty locals variables list.
-    /// Used for light disassembler version.
+    /// Used for light decompiler version.
     pub fn mock() -> Locals<'static> {
         Locals { inner: vec![] }
     }

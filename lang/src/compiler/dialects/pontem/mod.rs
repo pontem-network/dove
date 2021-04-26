@@ -25,7 +25,7 @@ impl Dialect for PontDialect {
         Ok(())
     }
 
-    fn normalize_account_address(&self, addr: &str) -> Result<AccountAddress> {
+    fn parse_address(&self, addr: &str) -> Result<AccountAddress> {
         ss58_to_address(addr)
             .with_context(|| format!("Address {:?} is not a valid libra/polkadot address", addr))
     }

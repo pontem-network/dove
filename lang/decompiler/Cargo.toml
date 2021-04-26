@@ -1,7 +1,7 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [package]
-name = "disassembler"
+name = "decompiler"
 version = "0.1.0"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
@@ -14,7 +14,7 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "disassembler"
+name = "decompiler"
 
 # lib, wasm, cffi:
 [dependencies]
@@ -24,7 +24,7 @@ hex = "0.4"
 anyhow = { version = "1.0", default-features = false }
 diem-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-bcs = "0.1.1"
+bcs = "0.1.2"
 vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 compat = { path = "../compat", package = "move-compat" }
 git-hash = { path = "../../common/git-hash" }

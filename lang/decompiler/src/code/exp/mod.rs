@@ -140,7 +140,7 @@ pub enum Exp<'a> {
     Abort(Abort<'a>),
     /// Load literal or constant. (5)
     Ld(Ld),
-    /// Disassembler error.
+    /// Decompiler error.
     Error(Bytecode),
     /// Local variable.
     Local(Loc<'a>),

@@ -67,7 +67,7 @@ pub fn main() -> Result<()> {
 
     let dialect = DialectName::from_str("dfinance")?.get_dialect();
     let sender = dialect
-        .normalize_account_address(sender)
+        .parse_address(sender)
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
 
     let executor = Executor::new(dialect.as_ref(), sender, deps);

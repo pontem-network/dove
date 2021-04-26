@@ -4,10 +4,10 @@ use anyhow::Error;
 use crate::index::meta::{source_meta, FileMeta, extract_bytecode_dependencies};
 use tiny_keccak::{Sha3, Hasher};
 use loader::{RestBytecodeLoader, BytecodeLoader};
-use diem::prelude::ModuleId;
-use lang::disassembler::{Config, Disassembler, unit::CompiledUnit as Unit};
+use decompiler::{Config, Decompiler, unit::CompiledUnit as Unit};
 use std::fs::OpenOptions;
 use std::io::Write;
+use move_core_types::language_storage::ModuleId;
 
 /// Dependencies loader.
 pub mod loader;
@@ -49,7 +49,7 @@ fn load_tree(
         light_version: true,
     };
     let unit = Unit::new(&bytecode)?;
-    let disasm = Disassembler::new(&unit, config);
+    let disasm = Decompiler::new(&unit, config);
     let source_unit = disasm.make_source_unit();
     let signature = source_unit.code_string()?;
 

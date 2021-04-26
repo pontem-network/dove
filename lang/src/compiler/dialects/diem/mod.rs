@@ -21,7 +21,7 @@ impl Dialect for DiemDialect {
         compat::adapt_to_basis(bytecode, compat::AddressType::Diem)
     }
 
-    fn normalize_account_address(&self, addr: &str) -> Result<AccountAddress> {
+    fn parse_address(&self, addr: &str) -> Result<AccountAddress> {
         Ok(AccountAddress::from_hex_literal(&addr)?)
     }
 

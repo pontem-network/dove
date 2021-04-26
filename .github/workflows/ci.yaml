@@ -85,7 +85,7 @@ jobs:
         rust:
           - "1.50.0"
         crate:
-          - disassembler
+          - decompiler
 
     env:
       RUSTFLAGS: -D warnings

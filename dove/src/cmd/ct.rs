@@ -8,18 +8,16 @@ use lang::flow::builder::{Artifacts, MoveBuilder};
 use termcolor::{StandardStream, ColorChoice};
 use move_core_types::language_storage::TypeTag;
 use serde::{Serialize, Deserialize};
-use diem::account::AccountAddress;
-use diem::move_lang::parser::lexer::{Lexer, Tok};
-use diem::move_lang::parser::syntax::parse_type;
-use diem::{
-    prelude::CompiledUnit,
-    move_lang::{compiled_unit, errors::output_errors},
-};
-use move_resource_viewer::tte::unwrap_spanned_ty;
+use move_lang::parser::lexer::{Lexer, Tok};
+use move_lang::parser::syntax::parse_type;
+use move_lang::{compiled_unit, errors::output_errors};
 use std::fmt::Debug;
 use std::str::FromStr;
 use lang::compiler::address::ss58::{ss58_to_diem, replace_ss58_addresses};
 use std::fs;
+use move_lang::compiled_unit::CompiledUnit;
+use move_core_types::account_address::AccountAddress;
+use lang::lexer::unwrap_spanned_ty;
 
 /// Create transaction.
 #[derive(StructOpt, Debug)]
@@ -630,7 +628,7 @@ fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), E
         fs::remove_file(&tx_file)?;
     }
     println!("Store transaction:{:?}", tx_file);
-    Ok(fs::write(&tx_file, diem::bcs::to_bytes(&tx)?)?)
+    Ok(fs::write(&tx_file, bcs::to_bytes(&tx)?)?)
 }
 
 struct Address {
@@ -652,9 +650,9 @@ impl FromStr for Address {
 #[cfg(test)]
 mod test {
     use crate::cmd::ct::TransactionBuilder;
-    use diem::move_core_types::language_storage::{TypeTag, StructTag};
-    use diem::move_core_types::language_storage::CORE_CODE_ADDRESS;
-    use diem::move_core_types::identifier::Identifier;
+    use move_core_types::language_storage::{TypeTag, StructTag};
+    use move_core_types::language_storage::CORE_CODE_ADDRESS;
+    use move_core_types::identifier::Identifier;
 
     #[test]
     fn test_parse_call() {

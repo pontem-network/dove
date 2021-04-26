@@ -37,7 +37,7 @@ fn execute_script(
 ) -> Result<PipelineExecutionResult, Error> {
     let dialect = DialectName::from_str(dialect)?.get_dialect();
     let sender = dialect
-        .normalize_account_address(address)
+        .parse_address(address)
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), address))?;
 
     let executor = Executor::new(dialect.as_ref(), sender, deps);

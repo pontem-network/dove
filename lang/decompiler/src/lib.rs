@@ -8,19 +8,19 @@ use generics::Generics;
 use module::Module as ModuleAst;
 use script::Script as ScriptAst;
 
-/// Code disassembler.
+/// Code decompiler.
 pub mod code;
-/// Function disassembler.
+/// Function decompiler.
 pub mod functions;
-/// Generic disassembler.
+/// Generic decompiler.
 pub mod generics;
-/// Imports disassembler.
+/// Imports decompiler.
 pub mod imports;
-/// Module disassembler.
+/// Module decompiler.
 pub mod module;
-/// Struct disassembler.
+/// Struct decompiler.
 pub mod script;
-/// Struct disassembler.
+/// Struct decompiler.
 pub mod structs;
 /// Common types.
 pub mod types;
@@ -45,7 +45,7 @@ pub const INDENT: usize = 4;
 pub fn disasm<W: Write>(bytecode: &[u8], writer: &mut W, config: Config) -> Result<(), Error> {
     let unit = Unit::new(bytecode)?;
 
-    let disasm = Disassembler::new(&unit, config);
+    let disasm = Decompiler::new(&unit, config);
     let ast = disasm.make_source_unit();
     ast.write_code(writer)
 }
@@ -57,29 +57,29 @@ pub fn disasm_str(bytecode: &[u8], config: Config) -> Result<String, Error> {
     Ok(code)
 }
 
-/// Disassembler configuration.
+/// Decompiler configuration.
 #[derive(Debug)]
 pub struct Config {
-    /// Use light disassembler version.
+    /// Use light decompiler version.
     pub light_version: bool,
 }
 
-/// Move disassembler.
+/// Move decompiler.
 #[derive(Debug)]
-pub struct Disassembler<'a> {
+pub struct Decompiler<'a> {
     unit: &'a CompiledUnit,
     imports: Imports<'a>,
     generics: Generics,
     config: Config,
 }
 
-impl<'a> Disassembler<'a> {
-    /// Create a new disassembler.
-    pub fn new(unit: &'a CompiledUnit, config: Config) -> Disassembler<'a> {
+impl<'a> Decompiler<'a> {
+    /// Create a new decompiler.
+    pub fn new(unit: &'a CompiledUnit, config: Config) -> Decompiler<'a> {
         let imports = Imports::new(unit);
         let generics = Generics::new(unit);
 
-        Disassembler {
+        Decompiler {
             unit,
             imports,
             generics,
@@ -148,7 +148,7 @@ mod tests {
         let _pool = ConstPool::new();
         let dialect = DialectName::DFinance.get_dialect();
 
-        let sender = dialect.normalize_account_address("0x1").unwrap();
+        let sender = dialect.parse_address("0x1").unwrap();
         let deps = &[
             MoveFile::with_content("assets/base.move", include_str!("assets/base.move")),
             MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),

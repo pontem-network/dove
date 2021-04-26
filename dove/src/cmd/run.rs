@@ -43,15 +43,15 @@ impl Cmd for Run {
             .iter()
             .map(|signer| {
                 ctx.dialect
-                    .normalize_account_address(signer)
-                    .map(|addr| addr.as_account_address())
+                    .parse_address(signer)
+                    .map(|addr| addr)
             })
             .collect::<Result<Vec<_>, Error>>()?;
 
         let sender = self
             .signers
             .get(0)
-            .map(|addr| ctx.dialect.normalize_account_address(addr))
+            .map(|addr| ctx.dialect.parse_address(addr))
             .unwrap_or_else(|| ctx.account_address())?;
 
         let executor = Executor::new(ctx.dialect.as_ref(), sender, dep_list);

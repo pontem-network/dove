@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use anyhow::Error;
-use diem::account::AccountAddress;
 use git2::{Oid, Repository};
 use git2::build::RepoBuilder;
 use tiny_keccak::{Hasher, Sha3};
@@ -15,6 +14,7 @@ use crate::index::move_dir_iter;
 use lang::compiler::dialects::{DialectName};
 use crate::index::meta::{source_meta, FileMeta};
 use crate::manifest::{CheckoutParams, default_dialect, Git, MANIFEST, read_manifest};
+use move_core_types::account_address::AccountAddress;
 
 /// Git prefix.
 pub const PREFIX: &str = "git";
@@ -135,9 +135,7 @@ fn get_dep_address(path: &Path) -> Result<Option<AccountAddress>, Error> {
             .account_address
             .ok_or_else(|| anyhow!("couldn't read account address from manifest"))?;
 
-        let provided_account_address = dialect.normalize_account_address(&acc_addr)?;
-
-        Ok(Some(provided_account_address.as_account_address()))
+        Ok(Some(dialect.parse_address(&acc_addr)?))
     } else {
         Ok(None)
     }

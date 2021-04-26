@@ -4,8 +4,8 @@ use std::str::FromStr;
 use anyhow::{Result, anyhow, Error};
 use std::env;
 use lang::compiler::dialects::{Dialect, DialectName};
-use lang::compiler::address::ProvidedAccountAddress;
 use crate::index::Index;
+use move_core_types::account_address::AccountAddress;
 
 /// Project context.
 pub struct Context {
@@ -51,15 +51,14 @@ impl Context {
     }
 
     /// Returns provided account address.
-    pub fn account_address(&self) -> Result<ProvidedAccountAddress> {
-        let acc_addr = self
+    pub fn account_address(&self) -> Result<AccountAddress> {
+        let acc_addr = &self
             .manifest
             .package
             .account_address
-            .clone()
             .ok_or_else(|| anyhow!("couldn't read account address from manifest"))?;
 
-        self.dialect.normalize_account_address(&acc_addr)
+        self.dialect.parse_address(acc_addr)
     }
 }
 

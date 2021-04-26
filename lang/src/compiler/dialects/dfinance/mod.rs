@@ -22,7 +22,7 @@ impl Dialect for DFinanceDialect {
         compat::adapt_to_basis(bytecode, compat::AddressType::Dfninance)
     }
 
-    fn normalize_account_address(&self, addr: &str) -> Result<AccountAddress> {
+    fn parse_address(&self, addr: &str) -> Result<AccountAddress> {
         let address_res = if addr.starts_with(HRP) {
             bech32_into_address(addr)
         } else if addr.starts_with("0x") {

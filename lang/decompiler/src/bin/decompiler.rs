@@ -8,7 +8,7 @@ use anyhow::Error;
 use clap::Clap;
 
 #[derive(Clap, Debug)]
-#[clap(name = "Move decompiler", version = disassembler::VERSION)]
+#[clap(name = "Move decompiler", version = decompiler::VERSION)]
 struct Opt {
     #[clap(about = "Path to input file", long, short)]
     /// Path to compiled Move binary
@@ -46,11 +46,11 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    let cfg = disassembler::Config {
+    let cfg = decompiler::Config {
         light_version: false,
     };
 
-    let out = disassembler::disasm_str(&bytes, cfg)?;
+    let out = decompiler::disasm_str(&bytes, cfg)?;
 
     if let Some(output) = opts.output {
         File::create(output)?.write_all(out.as_bytes())?;

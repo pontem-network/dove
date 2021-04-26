@@ -3,13 +3,13 @@ use std::convert::TryFrom;
 use std::path::Path;
 
 use anyhow::Error;
-use diem::prelude::CORE_CODE_ADDRESS;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
     ser::Error as SerError,
 };
 use toml::Value;
+use move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -341,9 +341,9 @@ pub fn read_manifest(path: &Path) -> Result<DoveToml, Error> {
     Ok(toml::from_str(&fs::read_to_string(path)?)?)
 }
 
-/// Default dialect name (dfinance).
+/// Default dialect name (pont).
 pub fn default_dialect() -> String {
-    "dfinance".to_owned()
+    "pont".to_owned()
 }
 
 #[cfg(test)]

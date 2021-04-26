@@ -35,7 +35,7 @@ impl Default for Config {
             modules_folders: vec![],
             sender_address: DialectName::Diem
                 .get_dialect()
-                .normalize_account_address("0x1")
+                .parse_address("0x1")
                 .unwrap(),
         }
     }
@@ -111,7 +111,7 @@ impl Config {
                 log::info!("Using default account address 0x0");
                 ProvidedAccountAddress::default()
             }
-            Some(address) => match self.dialect().normalize_account_address(address) {
+            Some(address) => match self.dialect().parse_address(address) {
                 Ok(provided_address) => provided_address,
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);

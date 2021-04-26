@@ -24,7 +24,7 @@ pub trait Dialect {
     /// Returns the bytecode in the basis format.
     fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()>;
 
-    fn normalize_account_address(&self, addr: &str) -> Result<AccountAddress>;
+    fn parse_address(&self, addr: &str) -> Result<AccountAddress>;
 
     fn cost_table(&self) -> CostTable;
 

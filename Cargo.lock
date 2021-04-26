@@ -931,6 +931,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ee2393c4a91429dffb4bedf19f4d6abf27d8a732c8ce4980305d782e5426d57"
 
 [[package]]
+name = "decompiler"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "clap 3.0.0-beta.2",
+ "diem-types",
+ "git-hash",
+ "hex",
+ "itertools 0.9.0",
+ "lang",
+ "move-compat",
+ "move-core-types",
+ "move-lang",
+ "rand 0.7.3",
+ "vm",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.99.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1149,26 +1169,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "disassembler"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "clap 3.0.0-beta.2",
- "diem-types",
- "git-hash",
- "hex",
- "itertools 0.9.0",
- "lang",
- "move-compat",
- "move-core-types",
- "move-lang",
- "rand 0.7.3",
- "vm",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "dnode-rest-client"
 version = "0.1.0"
 dependencies = [
@@ -1186,7 +1186,9 @@ name = "dove"
 version = "1.1.4"
 dependencies = [
  "anyhow",
+ "bcs",
  "bech32",
+ "decompiler",
  "git-hash",
  "git2",
  "hex",
@@ -1196,7 +1198,9 @@ dependencies = [
  "lazy_static",
  "log",
  "maplit",
+ "move-core-types",
  "move-executor",
+ "move-lang",
  "once_cell",
  "rand 0.7.3",
  "regex",
@@ -1209,6 +1213,7 @@ dependencies = [
  "tiny-keccak",
  "toml",
  "twox-hash",
+ "vm",
  "walkdir",
 ]
 

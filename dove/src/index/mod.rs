@@ -20,7 +20,7 @@ use crate::index::meta::{source_meta, FileMeta};
 use resolver::{git};
 use crate::index::resolver::chain;
 use crate::index::resolver::chain::ChainIndex;
-use diem::prelude::*;
+use move_core_types::language_storage::ModuleId;
 
 /// Modules index.
 pub type ModulesIndex = HashMap<Rc<ModuleId>, HashMap<SourceType, Module>>;
@@ -107,7 +107,7 @@ impl<'a> Index<'a> {
             if path.is_file() {
                 let f_meta = source_meta(
                     path,
-                    Some(self.ctx.account_address()?.as_account_address()),
+                    Some(self.ctx.account_address()?),
                     self.ctx.dialect.as_ref(),
                 )?;
                 for meta in f_meta.meta {
@@ -118,7 +118,7 @@ impl<'a> Index<'a> {
                 for mv_file in move_dir_iter(path) {
                     let f_meta = source_meta(
                         mv_file.path(),
-                        Some(self.ctx.account_address()?.as_account_address()),
+                        Some(self.ctx.account_address()?),
                         self.ctx.dialect.as_ref(),
                     )?;
 
@@ -216,7 +216,7 @@ impl<'a> Index<'a> {
         for file in move_dir_iter(path) {
             let meta = source_meta(
                 file.path(),
-                Some(self.ctx.account_address()?.as_account_address()),
+                Some(self.ctx.account_address()?),
                 self.ctx.dialect.as_ref(),
             )?;
 

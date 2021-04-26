@@ -20,7 +20,7 @@ impl<'a> Block<'a> {
     }
 
     /// Returns block with abort instruction.
-    /// Used for light disassembler version.
+    /// Used for light decompiler version.
     pub fn mock() -> Block<'static> {
         Block {
             exp: vec![ExpLoc::new(1, Abort::mock(ExpLoc::new(0, Ld::u64(1))))],

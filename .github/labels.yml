@@ -25,7 +25,7 @@ dove:
       - dove/**
       - *compiler
 
-disassembler: lang/disassembler/**
+decompiler: lang/decompiler/**
 compat: lang/compat/**
 
 resource viewer:

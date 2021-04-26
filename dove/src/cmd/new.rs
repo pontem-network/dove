@@ -3,9 +3,9 @@ use http::Uri;
 use std::fs;
 use crate::cmd::Cmd;
 use crate::context::{Context, create_context};
-use diem::prelude::*;
 use crate::cmd::init::Init;
 use structopt::StructOpt;
+use move_core_types::identifier::Identifier;
 
 /// Create project command.
 #[derive(StructOpt, Debug)]

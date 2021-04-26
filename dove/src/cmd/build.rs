@@ -4,22 +4,19 @@ use std::io::Write;
 use std::path::Path;
 
 use anyhow::Error;
-use diem::{
-    move_lang::{
+use move_lang::{
         compiled_unit,
         errors::{FilesSourceText, output_errors},
-    },
-    prelude::CompiledUnit,
-};
+    };
 use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
 use termcolor::{ColorChoice, StandardStream};
-
-use lang::builder::{Artifacts, MoveBuilder};
 use lang::compiler::file::load_move_files_with_filter;
 
 use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
+use lang::flow::builder::{Artifacts, MoveBuilder};
+use move_lang::compiled_unit::CompiledUnit;
 
 /// Build dependencies.
 #[derive(StructOpt, Debug)]
@@ -221,6 +218,6 @@ impl ModulePackage {
     }
 
     pub fn encode(&self) -> Result<Vec<u8>, Error> {
-        diem::bcs::to_bytes(&self).map_err(|err| err.into())
+        bcs::to_bytes(&self).map_err(|err| err.into())
     }
 }

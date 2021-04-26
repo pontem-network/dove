@@ -397,7 +397,7 @@ pub fn explain_execution_failure(vm_status: VMStatus, remote_cache: &FakeRemoteC
                 ),
                 AbortLocation::Script => "script".to_string(),
             };
-            // TODO: code offset is 1-indexed, but disassembler instruction numbering starts at zero
+            // TODO: code offset is 1-indexed, but decompiler instruction numbering starts at zero
             // This is potentially confusing to someone trying to understand where something failed
             // by looking at a code offset + disassembled bytecode; we should fix it
             return format!(

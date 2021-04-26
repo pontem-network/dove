@@ -1,13 +1,12 @@
 use std::path::PathBuf;
 use anyhow::Result;
 
-use diem::prelude::*;
-
 use tiny_keccak::{Hasher, Sha3};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use http::Uri;
 use serde::{Deserialize, Serialize};
+use move_core_types::language_storage::ModuleId;
 
 /// Module loader.
 pub trait BytecodeLoader: Clone {
@@ -45,7 +44,7 @@ impl BytecodeLoader for RestBytecodeLoader {
         let url = format!(
             "{base_url}vm/data/{address}/{path}",
             base_url = self.url,
-            address = hex::encode(&path.address),
+            address = hex::encode(&module_id.address().as_bytes()),
             path = hex::encode(path.path)
         );
 
