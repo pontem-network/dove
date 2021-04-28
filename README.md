@@ -10,8 +10,8 @@ Toolset for work with Move language based projects:
 Supported projects and dialects:
 
 * [Diem](https://www.diem.com/en-us/)
-* [Dfinance](https://dfinance.co/)
 * [Pontem](https://pontem.network/)
+* [Dfinance](https://dfinance.co/)
 
 Clone this repository and follow documentation:
 
@@ -46,7 +46,7 @@ Create new project:
 dove new first_project --dialect polkadot
 ```
 
-`dialect` - dialect of the Move language. Either `move` (for original Libra version) or `dfinance` (bech32 addresses and some other stuff), or `polkadot`. Default is `move`.
+`dialect` - dialect of the Move language. Either `move` (for original Libra version)  or `polkadot`, or `dfinance` (bech32 addresses and some other stuff). Default is `move`.
 
 Build project:
 
@@ -78,12 +78,12 @@ You can use type parameters like in the move language.
 
 Example:
 ```shell script
-dove ct 'create_account<0x01::Dfinance::USD, 0x01::Dfinance::BTC>()'
+dove ct 'create_account<0x01::PONT::T, 0x01::Coins::USDT>()'
 ```
 
 You allow can use ss58 address format:
 ```shell script
-dove ct 'create_account<1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::Dfinance::USD>()'
+dove ct 'create_account<1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::MyToken::Token>()'
 ```
 
 Supported types:
@@ -163,10 +163,10 @@ You can define or override script type parameters by using '--type' or '-t' para
 Example:
 
 ```shell script
-dove ct 'store_u64()' -t 0x01::Dfinance::USD u8
+dove ct 'store_u64()' -t 0x01::Coins::USDT u8
 ```
 ```shell script
-dove ct -n store_u64 -t 0x01::Dfinance::USD u8
+dove ct -n store_u64 -t 0x01::Coin::USDT u8
 ```
 
 ## Resource Viewer
@@ -188,7 +188,7 @@ For the corresponding VSCode extension, see https://marketplace.visualstudio.com
 
 #### Configuration
 
-`dialect` - dialect of the Move language. Either `move` (for original Libra version) or `dfinance` (bech32 addresses and some other stuff). Default is `move`.
+`dialect` - dialect of the Move language. Either `move` (for original Libra version) or `polkadot` (ss58), or ` (bech32 addresses and some other stuff). Default is `move`.
 
 `sender_address` - address of the user, used for module imports. Default is `0x0`.
 
@@ -206,6 +206,26 @@ cargo install --path executor
 See help:
 ```
 executor -h
+```
+
+## Disassembler:
+
+Install **disassembler**:
+
+```shell script
+cargo install --path=lang/disassembler --bin disassembler
+```
+
+See help:
+
+```
+disassembler --help
+```
+
+Try to disassembly `.mv` file:
+
+```
+disassembler --input <path to compiled module or script>
 ```
 
 ## LICENSE

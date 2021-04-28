@@ -28,6 +28,7 @@ bcs = "0.1.1"
 vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
 compat = { path = "../compat", package = "move-compat" }
 git-hash = { path = "../../common/git-hash" }
+serde = { version = "=1.0.118", features = ["derive"] }
 
 [features]
 default = [
