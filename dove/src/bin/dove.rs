@@ -17,7 +17,7 @@ use dove::cmd::run::Run;
 use dove::cmd::ct::CreateTransactionCmd;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Move compiler.", version = git_hash::crate_version_with_git_hash_short!())]
+#[structopt(name = "Dove", version = git_hash::crate_version_with_git_hash_short!())]
 enum Opt {
     #[structopt(about = "Init directory as move project")]
     Init {
