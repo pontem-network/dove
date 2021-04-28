@@ -4,7 +4,7 @@ use anyhow::Error;
 use structopt::StructOpt;
 use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
 use lang::flow::meta_extractor::{ScriptMetadata, Meta};
-use lang::flow::builder::{Artifacts, MoveBuilder};
+use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 use termcolor::{StandardStream, ColorChoice};
 use move_core_types::language_storage::TypeTag;
 use serde::{Serialize, Deserialize};
@@ -18,6 +18,7 @@ use std::fs;
 use move_lang::compiled_unit::CompiledUnit;
 use move_core_types::account_address::AccountAddress;
 use lang::lexer::unwrap_spanned_ty;
+use lang::compiler::mut_string::MutString;
 
 /// Create transaction.
 #[derive(StructOpt, Debug)]
@@ -82,7 +83,11 @@ impl<'a> TransactionBuilder<'a> {
         if let Some(cmd_type_parameters) = cmd.type_parameters {
             type_parameters = cmd_type_parameters
                 .iter()
-                .map(|tp| replace_ss58_addresses(tp, &mut Default::default()))
+                .map(|tp| {
+                    let mut mut_string = MutString::new(tp);
+                    replace_ss58_addresses(tp, &mut mut_string, &mut Default::default());
+                    mut_string.freeze()
+                })
                 .map(|tp| parse_type_params(&mut Lexer::new(&tp, "tp", Default::default())))
                 .collect::<Result<_, _>>()?;
         }
@@ -90,7 +95,11 @@ impl<'a> TransactionBuilder<'a> {
         if let Some(cmd_args) = cmd.args {
             args = cmd_args
                 .iter()
-                .map(|arg| replace_ss58_addresses(arg, &mut Default::default()))
+                .map(|arg| {
+                    let mut mut_string = MutString::new(arg);
+                    replace_ss58_addresses(arg, &mut mut_string, &mut Default::default());
+                    mut_string.freeze()
+                })
                 .collect();
         }
 
@@ -104,7 +113,9 @@ impl<'a> TransactionBuilder<'a> {
     }
 
     pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Error> {
-        let call = replace_ss58_addresses(call, &mut Default::default());
+        let mut mut_string = MutString::new(call);
+        replace_ss58_addresses(call, &mut mut_string, &mut Default::default());
+        let call = mut_string.freeze();
 
         let map_err = |err| Error::msg(format!("{:?}", err));
         let mut lexer = Lexer::new(&call, "call", Default::default());
@@ -209,7 +220,7 @@ impl<'a> TransactionBuilder<'a> {
         }
 
         let script = MoveFile::load(&file_path)?;
-        let mut scripts = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &script)?;
+        let mut scripts = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &[&script])?;
         if scripts.is_empty() {
             return Err(anyhow!("Script not found in file '{}'", fname));
         }
@@ -262,7 +273,7 @@ impl<'a> TransactionBuilder<'a> {
                 }
             })
             .map(|mf| {
-                ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &mf)
+                ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &[&mf])
                     .map(|meta| (mf, meta))
             })
             .filter_map(|script| match script {
@@ -322,7 +333,7 @@ impl<'a> TransactionBuilder<'a> {
         let files = find_move_files(&script_path)?;
         if files.len() == 1 {
             let mf = MoveFile::load(&files[0])?;
-            let mut meta = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &mf)?;
+            let mut meta = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &[&mf])?;
             if meta.is_empty() {
                 return Err(anyhow!("Script not found."));
             }
@@ -350,9 +361,12 @@ impl<'a> TransactionBuilder<'a> {
         dep_list.extend(load_move_files(&[module_dir])?);
 
         let sender = self.dove_ctx.account_address()?;
-        let Artifacts { files, prog } =
-            MoveBuilder::new(self.dove_ctx.dialect.as_ref(), Some(sender).as_ref())
-                .build(&[script], &dep_list);
+        let Artifacts { files, prog } = MoveBuilder::new(
+            self.dove_ctx.dialect.as_ref(),
+            Some(sender),
+            StaticResolver::new(dep_list),
+        )
+        .build(&[&script]);
 
         match prog {
             Err(errors) => {
@@ -489,7 +503,13 @@ impl<'a> TransactionBuilder<'a> {
                 is_module && unit.name() == meta.name
             })
             .map(|unit| unit.serialize())
-            .ok_or_else(|| anyhow!("Script '{}' not found", meta.name))?;
+            .map(|mut unit| {
+                self.dove_ctx
+                    .dialect
+                    .adapt_to_target(&mut unit)
+                    .map(|_| unit)
+            })
+            .ok_or_else(|| anyhow!("Script '{}' not found", meta.name))??;
 
         if meta.type_parameters.len() != self.type_parameters.len() {
             return Err(anyhow!(

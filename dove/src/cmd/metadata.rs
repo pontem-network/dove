@@ -107,7 +107,7 @@ mod tests {
 
         let metadata = into_metadata(context);
 
-        assert_eq!(metadata.package.dialect, "dfinance".to_string());
+        assert_eq!(metadata.package.dialect, "pont".to_string());
 
         // non-existent paths ain't present in the metadata
         assert_eq!(metadata.package.local_dependencies.len(), 1);

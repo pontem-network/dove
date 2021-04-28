@@ -152,7 +152,7 @@ impl<'a> SessionBuilder<'a> {
         }
     }
 
-    pub fn build(self, sources: &[MoveFile]) -> Result<ExecutionSession, CompilerError> {
+    pub fn build(self, sources: &[&MoveFile]) -> Result<ExecutionSession, CompilerError> {
         compile(self.dialect, sources, Some(self.sender), self)
     }
 }

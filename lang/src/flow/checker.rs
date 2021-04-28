@@ -27,7 +27,7 @@ impl<'a, R: DependencyResolver> MoveChecker<'a, R> {
         }
     }
 
-    pub fn check(self, targets: &[MoveFile]) -> Result<(), Errors> {
+    pub fn check(self, targets: &[&MoveFile]) -> Result<(), Errors> {
         compile(self.dialect, targets, self.sender, self)
     }
 }

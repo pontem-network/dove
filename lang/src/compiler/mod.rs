@@ -58,7 +58,7 @@ pub enum Step<A, N> {
 
 pub fn compile<A>(
     dialect: &dyn Dialect,
-    targets: &[MoveFile],
+    targets: &[&MoveFile],
     sender: Option<AccountAddress>,
     mut flow: impl CompileFlow<A>,
 ) -> A {

@@ -27,7 +27,7 @@ pub struct ParsingMeta {
 
 pub fn parse_target(
     dialect: &dyn Dialect,
-    targets: &[MoveFile],
+    targets: &[&MoveFile],
     sender: Option<AccountAddress>,
 ) -> ParserArtifact {
     let mut files: FilesSourceText = HashMap::new();

@@ -40,12 +40,11 @@ impl RestBytecodeLoader {
 
 impl BytecodeLoader for RestBytecodeLoader {
     fn load(&self, module_id: ModuleId) -> Result<Vec<u8>> {
-        let path = AccessPath::code_access_path(module_id);
         let url = format!(
             "{base_url}vm/data/{address}/{path}",
             base_url = self.url,
-            address = hex::encode(&module_id.address().as_bytes()),
-            path = hex::encode(path.path)
+            address = hex::encode(&module_id.address().to_u8()),
+            path = hex::encode(&module_id.access_vector())
         );
 
         let resp = reqwest::blocking::get(&url)?;

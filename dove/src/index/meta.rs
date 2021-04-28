@@ -29,13 +29,8 @@ pub fn source_meta(
         Some(addr) => Some(dialect.parse_address(&format!("0x{}", addr))?),
     };
 
-    let (defs, _, errors, _) = parse_file(
-        dialect,
-        &mut HashMap::default(),
-        name,
-        &source,
-        sender,
-    );
+    let (defs, _, errors, _) =
+        parse_file(dialect, &mut HashMap::default(), name, &source, sender);
     if errors.is_empty() {
         let mut metadata = Vec::new();
         for def in defs {
@@ -420,9 +415,7 @@ impl DefinitionMeta {
     fn friend(&mut self, friend: &Friend) -> Result<()> {
         let friend = &friend.value;
         match friend {
-            Friend_::Module(_) => {
-                /*no-op*/
-            }
+            Friend_::Module(_) => { /*no-op*/ }
             Friend_::QualifiedModule(ident) => {
                 self.ident(ident)?;
             }

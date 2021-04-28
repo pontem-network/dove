@@ -5,18 +5,19 @@ use std::path::Path;
 
 use anyhow::Error;
 use move_lang::{
-        compiled_unit,
-        errors::{FilesSourceText, output_errors},
-    };
+    compiled_unit,
+    errors::{FilesSourceText, output_errors},
+};
+use move_lang::compiled_unit::CompiledUnit;
 use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
 use termcolor::{ColorChoice, StandardStream};
+
 use lang::compiler::file::load_move_files_with_filter;
+use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 
 use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
-use lang::flow::builder::{Artifacts, MoveBuilder};
-use move_lang::compiled_unit::CompiledUnit;
 
 /// Build dependencies.
 #[derive(StructOpt, Debug)]
@@ -86,10 +87,15 @@ impl Cmd for Build {
             dep_list = vec![];
         }
 
+        let source_ref = source_list.iter().map(|s| s).collect::<Vec<_>>();
+
         let sender = ctx.account_address()?;
-        let Artifacts { files, prog } =
-            MoveBuilder::new(ctx.dialect.as_ref(), Some(sender).as_ref())
-                .build(&source_list, &dep_list);
+        let Artifacts { files, prog } = MoveBuilder::new(
+            ctx.dialect.as_ref(),
+            Some(sender),
+            StaticResolver::new(dep_list),
+        )
+        .build(&source_ref);
 
         match prog {
             Err(errors) => {
@@ -171,7 +177,7 @@ impl Build {
                 }
                 fs::create_dir_all(&modules_dir)?;
 
-                self.store_units(units, &modules_dir)?;
+                self.store_units(ctx, units, &modules_dir)?;
             }
         }
         Ok(())
@@ -185,12 +191,17 @@ impl Build {
             }
             fs::create_dir_all(&scripts_dir)?;
 
-            self.store_units(units, &scripts_dir)?;
+            self.store_units(ctx, units, &scripts_dir)?;
         }
         Ok(())
     }
 
-    fn store_units(&self, units: Vec<CompiledUnit>, base_dir: &Path) -> Result<(), Error> {
+    fn store_units(
+        &self,
+        ctx: &Context,
+        units: Vec<CompiledUnit>,
+        base_dir: &Path,
+    ) -> Result<(), Error> {
         for (idx, unit) in units.into_iter().enumerate() {
             let mut path = if !self.unordered {
                 base_dir.join(format!("{}_{}", idx, unit.name()))
@@ -199,7 +210,10 @@ impl Build {
             };
 
             path.set_extension("mv");
-            File::create(&path)?.write_all(&unit.serialize())?
+            let mut bytecode = unit.serialize();
+            ctx.dialect.adapt_to_target(&mut bytecode)?;
+
+            File::create(&path)?.write_all(&bytecode)?
         }
         Ok(())
     }

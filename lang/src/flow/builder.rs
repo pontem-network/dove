@@ -34,7 +34,7 @@ impl<'a, R: DependencyResolver> MoveBuilder<'a, R> {
         }
     }
 
-    pub fn build(self, targets: &[MoveFile]) -> Artifacts {
+    pub fn build(self, targets: &[&MoveFile]) -> Artifacts {
         compile(self.dialect, targets, self.sender, self)
     }
 }
@@ -88,7 +88,15 @@ impl<'a, R: DependencyResolver> CompileFlow<Artifacts> for MoveBuilder<'a, R> {
 }
 
 pub struct StaticResolver {
-    pub deps: Vec<MoveFile<'static, 'static>>,
+    deps: Vec<MoveFile<'static, 'static>>,
+}
+
+impl StaticResolver {
+    pub fn new(deps: Vec<MoveFile<'static, 'static>>) -> StaticResolver {
+        StaticResolver {
+            deps
+        }
+    }
 }
 
 impl DependencyResolver for StaticResolver {

@@ -11,7 +11,7 @@ use move_lang::compiled_unit::CompiledUnit;
 pub struct ScriptMetadata;
 
 impl ScriptMetadata {
-    pub fn extract(dialect: &dyn Dialect, scripts: &[MoveFile]) -> Result<Vec<Meta>, Error> {
+    pub fn extract(dialect: &dyn Dialect, scripts: &[&MoveFile]) -> Result<Vec<Meta>, Error> {
         compile(dialect, scripts, None, ScriptMetadata)
     }
 }

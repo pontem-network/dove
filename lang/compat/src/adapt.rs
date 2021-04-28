@@ -1,7 +1,8 @@
-use anyhow::{Result, Error};
+use anyhow::{Error, Result};
 use vm::deserializer::{load_constant_size, load_signature_token};
 use vm::file_format::SignatureToken;
-use vm::file_format_common::{BinaryData, TableType, write_u64_as_uleb128, VersionedCursor};
+use vm::file_format_common::{BinaryData, TableType, VersionedCursor, write_u64_as_uleb128};
+
 use crate::context::TableContext;
 use crate::mutator::Mutator;
 
@@ -90,7 +91,7 @@ impl AddressAdaptation {
                     TableContext::new(cur, offset + header_size + header_len, t_len),
                     mutator,
                 )
-                .map_err(|err| anyhow!("{:?}", err))?
+                    .map_err(|err| anyhow!("{:?}", err))?
             } else {
                 0
             };
@@ -183,10 +184,8 @@ impl AddressAdaptation {
                 } else {
                     mutator.add_patch(index, index, vec![0x0; diff_size.abs() as usize]);
                 }
-                ctx.cursor.set_position(ctx.cursor.position() + size as u64);
-            } else {
-                ctx.cursor.set_position(ctx.cursor.position() + size as u64);
             }
+            ctx.cursor.set_position(ctx.cursor.position() + size as u64);
         }
 
         Ok(additional_offset)

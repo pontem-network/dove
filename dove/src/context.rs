@@ -52,10 +52,11 @@ impl Context {
 
     /// Returns provided account address.
     pub fn account_address(&self) -> Result<AccountAddress> {
-        let acc_addr = &self
+        let acc_addr = self
             .manifest
             .package
             .account_address
+            .as_ref()
             .ok_or_else(|| anyhow!("couldn't read account address from manifest"))?;
 
         self.dialect.parse_address(acc_addr)
