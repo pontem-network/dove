@@ -7,6 +7,8 @@ use anyhow::{Error, Result};
 use http::Uri;
 use move_core_types::language_storage::{ResourceKey, StructTag, ModuleId};
 use move_core_types::account_address::AccountAddress;
+use vm::errors::{PartialVMResult, VMResult};
+use move_vm_runtime::data_cache::RemoteCache;
 
 /// Block number
 pub type Block = sp_core::H256;

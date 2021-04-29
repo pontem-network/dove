@@ -115,17 +115,7 @@ fn run() -> Result<(), Error> {
             .unwrap_or_default()
     });
     let (tte, index) = cfg.query.into_inner();
-    let addr = if cfg.address.starts_with(HRP) {
-        AccountAddress::from_hex_literal(&bech32_into_diem(&cfg.address)?)
-    } else if cfg.address.starts_with("0x") {
-        AccountAddress::from_hex_literal(&cfg.address)
-    } else if let Ok(addr) = lang::compiler::address::ss58::ss58_to_diem(&cfg.address) {
-        debug!("address decoded: {:}", addr);
-        AccountAddress::from_hex_literal(&addr)
-    } else {
-        // fail with from:
-        AccountAddress::from_hex_literal(&cfg.address)
-    }?;
+    let addr = dialect.as_ref().parse_address(&cfg.address)?;
 
     match tte {
         TypeTag::Struct(st) => {

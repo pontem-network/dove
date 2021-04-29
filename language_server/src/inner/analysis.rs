@@ -1,7 +1,9 @@
-use crate::inner::db::{RootDatabase, FileDiagnostic};
-use lang::compiler::file::MoveFile;
 use lang::compiler::file;
-use lang::checker::MoveChecker;
+use lang::compiler::file::MoveFile;
+use lang::flow::builder::StaticResolver;
+use lang::flow::checker::MoveChecker;
+
+use crate::inner::db::{FileDiagnostic, RootDatabase};
 
 #[derive(Debug)]
 pub struct Analysis {
@@ -25,7 +27,7 @@ impl Analysis {
     }
 
     fn check_file_inner(&self, current_file: MoveFile) -> Result<(), Vec<FileDiagnostic>> {
-        let deps: Vec<MoveFile> = self
+        let deps = self
             .read_stdlib_files()
             .into_iter()
             .chain(
@@ -35,13 +37,15 @@ impl Analysis {
                     .map(|(name, text)| MoveFile::with_content(name, text)),
             )
             .filter(|file| file.name() != current_file.name())
-            .collect();
+            .collect::<Vec<MoveFile<'static, 'static>>>();
 
+        let resolver = StaticResolver::new(deps);
         MoveChecker::new(
             self.db.config.dialect().as_ref(),
             Some(self.db.config.sender()),
+            resolver,
         )
-        .check(&[current_file], &deps)
+        .check(&[&current_file])
         .map_err(|errors| {
             errors
                 .into_iter()
@@ -57,7 +61,7 @@ impl Analysis {
         })
     }
 
-    fn read_stdlib_files(&self) -> Vec<MoveFile> {
+    fn read_stdlib_files(&self) -> Vec<MoveFile<'static, 'static>> {
         self.db
             .config
             .stdlib_folder

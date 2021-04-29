@@ -1,13 +1,12 @@
 use std::str::FromStr;
 
-use anyhow::{Result, Error, bail, anyhow};
+use anyhow::{Result, Error, anyhow};
 
 use move_ir_types::location::Loc;
-use move_core_types::language_storage::{TypeTag, StructTag};
-use move_core_types::account_address::AccountAddress;
-use move_core_types::identifier::Identifier;
-use move_ir_types::ast::Type;
+use move_core_types::language_storage::TypeTag;
 use lang::lexer::unwrap_spanned_ty;
+use move_lang::parser::lexer::{Lexer, Tok};
+use move_lang::parser::syntax::{parse_type, parse_num};
 
 #[derive(Debug)]
 pub struct TypeTagQuery {
@@ -48,6 +47,8 @@ pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
             strs.join("\n\t")
         })
     };
+
+
 
     let q = {
         #[cfg(feature = "ps_address")]

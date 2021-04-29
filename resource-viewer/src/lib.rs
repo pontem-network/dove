@@ -2,11 +2,11 @@ extern crate anyhow;
 
 use std::str::FromStr;
 
-use anyhow::Error;
+use anyhow::{Error, anyhow};
 
 use lang::compiler::dialects::{dfinance::DFinanceDialect, DialectName, pontem::PontDialect};
 
-use crate::compiler::dialects::Dialect as DialectTrait;
+use lang::compiler::dialects::Dialect as DialectTrait;
 
 pub mod ser;
 mod sp_client;

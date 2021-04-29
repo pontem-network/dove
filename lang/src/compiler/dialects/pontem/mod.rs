@@ -26,8 +26,12 @@ impl Dialect for PontDialect {
     }
 
     fn parse_address(&self, addr: &str) -> Result<AccountAddress> {
-        ss58_to_address(addr)
-            .with_context(|| format!("Address {:?} is not a valid libra/polkadot address", addr))
+        if addr.starts_with("0x") {
+            AccountAddress::from_hex_literal(addr).map_err(|err| err.into())
+        } else {
+            ss58_to_address(addr)
+                .with_context(|| format!("Address {:?} is not a valid diem/pont address", addr))
+        }
     }
 
     fn cost_table(&self) -> CostTable {

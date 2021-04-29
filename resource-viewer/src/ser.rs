@@ -29,7 +29,7 @@ pub struct AnnotatedMoveStructWrapper {
 
 #[derive(Serialize)]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
-#[serde(remote = "rv::AnnotatedMoveStruct")]
+#[serde(remote = "resource_viewer::AnnotatedMoveStruct")]
 struct AnnotatedMoveStructExt {
     is_resource: bool,
     #[serde(rename = "type")]
@@ -45,7 +45,7 @@ struct AnnotatedMoveStructExt {
 
 #[derive(Serialize)]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
-#[serde(remote = "rv::AnnotatedMoveValue")]
+#[serde(remote = "resource_viewer::AnnotatedMoveValue")]
 enum AnnotatedMoveValueExt {
     U8(u8),
     U64(u64),
