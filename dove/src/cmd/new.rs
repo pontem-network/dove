@@ -28,11 +28,12 @@ pub struct New {
     address: Option<String>,
     #[structopt(
         help = "Compiler dialect",
+        default_value = "pont",
         name = "Dialect",
         long = "dialect",
         short = "d"
     )]
-    dialect: Option<String>,
+    dialect: String,
 }
 
 impl Cmd for New {

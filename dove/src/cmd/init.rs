@@ -27,11 +27,12 @@ pub struct Init {
     address: Option<String>,
     #[structopt(
         help = "Compiler dialect",
+        default_value = "pont",
         name = "Dialect",
         long = "dialect",
         short = "d"
     )]
-    dialect: Option<String>,
+    dialect: String,
 }
 
 impl Init {
@@ -39,7 +40,7 @@ impl Init {
     pub fn new(
         repository: Option<Uri>,
         address: Option<String>,
-        dialect: Option<String>,
+        dialect: String,
     ) -> Init {
         Init {
             repository,
@@ -86,9 +87,7 @@ impl Cmd for Init {
             writeln!(&mut f, "blockchain_api = \"{}\"", url)?;
         }
 
-        if let Some(dialect) = &self.dialect {
-            writeln!(&mut f, "dialect = \"{}\"", dialect)?;
-        }
+        writeln!(&mut f, "dialect = \"{}\"", self.dialect)?;
 
         write!(
             &mut f,
