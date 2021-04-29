@@ -7,12 +7,13 @@ use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use move_lang::parser::ast::{Script, Type, Type_, ModuleAccess_, Definition};
 use move_lang::compiled_unit::CompiledUnit;
+use move_core_types::account_address::AccountAddress;
 
 pub struct ScriptMetadata;
 
 impl ScriptMetadata {
-    pub fn extract(dialect: &dyn Dialect, scripts: &[&MoveFile]) -> Result<Vec<Meta>, Error> {
-        compile(dialect, scripts, None, ScriptMetadata)
+    pub fn extract(dialect: &dyn Dialect, sender: Option<AccountAddress>, scripts: &[&MoveFile]) -> Result<Vec<Meta>, Error> {
+        compile(dialect, scripts, sender, ScriptMetadata)
     }
 }
 

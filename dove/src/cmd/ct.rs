@@ -219,8 +219,9 @@ impl<'a> TransactionBuilder<'a> {
             return Err(anyhow!("File [{}] not found", fname));
         }
 
+        let sender = self.dove_ctx.account_address()?;
         let script = MoveFile::load(&file_path)?;
-        let mut scripts = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &[&script])?;
+        let mut scripts = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&script])?;
         if scripts.is_empty() {
             return Err(anyhow!("Script not found in file '{}'", fname));
         }
@@ -256,6 +257,7 @@ impl<'a> TransactionBuilder<'a> {
         let script_path = self
             .dove_ctx
             .path_for(&self.dove_ctx.manifest.layout.script_dir);
+        let sender = self.dove_ctx.account_address()?;
         let mut files = find_move_files(&script_path)?
             .iter()
             .map(MoveFile::load)
@@ -273,7 +275,7 @@ impl<'a> TransactionBuilder<'a> {
                 }
             })
             .map(|mf| {
-                ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &[&mf])
+                ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&mf])
                     .map(|meta| (mf, meta))
             })
             .filter_map(|script| match script {
@@ -333,7 +335,9 @@ impl<'a> TransactionBuilder<'a> {
         let files = find_move_files(&script_path)?;
         if files.len() == 1 {
             let mf = MoveFile::load(&files[0])?;
-            let mut meta = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), &[&mf])?;
+            let sender = self.dove_ctx.account_address()?;
+            let mut meta =
+                ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&mf])?;
             if meta.is_empty() {
                 return Err(anyhow!("Script not found."));
             }
