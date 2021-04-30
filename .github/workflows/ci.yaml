@@ -21,7 +21,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          # TODO: - windows-latest
+          - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -56,17 +56,17 @@ jobs:
         run: cargo fmt -- --check
 
       - name: Test All
-        if: matrix.os != 'windows-latest'
+        # if: matrix.os != 'windows-latest'
         run: >
           cargo test --no-fail-fast --all
 
-      - name: Test on Win
-        if: matrix.os == 'windows-latest'
-        run: |
-          cargo test --no-fail-fast -p=move-language-server
-          pushd resource-viewer
-          cargo test -p=move-resource-viewer --no-default-features --features="dfinance_address, json-schema"
-          popd
+      # - name: Test on Win
+      #   if: matrix.os == 'windows-latest'
+      #   run: |
+      #     cargo test --no-fail-fast -p=move-language-server
+      #     pushd resource-viewer
+      #     cargo test -p=move-resource-viewer --no-default-features --features="dfinance_address, json-schema"
+      #     popd
 
       - name: Run clippy
         run: cargo clippy --tests --examples -- -Dwarnings

@@ -41,9 +41,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux
           - os: macos-latest
-            platform: mac
-          # TODO: - os: windows-latest
-          #   platform: win # gnu,mingw64
+            platform: darwin
+          - os: windows-latest
+            platform: win # gnu,mingw64
 
     defaults:
       run:
