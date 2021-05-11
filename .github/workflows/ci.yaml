@@ -44,7 +44,7 @@ jobs:
           .\bootstrap-vcpkg.bat
           .\vcpkg.exe install openssl:x64-windows-static
 
-          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+          # echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
 
           # $env:OPENSSL_DIR = 'C:\Tools\vcpkg\installed\x64-windows-static'
           $env:OPENSSL_DIR = 'D:\Tools\vcpkg\installed\x64-windows-static'
@@ -52,9 +52,12 @@ jobs:
           [System.Environment]::SetEnvironmentVariable('OPENSSL_DIR', $env:OPENSSL_DIR, [System.EnvironmentVariableTarget]::User)
           [System.Environment]::SetEnvironmentVariable('OPENSSL_STATIC', $env:OPENSSL_STATIC, [System.EnvironmentVariableTarget]::User)
 
+          env
+
       - name: debug
         if: matrix.os == 'windows-latest'
         run: |
+          env
           echo "VCPKG_ROOT = $VCPKG_ROOT"
           echo "OPENSSL_DIR = $OPENSSL_DIR"
           echo "OPENSSL_STATIC = $OPENSSL_STATIC"
@@ -84,6 +87,9 @@ jobs:
         run: cargo fmt -- --check
 
       - name: Test All
+        env:
+          OPENSSL_DIR: /Tools/vcpkg/installed/x64-windows-static
+          OPENSSL_STATIC: Yes
         # if: matrix.os != 'windows-latest'
         run: >
           cargo test --no-fail-fast --all
