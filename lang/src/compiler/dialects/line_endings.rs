@@ -4,19 +4,21 @@ use crate::compiler::source_map::FileOffsetMap;
 pub fn normalize(s: &mut MutString) -> FileOffsetMap {
     let mut source_map = FileOffsetMap::default();
 
-    let mut _n_prev = false;
+    if s.as_ref().is_ascii() {
+        let mut _n_prev = false;
 
-    // Move allows only ascii symbols. We can iter by byte index.
-    for i in 0..s.as_ref().len() {
-        let c = &s.as_ref()[i..i + 1];
-        if c == "\n" {
-            _n_prev = true;
-        } else if c == "\r" {
-            source_map.insert_layer(i, 1);
-            s.make_patch(i - 1, i + 1, NewValue::Borrowed("\n"));
-            _n_prev = false;
-        } else {
-            _n_prev = false;
+        // Move allows only ascii symbols. We can iter by byte index.
+        for i in 0..s.as_ref().len() {
+            let c = &s.as_ref()[i..i + 1];
+            if c == "\n" {
+                _n_prev = true;
+            } else if c == "\r" {
+                source_map.insert_layer(i, 1);
+                s.make_patch(i - 1, i + 1, NewValue::Borrowed("\n"));
+                _n_prev = false;
+            } else {
+                _n_prev = false;
+            }
         }
     }
 
