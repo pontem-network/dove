@@ -210,16 +210,16 @@ mod test_dove_cmd {
     fn remove_project(path:&PathBuf, project_name:&str)->bool{
         // Удаление директории со всем содержимым
         if let Err(error) = std::fs::remove_dir_all(path) {
-            print_color_red("[ERROR] ");
-            print_default(format!("remove directory {}", project_name).as_str());
+            print_default(format!("remove directory {} ", project_name).as_str());
+            print_color_red("[ERROR]");
             print_ln();
             print_bold("Message: ");
             print_default(error.to_string().as_str());
             print_ln();
             false
         }else{
-            print_color_green("[SUCCESS] ");
-            print_default(format!("remove directory {}", project_name).as_str());
+            print_default(format!("remove directory {} ", project_name).as_str());
+            print_color_green("[SUCCESS]");
             print_ln();
             true
         }
