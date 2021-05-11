@@ -8,8 +8,8 @@ mod test_dove_cmd {
 
     /// Создание нового проекта с настройками по умолчанию и сборка его
     /// Имя тестового проекта demoproject_1
-    /// cargo run -- new demoproject_1
-    /// cargo run -- build -e demoproject_1
+    /// $ cargo run -- new demoproject_1
+    /// $ cargo run -- build -e demoproject_1
     #[test]
     fn create_new_project_with_default_settings(){
         use std::process::Command;
@@ -47,6 +47,7 @@ mod test_dove_cmd {
 
         // =========================================================================================
         // Запуск создания нового проекта
+        // $ cargo run -- new demoproject_1
         // =========================================================================================
         print_h2("Create project ");
         let result = Command::new("cargo")
@@ -86,7 +87,8 @@ mod test_dove_cmd {
         print_color_green("[SUCCESS]");
         print_ln();
         // =========================================================================================
-        // Попытка сборки проекта
+        // Cборка проекта
+        // $ cargo run -- build -e demoproject_1
         // =========================================================================================
         print_h2("Building project ");
         let result = Command::new("cargo")
@@ -136,9 +138,9 @@ mod test_dove_cmd {
 
         // Удаление созданного проекта
         if let Some(finded) =  list_projects.as_ref().unwrap().iter().find(|it|it.as_os_str().to_str().unwrap_or("").contains(&project_name)){
-            print_ln();
             assert_eq!(true, remove_project(finded, &project_name), "[ERROR] remove project {};", project_name);
         }
+        assert!(true);
     }
 
     // =============================================================================================
