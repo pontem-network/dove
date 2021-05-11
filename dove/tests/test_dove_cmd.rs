@@ -151,7 +151,7 @@ mod test_dove_cmd {
     // =============================================================================================
     /// Получить путь до dove каталога
     fn get_path_dove()->Option<PathBuf>{
-        path_isset_dove("./")
+        path_isset_dove(".")
             .or(path_isset_dove("./dove"))
     }
     fn path_isset_dove(path:&str)->Option<PathBuf>{
@@ -159,15 +159,18 @@ mod test_dove_cmd {
             .canonicalize()
             .map_or(None, |p|p.to_str().map_or(None,|p|Some(p.to_string())))
             .and_then(|p|{
+                #[cfg(not(windows))]
                 if let Some(pos) = (p.clone() + "/").find("/dove/"){
                     let p = {&p[..pos]}.to_string() + "/dove";
-                    Some(PathBuf::from(&p))
-                } else if let Some(pos) = (p.clone() + "\\").find("\\dove\\") {
-                    let p = {&p[..pos]}.to_string() + "\\dove";
-                    Some(PathBuf::from(&p))
-                }else{
-                    None
+                    return Some(PathBuf::from(&p));
                 }
+                #[cfg(windows)]
+                if let Some(pos) = (p.clone() + "\\").find("\\dove\\"){
+                    let p = {&p[..pos]}.to_string() + "\\dove";
+                    return Some(PathBuf::from(&p));
+                }
+
+                None
             })
     }
     /// Получить все созданные проекты
@@ -228,7 +231,7 @@ mod test_dove_cmd {
         }
     }
     // =============================================================================================
-    // Оформление
+    // Вывод
     // =============================================================================================
     /// Вывод настроек создоваемого проекта
     fn print_newproject_settings(project_name:&str, project_dialect: &str, project_address:&Option<String>){
@@ -298,7 +301,9 @@ mod test_dove_cmd {
                 projects.iter().for_each(|p|print_project(p));
             });
     }
-
+    // =============================================================================================
+    // Консольное оформление
+    // =============================================================================================
     fn print_reset(){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
         let mut buffer = bufwrt.buffer();
