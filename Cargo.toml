@@ -10,7 +10,6 @@ members = [
     "resource-viewer",
     "resources",
     "common/git-hash",
-    "common/dnode-rest-client",
 ]
 
 [profile.release]

@@ -175,10 +175,11 @@ impl<'a> TransactionBuilder<'a> {
                 continue;
             }
 
+            let mut token = String::new();
+            token.push_str(lexer.content());
+            lexer.advance().map_err(map_err)?;
+
             if lexer.peek() == Tok::LBracket {
-                let mut token = String::new();
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
                 while lexer.peek() != Tok::RBracket {
                     token.push_str(lexer.content());
                     lexer.advance().map_err(map_err)?;
@@ -186,9 +187,6 @@ impl<'a> TransactionBuilder<'a> {
                 token.push_str(lexer.content());
                 arguments.push(token);
             } else {
-                let mut token = String::new();
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
                 while lexer.peek() != Tok::Comma && lexer.peek() != Tok::RParen {
                     token.push_str(lexer.content());
                     lexer.advance().map_err(map_err)?;
@@ -198,6 +196,7 @@ impl<'a> TransactionBuilder<'a> {
                     break;
                 }
             }
+
             lexer.advance().map_err(map_err)?;
         }
 
@@ -221,7 +220,8 @@ impl<'a> TransactionBuilder<'a> {
 
         let sender = self.dove_ctx.account_address()?;
         let script = MoveFile::load(&file_path)?;
-        let mut scripts = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&script])?;
+        let mut scripts =
+            ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&script])?;
         if scripts.is_empty() {
             return Err(anyhow!("Script not found in file '{}'", fname));
         }

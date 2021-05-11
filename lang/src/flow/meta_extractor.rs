@@ -12,7 +12,11 @@ use move_core_types::account_address::AccountAddress;
 pub struct ScriptMetadata;
 
 impl ScriptMetadata {
-    pub fn extract(dialect: &dyn Dialect, sender: Option<AccountAddress>, scripts: &[&MoveFile]) -> Result<Vec<Meta>, Error> {
+    pub fn extract(
+        dialect: &dyn Dialect,
+        sender: Option<AccountAddress>,
+        scripts: &[&MoveFile],
+    ) -> Result<Vec<Meta>, Error> {
         compile(dialect, scripts, sender, ScriptMetadata)
     }
 }

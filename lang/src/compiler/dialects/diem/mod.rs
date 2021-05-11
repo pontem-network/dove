@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crate::compiler::dialects::Dialect;
+use crate::compiler::dialects::{Dialect, DialectName};
 use move_core_types::gas_schedule::{CostTable};
 use crate::compiler::source_map::FileOffsetMap;
 use std::ops::Deref;
@@ -9,8 +9,8 @@ use move_core_types::account_address::AccountAddress;
 pub struct DiemDialect;
 
 impl Dialect for DiemDialect {
-    fn name(&self) -> &str {
-        "diem"
+    fn name(&self) -> DialectName {
+        DialectName::Diem
     }
 
     fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()> {
@@ -19,6 +19,14 @@ impl Dialect for DiemDialect {
 
     fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()> {
         compat::adapt_to_basis(bytecode, compat::AddressType::Diem)
+    }
+
+    fn adapt_address_to_target(&self, address: AccountAddress) -> Vec<u8> {
+        compat::adapt_address_to_target(address, compat::AddressType::Diem)
+    }
+
+    fn adapt_address_to_basis(&self, address: &[u8]) -> Result<AccountAddress> {
+        compat::adapt_address_to_basis(address, compat::AddressType::Diem)
     }
 
     fn parse_address(&self, addr: &str) -> Result<AccountAddress> {

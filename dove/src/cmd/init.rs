@@ -37,11 +37,7 @@ pub struct Init {
 
 impl Init {
     /// Creates a new Init command.
-    pub fn new(
-        repository: Option<Uri>,
-        address: Option<String>,
-        dialect: String,
-    ) -> Init {
+    pub fn new(repository: Option<Uri>, address: Option<String>, dialect: String) -> Init {
         Init {
             repository,
             address,

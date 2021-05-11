@@ -87,7 +87,7 @@ impl Cmd for Build {
             dep_list = vec![];
         }
 
-        let source_ref = source_list.iter().map(|s| s).collect::<Vec<_>>();
+        let source_ref = source_list.iter().collect::<Vec<_>>();
 
         let sender = ctx.account_address()?;
         let Artifacts { files, prog } = MoveBuilder::new(

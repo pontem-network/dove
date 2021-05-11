@@ -7,7 +7,8 @@ use resource_viewer::{AnnotatedMoveStruct, AnnotatedMoveValue};
 use schemars::{JsonSchema, schema_for, schema::RootSchema};
 use move_core_types::identifier::Identifier;
 use move_core_types::account_address::AccountAddress;
-use move_core_types::language_storage::StructTag;
+use move_core_types::language_storage::{StructTag, TypeTag};
+use vm::file_format::AbilitySet;
 
 #[cfg(feature = "json-schema")]
 pub fn produce_json_schema() -> RootSchema {
@@ -18,9 +19,6 @@ pub fn produce_json_schema() -> RootSchema {
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct AnnotatedMoveStructWrapper {
     /// Block number, current for the state
-    #[cfg(not(feature = "ps_address"))]
-    pub height: u128,
-    #[cfg(feature = "ps_address")]
     pub height: String,
 
     #[serde(with = "AnnotatedMoveStructExt")]
@@ -31,7 +29,8 @@ pub struct AnnotatedMoveStructWrapper {
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(remote = "resource_viewer::AnnotatedMoveStruct")]
 struct AnnotatedMoveStructExt {
-    is_resource: bool,
+    #[serde(with = "schema_support::AbilitySetExt")]
+    abilities: AbilitySet,
     #[serde(rename = "type")]
     #[cfg_attr(feature = "json-schema", serde(with = "schema_support::StructTagExt"))]
     type_: StructTag,
@@ -53,6 +52,7 @@ enum AnnotatedMoveValueExt {
     Bool(bool),
     Address(#[serde(with = "AccountAddressExt")] AccountAddress),
     Vector(
+        #[serde(with = "schema_support::TypeTagExt")] TypeTag,
         #[cfg_attr(
             feature = "json-schema",
             schemars(schema_with = "schema_support::vec_annotated_move_value")
@@ -140,6 +140,17 @@ mod schema_support {
         schema::{ArrayValidation, InstanceType, Schema, SchemaObject, SingleOrVec},
     };
     use move_core_types::language_storage::TypeTag;
+    use vm::file_format::AbilitySet;
+
+    #[derive(Serialize, JsonSchema)]
+    #[serde(remote = "AbilitySet")]
+    pub struct AbilitySetExt(#[serde(getter = "AbilitySetExt::ext_to_u8")] pub u8);
+
+    impl AbilitySetExt {
+        pub fn ext_to_u8(ability: &AbilitySet) -> u8 {
+            ability.into_u8()
+        }
+    }
 
     #[derive(Serialize, JsonSchema)]
     #[serde(remote = "StructTag")]

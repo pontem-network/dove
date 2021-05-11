@@ -65,7 +65,7 @@ jobs:
         run: |
           cargo test --no-fail-fast -p=move-language-server
           pushd resource-viewer
-          cargo test -p=move-resource-viewer --no-default-features --features="dfinance_address, json-schema"
+          cargo test -p=move-resource-viewer --features="json-schema"
           popd
 
       - name: Run clippy

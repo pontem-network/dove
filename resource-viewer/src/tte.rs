@@ -48,8 +48,6 @@ pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
         })
     };
 
-
-
     let q = {
         #[cfg(feature = "ps_address")]
         {

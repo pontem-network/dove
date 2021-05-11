@@ -93,9 +93,7 @@ pub struct StaticResolver {
 
 impl StaticResolver {
     pub fn new(deps: Vec<MoveFile<'static, 'static>>) -> StaticResolver {
-        StaticResolver {
-            deps
-        }
+        StaticResolver { deps }
     }
 }
 

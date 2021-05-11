@@ -91,7 +91,7 @@ impl AddressAdaptation {
                     TableContext::new(cur, offset + header_size + header_len, t_len),
                     mutator,
                 )
-                    .map_err(|err| anyhow!("{:?}", err))?
+                .map_err(|err| anyhow!("{:?}", err))?
             } else {
                 0
             };
