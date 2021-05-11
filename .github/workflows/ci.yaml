@@ -51,13 +51,9 @@ jobs:
 
       - name: debug
         run: |
-          # env
-          $env:VCPKG_ROOT = '/Tools/vcpkg'
-          $env:OPENSSL_DIR = '/Tools/vcpkg/installed/x64-windows-static'
-          $env:OPENSSL_STATIC = 'Yes'
-          echo "!!! VCPKG_ROOT = $VCPKG_ROOT"
-          echo "!!! OPENSSL_DIR = $OPENSSL_DIR"
-          echo "!!! OPENSSL_STATIC = $OPENSSL_STATIC"
+          echo "VCPKG_ROOT = $VCPKG_ROOT"
+          echo "OPENSSL_DIR = $OPENSSL_DIR"
+          echo "OPENSSL_STATIC = $OPENSSL_STATIC"
           ls $OPENSSL_DIR
 
       # We need to disable the existing toolchain to avoid updating rust-docs
