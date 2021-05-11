@@ -63,7 +63,8 @@ jobs:
           echo "VCPKG_ROOT = $VCPKG_ROOT"
           echo "OPENSSL_DIR = $OPENSSL_DIR"
           echo "OPENSSL_STATIC = $OPENSSL_STATIC"
-          ls $OPENSSL_DIR
+          # ls $OPENSSL_DIR
+          ls -R /vcpkg
 
       # We need to disable the existing toolchain to avoid updating rust-docs
       # which takes a long time. The fastest way to do this is to rename the
