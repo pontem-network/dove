@@ -6,6 +6,9 @@ mod test_dove_cmd {
     use termcolor::{ColorChoice, WriteColor, ColorSpec, Color};
     use std::path::{PathBuf, Path};
 
+    // =============================================================================================
+    // Tests
+    // =============================================================================================
     /// Создание нового проекта с настройками по умолчанию и сборка его
     /// Имя тестового проекта demoproject_1
     /// $ cargo run -- new demoproject_1
@@ -210,7 +213,7 @@ mod test_dove_cmd {
     fn remove_project(path:&PathBuf, project_name:&str)->bool{
         // Удаление директории со всем содержимым
         if let Err(error) = std::fs::remove_dir_all(path) {
-            print_default(format!("remove directory {} ", project_name).as_str());
+            print_default(format!("Couldn't delete project directory {}  ", project_name).as_str());
             print_color_red("[ERROR]");
             print_ln();
             print_bold("Message: ");
@@ -218,7 +221,7 @@ mod test_dove_cmd {
             print_ln();
             false
         }else{
-            print_default(format!("remove directory {} ", project_name).as_str());
+            print_default(format!("Project directory was deleted {}  ", project_name).as_str());
             print_color_green("[SUCCESS]");
             print_ln();
             true
@@ -303,7 +306,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "").unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_default(text: &str){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
@@ -314,7 +316,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_ln(){ print_default("\n"); }
 
@@ -328,7 +329,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text.to_uppercase()).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_h2(text: &str){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
@@ -337,7 +337,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text.to_uppercase()).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_h3(text: &str){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
@@ -346,7 +345,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text.to_uppercase()).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_bold(text: &str){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
@@ -355,7 +353,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_color_red(text: &str){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
@@ -366,7 +363,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_color_green(text: &str){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
@@ -377,7 +373,6 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
     fn print_color_yellow(text: &str){
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
@@ -388,6 +383,5 @@ mod test_dove_cmd {
         write!(&mut buffer, "{}", text).unwrap();
         let t = String::from_utf8_lossy(buffer.as_slice()).to_string();
         print!("{}", t);
-        // bufwrt.print(&buffer).unwrap();
     }
 }
