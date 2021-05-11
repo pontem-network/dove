@@ -35,6 +35,7 @@ jobs:
 
       - name: Prepare MSVC Openssl
         if: matrix.os == 'windows-latest'
+        shell: powershell
         run: |
           mkdir \Tools
           cd \Tools
