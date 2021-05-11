@@ -44,6 +44,8 @@ jobs:
           .\bootstrap-vcpkg.bat
           .\vcpkg.exe install openssl:x64-windows-static
 
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+
           # $env:OPENSSL_DIR = 'C:\Tools\vcpkg\installed\x64-windows-static'
           $env:OPENSSL_DIR = 'D:\Tools\vcpkg\installed\x64-windows-static'
           $env:OPENSSL_STATIC = 'Yes'
