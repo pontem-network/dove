@@ -19,8 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
+#          - macos-latest
+#          - ubuntu-latest
           - windows-latest
 
     env:
@@ -108,60 +108,60 @@ jobs:
       - name: Run clippy
         run: cargo clippy --tests --examples -- -Dwarnings
 
-  wasm:
-    name: Wasm
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        shell: bash
-
-    strategy:
-      fail-fast: false
-      matrix:
-        rust:
-          - "1.50.0"
-        crate:
-          - disassembler
-
-    env:
-      RUSTFLAGS: -D warnings
-      CARGO_INCREMENTAL: 1
-      RUSTUP_MAX_RETRIES: 10
-      CARGO_NET_RETRY: 10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          profile: minimal
-          target: wasm32-unknown-unknown
-          override: true
-
-      - name: Build ${{ matrix.crate }}
-        run: cargo build -p ${{ matrix.crate }} --lib --target wasm32-unknown-unknown --release
-
-      # - name: Install wasm-bindgen tool
-      #   continue-on-error: true
-      #   run: cargo install wasm-bindgen-cli or use wasm-pack
-
-      - uses: jetli/wasm-bindgen-action@v0.1.0
-        with:
-          version: "0.2.73"
-
-      - name: Gen JS/TS API
-        run: |
-          wasm-bindgen target/wasm32-unknown-unknown/release/${{ matrix.crate }}.wasm --out-dir ./dist_${{ matrix.crate }} --no-modules --no-modules-global ${{ matrix.crate }}
-          wasm-bindgen target/wasm32-unknown-unknown/release/${{ matrix.crate }}.wasm --out-dir ./dist_${{ matrix.crate }}/js-modules
-      # - name: Install wasm-pack toolchain
-      #   run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      # - name: Test in Chrome
-      #   run: wasm-pack test --headless --chrome
-      # - name: Test in Firefox
-      #   run: wasm-pack test --headless --firefox
-      # - name: Test in Safari
-      #   run: wasm-pack test --headless --safari
+#  wasm:
+#    name: Wasm
+#    runs-on: ubuntu-latest
+#
+#    defaults:
+#      run:
+#        shell: bash
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        rust:
+#          - "1.50.0"
+#        crate:
+#          - disassembler
+#
+#    env:
+#      RUSTFLAGS: -D warnings
+#      CARGO_INCREMENTAL: 1
+#      RUSTUP_MAX_RETRIES: 10
+#      CARGO_NET_RETRY: 10
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#
+#      - name: Install Rust toolchain
+#        uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: ${{ matrix.rust }}
+#          profile: minimal
+#          target: wasm32-unknown-unknown
+#          override: true
+#
+#      - name: Build ${{ matrix.crate }}
+#        run: cargo build -p ${{ matrix.crate }} --lib --target wasm32-unknown-unknown --release
+#
+#      # - name: Install wasm-bindgen tool
+#      #   continue-on-error: true
+#      #   run: cargo install wasm-bindgen-cli or use wasm-pack
+#
+#      - uses: jetli/wasm-bindgen-action@v0.1.0
+#        with:
+#          version: "0.2.73"
+#
+#      - name: Gen JS/TS API
+#        run: |
+#          wasm-bindgen target/wasm32-unknown-unknown/release/${{ matrix.crate }}.wasm --out-dir ./dist_${{ matrix.crate }} --no-modules --no-modules-global ${{ matrix.crate }}
+#          wasm-bindgen target/wasm32-unknown-unknown/release/${{ matrix.crate }}.wasm --out-dir ./dist_${{ matrix.crate }}/js-modules
+#      # - name: Install wasm-pack toolchain
+#      #   run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+#      # - name: Test in Chrome
+#      #   run: wasm-pack test --headless --chrome
+#      # - name: Test in Firefox
+#      #   run: wasm-pack test --headless --firefox
+#      # - name: Test in Safari
+#      #   run: wasm-pack test --headless --safari
