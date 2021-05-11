@@ -1,5 +1,7 @@
-/// Тестирование создания нового проекта
+/// Тестирование создания|инициализация проекта
 /// dove new demoproject_###
+/// dove init demoproject_###
+/// dove build -e demoproject_###
 #[cfg(test)]
 mod test_dove_cmd {
     use std::io::{Write};
@@ -15,18 +17,40 @@ mod test_dove_cmd {
     /// $ cargo run -- build -e demoproject_1
     #[test]
     fn create_new_project_with_default_settings(){
+        create_new_project_with_settings("demoproject_1".to_string(), None, None)
+    }
+
+    /// Инициализация существующего проекта проекта
+    /// Имя тестового проекта demoproject_2
+    /// В тестовом режиме инициализировать можно только в каталоге dove.
+    /// Для инициализации в любом месте проект должен быть собран в бинарник через cargo не выйдет
+    /// $ cargo run -- init
+    /// $ cargo run -- build
+    #[test]
+    fn init_project_in_folder_default_settings(){
+        init_project_with_settings("demoproject_2".to_string(), None, None);
+    }
+
+    /// Создать проект из указаных настроек
+    fn create_new_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
         use std::process::Command;
 
         // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
-
-        // Генирация рандомного имени
-        let project_name = "demoproject_1".to_string();
-        let project_dialect = "pont".to_string();
-        let project_address:Option<String> = None;
-        print_h1("Dove: New move project. Test-1\n");
+        print_h1(format!("Dove: New move project. {}", &project_name).as_str() );
+        print_ln();
         // Шапка с исходными параметрами нового проекта
-        print_newproject_settings(&project_name, &project_dialect, &project_address);
+        print_newproject_settings(
+            &project_name,
+            match &project_dialect {
+                Some(dialect) => dialect,
+                None => "pont (default)"
+            },
+            match &project_dialect {
+                Some(dialect) => dialect,
+                None => "None (default)"
+            },
+        );
 
         // Поиск существующего проекта с таким именем. Если наден то удалить
         let mut list_projects = get_list_projects();
@@ -36,7 +60,7 @@ mod test_dove_cmd {
                 print_color_yellow("[WARNING] ");
                 print_default(format!("directory exists {}", project_name).as_str());
                 print_ln();
-                assert_eq!(true, remove_project(finded, &project_name), "[ERROR] remove project {};", project_name);
+                assert!( remove_project(finded, &project_name), "[ERROR] remove project {};", project_name);
 
                 // Обновления списка проектов
                 list_projects = get_list_projects();
@@ -52,23 +76,31 @@ mod test_dove_cmd {
         // Запуск создания нового проекта
         // $ cargo run -- new demoproject_1
         // =========================================================================================
-        print_h2("Create project ");
-        let result = Command::new("cargo")
+        print_h2("Create project: ");
+        let mut create_command = Command::new("cargo");
+        create_command
             .args(&["run", "--", "new", &project_name])
-            .current_dir(&dove_path)
+            .current_dir(&dove_path);
+        if let Some(dialect) = project_dialect.as_ref() { create_command.args(&["-d", dialect]); }
+        if let Some(address) = project_address.as_ref() { create_command.args(&["-a", address]); }
+
+        let command_string = format!("{:?} ", create_command).replace("\"", "");
+        print!("{}",  command_string);
+
+        let result = create_command
             .output()
             .map_or_else(|err|{
-                    // Неудалось создать новый проект. Вывод сообщения
-                    print_ln();
-                    print_color_red("[ERROR] ");
-                    print_default(format!("cargo run -- new {}", project_name).as_str());
-                    print_ln();
-                    print_bold("Message: ");
-                    print_default(err.to_string().as_str());
-                    print_ln();
-                    None
-                },|result|Some(result));
-        assert_ne!(result, None, "failed: cargo run -- new {}", project_name);
+                // Неудалось создать новый проект. Вывод сообщения
+                print_ln();
+                print_color_red("[ERROR] ");
+                print_default(&command_string);
+                print_ln();
+                print_bold("Message: ");
+                print_default(err.to_string().as_str());
+                print_ln();
+                None
+            },|result|Some(result));
+        assert_ne!(result, None, "failed: {}", &command_string);
         let result = result.unwrap();
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
@@ -76,7 +108,7 @@ mod test_dove_cmd {
             // При создании произошла ошибка
             print_ln();
             print_color_red("[ERROR] ");
-            print_default(format!("cargo run -- new {}", project_name).as_str());
+            print_default(&command_string);
             print_ln();
             print_bold("Code: ");
             print_default( result.status.to_string().as_str());
@@ -94,15 +126,19 @@ mod test_dove_cmd {
         // $ cargo run -- build -e demoproject_1
         // =========================================================================================
         print_h2("Building project ");
-        let result = Command::new("cargo")
+        let mut create_command = Command::new("cargo");
+        create_command
             .args(&["run", "--", "build", "-e", &project_name])
-            .current_dir(&dove_path)
+            .current_dir(&dove_path);
+        let command_string = format!("{:?} ", create_command).replace("\"", "");
+        print!("{}",  command_string);
+        let result = create_command
             .output()
             .map_or_else(|err|{
                 // Неудалось создать новый проект. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
-                print_default(format!("cargo run -- build -e {}", project_name).as_str());
+                print_default(&command_string);
                 print_ln();
                 print_bold("Message: ");
                 print_default(err.to_string().as_str());
@@ -110,7 +146,7 @@ mod test_dove_cmd {
                 None
             },|result|Some(result));
 
-        assert_ne!(result, None, "failed: cargo run -- build -e {}", project_name);
+        assert_ne!(result, None, "failed: {}", command_string);
         let result = result.unwrap();
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
@@ -118,7 +154,7 @@ mod test_dove_cmd {
             // При создании произошла ошибка
             print_ln();
             print_color_red("[ERROR] ");
-            print_default(format!("cargo run -- build -e {}", project_name).as_str());
+            print_default(&command_string);
             print_ln();
             print_bold("Code: ");
             print_default( result.status.to_string().as_str());
@@ -141,20 +177,163 @@ mod test_dove_cmd {
 
         // Удаление созданного проекта
         if let Some(finded) =  list_projects.as_ref().unwrap().iter().find(|it|it.as_os_str().to_str().unwrap_or("").contains(&project_name)){
-            assert_eq!(true, remove_project(finded, &project_name), "[ERROR] remove project {};", project_name);
+            assert!( remove_project(finded, &project_name), "[ERROR] remove project {};", project_name);
         }
         assert!(true);
     }
+    /// Инициализировать проект из указаных настроек
+    fn init_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
+        use std::process::Command;
 
+        // Путь до Dove
+        let dove_path = get_path_dove().expect("Dove path - not found");
+        print_h1(format!("Dove: init move project. {}", &project_name).as_str() );
+        print_ln();
+
+        let project_folder_str = dove_path.as_path().to_str().unwrap().to_string() + "/" + project_name.as_str();
+        let project_folder = Path::new(&project_folder_str);
+
+        // Шапка с исходными параметрами нового проекта
+        print_newproject_settings(
+            &project_name,
+            match &project_dialect {
+                Some(dialect) => dialect,
+                None => "pont (default)"
+            },
+            match &project_dialect {
+                Some(dialect) => dialect,
+                None => "None (default)"
+            },
+        );
+        print_bold("Directory: ");
+        print_default(&project_folder_str);
+        print_ln();
+
+        // Проверка на существование директории для проекта
+        if project_folder.exists() {
+            print_color_yellow("[WARNING] ");
+            print_default(format!("directory exists {}", &project_folder_str).as_str());
+            print_ln();
+            assert!( remove_project(&project_folder.to_path_buf(), &project_name), "[ERROR] remove project {};", project_name);
+        }
+        match std::fs::create_dir(&project_folder) {
+            Ok(_) => {
+                print_color_green("[SUCCESS] ");
+                print_default(format!("Project directory created  {}", &project_folder_str).as_str());
+                print_ln();
+            },
+            Err(err) => {
+                print_color_red("[ERROR] ");
+                print_default(format!("Couldn't create project directory {}; {}", &project_folder_str, err.to_string()).as_str() );
+                print_ln();
+                assert!(false, "Couldn't create project directory {}", &project_folder_str );
+            }
+        }
+        // =========================================================================================
+        // Запуск создания нового проекта
+        // $ cargo run -- init
+        // =========================================================================================
+        print_h2("init project: ");
+        let mut init_command = Command::new("cargo");
+        init_command
+            .args(&["run", "--", "init"])
+            .current_dir(&project_folder);
+        if let Some(dialect) = project_dialect.as_ref() { init_command.args(&["-d", dialect]); }
+        if let Some(address) = project_address.as_ref() { init_command.args(&["-a", address]); }
+
+        let command_string = format!("{:?} ", init_command).replace("\"", "");
+        print!("{}",  command_string);
+
+        let result = init_command
+            .output()
+            .map_or_else(|err|{
+                // Неудалось создать новый проект. Вывод сообщения
+                print_ln();
+                print_color_red("[ERROR] ");
+                print_default(&command_string);
+                print_ln();
+                print_bold("Message: ");
+                print_default(err.to_string().as_str());
+                print_ln();
+                None
+            },|result|Some(result));
+        assert_ne!(result, None, "failed: {}", command_string);
+        let result = result.unwrap();
+        let code = result.status.code().unwrap_or(0);
+        let stderr = String::from_utf8(result.stderr).unwrap();
+        if code != 0 {
+            // При создании произошла ошибка
+            print_ln();
+            print_color_red("[ERROR] ");
+            print_default(&command_string);
+            print_ln();
+            print_bold("Code: ");
+            print_default( result.status.to_string().as_str());
+            print_ln();
+            print_bold("Message: ");
+            print_default(stderr.as_str());
+            print_ln();
+            assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
+        }
+
+        print_color_green("[SUCCESS]");
+        print_ln();
+        // =========================================================================================
+        // Cборка проекта
+        // $ cargo run -- build
+        // =========================================================================================
+        print_h2("Building project ");
+        let mut create_command = Command::new("cargo");
+        create_command
+            .args(&["run", "--", "build"])
+            .current_dir(&project_folder);
+        let command_string = format!("{:?} ", create_command).replace("\"", "");
+        print!("{}",  command_string);
+        let result = create_command
+            .output()
+            .map_or_else(|err|{
+                // Неудалось создать новый проект. Вывод сообщения
+                print_ln();
+                print_color_red("[ERROR] ");
+                print_default(&command_string);
+                print_ln();
+                print_bold("Message: ");
+                print_default(err.to_string().as_str());
+                print_ln();
+                None
+            },|result|Some(result));
+
+        assert_ne!(result, None, "{}", &command_string);
+        let result = result.unwrap();
+        let code = result.status.code().unwrap_or(0);
+        let stderr = String::from_utf8(result.stderr).unwrap();
+        if code != 0 {
+            // При создании произошла ошибка
+            print_ln();
+            print_color_red("[ERROR] ");
+            print_default(&command_string);
+            print_ln();
+            print_bold("Code: ");
+            print_default( result.status.to_string().as_str());
+            print_ln();
+            print_bold("Message: ");
+            print_default(stderr.as_str());
+            print_ln();
+            assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
+        }
+        print_color_green("[SUCCESS]");
+        print_ln();
+        assert!(true);
+    }
     // =============================================================================================
     // Проекты
     // =============================================================================================
     /// Получить путь до dove каталога
     fn get_path_dove()->Option<PathBuf>{
-        path_isset_dove(".")
-            .or(path_isset_dove("./dove"))
+        isset_path_dove(".")
+            .or(isset_path_dove("./dove"))
     }
-    fn path_isset_dove(path:&str)->Option<PathBuf>{
+    fn isset_path_dove(path:&str) ->Option<PathBuf>{
         Path::new(path)
             .canonicalize()
             .map_or(None, |p|p.to_str().map_or(None,|p|Some(p.to_string())))
@@ -234,7 +413,7 @@ mod test_dove_cmd {
     // Вывод
     // =============================================================================================
     /// Вывод настроек создоваемого проекта
-    fn print_newproject_settings(project_name:&str, project_dialect: &str, project_address:&Option<String>){
+    fn print_newproject_settings(project_name:&str, project_dialect: &str, project_address:&str){
         print_h2("New project settings:\n");
         // Название проекта
         print_bold(format!("Project will be created: ").as_str());
@@ -247,10 +426,7 @@ mod test_dove_cmd {
         // Адрес проекта
         print_bold(format!("Address: ").as_str());
         print_reset();
-        print_default(format!("{} \n", match project_address.as_ref() {
-                Some(path) => path.clone(),
-                None => "default".to_string()
-            }).as_str());
+        print_default(format!("{} \n", project_address).as_str());
         print_ln();
     }
     /// Вывод на экран проекта
