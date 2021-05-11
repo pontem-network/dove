@@ -11,9 +11,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
 
-    # defaults:
-    #   run:
-    #     shell: bash
+    defaults:
+      run:
+        shell: bash
 
     strategy:
       fail-fast: false
@@ -44,12 +44,14 @@ jobs:
           .\bootstrap-vcpkg.bat
           .\vcpkg.exe install openssl:x64-windows-static
 
+          # $env:OPENSSL_DIR = 'C:\Tools\vcpkg\installed\x64-windows-static'
           $env:OPENSSL_DIR = 'D:\Tools\vcpkg\installed\x64-windows-static'
           $env:OPENSSL_STATIC = 'Yes'
           [System.Environment]::SetEnvironmentVariable('OPENSSL_DIR', $env:OPENSSL_DIR, [System.EnvironmentVariableTarget]::User)
           [System.Environment]::SetEnvironmentVariable('OPENSSL_STATIC', $env:OPENSSL_STATIC, [System.EnvironmentVariableTarget]::User)
 
       - name: debug
+        if: matrix.os == 'windows-latest'
         run: |
           echo "VCPKG_ROOT = $VCPKG_ROOT"
           echo "OPENSSL_DIR = $OPENSSL_DIR"
@@ -63,7 +65,7 @@ jobs:
       - name: Rename existing rust toolchain (Windows)
         if: matrix.os == 'windows-latest'
         run: mv -f /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc.old
-        shell: bash
+        # shell: bash
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
