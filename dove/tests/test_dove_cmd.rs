@@ -8,6 +8,7 @@ mod test_dove_cmd {
     use termcolor::{ColorChoice, WriteColor, ColorSpec, Color};
     use std::path::{PathBuf, Path};
 
+
     // =============================================================================================
     // Tests
     // =============================================================================================
@@ -22,7 +23,7 @@ mod test_dove_cmd {
     /// $ cargo run -- build -e demoproject_2
     ///
     /// Имя тестового проекта demoproject_3
-    /// $ cargo run -- new demoproject_3 -d pont -a 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE
+    /// $ cargo run -- new demoproject_3 -d pont -a 5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv
     /// $ cargo run -- build -e demoproject_3
     ///
     /// Имя тестового проекта demoproject_4
@@ -53,7 +54,7 @@ mod test_dove_cmd {
         vec![
                 (1,None,None),
                 (2,Some("pont"),None),
-                (3,Some("pont"),Some("1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE")),
+                (3,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv")),
                 (4,Some("pont"),Some("0x1")),
                 (5,Some("dfinance"),None),
                 (6,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh")),
@@ -72,7 +73,7 @@ mod test_dove_cmd {
     }
 
     /// Создание нового проекта c несуществующим деалектом incorectdialect
-    /// Имя тестового проекта demoproject_6
+    /// Имя тестового проекта demoproject_-##
     ///
     /// Ожидается ошибка
     /// $ cargo run -- new demoproject_-1 -d incorectdialect
@@ -123,15 +124,68 @@ mod test_dove_cmd {
     }
 
     /// Инициализация существующего проекта проекта
-    /// Имя тестового проекта demoproject_2
+    /// Имя тестового проекта demoproject_3#
     /// В тестовом режиме инициализировать можно только в каталоге dove.
     /// Для инициализации в любом месте проект должен быть собран в бинарник через cargo не выйдет
+    ///
+    /// Имя тестового проекта demoproject_31
     /// $ cargo run -- init
     /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_32
+    /// $ cargo run -- init -d pont
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_33
+    /// $ cargo run -- init -d pont -a 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_34
+    /// $ cargo run -- init -d pont -a 0x1
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_35
+    /// $ cargo run -- init -d dfinance
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_36
+    /// $ cargo run -- init -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_37
+    /// $ cargo run -- init -d dfinance -a 0x1
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_38
+    /// $ cargo run -- init -d diem
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_39
+    /// $ cargo run -- init -d diem -a 0x1
+    /// $ cargo run -- build
     #[test]
-    fn success_init_project_in_folder_default_settings(){
-        init_project_with_settings("demoproject_2".to_string(), None, None);
+    fn success_init_project_in_folder(){
+        vec![
+            (31,None,None),
+            (32,Some("pont"),None),
+            (33,Some("pont"),Some("1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE")),
+            (34,Some("pont"),Some("0x1")),
+            (35,Some("dfinance"),None),
+            (36,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh")),
+            (37,Some("dfinance"),Some("0x1")),
+            (38,Some("diem"),None),
+            (39,Some("diem"),Some("0x1"))
+        ]
+            .iter()
+            .for_each(|(num, dialect,address)|{
+                init_project_with_settings(
+                    format!("demoproject_{}", num),
+                    dialect.map(|d| d.to_string()),
+                    address.map(|a| a.to_string())
+                )
+            });
     }
+
     // =============================================================================================
     /// Создать проект из указаных настроек. Ожидается успех
     fn success_create_new_project_and_build_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
@@ -149,7 +203,7 @@ mod test_dove_cmd {
                 None => "pont (default)"
             },
             match &project_address {
-                Some(dialect) => dialect,
+                Some(address) => address,
                 None => "None (default)"
             },
         );
@@ -288,7 +342,7 @@ mod test_dove_cmd {
                 None => "pont (default)"
             },
             match &project_address {
-                Some(dialect) => dialect,
+                Some(address) => address,
                 None => "None (default)"
             },
         );
@@ -380,7 +434,7 @@ mod test_dove_cmd {
                 None => "pont (default)"
             },
             match &project_address {
-                Some(dialect) => dialect,
+                Some(address) => address,
                 None => "None (default)"
             },
         );
