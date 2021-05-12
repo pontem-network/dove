@@ -65,7 +65,11 @@ impl Default for Result {
 /// middle. __Ownership__ of result is yours, feel free to free.
 #[no_mangle]
 #[export_name = "move_decompile"]
-pub unsafe extern "C" fn decompile(bytes: *const u8, len: usize, source_type: SourceType) -> Result {
+pub unsafe extern "C" fn decompile(
+    bytes: *const u8,
+    len: usize,
+    source_type: SourceType
+) -> Result {
     let mut bytes = {
         if !bytes.is_null() {
             let borrowed = std::slice::from_raw_parts(bytes, len);
@@ -81,7 +85,9 @@ pub unsafe extern "C" fn decompile(bytes: *const u8, len: usize, source_type: So
     if let Err(err) = match source_type {
         SourceType::Diem => compat::adapt_to_basis(&mut bytes, compat::AddressType::Diem),
         SourceType::Pont => Ok(()),
-        SourceType::Dfinance => compat::adapt_to_basis(&mut bytes, compat::AddressType::Dfninance),
+        SourceType::Dfinance => {
+            compat::adapt_to_basis(&mut bytes, compat::AddressType::Dfninance)
+        },
     } {
         return Result {
             error: to_cstring(err.to_string()).into_raw(),
