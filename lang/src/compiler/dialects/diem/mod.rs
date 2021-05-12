@@ -9,6 +9,10 @@ use move_core_types::account_address::AccountAddress;
 pub struct DiemDialect;
 
 impl Dialect for DiemDialect {
+    fn address_length(&self) -> usize {
+        16
+    }
+
     fn name(&self) -> DialectName {
         DialectName::Diem
     }
@@ -30,6 +34,14 @@ impl Dialect for DiemDialect {
     }
 
     fn parse_address(&self, addr: &str) -> Result<AccountAddress> {
+        let max_hex_len = self.address_length() * 2 + 2;
+        if addr.len() > max_hex_len {
+            return Err(anyhow::anyhow!(
+                "Unable to parse AccountAddress. Maximum address length is {}.",
+                max_hex_len
+            ));
+        }
+
         Ok(AccountAddress::from_hex_literal(&addr)?)
     }
 

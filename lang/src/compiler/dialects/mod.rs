@@ -17,6 +17,10 @@ pub mod line_endings;
 pub mod pontem;
 
 pub trait Dialect {
+    /// Returns maximum number of bytes in the address.
+    fn address_length(&self) -> usize;
+
+    /// Returns dialect name.
     fn name(&self) -> DialectName;
 
     /// Returns the bytecode in the dialect format.

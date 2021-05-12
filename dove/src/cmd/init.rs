@@ -58,7 +58,7 @@ impl Cmd for Init {
         if manifest.exists() {
             return Err(anyhow!("init cannot be run on existing project."));
         }
-        DialectName::from_str(&self.dialect)?;
+        let dialect = DialectName::from_str(&self.dialect)?.get_dialect();
 
         let name = ctx
             .project_dir
@@ -79,6 +79,7 @@ impl Cmd for Init {
         writeln!(&mut f, "name = \"{}\"", name)?;
 
         if let Some(adr) = &self.address {
+            dialect.parse_address(adr)?;
             writeln!(&mut f, "account_address = \"{}\"", adr)?;
         }
 

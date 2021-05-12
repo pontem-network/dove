@@ -75,7 +75,10 @@ mod test_dove_cmd {
     /// Имя тестового проекта demoproject_6
     ///
     /// Ожидается ошибка
-    /// $ cargo run -- new demoproject_6 -d incorectdialect
+    /// $ cargo run -- new demoproject_-1 -d incorectdialect
+    /// $ cargo run -- new demoproject_-2 -d pont -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject_-3 -d dfinance -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject_-4 -d diem -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
     ///
     #[test]
     fn fail_create_new_project_dealect_incorectdialect(){
@@ -346,6 +349,7 @@ mod test_dove_cmd {
             print_ln();
             assert_ne!(code, 0, "[ERROR] was created - {} ", &command_string);
         }
+        print_ln();
         print_color_green("[NOT CREATED]");
         print_ln();
 
