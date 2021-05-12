@@ -11,13 +11,112 @@ mod test_dove_cmd {
     // =============================================================================================
     // Tests
     // =============================================================================================
-    /// Создание нового проекта с настройками по умолчанию и сборка его
+    /// Создание нового проекта
+    ///
     /// Имя тестового проекта demoproject_1
     /// $ cargo run -- new demoproject_1
     /// $ cargo run -- build -e demoproject_1
+    ///
+    /// Имя тестового проекта demoproject_3
+    /// $ cargo run -- new demoproject_3 -d pont
+    /// $ cargo run -- build -e demoproject_3
+    ///
+    /// Имя тестового проекта demoproject_7
+    /// $ cargo run -- new demoproject_7 -d pont -a 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE
+    /// $ cargo run -- build -e demoproject_7
+    ///
+    /// Имя тестового проекта demoproject_8
+    /// $ cargo run -- new demoproject_8 -d pont -a 0x1
+    /// $ cargo run -- build -e demoproject_8
+    ///
+    /// Имя тестового проекта demoproject_4
+    /// $ cargo run -- new demoproject_4 -d dfinance
+    /// $ cargo run -- build -e demoproject_4
+    ///
+    /// Имя тестового проекта demoproject_9
+    /// $ cargo run -- new demoproject_9 -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
+    /// $ cargo run -- build -e demoproject_9
+    ///
+    /// Имя тестового проекта demoproject_10
+    /// $ cargo run -- new demoproject_10 -d dfinance -a 0x1
+    /// $ cargo run -- build -e demoproject_10
+    ///
+    /// Имя тестового проекта demoproject_5
+    /// $ cargo run -- new demoproject_5 -d diem
+    /// $ cargo run -- build -e demoproject_5
+    ///
+    /// Имя тестового проекта demoproject_11
+    /// $ cargo run -- new demoproject_11 -d diem -a 0x1
+    /// $ cargo run -- build -e demoproject_11
     #[test]
-    fn create_new_project_with_default_settings(){
-        create_new_project_with_settings("demoproject_1".to_string(), None, None)
+    fn success_create_new_project(){
+        vec![
+                (1,None,None),
+                (2,Some("pont"),None),
+                (3,Some("pont"),Some("1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE")),
+                (4,Some("pont"),Some("0x1")),
+                (5,Some("dfinance"),None),
+                (6,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh")),
+                (7,Some("dfinance"),Some("0x1")),
+                (8,Some("diem"),None),
+                (9,Some("diem"),Some("0x1"))
+            ]
+            .iter()
+            .for_each(|(num, dialect,address)|{
+                success_create_new_project_and_build_with_settings(
+                    format!("demoproject_{}", num),
+                    dialect.map(|d| d.to_string()),
+                    address.map(|a| a.to_string())
+                )
+            });
+    }
+
+    /// Создание нового проекта c несуществующим деалектом incorectdialect
+    /// Имя тестового проекта demoproject_6
+    ///
+    /// Ожидается ошибка
+    /// $ cargo run -- new demoproject_6 -d incorectdialect
+    ///
+    #[test]
+    fn fail_create_new_project_dealect_incorectdialect(){
+        vec![
+                (-1, Some("incorectdialect"), None ),
+                // Max address 32 byte
+                (-2,Some("pont"),Some("w0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789")),
+                // Max address 16 byte
+                (-3,Some("dfinance"),Some("w0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789")),
+                // Max address 16 byte
+                (9,Some("diem"),Some("w0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789\
+                        0123456789"))
+            ]
+            .iter()
+            .for_each(|(num, dialect,address)|{
+                fail_create_new_project_with_settings(
+                    format!("demoproject_{}", num),
+                    dialect.map(|d| d.to_string()),
+                    address.map(|a:&str| a.to_string())
+                )
+            });
     }
 
     /// Инициализация существующего проекта проекта
@@ -27,12 +126,12 @@ mod test_dove_cmd {
     /// $ cargo run -- init
     /// $ cargo run -- build
     #[test]
-    fn init_project_in_folder_default_settings(){
+    fn success_init_project_in_folder_default_settings(){
         init_project_with_settings("demoproject_2".to_string(), None, None);
     }
-
-    /// Создать проект из указаных настроек
-    fn create_new_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
+    // =============================================================================================
+    /// Создать проект из указаных настроек. Ожидается успех
+    fn success_create_new_project_and_build_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
         use std::process::Command;
 
         // Путь до Dove
@@ -46,7 +145,7 @@ mod test_dove_cmd {
                 Some(dialect) => dialect,
                 None => "pont (default)"
             },
-            match &project_dialect {
+            match &project_address {
                 Some(dialect) => dialect,
                 None => "None (default)"
             },
@@ -54,19 +153,8 @@ mod test_dove_cmd {
 
         // Поиск существующего проекта с таким именем. Если наден то удалить
         let mut list_projects = get_list_projects();
-        if let Some(list) = list_projects.as_ref() {
-            // Если найден удалить
-            if let Some(finded) = list.iter().find(|it|it.as_os_str().to_str().unwrap_or("").contains(&project_name)){
-                print_color_yellow("[WARNING] ");
-                print_default(format!("directory exists {}", project_name).as_str());
-                print_ln();
-                assert!( remove_project(finded, &project_name), "[ERROR] remove project {};", project_name);
-
-                // Обновления списка проектов
-                list_projects = get_list_projects();
-                print_ln();
-            }
-        }
+        // Удалить проект если уже существует
+        if_exists_project_then_remove(&mut list_projects, &project_name);
         // Вывод уже существующих проектов
         print_h2("Existing projects: ");
         print_ln();
@@ -181,6 +269,93 @@ mod test_dove_cmd {
         }
         assert!(true);
     }
+    /// Создать проект из указаных настроек. Ожидается ошибка
+    fn fail_create_new_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
+        use std::process::Command;
+
+        // Путь до Dove
+        let dove_path = get_path_dove().expect("Dove path - not found");
+        print_h1(format!("Dove: New move project. {}", &project_name).as_str() );
+        print_ln();
+        // Шапка с исходными параметрами нового проекта
+        print_newproject_settings(
+            &project_name,
+            match &project_dialect {
+                Some(dialect) => dialect,
+                None => "pont (default)"
+            },
+            match &project_address {
+                Some(dialect) => dialect,
+                None => "None (default)"
+            },
+        );
+
+        // Поиск существующего проекта с таким именем. Если наден то удалить
+        let mut list_projects = get_list_projects();
+        // Удалить проект если уже существует
+        if_exists_project_then_remove(&mut list_projects, &project_name);
+
+        // Вывод уже существующих проектов
+        print_h2("Existing projects: ");
+        print_ln();
+        print_projects(&list_projects);
+
+        // =========================================================================================
+        // Запуск создания нового проекта
+        // $ cargo run -- new demoproject_### [-d dealect] [-a address]
+        // =========================================================================================
+        print_h2("Create project: ");
+        let mut create_command = Command::new("cargo");
+        create_command
+            .args(&["run", "--", "new", &project_name])
+            .current_dir(&dove_path);
+        if let Some(dialect) = project_dialect.as_ref() { create_command.args(&["-d", dialect]); }
+        if let Some(address) = project_address.as_ref() { create_command.args(&["-a", address]); }
+
+        let command_string = format!("{:?} ", create_command).replace("\"", "");
+        print!("{}",  command_string);
+        let result = create_command
+            .output()
+            .map_or_else(|err|{
+                // Неудалось создать новый проект. Вывод сообщения
+                print_ln();
+                print_color_red("[ERROR] ");
+                print_default(&command_string);
+                print_ln();
+                print_bold("Message: ");
+                print_default(err.to_string().as_str());
+                print_ln();
+                None
+            },|result|Some(result));
+        assert_ne!(result, None, "failed: {}", &command_string);
+
+        let result = result.unwrap();
+        let code = result.status.code().unwrap_or(0);
+        let stderr = String::from_utf8(result.stderr).unwrap();
+        if code == 0 {
+            // При создании произошла ошибка
+            print_ln();
+            print_color_red("[ERROR] was created - ");
+            print_default(&command_string);
+            print_ln();
+            print_bold("Code: ");
+            print_default( result.status.to_string().as_str());
+            print_ln();
+            print_bold("Message: ");
+            print_default(stderr.as_str());
+            print_ln();
+            assert_ne!(code, 0, "[ERROR] was created - {} ", &command_string);
+        }
+        print_color_green("[NOT CREATED]");
+        print_ln();
+
+        // Удаление созданного проекта
+        if let Some(finded) =  list_projects.as_ref().unwrap().iter().find(|it|it.as_os_str().to_str().unwrap_or("").contains(&project_name)){
+            assert!( remove_project(finded, &project_name), "[ERROR] remove project {};", project_name);
+        }
+        assert!(true);
+    }
+
     /// Инициализировать проект из указаных настроек
     fn init_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
         use std::process::Command;
@@ -200,7 +375,7 @@ mod test_dove_cmd {
                 Some(dialect) => dialect,
                 None => "pont (default)"
             },
-            match &project_dialect {
+            match &project_address {
                 Some(dialect) => dialect,
                 None => "None (default)"
             },
@@ -325,6 +500,21 @@ mod test_dove_cmd {
         print_ln();
         assert!(true);
     }
+    fn if_exists_project_then_remove(list_projects: &mut Option<Vec<PathBuf>>, project_name:&str){
+        if let Some(list) = list_projects.as_ref() {
+            // Если найден удалить
+            if let Some(finded) = list.iter().find(|it|it.as_os_str().to_str().unwrap_or("").contains(&project_name)){
+                print_color_yellow("[WARNING] ");
+                print_default(format!("directory exists {}", project_name).as_str());
+                print_ln();
+                assert!( remove_project(finded, &project_name), "[ERROR] remove directory {};", project_name);
+
+                // Обновления списка проектов
+                *list_projects = get_list_projects();
+                print_ln();
+            }
+        }
+    }
     // =============================================================================================
     // Проекты
     // =============================================================================================
@@ -442,6 +632,9 @@ mod test_dove_cmd {
         let project_dialect = package.get("dialect")
             .and_then(|v|v.as_str())
             .map_or("- NULL -".to_string(), |v|v.to_string());
+        let project_account_address = package.get("account_address")
+            .and_then(|v|v.as_str())
+            .map_or("- NULL -".to_string(), |v|v.to_string());
         let project_dependencies = package.get("dependencies")
             .and_then(|v| v.get(0) )
             .and_then(|v| v.get("git") )
@@ -459,6 +652,10 @@ mod test_dove_cmd {
         // Диалект проекта
         print_bold("Dialect: ");
         print_default(&project_dialect);
+        print_ln();
+        // Адрес проекта
+        print_bold("Account address: ");
+        print_default(&project_account_address);
         print_ln();
         // Git проекта
         print_bold("Dependencies: ");
