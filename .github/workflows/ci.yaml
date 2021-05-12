@@ -18,7 +18,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
 
   tests:
-    name: Tests
+    name: ${{ matrix.os }}::tests
     runs-on: ${{ matrix.os }}
 
     strategy:
