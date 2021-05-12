@@ -68,7 +68,7 @@ impl Default for Result {
 pub unsafe extern "C" fn decompile(
     bytes: *const u8,
     len: usize,
-    source_type: SourceType
+    source_type: SourceType,
 ) -> Result {
     let mut bytes = {
         if !bytes.is_null() {
@@ -87,7 +87,7 @@ pub unsafe extern "C" fn decompile(
         SourceType::Pont => Ok(()),
         SourceType::Dfinance => {
             compat::adapt_to_basis(&mut bytes, compat::AddressType::Dfninance)
-        },
+        }
     } {
         return Result {
             error: to_cstring(err.to_string()).into_raw(),
