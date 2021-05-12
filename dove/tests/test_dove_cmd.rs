@@ -30,6 +30,26 @@ mod test_dove_cmd {
     /// $ cargo run -- new demoproject_4 -d pont -a 0x1
     /// $ cargo run -- build -e demoproject_4
     ///
+    /// Имя тестового проекта demoproject_60
+    /// $ cargo run -- new demoproject_60 -d pont -a 0x1 -r http://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_61
+    /// $ cargo run -- new demoproject_61 -d pont -a 0x1 -r https://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_62
+    /// $ cargo run -- new demoproject_62 -d pont -a 0x1 -r http://127.0.0.1/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_63
+    /// $ cargo run -- new demoproject_63 -d pont -a 0x1 -r http://localhost/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_72
+    /// $ cargo run -- new demoproject_72 -d pont -a 0x1 -r http://localhost:8080/api
+    /// $ cargo run -- build
+    ///
     /// Имя тестового проекта demoproject_5
     /// $ cargo run -- new demoproject_5 -d dfinance
     /// $ cargo run -- build -e demoproject_5
@@ -39,8 +59,28 @@ mod test_dove_cmd {
     /// $ cargo run -- build -e demoproject_6
     ///
     /// Имя тестового проекта demoproject_7
-    /// $ cargo run -- new demoproject_7 -d dfinance -a 0x1
+    /// $ cargo run -- new demoproject_7 demoproject_7 -d dfinance -a 0x1
     /// $ cargo run -- build -e demoproject_7
+    ///
+    /// Имя тестового проекта demoproject_64
+    /// $ cargo run -- new demoproject_64 -d dfinance -a 0x1 -r http://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_65
+    /// $ cargo run -- new demoproject_65 -d dfinance -a 0x1 -r https://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_66
+    /// $ cargo run -- new demoproject_66 -d dfinance -a 0x1 -r http://127.0.0.1/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_67
+    /// $ cargo run -- new -d dfinance -a 0x1 -r http://localhost/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_74
+    /// $ cargo run -- new demoproject_73 -d dfinance -a 0x1 -r http://localhost:8080/api
+    /// $ cargo run -- build
     ///
     /// Имя тестового проекта demoproject_8
     /// $ cargo run -- new demoproject_8 -d diem
@@ -49,82 +89,111 @@ mod test_dove_cmd {
     /// Имя тестового проекта demoproject_9
     /// $ cargo run -- new demoproject_9 -d diem -a 0x1
     /// $ cargo run -- build -e demoproject_9
+    ///
+    /// Имя тестового проекта demoproject_68
+    /// $ cargo run -- new demoproject_68 -d diem -a 0x1 -r http://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_69
+    /// $ cargo run -- new demoproject_69 -d diem -a 0x1 -r https://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_70
+    /// $ cargo run -- new demoproject_70 -d diem -a 0x1 -r http://127.0.0.1/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_71
+    /// $ cargo run -- new demoproject_71 -d diem -a 0x1 -r http://localhost/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_75
+    /// $ cargo run -- new demoproject_75 -d diem -a 0x1 -r http://localhost:8080/api
+    /// $ cargo run -- build
+    ///
     #[test]
     fn success_create_new_project(){
         vec![
-                (1,None,None),
-                (2,Some("pont"),None),
-                (3,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv")),
-                (4,Some("pont"),Some("0x1")),
-                (5,Some("dfinance"),None),
-                (6,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh")),
-                (7,Some("dfinance"),Some("0x1")),
-                (8,Some("diem"),None),
-                (9,Some("diem"),Some("0x1"))
+                (1,None,None,None),
+                (2,Some("pont"),None,None),
+                (3,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None),
+                (4,Some("pont"),Some("0x1"),None),
+                (60,Some("pont"),Some("0x1"),Some("http://demo.ru/api")),
+                (61,Some("pont"),Some("0x1"),Some("https://demo.ru/api")),
+                (62,Some("pont"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (63,Some("pont"),Some("0x1"),Some("http://localhost/api")),
+                (72,Some("pont"),Some("0x1"),Some("http://localhost:8080/api")),
+                (5,Some("dfinance"),None,None),
+                (6,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"),None),
+                (7,Some("dfinance"),Some("0x1"),None),
+                (64,Some("dfinance"),Some("0x1"),Some("http://demo.ru/api")),
+                (65,Some("dfinance"),Some("0x1"),Some("https://demo.ru/api")),
+                (66,Some("dfinance"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (67,Some("dfinance"),Some("0x1"),Some("http://localhost/api")),
+                (73,Some("dfinance"),Some("0x1"),Some("http://localhost:8080/api")),
+                (8,Some("diem"),None,None),
+                (9,Some("diem"),Some("0x1"),None),
+                (68,Some("diem"),Some("0x1"),Some("http://demo.ru/api")),
+                (69,Some("diem"),Some("0x1"),Some("https://demo.ru/api")),
+                (70,Some("diem"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (71,Some("diem"),Some("0x1"),Some("http://localhost/api")),
+                (74,Some("diem"),Some("0x1"),Some("http://localhost:8080/api")),
             ]
             .iter()
-            .for_each(|(num, dialect,address)|{
+            .for_each(|(num, dialect,address,api)|{
                 success_create_new_project_and_build_with_settings(
                     format!("demoproject_{}", num),
-                    dialect.map(|d| d.to_string()),
-                    address.map(|a| a.to_string())
+                    dialect.map(|d:&str| d.to_string()),
+                    address.map(|a:&str| a.to_string()),
+                    api.map(|a:&str| a.to_string())
                 )
             });
     }
 
     /// Создание нового проекта c несуществующим деалектом incorectdialect
-    /// Имя тестового проекта demoproject_-##
+    /// Имя тестового проекта demoproject__##
     ///
     /// Ожидается ошибка
-    /// $ cargo run -- new demoproject_-1 -d incorectdialect
-    /// $ cargo run -- new demoproject_-2 -d pont -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
-    /// $ cargo run -- new demoproject_-3 -d dfinance -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
-    /// $ cargo run -- new demoproject_-4 -d diem -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject__1 -d incorectdialect
+    /// $ cargo run -- new demoproject__2 -d pont -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject__# -d pont -a 5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv -r demo
+    /// $ cargo run -- new demoproject__3 -d dfinance -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject__4 -d diem -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
     ///
     #[test]
     fn fail_create_new_project_dealect_incorectdialect(){
         vec![
-                (-1, Some("incorectdialect"), None ),
+                (1, Some("incorectdialect"), None, None),
                 // Max address 32 byte
-                (-2,Some("pont"),Some("w0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789")),
+                (2,Some("pont"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
+                (7,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("demo")),
+                (8,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("/demo")),
+                (9,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("/demo/api")),
+                (14,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("//demo/api")),
+                (14,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("//demo:8080/api")),
+                (10,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("127.0.0.1/api")),
+                (11,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("ftp://demo.ru/api")),
+                (12,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("ssh://demo.ru/api")),
+                (13,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("smb://demo.ru/api")),
                 // Max address 16 byte
-                (-3,Some("dfinance"),Some("w0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789")),
+                (3,Some("dfinance"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
+                (5,Some("dfinance"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None),
                 // Max address 16 byte
-                (9,Some("diem"),Some("w0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789\
-                        0123456789"))
+                (4,Some("diem"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
+                (6,Some("diem"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None)
             ]
             .iter()
-            .for_each(|(num, dialect,address)|{
+            .for_each(|(num, dialect,address,api)|{
                 fail_create_new_project_with_settings(
-                    format!("demoproject_{}", num),
+                    format!("demoproject__{}", num),
                     dialect.map(|d| d.to_string()),
-                    address.map(|a:&str| a.to_string())
+                    address.map(|a:&str| a.to_string()),
+                    api.map(|a:&str| a.to_string())
                 )
             });
     }
 
     /// Инициализация существующего проекта проекта
-    /// Имя тестового проекта demoproject_3#
+    /// Имя тестового проекта demoproject_#
     /// В тестовом режиме инициализировать можно только в каталоге dove.
     /// Для инициализации в любом месте проект должен быть собран в бинарник через cargo не выйдет
     ///
@@ -144,6 +213,22 @@ mod test_dove_cmd {
     /// $ cargo run -- init -d pont -a 0x1
     /// $ cargo run -- build
     ///
+    /// Имя тестового проекта demoproject_40
+    /// $ cargo run -- init -d pont -a 0x1 -r http://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_41
+    /// $ cargo run -- init -d pont -a 0x1 -r https://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_42
+    /// $ cargo run -- init -d pont -a 0x1 -r http://127.0.0.1/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_43
+    /// $ cargo run -- init -d pont -a 0x1 -r http://localhost/api
+    /// $ cargo run -- build
+    ///
     /// Имя тестового проекта demoproject_35
     /// $ cargo run -- init -d dfinance
     /// $ cargo run -- build
@@ -156,6 +241,22 @@ mod test_dove_cmd {
     /// $ cargo run -- init -d dfinance -a 0x1
     /// $ cargo run -- build
     ///
+    /// Имя тестового проекта demoproject_44
+    /// $ cargo run -- init -d dfinance -a 0x1 -r http://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_45
+    /// $ cargo run -- init -d dfinance -a 0x1 -r https://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_46
+    /// $ cargo run -- init -d dfinance -a 0x1 -r http://127.0.0.1/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_47
+    /// $ cargo run -- init -d dfinance -a 0x1 -r http://localhost/api
+    /// $ cargo run -- build
+    ///
     /// Имя тестового проекта demoproject_38
     /// $ cargo run -- init -d diem
     /// $ cargo run -- build
@@ -163,32 +264,61 @@ mod test_dove_cmd {
     /// Имя тестового проекта demoproject_39
     /// $ cargo run -- init -d diem -a 0x1
     /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_48
+    /// $ cargo run -- init -d diem -a 0x1 -r http://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_49
+    /// $ cargo run -- init -d diem -a 0x1 -r https://demo.ru/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_50
+    /// $ cargo run -- init -d diem -a 0x1 -r http://127.0.0.1/api
+    /// $ cargo run -- build
+    ///
+    /// Имя тестового проекта demoproject_51
+    /// $ cargo run -- init -d diem -a 0x1 -r http://localhost/api
+    /// $ cargo run -- build
     #[test]
     fn success_init_project_in_folder(){
         vec![
-            (31,None,None),
-            (32,Some("pont"),None),
-            (33,Some("pont"),Some("1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE")),
-            (34,Some("pont"),Some("0x1")),
-            (35,Some("dfinance"),None),
-            (36,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh")),
-            (37,Some("dfinance"),Some("0x1")),
-            (38,Some("diem"),None),
-            (39,Some("diem"),Some("0x1"))
-        ]
+                (31,None,None,None),
+                (32,Some("pont"),None,None),
+                (33,Some("pont"),Some("1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"),None),
+                (34,Some("pont"),Some("0x1"),None),
+                (40,Some("pont"),Some("0x1"),Some("http://demo.ru/api")),
+                (41,Some("pont"),Some("0x1"),Some("https://demo.ru/api")),
+                (42,Some("pont"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (43,Some("pont"),Some("0x1"),Some("http://localhost/api")),
+                (35,Some("dfinance"),None,None),
+                (36,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"),None),
+                (37,Some("dfinance"),Some("0x1"),None),
+                (44,Some("dfinance"),Some("0x1"),Some("http://demo.ru/api")),
+                (45,Some("dfinance"),Some("0x1"),Some("https://demo.ru/api")),
+                (46,Some("dfinance"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (47,Some("dfinance"),Some("0x1"),Some("http://localhost/api")),
+                (38,Some("diem"),None,None),
+                (39,Some("diem"),Some("0x1"),None),
+                (48,Some("diem"),Some("0x1"),Some("http://demo.ru/api")),
+                (49,Some("diem"),Some("0x1"),Some("https://demo.ru/api")),
+                (50,Some("diem"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (51,Some("diem"),Some("0x1"),Some("http://localhost/api")),
+            ]
             .iter()
-            .for_each(|(num, dialect,address)|{
+            .for_each(|(num, dialect,address, api)|{
                 init_project_with_settings(
                     format!("demoproject_{}", num),
                     dialect.map(|d| d.to_string()),
-                    address.map(|a| a.to_string())
+                    address.map(|a| a.to_string()),
+                    api.map(|a:&str| a.to_string())
                 )
             });
     }
 
     // =============================================================================================
     /// Создать проект из указаных настроек. Ожидается успех
-    fn success_create_new_project_and_build_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
+    fn success_create_new_project_and_build_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>, blockchain_api:Option<String>){
         use std::process::Command;
 
         // Путь до Dove
@@ -206,6 +336,10 @@ mod test_dove_cmd {
                 Some(address) => address,
                 None => "None (default)"
             },
+            match &blockchain_api {
+                Some(api) => api,
+                None => "None (default)"
+            }
         );
 
         // Поиск существующего проекта с таким именем. Если наден то удалить
@@ -228,6 +362,7 @@ mod test_dove_cmd {
             .current_dir(&dove_path);
         if let Some(dialect) = project_dialect.as_ref() { create_command.args(&["-d", dialect]); }
         if let Some(address) = project_address.as_ref() { create_command.args(&["-a", address]); }
+        if let Some(api) = blockchain_api.as_ref() { create_command.args(&["-r", api]); }
 
         let command_string = format!("{:?} ", create_command).replace("\"", "");
         print!("{}",  command_string);
@@ -327,7 +462,7 @@ mod test_dove_cmd {
         assert!(true);
     }
     /// Создать проект из указаных настроек. Ожидается ошибка
-    fn fail_create_new_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
+    fn fail_create_new_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>, blockchain_api:Option<String>){
         use std::process::Command;
 
         // Путь до Dove
@@ -343,6 +478,10 @@ mod test_dove_cmd {
             },
             match &project_address {
                 Some(address) => address,
+                None => "None (default)"
+            },
+            match &blockchain_api {
+                Some(api) => api,
                 None => "None (default)"
             },
         );
@@ -368,6 +507,7 @@ mod test_dove_cmd {
             .current_dir(&dove_path);
         if let Some(dialect) = project_dialect.as_ref() { create_command.args(&["-d", dialect]); }
         if let Some(address) = project_address.as_ref() { create_command.args(&["-a", address]); }
+        if let Some(api) = blockchain_api.as_ref() { create_command.args(&["-r", api]); }
 
         let command_string = format!("{:?} ", create_command).replace("\"", "");
         print!("{}",  command_string);
@@ -406,6 +546,7 @@ mod test_dove_cmd {
         print_ln();
         print_color_green("[NOT CREATED]");
         print_ln();
+        print_ln();
 
         // Удаление созданного проекта
         if let Some(finded) =  list_projects.as_ref().unwrap().iter().find(|it|it.as_os_str().to_str().unwrap_or("").contains(&project_name)){
@@ -413,9 +554,8 @@ mod test_dove_cmd {
         }
         assert!(true);
     }
-
     /// Инициализировать проект из указаных настроек
-    fn init_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>){
+    fn init_project_with_settings(project_name:String, project_dialect:Option<String>, project_address:Option<String>, blockchain_api:Option<String>){
         use std::process::Command;
 
         // Путь до Dove
@@ -435,6 +575,10 @@ mod test_dove_cmd {
             },
             match &project_address {
                 Some(address) => address,
+                None => "None (default)"
+            },
+            match &blockchain_api {
+                Some(api) => api,
                 None => "None (default)"
             },
         );
@@ -473,6 +617,7 @@ mod test_dove_cmd {
             .current_dir(&project_folder);
         if let Some(dialect) = project_dialect.as_ref() { init_command.args(&["-d", dialect]); }
         if let Some(address) = project_address.as_ref() { init_command.args(&["-a", address]); }
+        if let Some(api) = blockchain_api.as_ref() { init_command.args(&["-r", api]); }
 
         let command_string = format!("{:?} ", init_command).replace("\"", "");
         print!("{}",  command_string);
@@ -558,6 +703,7 @@ mod test_dove_cmd {
         print_ln();
         assert!(true);
     }
+
     fn if_exists_project_then_remove(list_projects: &mut Option<Vec<PathBuf>>, project_name:&str){
         if let Some(list) = list_projects.as_ref() {
             // Если найден удалить
@@ -661,7 +807,7 @@ mod test_dove_cmd {
     // Вывод
     // =============================================================================================
     /// Вывод настроек создоваемого проекта
-    fn print_newproject_settings(project_name:&str, project_dialect: &str, project_address:&str){
+    fn print_newproject_settings(project_name:&str, project_dialect: &str, project_address:&str, blockchain_api:&str){
         print_h2("New project settings:\n");
         // Название проекта
         print_bold(format!("Project will be created: ").as_str());
@@ -675,6 +821,10 @@ mod test_dove_cmd {
         print_bold(format!("Address: ").as_str());
         print_reset();
         print_default(format!("{} \n", project_address).as_str());
+        // Адрес проекта
+        print_bold(format!("Blockchain API: ").as_str());
+        print_reset();
+        print_default(format!("{} \n", blockchain_api).as_str());
         print_ln();
     }
     /// Вывод на экран проекта
@@ -691,6 +841,9 @@ mod test_dove_cmd {
             .and_then(|v|v.as_str())
             .map_or("- NULL -".to_string(), |v|v.to_string());
         let project_account_address = package.get("account_address")
+            .and_then(|v|v.as_str())
+            .map_or("- NULL -".to_string(), |v|v.to_string());
+        let project_api = package.get("blockchain_api")
             .and_then(|v|v.as_str())
             .map_or("- NULL -".to_string(), |v|v.to_string());
         let project_dependencies = package.get("dependencies")
@@ -714,6 +867,10 @@ mod test_dove_cmd {
         // Адрес проекта
         print_bold("Account address: ");
         print_default(&project_account_address);
+        print_ln();
+        // API
+        print_bold("Blockchain API: ");
+        print_default(&project_api);
         print_ln();
         // Git проекта
         print_bold("Dependencies: ");
