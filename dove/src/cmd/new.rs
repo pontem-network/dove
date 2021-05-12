@@ -51,8 +51,13 @@ impl Cmd for New {
 
         fs::create_dir(&project_dir)?;
 
-        ctx.project_dir = project_dir;
+        ctx.project_dir = project_dir.clone();
         let init = Init::new(self.repository, self.address, self.dialect);
-        init.apply(ctx)
+        if let Err(err) = init.apply(ctx) {
+            fs::remove_dir_all(&project_dir)?;
+            Err(err)
+        } else {
+            Ok(())
+        }
     }
 }

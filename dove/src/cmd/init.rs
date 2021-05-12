@@ -7,6 +7,8 @@ use crate::context::{Context, create_context};
 use structopt::StructOpt;
 use std::fs::OpenOptions;
 use std::io::Write;
+use lang::compiler::dialects::DialectName;
+use std::str::FromStr;
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -56,6 +58,7 @@ impl Cmd for Init {
         if manifest.exists() {
             return Err(anyhow!("init cannot be run on existing project."));
         }
+        DialectName::from_str(&self.dialect)?;
 
         let name = ctx
             .project_dir
