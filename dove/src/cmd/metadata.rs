@@ -75,7 +75,7 @@ pub struct PackageMetadata {
     pub name: String,
     /// Project AccountAddress.
     #[serde(default = "code_code_address")]
-    pub account_address: Option<String>,
+    pub account_address: String,
     /// Authors list.
     #[serde(default)]
     pub authors: Vec<String>,

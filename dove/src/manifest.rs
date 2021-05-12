@@ -33,7 +33,7 @@ pub struct Package {
     pub name: Option<String>,
     /// Project account address.
     #[serde(default = "code_code_address")]
-    pub account_address: Option<String>,
+    pub account_address: String,
     /// Authors list.
     #[serde(default)]
     pub authors: Vec<String>,
@@ -104,9 +104,8 @@ fn index() -> String {
     INDEX_FILE.to_owned()
 }
 
-#[allow(clippy::unnecessary_wraps)]
-fn code_code_address() -> Option<String> {
-    Some(format!("0x{}", CORE_CODE_ADDRESS))
+fn code_code_address() -> String {
+    format!("0x{}", CORE_CODE_ADDRESS)
 }
 
 /// Project layout.
@@ -353,7 +352,7 @@ mod test {
     fn package() -> Package {
         Package {
             name: Some("Foo".to_owned()),
-            account_address: Some("0x01".to_owned()),
+            account_address: "0x01".to_owned(),
             authors: vec![],
             blockchain_api: None,
             dependencies: Some(Dependencies {

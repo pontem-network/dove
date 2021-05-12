@@ -130,12 +130,9 @@ fn get_dep_address(path: &Path) -> Result<Option<AccountAddress>, Error> {
             .unwrap_or_else(default_dialect);
         let dialect = DialectName::from_str(&dialect_name)?.get_dialect();
 
-        let acc_addr = manifest
-            .package
-            .account_address
-            .ok_or_else(|| anyhow!("couldn't read account address from manifest"))?;
-
-        Ok(Some(dialect.parse_address(&acc_addr)?))
+        Ok(Some(
+            dialect.parse_address(&manifest.package.account_address)?,
+        ))
     } else {
         Ok(None)
     }
