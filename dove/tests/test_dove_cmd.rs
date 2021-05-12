@@ -8,140 +8,77 @@ mod test_dove_cmd {
     use termcolor::{ColorChoice, WriteColor, ColorSpec, Color};
     use std::path::{PathBuf, Path};
 
-
     // =============================================================================================
     // Tests
     // =============================================================================================
     /// Создание нового проекта
+    /// Считается корректным url
+    ///  http://demo.ru/api
+    ///  https://demo.ru/api
+    ///  http://127.0.0.1/api
+    ///  http://localhost/api
+    ///  http://localhost:8080/api
+    /// $ cargo run -- new ### -d ### -a ### -r http://localhost/api
+    //  $ cargo run -- build -e ###
     ///
-    /// Имя тестового проекта demoproject_1
     /// $ cargo run -- new demoproject_1
     /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_2
-    /// $ cargo run -- new demoproject_2 -d pont
-    /// $ cargo run -- build -e demoproject_2
+    /// $ cargo run -- new demoproject_1 -d pont
+    /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_3
-    /// $ cargo run -- new demoproject_3 -d pont -a 5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv
-    /// $ cargo run -- build -e demoproject_3
+    /// $ cargo run -- new demoproject_1 -d pont -a 5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv
+    /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_4
-    /// $ cargo run -- new demoproject_4 -d pont -a 0x1
-    /// $ cargo run -- build -e demoproject_4
+    /// $ cargo run -- new demoproject_1 -d pont -a 0x1
+    /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_60
-    /// $ cargo run -- new demoproject_60 -d pont -a 0x1 -r http://demo.ru/api
-    /// $ cargo run -- build
+    /// $ cargo run -- new demoproject_1 -d dfinance
+    /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_61
-    /// $ cargo run -- new demoproject_61 -d pont -a 0x1 -r https://demo.ru/api
-    /// $ cargo run -- build
+    /// $ cargo run -- new demoproject_1 -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
+    /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_62
-    /// $ cargo run -- new demoproject_62 -d pont -a 0x1 -r http://127.0.0.1/api
-    /// $ cargo run -- build
+    /// $ cargo run -- new demoproject_1 demoproject_7 -d dfinance -a 0x1
+    /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_63
-    /// $ cargo run -- new demoproject_63 -d pont -a 0x1 -r http://localhost/api
-    /// $ cargo run -- build
+    /// $ cargo run -- new demoproject_1 -d diem
+    /// $ cargo run -- build -e demoproject_1
     ///
-    /// Имя тестового проекта demoproject_72
-    /// $ cargo run -- new demoproject_72 -d pont -a 0x1 -r http://localhost:8080/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_5
-    /// $ cargo run -- new demoproject_5 -d dfinance
-    /// $ cargo run -- build -e demoproject_5
-    ///
-    /// Имя тестового проекта demoproject_6
-    /// $ cargo run -- new demoproject_6 -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
-    /// $ cargo run -- build -e demoproject_6
-    ///
-    /// Имя тестового проекта demoproject_7
-    /// $ cargo run -- new demoproject_7 demoproject_7 -d dfinance -a 0x1
-    /// $ cargo run -- build -e demoproject_7
-    ///
-    /// Имя тестового проекта demoproject_64
-    /// $ cargo run -- new demoproject_64 -d dfinance -a 0x1 -r http://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_65
-    /// $ cargo run -- new demoproject_65 -d dfinance -a 0x1 -r https://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_66
-    /// $ cargo run -- new demoproject_66 -d dfinance -a 0x1 -r http://127.0.0.1/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_67
-    /// $ cargo run -- new -d dfinance -a 0x1 -r http://localhost/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_74
-    /// $ cargo run -- new demoproject_73 -d dfinance -a 0x1 -r http://localhost:8080/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_8
-    /// $ cargo run -- new demoproject_8 -d diem
-    /// $ cargo run -- build -e demoproject_8
-    ///
-    /// Имя тестового проекта demoproject_9
-    /// $ cargo run -- new demoproject_9 -d diem -a 0x1
-    /// $ cargo run -- build -e demoproject_9
-    ///
-    /// Имя тестового проекта demoproject_68
-    /// $ cargo run -- new demoproject_68 -d diem -a 0x1 -r http://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_69
-    /// $ cargo run -- new demoproject_69 -d diem -a 0x1 -r https://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_70
-    /// $ cargo run -- new demoproject_70 -d diem -a 0x1 -r http://127.0.0.1/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_71
-    /// $ cargo run -- new demoproject_71 -d diem -a 0x1 -r http://localhost/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_75
-    /// $ cargo run -- new demoproject_75 -d diem -a 0x1 -r http://localhost:8080/api
-    /// $ cargo run -- build
-    ///
+    /// $ cargo run -- new demoproject_1 -d diem -a 0x1
+    /// $ cargo run -- build -e demoproject_1
     #[test]
     fn success_create_new_project(){
         vec![
-                (1,None,None,None),
-                (2,Some("pont"),None,None),
-                (3,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None),
-                (4,Some("pont"),Some("0x1"),None),
-                (60,Some("pont"),Some("0x1"),Some("http://demo.ru/api")),
-                (61,Some("pont"),Some("0x1"),Some("https://demo.ru/api")),
-                (62,Some("pont"),Some("0x1"),Some("http://127.0.0.1/api")),
-                (63,Some("pont"),Some("0x1"),Some("http://localhost/api")),
-                (72,Some("pont"),Some("0x1"),Some("http://localhost:8080/api")),
-                (5,Some("dfinance"),None,None),
-                (6,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"),None),
-                (7,Some("dfinance"),Some("0x1"),None),
-                (64,Some("dfinance"),Some("0x1"),Some("http://demo.ru/api")),
-                (65,Some("dfinance"),Some("0x1"),Some("https://demo.ru/api")),
-                (66,Some("dfinance"),Some("0x1"),Some("http://127.0.0.1/api")),
-                (67,Some("dfinance"),Some("0x1"),Some("http://localhost/api")),
-                (73,Some("dfinance"),Some("0x1"),Some("http://localhost:8080/api")),
-                (8,Some("diem"),None,None),
-                (9,Some("diem"),Some("0x1"),None),
-                (68,Some("diem"),Some("0x1"),Some("http://demo.ru/api")),
-                (69,Some("diem"),Some("0x1"),Some("https://demo.ru/api")),
-                (70,Some("diem"),Some("0x1"),Some("http://127.0.0.1/api")),
-                (71,Some("diem"),Some("0x1"),Some("http://localhost/api")),
-                (74,Some("diem"),Some("0x1"),Some("http://localhost:8080/api")),
+                (None,None,None),
+                (Some("pont"),None,None),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None),
+                (Some("pont"),Some("0x1"),None),
+                (Some("pont"),Some("0x1"),Some("http://demo.ru/api")),
+                (Some("pont"),Some("0x1"),Some("https://demo.ru/api")),
+                (Some("pont"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (Some("pont"),Some("0x1"),Some("http://localhost/api")),
+                (Some("pont"),Some("0x1"),Some("http://localhost:8080/api")),
+                (Some("dfinance"),None,None),
+                (Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"),None),
+                (Some("dfinance"),Some("0x1"),None),
+                (Some("dfinance"),Some("0x1"),Some("http://demo.ru/api")),
+                (Some("dfinance"),Some("0x1"),Some("https://demo.ru/api")),
+                (Some("dfinance"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (Some("dfinance"),Some("0x1"),Some("http://localhost/api")),
+                (Some("dfinance"),Some("0x1"),Some("http://localhost:8080/api")),
+                (Some("diem"),None,None),
+                (Some("diem"),Some("0x1"),None),
+                (Some("diem"),Some("0x1"),Some("http://demo.ru/api")),
+                (Some("diem"),Some("0x1"),Some("https://demo.ru/api")),
+                (Some("diem"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (Some("diem"),Some("0x1"),Some("http://localhost/api")),
+                (Some("diem"),Some("0x1"),Some("http://localhost:8080/api")),
             ]
             .iter()
-            .for_each(|(num, dialect,address,api)|{
+            .for_each(|(dialect,address,api)|{
                 success_create_new_project_and_build_with_settings(
-                    format!("demoproject_{}", num),
+                    "demoproject_1".to_string(),
                     dialect.map(|d:&str| d.to_string()),
                     address.map(|a:&str| a.to_string()),
                     api.map(|a:&str| a.to_string())
@@ -151,40 +88,51 @@ mod test_dove_cmd {
 
     /// Создание нового проекта c несуществующим деалектом incorectdialect
     /// Имя тестового проекта demoproject__##
+    /// Считается некорректным url
+    /// demo
+    /// /demo
+    /// /demo/api
+    /// //demo/api
+    /// //demo:8080/api
+    /// 127.0.0.1/api
+    /// ftp://demo.ru/api
+    /// ssh://demo.ru/api
+    /// smb://demo.ru/api
+    /// $ cargo run -- new ### -d ### -a ### -r URL
+    ///
     ///
     /// Ожидается ошибка
-    /// $ cargo run -- new demoproject__1 -d incorectdialect
-    /// $ cargo run -- new demoproject__2 -d pont -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
-    /// $ cargo run -- new demoproject__# -d pont -a 5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv -r demo
-    /// $ cargo run -- new demoproject__3 -d dfinance -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
-    /// $ cargo run -- new demoproject__4 -d diem -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject_2 -d incorectdialect
+    /// $ cargo run -- new demoproject_2 -d pont -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject_2 -d dfinance -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    /// $ cargo run -- new demoproject_2 -d diem -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
     ///
     #[test]
     fn fail_create_new_project_dealect_incorectdialect(){
         vec![
-                (1, Some("incorectdialect"), None, None),
+                (Some("incorectdialect"), None, None),
                 // Max address 32 byte
-                (2,Some("pont"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
-                (7,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("demo")),
-                (8,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("/demo")),
-                (9,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("/demo/api")),
-                (14,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("//demo/api")),
-                (14,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("//demo:8080/api")),
-                (10,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("127.0.0.1/api")),
-                (11,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("ftp://demo.ru/api")),
-                (12,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("ssh://demo.ru/api")),
-                (13,Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("smb://demo.ru/api")),
+                (Some("pont"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("demo")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("/demo")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("/demo/api")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("//demo/api")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("//demo:8080/api")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("127.0.0.1/api")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("ftp://demo.ru/api")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("ssh://demo.ru/api")),
+                (Some("pont"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),Some("smb://demo.ru/api")),
                 // Max address 16 byte
-                (3,Some("dfinance"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
-                (5,Some("dfinance"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None),
+                (Some("dfinance"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
+                (Some("dfinance"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None),
                 // Max address 16 byte
-                (4,Some("diem"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
-                (6,Some("diem"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None)
+                (Some("diem"),Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),None),
+                (Some("diem"),Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),None)
             ]
             .iter()
-            .for_each(|(num, dialect,address,api)|{
+            .for_each(|(dialect,address,api)|{
                 fail_create_new_project_with_settings(
-                    format!("demoproject__{}", num),
+                    "demoproject_2".to_string(),
                     dialect.map(|d| d.to_string()),
                     address.map(|a:&str| a.to_string()),
                     api.map(|a:&str| a.to_string())
@@ -197,118 +145,71 @@ mod test_dove_cmd {
     /// В тестовом режиме инициализировать можно только в каталоге dove.
     /// Для инициализации в любом месте проект должен быть собран в бинарник через cargo не выйдет
     ///
-    /// Имя тестового проекта demoproject_31
+    /// Считается корректным url
+    ///  http://demo.ru/api
+    ///  https://demo.ru/api
+    ///  http://127.0.0.1/api
+    ///  http://localhost/api
+    ///  http://localhost:8080/api
+    /// $ cargo run -- init -d ### -a ### -r http://localhost/api
+    ///
+    /// Имя тестового проекта demoproject_1
     /// $ cargo run -- init
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_32
     /// $ cargo run -- init -d pont
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_33
     /// $ cargo run -- init -d pont -a 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_34
     /// $ cargo run -- init -d pont -a 0x1
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_40
-    /// $ cargo run -- init -d pont -a 0x1 -r http://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_41
-    /// $ cargo run -- init -d pont -a 0x1 -r https://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_42
-    /// $ cargo run -- init -d pont -a 0x1 -r http://127.0.0.1/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_43
-    /// $ cargo run -- init -d pont -a 0x1 -r http://localhost/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_35
     /// $ cargo run -- init -d dfinance
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_36
     /// $ cargo run -- init -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_37
     /// $ cargo run -- init -d dfinance -a 0x1
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_44
-    /// $ cargo run -- init -d dfinance -a 0x1 -r http://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_45
-    /// $ cargo run -- init -d dfinance -a 0x1 -r https://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_46
-    /// $ cargo run -- init -d dfinance -a 0x1 -r http://127.0.0.1/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_47
-    /// $ cargo run -- init -d dfinance -a 0x1 -r http://localhost/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_38
     /// $ cargo run -- init -d diem
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_39
     /// $ cargo run -- init -d diem -a 0x1
     /// $ cargo run -- build
     ///
-    /// Имя тестового проекта demoproject_48
-    /// $ cargo run -- init -d diem -a 0x1 -r http://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_49
-    /// $ cargo run -- init -d diem -a 0x1 -r https://demo.ru/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_50
-    /// $ cargo run -- init -d diem -a 0x1 -r http://127.0.0.1/api
-    /// $ cargo run -- build
-    ///
-    /// Имя тестового проекта demoproject_51
-    /// $ cargo run -- init -d diem -a 0x1 -r http://localhost/api
-    /// $ cargo run -- build
     #[test]
     fn success_init_project_in_folder(){
         vec![
-                (31,None,None,None),
-                (32,Some("pont"),None,None),
-                (33,Some("pont"),Some("1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"),None),
-                (34,Some("pont"),Some("0x1"),None),
-                (40,Some("pont"),Some("0x1"),Some("http://demo.ru/api")),
-                (41,Some("pont"),Some("0x1"),Some("https://demo.ru/api")),
-                (42,Some("pont"),Some("0x1"),Some("http://127.0.0.1/api")),
-                (43,Some("pont"),Some("0x1"),Some("http://localhost/api")),
-                (35,Some("dfinance"),None,None),
-                (36,Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"),None),
-                (37,Some("dfinance"),Some("0x1"),None),
-                (44,Some("dfinance"),Some("0x1"),Some("http://demo.ru/api")),
-                (45,Some("dfinance"),Some("0x1"),Some("https://demo.ru/api")),
-                (46,Some("dfinance"),Some("0x1"),Some("http://127.0.0.1/api")),
-                (47,Some("dfinance"),Some("0x1"),Some("http://localhost/api")),
-                (38,Some("diem"),None,None),
-                (39,Some("diem"),Some("0x1"),None),
-                (48,Some("diem"),Some("0x1"),Some("http://demo.ru/api")),
-                (49,Some("diem"),Some("0x1"),Some("https://demo.ru/api")),
-                (50,Some("diem"),Some("0x1"),Some("http://127.0.0.1/api")),
-                (51,Some("diem"),Some("0x1"),Some("http://localhost/api")),
+                (None,None,None),
+                (Some("pont"),None,None),
+                (Some("pont"),Some("1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"),None),
+                (Some("pont"),Some("0x1"),None),
+                (Some("pont"),Some("0x1"),Some("http://demo.ru/api")),
+                (Some("pont"),Some("0x1"),Some("https://demo.ru/api")),
+                (Some("pont"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (Some("pont"),Some("0x1"),Some("http://localhost/api")),
+                (Some("dfinance"),None,None),
+                (Some("dfinance"),Some("wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"),None),
+                (Some("dfinance"),Some("0x1"),None),
+                (Some("dfinance"),Some("0x1"),Some("http://demo.ru/api")),
+                (Some("dfinance"),Some("0x1"),Some("https://demo.ru/api")),
+                (Some("dfinance"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (Some("dfinance"),Some("0x1"),Some("http://localhost/api")),
+                (Some("diem"),None,None),
+                (Some("diem"),Some("0x1"),None),
+                (Some("diem"),Some("0x1"),Some("http://demo.ru/api")),
+                (Some("diem"),Some("0x1"),Some("https://demo.ru/api")),
+                (Some("diem"),Some("0x1"),Some("http://127.0.0.1/api")),
+                (Some("diem"),Some("0x1"),Some("http://localhost/api")),
             ]
             .iter()
-            .for_each(|(num, dialect,address, api)|{
+            .for_each(|(dialect,address, api)|{
                 init_project_with_settings(
-                    format!("demoproject_{}", num),
+                    "demoproject_3".to_string(),
                     dialect.map(|d| d.to_string()),
                     address.map(|a| a.to_string()),
                     api.map(|a:&str| a.to_string())
