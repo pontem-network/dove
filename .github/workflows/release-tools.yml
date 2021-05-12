@@ -62,6 +62,14 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Restore from cache and run vcpkg
+        uses: lukka/run-vcpkg@v7
+        with:
+          vcpkgArguments: 'openssl'
+          vcpkgDirectory: '${{github.workspace}}/3rdparty/vcpkg'
+          vcpkgTriplet: ${{ matrix.triplet }}
+          vcpkgGitCommitId: "3b4dd085b0f5b410d9f587b3c9f7ad08a07449aa"
+
       - name: Build all executables
         if: matrix.os != 'windows-latest'
         run: cargo build --release --all --bins
