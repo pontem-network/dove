@@ -41,8 +41,8 @@ pub const VERSION: &str = git_hash::crate_version_with_git_hash_short!();
 /// Code indent.
 pub const INDENT: usize = 4;
 
-/// Disassemble bytecode with config and write source code to writer.
-pub fn disasm<W: Write>(bytecode: &[u8], writer: &mut W, config: Config) -> Result<(), Error> {
+/// Decompile bytecode with config and write source code to writer.
+pub fn decompile<W: Write>(bytecode: &[u8], writer: &mut W, config: Config) -> Result<(), Error> {
     let unit = Unit::new(bytecode)?;
 
     let disasm = Decompiler::new(&unit, config);
@@ -50,10 +50,10 @@ pub fn disasm<W: Write>(bytecode: &[u8], writer: &mut W, config: Config) -> Resu
     ast.write_code(writer)
 }
 
-/// Disassemble bytecode with config.
-pub fn disasm_str(bytecode: &[u8], config: Config) -> Result<String, Error> {
+/// Decompile bytecode with config.
+pub fn decompile_str(bytecode: &[u8], config: Config) -> Result<String, Error> {
     let mut code = String::new();
-    disasm(bytecode, &mut code, config)?;
+    decompile(bytecode, &mut code, config)?;
     Ok(code)
 }
 
@@ -135,7 +135,7 @@ pub fn write_array<E: Encode, W: Write>(
 #[cfg(test)]
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
-    use crate::{disasm_str, Config};
+    use crate::{decompile_str, Config};
     use lang::flow::builder::{MoveBuilder, Artifacts, StaticResolver};
     use lang::compiler::dialects::DialectName;
     use lang::compiler::file::MoveFile;
@@ -174,7 +174,7 @@ mod tests {
         let config = Config {
             light_version: false,
         };
-        let restored_source = disasm_str(&original_bytecode, config).unwrap();
+        let restored_source = decompile_str(&original_bytecode, config).unwrap();
         println!("decompiled:\n{}", restored_source);
 
         let original_bytecode = CompiledModule::deserialize(&original_bytecode).unwrap();
