@@ -11,6 +11,10 @@ use crate::compiler::address::ss58::{replace_ss58_addresses, ss58_to_address};
 pub struct PontDialect;
 
 impl Dialect for PontDialect {
+    fn address_length(&self) -> usize {
+        32
+    }
+
     fn name(&self) -> DialectName {
         DialectName::Pont
     }
@@ -35,6 +39,14 @@ impl Dialect for PontDialect {
 
     fn parse_address(&self, addr: &str) -> Result<AccountAddress> {
         if addr.starts_with("0x") {
+            let max_hex_len = self.address_length() * 2 + 2;
+            if addr.len() > max_hex_len {
+                return Err(anyhow::anyhow!(
+                    "Unable to parse AccountAddress. Maximum address length is {}.",
+                    max_hex_len
+                ));
+            }
+
             AccountAddress::from_hex_literal(addr).map_err(|err| err.into())
         } else {
             ss58_to_address(addr)

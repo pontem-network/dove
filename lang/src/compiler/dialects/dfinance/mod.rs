@@ -10,6 +10,10 @@ use crate::compiler::address::bech32::{HRP, replace_bech32_addresses, bech32_int
 pub struct DFinanceDialect;
 
 impl Dialect for DFinanceDialect {
+    fn address_length(&self) -> usize {
+        20
+    }
+
     fn name(&self) -> DialectName {
         DialectName::DFinance
     }
@@ -34,6 +38,14 @@ impl Dialect for DFinanceDialect {
         let address_res = if addr.starts_with(HRP) {
             bech32_into_address(addr)
         } else if addr.starts_with("0x") {
+            let max_hex_len = self.address_length() * 2 + 2;
+            if addr.len() > max_hex_len {
+                return Err(anyhow::anyhow!(
+                    "Unable to parse AccountAddress. Maximum address length is {}.",
+                    max_hex_len
+                ));
+            }
+
             AccountAddress::from_hex_literal(addr).map_err(|err| err.into())
         } else {
             Err(anyhow::anyhow!("Does not start with either wallet1 or 0x"))
