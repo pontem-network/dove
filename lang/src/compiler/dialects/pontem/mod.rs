@@ -1,4 +1,4 @@
-use crate::compiler::dialects::Dialect;
+use crate::compiler::dialects::{Dialect, DialectName};
 use crate::compiler::source_map::FileOffsetMap;
 use move_core_types::account_address::AccountAddress;
 use anyhow::Context;
@@ -11,8 +11,8 @@ use crate::compiler::address::ss58::{replace_ss58_addresses, ss58_to_address};
 pub struct PontDialect;
 
 impl Dialect for PontDialect {
-    fn name(&self) -> &str {
-        "pont"
+    fn name(&self) -> DialectName {
+        DialectName::Pont
     }
 
     fn adapt_to_target(&self, _: &mut Vec<u8>) -> Result<()> {
@@ -23,6 +23,14 @@ impl Dialect for PontDialect {
     fn adapt_to_basis(&self, _: &mut Vec<u8>) -> Result<()> {
         // No-op
         Ok(())
+    }
+
+    fn adapt_address_to_target(&self, address: AccountAddress) -> Vec<u8> {
+        address.to_vec()
+    }
+
+    fn adapt_address_to_basis(&self, address: &[u8]) -> Result<AccountAddress> {
+        AccountAddress::from_bytes(address).map_err(|err| err.into())
     }
 
     fn parse_address(&self, addr: &str) -> Result<AccountAddress> {

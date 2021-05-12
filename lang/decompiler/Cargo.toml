@@ -18,7 +18,7 @@ name = "decompiler"
 
 # lib, wasm, cffi:
 [dependencies]
-rand = "0.7"
+rand = "=0.7.3"
 itertools = "0.9"
 hex = "0.4"
 anyhow = { version = "1.0", default-features = false }
@@ -34,7 +34,6 @@ move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "rele
 
 [features]
 cffi = []
-
 
 # cli:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

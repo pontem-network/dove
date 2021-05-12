@@ -1,4 +1,4 @@
-use crate::compiler::dialects::Dialect;
+use crate::compiler::dialects::{Dialect, DialectName};
 use crate::compiler::source_map::FileOffsetMap;
 use anyhow::Context;
 use move_core_types::account_address::AccountAddress;
@@ -10,8 +10,8 @@ use crate::compiler::address::bech32::{HRP, replace_bech32_addresses, bech32_int
 pub struct DFinanceDialect;
 
 impl Dialect for DFinanceDialect {
-    fn name(&self) -> &str {
-        "dfinance"
+    fn name(&self) -> DialectName {
+        DialectName::DFinance
     }
 
     fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()> {
@@ -20,6 +20,14 @@ impl Dialect for DFinanceDialect {
 
     fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()> {
         compat::adapt_to_basis(bytecode, compat::AddressType::Dfninance)
+    }
+
+    fn adapt_address_to_target(&self, address: AccountAddress) -> Vec<u8> {
+        compat::adapt_address_to_target(address, compat::AddressType::Dfninance)
+    }
+
+    fn adapt_address_to_basis(&self, address: &[u8]) -> Result<AccountAddress> {
+        compat::adapt_address_to_basis(address, compat::AddressType::Dfninance)
     }
 
     fn parse_address(&self, addr: &str) -> Result<AccountAddress> {

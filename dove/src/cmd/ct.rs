@@ -221,7 +221,8 @@ impl<'a> TransactionBuilder<'a> {
 
         let sender = self.dove_ctx.account_address()?;
         let script = MoveFile::load(&file_path)?;
-        let mut scripts = ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&script])?;
+        let mut scripts =
+            ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&script])?;
         if scripts.is_empty() {
             return Err(anyhow!("Script not found in file '{}'", fname));
         }

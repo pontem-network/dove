@@ -15,14 +15,12 @@ use std::str::FromStr;
 use anyhow::{anyhow, Error, Result};
 use clap::Clap;
 use http::Uri;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::language_storage::{ResourceKey, TypeTag};
+use move_core_types::language_storage::TypeTag;
+use resource_viewer as rv;
 
-use diem::prelude::*;
-use diem::rv;
-use lang::compiler::address::bech32::{bech32_into_diem, HRP};
 use lang::compiler::dialects::DialectName;
-use move_resource_viewer::{Dialect, net::*, ser, tte};
+use move_resource_viewer::{ser, tte};
+use net::{make_net, NetView};
 
 #[cfg(feature = "json-schema")]
 const STDOUT_PATH: &str = "-";
@@ -49,10 +47,7 @@ struct Cfg {
 
     /// Time: maximum block number
     #[clap(long, short)]
-    #[cfg(not(feature = "ps_address"))]
-    height: Option<u128>,
-    #[cfg(feature = "ps_address")]
-    height: Option<sp_core::H256>,
+    height: Option<String>,
 
     /// Output file path.
     /// Special value for write to stdout: "-"
@@ -101,11 +96,12 @@ fn init_logger() -> Result<(), impl std::error::Error> {
 fn run() -> Result<(), Error> {
     let cfg = Cfg::parse();
 
-    let dialect = Dialect::from_str(&cfg.dialect)?;
+    let dialect_name = DialectName::from_str(&cfg.dialect)?;
 
     produce_json_schema(&cfg);
+    let net = make_net(cfg.api, dialect_name)?;
+    let dialect = dialect_name.get_dialect();
 
-    let host = cfg.api;
     let output = cfg.output;
     let height = cfg.height;
     let json = cfg.json.unwrap_or_else(|| {
@@ -119,47 +115,34 @@ fn run() -> Result<(), Error> {
 
     match tte {
         TypeTag::Struct(st) => {
-            let key = ResourceKey::new(addr, st.clone());
-            let res = get_resource(key, &host, height);
-            res.map(|resp| {
-                let bytes = resp.as_bytes();
-                if !bytes.is_empty() {
-                    let client = NodeClient::new(host, height);
+            net.get_resource(&addr, &st, &height)
+                .map(|resp| {
+                    let view = NetView::new(net, height);
+                    if let Some(bytes_for_block) = resp {
+                        // Internally produce FatStructType (with layout) for StructTag by
+                        // resolving & de-.. entire deps-chain.
+                        let annotator = rv::MoveValueAnnotator::new_no_stdlib(&view);
 
-                    // Internally produce FatStructType (with layout) for StructTag by
-                    // resolving & de-.. entire deps-chain.
-                    let annotator = rv::MoveValueAnnotator::new_no_stdlib(&client);
+                        annotator
+                            .view_resource(&st, &bytes_for_block.0)
+                            .and_then(|result| {
+                                let height = bytes_for_block.1;
 
-                    annotator
-                        .view_resource(&st, &bytes)
-                        .and_then(|result| {
-                            let height = {
-                                let height;
-                                #[cfg(feature = "ps_address")]
-                                {
-                                    height = format!("{:#x}", resp.block());
+                                if json {
+                                    serde_json::ser::to_string_pretty(
+                                        &ser::AnnotatedMoveStructWrapper { height, result },
+                                    )
+                                    .map_err(|err| anyhow!("{}", err))
+                                } else {
+                                    Ok(format!("{}", result))
                                 }
-                                #[cfg(not(feature = "ps_address"))]
-                                {
-                                    height = resp.block();
-                                }
-                                height
-                            };
-                            if json {
-                                serde_json::ser::to_string_pretty(
-                                    &ser::AnnotatedMoveStructWrapper { height, result },
-                                )
-                                .map_err(|err| anyhow!("{}", err))
-                            } else {
-                                Ok(format!("{}", result))
-                            }
-                        })
-                        .map(|result| write_output(&output, &result, "result"))
-                } else {
-                    Err(anyhow!("Resource not found, result is empty"))
-                }
-            })
-            .and_then(|result| result)
+                            })
+                            .map(|result| write_output(&output, &result, "result"))
+                    } else {
+                        Err(anyhow!("Resource not found, result is empty"))
+                    }
+                })
+                .and_then(|result| result)
         }
 
         TypeTag::Vector(tt) => Err(anyhow!(

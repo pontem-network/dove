@@ -25,17 +25,7 @@ move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch =
 lang = { path = "../lang" }
 git-hash = { path = "../common/git-hash" }
 compat = { path = "../lang/compat", package = "move-compat" }
-dnclient = { path = "../common/dnode-rest-client", package = "dnode-rest-client", optional = true }
-
-# ps:
-[dependencies.substrate-api-client]
-git = "https://github.com/scs/substrate-api-client.git"
-rev = "62afbac0be1928681d8c70565fa0cc39a92cf4c8"
-[dependencies.keyring]
-version = '2.0.0'
-package = "sp-keyring"
-[dependencies.sp-core]
-version = '2.0.0'
+net = { path = "../net" }
 
 # cli:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -48,4 +38,4 @@ default = [
     "json-schema",
 ]
 
-json-schema = [ "schemars", ]
+json-schema = ["schemars"]

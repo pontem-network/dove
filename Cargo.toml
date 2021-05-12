@@ -2,6 +2,7 @@
 members = [
     "language_server",
     "executor",
+    "net",
     "dove",
     "lang",
     "lang/compat",
@@ -9,7 +10,6 @@ members = [
     "resource-viewer",
     "resources",
     "common/git-hash",
-    "common/dnode-rest-client",
 ]
 
 [profile.release]

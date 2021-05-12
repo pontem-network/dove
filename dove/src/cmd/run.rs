@@ -41,7 +41,7 @@ impl Cmd for Run {
         let signers = self
             .signers
             .iter()
-            .map(|signer| ctx.dialect.parse_address(signer).map(|addr| addr))
+            .map(|signer| ctx.dialect.parse_address(signer))
             .collect::<Result<Vec<_>, Error>>()?;
 
         let sender = self

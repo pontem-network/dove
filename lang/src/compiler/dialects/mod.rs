@@ -9,6 +9,7 @@ use crate::compiler::dialects::diem::DiemDialect;
 use crate::compiler::dialects::pontem::PontDialect;
 use crate::compiler::mut_string::MutString;
 use crate::compiler::source_map::FileOffsetMap;
+use std::fmt;
 
 pub mod dfinance;
 pub mod diem;
@@ -16,13 +17,17 @@ pub mod line_endings;
 pub mod pontem;
 
 pub trait Dialect {
-    fn name(&self) -> &str;
+    fn name(&self) -> DialectName;
 
     /// Returns the bytecode in the dialect format.
     fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()>;
 
     /// Returns the bytecode in the basis format.
     fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()>;
+
+    fn adapt_address_to_target(&self, address: AccountAddress) -> Vec<u8>;
+
+    fn adapt_address_to_basis(&self, address: &[u8]) -> Result<AccountAddress>;
 
     fn parse_address(&self, addr: &str) -> Result<AccountAddress>;
 
@@ -36,7 +41,7 @@ pub trait Dialect {
     );
 }
 
-#[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DialectName {
     Diem,
@@ -64,5 +69,19 @@ impl FromStr for DialectName {
             "pont" => Ok(DialectName::Pont),
             _ => Err(anyhow::format_err!("Invalid dialect {:?}", s)),
         }
+    }
+}
+
+impl fmt::Display for DialectName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                DialectName::Diem => "diem",
+                DialectName::DFinance => "dfinance",
+                DialectName::Pont => "pont",
+            }
+        )
     }
 }

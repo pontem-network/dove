@@ -22,7 +22,7 @@ pub fn resolve(ctx: &Context, module_id: &ModuleId) -> Result<PathBuf, Error> {
 
     if !dep.exists() {
         if let Some(chain_url) = &ctx.manifest.package.blockchain_api {
-            let loader = RestBytecodeLoader::new(chain_url.parse()?);
+            let loader = RestBytecodeLoader::new(ctx.dialect.as_ref(), chain_url.parse()?)?;
             load_tree(ctx, &loader, module_id)?;
         } else {
             return Err(anyhow!(

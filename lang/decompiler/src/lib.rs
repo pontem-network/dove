@@ -153,10 +153,8 @@ mod tests {
             MoveFile::with_content("assets/base.move", include_str!("assets/base.move")),
             MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
         ];
-        let resolver = StaticResolver {
-            deps: deps.to_vec(),
-        };
-        let target = &[MoveFile::with_content("target.move", source)];
+        let resolver = StaticResolver::new(deps.to_vec());
+        let target = &[&MoveFile::with_content("target.move", source)];
         let builder = MoveBuilder::new(dialect.as_ref(), Some(sender), resolver);
         let Artifacts { files, prog } = builder.build(target);
 
