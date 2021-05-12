@@ -2,7 +2,7 @@
 
 [package]
 name = "decompiler"
-version = "0.1.0"
+version = "1.2.0"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
     "Dm. Yakushev <dmitryyakushev@wings.ai>",
@@ -41,7 +41,8 @@ clap = "3.0.0-beta.2"
 anyhow = "1.0"
 
 [target.wasm32-unknown-unknown.dependencies]
-wasm-bindgen = "0.2.70"
+wasm-bindgen = "0.2.74"
+getrandom = { version = "0.2.2", features = ["js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 lang = { path = ".." }

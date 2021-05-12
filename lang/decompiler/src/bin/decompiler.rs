@@ -50,7 +50,7 @@ fn run() -> Result<(), Error> {
         light_version: false,
     };
 
-    let out = decompiler::disasm_str(&bytes, cfg)?;
+    let out = decompiler::decompile_str(&bytes, cfg)?;
 
     if let Some(output) = opts.output {
         File::create(output)?.write_all(out.as_bytes())?;
