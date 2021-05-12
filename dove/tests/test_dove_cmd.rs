@@ -17,37 +17,37 @@ mod test_dove_cmd {
     /// $ cargo run -- new demoproject_1
     /// $ cargo run -- build -e demoproject_1
     ///
+    /// Имя тестового проекта demoproject_2
+    /// $ cargo run -- new demoproject_2 -d pont
+    /// $ cargo run -- build -e demoproject_2
+    ///
     /// Имя тестового проекта demoproject_3
-    /// $ cargo run -- new demoproject_3 -d pont
+    /// $ cargo run -- new demoproject_3 -d pont -a 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE
     /// $ cargo run -- build -e demoproject_3
     ///
+    /// Имя тестового проекта demoproject_4
+    /// $ cargo run -- new demoproject_4 -d pont -a 0x1
+    /// $ cargo run -- build -e demoproject_4
+    ///
+    /// Имя тестового проекта demoproject_5
+    /// $ cargo run -- new demoproject_5 -d dfinance
+    /// $ cargo run -- build -e demoproject_5
+    ///
+    /// Имя тестового проекта demoproject_6
+    /// $ cargo run -- new demoproject_6 -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
+    /// $ cargo run -- build -e demoproject_6
+    ///
     /// Имя тестового проекта demoproject_7
-    /// $ cargo run -- new demoproject_7 -d pont -a 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE
+    /// $ cargo run -- new demoproject_7 -d dfinance -a 0x1
     /// $ cargo run -- build -e demoproject_7
     ///
     /// Имя тестового проекта demoproject_8
-    /// $ cargo run -- new demoproject_8 -d pont -a 0x1
+    /// $ cargo run -- new demoproject_8 -d diem
     /// $ cargo run -- build -e demoproject_8
     ///
-    /// Имя тестового проекта demoproject_4
-    /// $ cargo run -- new demoproject_4 -d dfinance
-    /// $ cargo run -- build -e demoproject_4
-    ///
     /// Имя тестового проекта demoproject_9
-    /// $ cargo run -- new demoproject_9 -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
+    /// $ cargo run -- new demoproject_9 -d diem -a 0x1
     /// $ cargo run -- build -e demoproject_9
-    ///
-    /// Имя тестового проекта demoproject_10
-    /// $ cargo run -- new demoproject_10 -d dfinance -a 0x1
-    /// $ cargo run -- build -e demoproject_10
-    ///
-    /// Имя тестового проекта demoproject_5
-    /// $ cargo run -- new demoproject_5 -d diem
-    /// $ cargo run -- build -e demoproject_5
-    ///
-    /// Имя тестового проекта demoproject_11
-    /// $ cargo run -- new demoproject_11 -d diem -a 0x1
-    /// $ cargo run -- build -e demoproject_11
     #[test]
     fn success_create_new_project(){
         vec![
