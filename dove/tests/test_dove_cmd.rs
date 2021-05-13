@@ -7,7 +7,7 @@ mod test_dove_cmd {
     use std::io::{Write};
     use termcolor::{ColorChoice, WriteColor, ColorSpec, Color};
     use std::path::{PathBuf, Path};
-    use std::process::{Command, exit};
+    use std::process::{Command};
     use std::fs::create_dir_all;
     use fs_extra::file::write_all;
 
@@ -297,12 +297,22 @@ mod test_dove_cmd {
 
         let mut dove_toml = project_folder.clone();
         dove_toml.push("Dove.toml");
-        write_all(dove_toml, "\
-            [package]\r\n\
-            name = \"demoproject_4\"\r\n\
-            dialect = \"pont\"\r\n\
-            dependencies = [{ git = \"https://github.com/pontem-network/move-stdlib\" }]\r\n
-        ");
+        if let Err(err) = write_all(
+            &dove_toml,
+            "\
+                [package]\r\n\
+                name = \"demoproject_4\"\r\n\
+                dialect = \"pont\"\r\n\
+                dependencies = [{ git = \"https://github.com/pontem-network/move-stdlib\" }]\r\n
+            ",
+        ) {
+            assert!(
+                false,
+                "failed to create file {}; [ERROR] {}",
+                dove_toml.to_str().unwrap_or(" - "),
+                err.to_string()
+            )
+        }
         let mut create_command = Command::new("cargo");
         create_command
             .args(&["run", "--", "clean"])
