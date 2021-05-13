@@ -6,7 +6,7 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::manifest::{Dependence, DoveToml, Git, Layout};
 
-fn into_metadata(ctx: Context) -> DoveMetadata {
+fn into_metadata(ctx: Context) -> Result<DoveMetadata, Error> {
     let project_name = ctx.project_name();
     let Context {
         project_dir,
@@ -14,6 +14,7 @@ fn into_metadata(ctx: Context) -> DoveMetadata {
         dialect,
     } = ctx;
     let DoveToml { package, layout } = manifest;
+    let layout = layout.to_absolute(&project_dir)?;
 
     let dependencies = package.dependencies.unwrap_or_default();
     let mut local_deps = vec![];
@@ -37,10 +38,10 @@ fn into_metadata(ctx: Context) -> DoveMetadata {
         local_dependencies: local_deps,
         dialect: dialect.name().to_string(),
     };
-    DoveMetadata {
+    Ok(DoveMetadata {
         package: package_metadata,
         layout,
-    }
+    })
 }
 
 /// Metadata project command.
@@ -49,7 +50,7 @@ pub struct Metadata {}
 
 impl Cmd for Metadata {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let metadata = into_metadata(ctx);
+        let metadata = into_metadata(ctx)?;
         println!(
             "{}",
             serde_json::to_string_pretty::<DoveMetadata>(&metadata)?

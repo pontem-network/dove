@@ -3,13 +3,13 @@ use std::convert::TryFrom;
 use std::path::Path;
 
 use anyhow::Error;
+use move_core_types::language_storage::CORE_CODE_ADDRESS;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
     ser::Error as SerError,
 };
 use toml::Value;
-use move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -149,6 +149,30 @@ pub struct Layout {
 
     /// Path to index.
     pub index: String,
+}
+
+impl Layout {
+    /// Returns layout instance with paths based on the `base`.
+    pub fn to_absolute(&self, base: &Path) -> Result<Layout, Error> {
+        fn abs(base: &Path, path: &str) -> Result<String, Error> {
+            base.join(path)
+                .to_str()
+                .map(|path| path.to_owned())
+                .ok_or_else(|| anyhow!("Failed to display absolute layout path:[{}]", path))
+        }
+        Ok(Layout {
+            module_dir: abs(base, &self.module_dir)?,
+            script_dir: abs(base, &self.script_dir)?,
+            tests_dir: abs(base, &self.tests_dir)?,
+            module_output: abs(base, &self.module_output)?,
+            packages_output: abs(base, &self.packages_output)?,
+            script_output: abs(base, &self.script_output)?,
+            transaction_output: abs(base, &self.transaction_output)?,
+            target_deps: abs(base, &self.target_deps)?,
+            target: abs(base, &self.target)?,
+            index: abs(base, &self.index)?,
+        })
+    }
 }
 
 impl Default for Layout {
