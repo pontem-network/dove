@@ -1,11 +1,14 @@
-use std::path::{PathBuf, Path};
-use crate::manifest::{DoveToml, MANIFEST, read_manifest, default_dialect};
-use std::str::FromStr;
-use anyhow::{Result, anyhow, Error};
 use std::env;
-use lang::compiler::dialects::{Dialect, DialectName};
-use crate::index::Index;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
+
+use anyhow::{anyhow, Error, Result};
 use move_core_types::account_address::AccountAddress;
+
+use lang::compiler::dialects::{Dialect, DialectName};
+
+use crate::index::Index;
+use crate::manifest::{default_dialect, DoveToml, MANIFEST, read_manifest};
 
 /// Project context.
 pub struct Context {
@@ -119,4 +122,13 @@ fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
     } else {
         read_manifest(&manifest)
     }
+}
+
+/// Convert path to string.
+pub fn str_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    let path = path.as_ref();
+
+    path.to_str()
+        .map(|path| path.to_owned())
+        .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", path))
 }

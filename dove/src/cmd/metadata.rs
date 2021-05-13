@@ -2,9 +2,11 @@ use anyhow::{Error, Result};
 use serde::Serialize;
 use structopt::StructOpt;
 
+use crate::index::resolver::git;
 use crate::cmd::Cmd;
-use crate::context::Context;
+use crate::context::{Context, str_path};
 use crate::manifest::{Dependence, Git, Layout};
+use std::path::Path;
 
 fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
     let layout = ctx.manifest.layout.to_absolute(&ctx)?;
@@ -12,9 +14,11 @@ fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
     let mut local_deps = vec![];
     let mut git_deps = vec![];
     if let Some(dependencies) = ctx.manifest.package.dependencies.take() {
-        for dep in &dependencies.deps {
+        for dep in dependencies.deps {
             match dep {
-                Dependence::Git(git) => git_deps.push(git.clone()),
+                Dependence::Git(git) => {
+                    git_deps.push(GitMetadata::new(git, &ctx)?);
+                }
                 Dependence::Path(dep_path) => {
                     local_deps.push(ctx.str_path_for(&dep_path.path)?);
                 }
@@ -76,11 +80,50 @@ pub struct PackageMetadata {
     /// dnode base url.
     pub blockchain_api: Option<String>,
     /// Git dependency list.
-    pub git_dependencies: Vec<Git>,
+    pub git_dependencies: Vec<GitMetadata>,
     /// Local dependency list.
     pub local_dependencies: Vec<String>,
     /// Dialect used in the project.
     pub dialect: String,
+}
+
+/// Git dependency metadata.
+#[derive(Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct GitMetadata {
+    /// Git url.
+    pub git: String,
+    /// Branch name.
+    pub branch: Option<String>,
+    /// Commit hash.
+    pub rev: Option<String>,
+    /// Tag.
+    pub tag: Option<String>,
+    /// Path.
+    pub path: Option<String>,
+    /// Local path.
+    pub local_path: Option<String>,
+}
+
+impl GitMetadata {
+    /// Create a new git metadata.
+    pub fn new(git: Git, ctx: &Context) -> Result<GitMetadata, Error> {
+        let path: &Path = ctx.manifest.layout.target_deps.as_ref();
+        let path = ctx.path_for(path.join(&git::make_local_name(&git)));
+        let local_path = if path.exists() {
+            Some(str_path(path)?)
+        } else {
+            None
+        };
+
+        Ok(GitMetadata {
+            git: git.git,
+            branch: git.branch,
+            rev: git.rev,
+            tag: git.tag,
+            path: git.path,
+            local_path,
+        })
+    }
 }
 
 #[cfg(test)]
