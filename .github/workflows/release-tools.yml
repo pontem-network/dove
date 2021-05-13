@@ -38,12 +38,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            platform: linux
-          - os: macos-latest
-            platform: darwin
-          - os: windows-latest
-            platform: win # gnu,mingw64
+          - platform: darwin
+            os: macos-latest
+            triplet: x64-osx
+          - platform: linux
+            os: ubuntu-latest
+            triplet: x64-linux
+          - platform: win
+            os: windows-latest
+            triplet: x64-windows-static-md
 
     defaults:
       run:
