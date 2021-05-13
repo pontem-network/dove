@@ -4,39 +4,32 @@ use structopt::StructOpt;
 
 use crate::cmd::Cmd;
 use crate::context::Context;
-use crate::manifest::{Dependence, DoveToml, Git, Layout};
+use crate::manifest::{Dependence, Git, Layout};
 
-fn into_metadata(ctx: Context) -> Result<DoveMetadata, Error> {
-    let project_name = ctx.project_name();
-    let Context {
-        project_dir,
-        manifest,
-        dialect,
-    } = ctx;
-    let DoveToml { package, layout } = manifest;
-    let layout = layout.to_absolute(&project_dir)?;
+fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
+    let layout = ctx.manifest.layout.to_absolute(&ctx)?;
 
-    let dependencies = package.dependencies.unwrap_or_default();
     let mut local_deps = vec![];
     let mut git_deps = vec![];
-    for dep in dependencies.deps {
-        match dep {
-            Dependence::Git(git) => git_deps.push(git),
-            Dependence::Path(deppath) => {
-                if let Ok(abs_path) = project_dir.join(deppath.path).canonicalize() {
-                    local_deps.push(abs_path.into_os_string().into_string().unwrap());
+    if let Some(dependencies) = ctx.manifest.package.dependencies.take() {
+        for dep in &dependencies.deps {
+            match dep {
+                Dependence::Git(git) => git_deps.push(git.clone()),
+                Dependence::Path(dep_path) => {
+                    local_deps.push(ctx.str_path_for(&dep_path.path)?);
                 }
             }
         }
     }
+
     let package_metadata = PackageMetadata {
-        name: project_name,
-        account_address: package.account_address,
-        authors: package.authors,
-        blockchain_api: package.blockchain_api,
+        name: ctx.project_name(),
+        account_address: ctx.manifest.package.account_address,
+        authors: ctx.manifest.package.authors,
+        blockchain_api: ctx.manifest.package.blockchain_api,
         git_dependencies: git_deps,
         local_dependencies: local_deps,
-        dialect: dialect.name().to_string(),
+        dialect: ctx.dialect.name().to_string(),
     };
     Ok(DoveMetadata {
         package: package_metadata,
@@ -92,8 +85,7 @@ pub struct PackageMetadata {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     use crate::context::get_context;
 
@@ -101,24 +93,38 @@ mod tests {
 
     #[test]
     fn paths_in_metadata_are_absolute() {
+        fn check_absolute<P: AsRef<Path>>(path: &P) {
+            let path = path.as_ref();
+            assert!(
+                path.starts_with(env!("CARGO_MANIFEST_DIR")),
+                "Path {:?} is not absolute",
+                path
+            );
+        }
+
         let move_project_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("resources")
             .join("test_move_project");
         let context = get_context(move_project_dir.clone()).unwrap();
 
-        let metadata = into_metadata(context);
+        let metadata = into_metadata(context).unwrap();
 
         assert_eq!(metadata.package.dialect, "pont".to_string());
 
         // non-existent paths ain't present in the metadata
-        assert_eq!(metadata.package.local_dependencies.len(), 1);
-        assert_eq!(
-            metadata.package.local_dependencies[0],
-            fs::canonicalize(move_project_dir.join("stdlib"))
-                .unwrap()
-                .into_os_string()
-                .into_string()
-                .unwrap()
-        );
+        assert_eq!(metadata.package.local_dependencies.len(), 2);
+        check_absolute(&metadata.package.local_dependencies[0]);
+        check_absolute(&metadata.package.local_dependencies[1]);
+
+        check_absolute(&metadata.layout.module_dir);
+        check_absolute(&metadata.layout.script_dir);
+        check_absolute(&metadata.layout.tests_dir);
+        check_absolute(&metadata.layout.module_output);
+        check_absolute(&metadata.layout.packages_output);
+        check_absolute(&metadata.layout.script_output);
+        check_absolute(&metadata.layout.transaction_output);
+        check_absolute(&metadata.layout.target_deps);
+        check_absolute(&metadata.layout.target);
+        check_absolute(&metadata.layout.index);
     }
 }

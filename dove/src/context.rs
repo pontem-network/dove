@@ -18,6 +18,20 @@ pub struct Context {
 }
 
 impl Context {
+    /// Returns create absolute path in project as string.
+    pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
+        let mut abs_path = self.path_for(path);
+
+        if abs_path.exists() {
+            abs_path = abs_path.canonicalize()?;
+        }
+
+        abs_path
+            .to_str()
+            .map(|path| path.to_owned())
+            .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
+    }
+
     /// Create absolute path in project.
     pub fn path_for<P: AsRef<Path>>(&self, path: P) -> PathBuf {
         self.project_dir.join(path)

@@ -10,6 +10,7 @@ use serde::{
     ser::Error as SerError,
 };
 use toml::Value;
+use crate::context::Context;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -152,25 +153,19 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// Returns layout instance with paths based on the `base`.
-    pub fn to_absolute(&self, base: &Path) -> Result<Layout, Error> {
-        fn abs(base: &Path, path: &str) -> Result<String, Error> {
-            base.join(path)
-                .to_str()
-                .map(|path| path.to_owned())
-                .ok_or_else(|| anyhow!("Failed to display absolute layout path:[{}]", path))
-        }
+    /// Returns layout instance with absolute paths.
+    pub fn to_absolute(&self, ctx: &Context) -> Result<Layout, Error> {
         Ok(Layout {
-            module_dir: abs(base, &self.module_dir)?,
-            script_dir: abs(base, &self.script_dir)?,
-            tests_dir: abs(base, &self.tests_dir)?,
-            module_output: abs(base, &self.module_output)?,
-            packages_output: abs(base, &self.packages_output)?,
-            script_output: abs(base, &self.script_output)?,
-            transaction_output: abs(base, &self.transaction_output)?,
-            target_deps: abs(base, &self.target_deps)?,
-            target: abs(base, &self.target)?,
-            index: abs(base, &self.index)?,
+            module_dir: ctx.str_path_for(&self.module_dir)?,
+            script_dir: ctx.str_path_for(&self.script_dir)?,
+            tests_dir: ctx.str_path_for(&self.tests_dir)?,
+            module_output: ctx.str_path_for(&self.module_output)?,
+            packages_output: ctx.str_path_for(&self.packages_output)?,
+            script_output: ctx.str_path_for(&self.script_output)?,
+            transaction_output: ctx.str_path_for(&self.transaction_output)?,
+            target_deps: ctx.str_path_for(&self.target_deps)?,
+            target: ctx.str_path_for(&self.target)?,
+            index: ctx.str_path_for(&self.index)?,
         })
     }
 }
