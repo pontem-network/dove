@@ -29,11 +29,11 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
     let local_name = make_local_name(&git);
     let mut repo_path = deps.join(&local_name);
 
-    if git.path.is_some() {
-        repo_path = repo_path.join("._tmp_dove_checkout_dir_");
-    }
-
     if !repo_path.exists() {
+        if git.path.is_some() {
+            repo_path = repo_path.join("._tmp_dove_checkout_dir_");
+        }
+
         if let Err(err) = checkout(checkout_params, &repo_path) {
             fs::remove_dir_all(&repo_path)?;
             return Err(err);
@@ -184,6 +184,9 @@ fn make_local_name(git: &Git) -> String {
     }
     if let Some(rev) = &git.rev {
         digest.update(rev.as_bytes());
+    }
+    if let Some(path) = &git.path {
+        digest.update(path.as_bytes());
     }
     let mut output = [0; 32];
     digest.finalize(&mut output);

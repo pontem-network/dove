@@ -13,8 +13,6 @@ use move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
-/// Index name.
-pub const INDEX_FILE: &str = ".Dove.man";
 
 /// Movec manifest.
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
@@ -101,7 +99,7 @@ fn target() -> String {
 }
 
 fn index() -> String {
-    INDEX_FILE.to_owned()
+    "target/.Dove.man".to_owned()
 }
 
 fn code_code_address() -> String {
