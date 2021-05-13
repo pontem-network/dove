@@ -7,6 +7,9 @@ mod test_dove_cmd {
     use std::io::{Write};
     use termcolor::{ColorChoice, WriteColor, ColorSpec, Color};
     use std::path::{PathBuf, Path};
+    use std::process::{Command, exit};
+    use std::fs::create_dir_all;
+    use fs_extra::file::write_all;
 
     // =============================================================================================
     // Tests
@@ -257,6 +260,79 @@ mod test_dove_cmd {
         });
     }
 
+    /// demoproject_4
+    ///
+    /// $ cargo run -- clean
+    /// $ dove clean
+    #[test]
+    fn check_clean() {
+        let project_name = "demoproject_4".to_string();
+        // Путь до Dove
+        let dove_path = get_path_dove().expect("Dove path - not found");
+        print_h1(format!("Dove: clean move project. {}", &project_name).as_str());
+        print_ln();
+
+        let mut project_folder = dove_path.clone();
+        project_folder.push(&project_name);
+        if project_folder.exists() {
+            remove_project(&project_folder, &project_name);
+        }
+
+        let mut project_target = project_folder.clone();
+        project_target.push("target");
+
+        assert!(
+            create_dir_all(project_target.as_path()).is_ok(),
+            "Create dir: {}",
+            project_target.to_str().unwrap_or(" - "),
+        );
+
+        let mut debug_dir = project_target.clone();
+        debug_dir.push("debug");
+        assert!(
+            create_dir_all(debug_dir.as_path()).is_ok(),
+            "Create dir: {}",
+            debug_dir.to_str().unwrap_or(" - "),
+        );
+
+        let mut dove_toml = project_folder.clone();
+        dove_toml.push("Dove.toml");
+        write_all(dove_toml, "\
+            [package]\r\n\
+            name = \"demoproject_4\"\r\n\
+            dialect = \"pont\"\r\n\
+            dependencies = [{ git = \"https://github.com/pontem-network/move-stdlib\" }]\r\n
+        ");
+        let mut create_command = Command::new("cargo");
+        create_command
+            .args(&["run", "--", "clean"])
+            .current_dir(&project_folder);
+
+        let command_string = format!("{:?} ", create_command).replace("\"", "");
+        print!("{}", command_string);
+
+        let result = create_command.output().map_or_else(
+            |err| {
+                // Неудалось очистить проект. Вывод сообщения
+                print_ln();
+                print_color_red("[ERROR] ");
+                print_default(&command_string);
+                print_ln();
+                print_bold("Message: ");
+                print_default(err.to_string().as_str());
+                print_ln();
+                None
+            },
+            |result| Some(result),
+        );
+
+        print_color_green("[SUCCESS]");
+        print_ln();
+
+        assert_ne!(result, None, "failed: {}", &command_string);
+        // Удаляем временый проект
+        remove_project(&project_folder, &project_name);
+    }
     // =============================================================================================
     /// Создать проект из указаных настроек. Ожидается успех
     fn success_create_new_project_and_build_with_settings(
@@ -265,8 +341,6 @@ mod test_dove_cmd {
         project_address: Option<String>,
         blockchain_api: Option<String>,
     ) {
-        use std::process::Command;
-
         // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
         print_h1(format!("Dove: New move project. {}", &project_name).as_str());
@@ -442,8 +516,6 @@ mod test_dove_cmd {
         project_address: Option<String>,
         blockchain_api: Option<String>,
     ) {
-        use std::process::Command;
-
         // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
         print_h1(format!("Dove: New move project. {}", &project_name).as_str());
@@ -556,8 +628,6 @@ mod test_dove_cmd {
         project_address: Option<String>,
         blockchain_api: Option<String>,
     ) {
-        use std::process::Command;
-
         // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
         print_h1(format!("Dove: init move project. {}", &project_name).as_str());
@@ -918,7 +988,7 @@ mod test_dove_cmd {
             print_ln();
             false
         } else {
-            print_default(format!("Project directory was deleted {}  ", project_name).as_str());
+            print_default(format!("Project directory was deleted {} ", project_name).as_str());
             print_color_green("[SUCCESS]");
             print_ln();
             true
