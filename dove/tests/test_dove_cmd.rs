@@ -99,7 +99,7 @@ mod test_dove_cmd {
     }
 
     /// Создание нового проекта c несуществующим деалектом incorectdialect
-    /// Имя тестового проекта demoproject__##
+    /// Имя тестового проекта demoproject_2
     /// Считается некорректным url
     /// demo
     /// /demo
@@ -507,7 +507,7 @@ mod test_dove_cmd {
         if code == 0 {
             // При создании произошла ошибка
             print_ln();
-            print_color_red("[ERROR] was created - ");
+            print_color_red("[ERROR] was created: ");
             print_default(&command_string);
             print_ln();
             print_bold("Code: ");
@@ -516,7 +516,7 @@ mod test_dove_cmd {
             print_bold("Message: ");
             print_default(stderr.as_str());
             print_ln();
-            assert_ne!(code, 0, "[ERROR] was created - {} ", &command_string);
+            assert_ne!(code, 0, "[ERROR] was created: {} ", &command_string);
         }
         print_ln();
         print_color_green("[NOT CREATED]");
@@ -532,7 +532,7 @@ mod test_dove_cmd {
         }) {
             assert!(
                 remove_project(finded, &project_name),
-                "[ERROR] remove project {};",
+                "[ERROR] remove project: {};",
                 project_name
             );
         }
@@ -583,7 +583,7 @@ mod test_dove_cmd {
             print_ln();
             assert!(
                 remove_project(&project_folder.to_path_buf(), &project_name),
-                "[ERROR] remove project {};",
+                "[ERROR] remove project: {};",
                 project_name
             );
         }
