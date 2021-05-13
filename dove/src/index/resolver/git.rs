@@ -4,17 +4,18 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use anyhow::Error;
+use fs_extra::dir::CopyOptions;
 use git2::{Oid, Repository};
 use git2::build::RepoBuilder;
+use move_core_types::account_address::AccountAddress;
 use tiny_keccak::{Hasher, Sha3};
 
-use crate::context::Context;
+use lang::compiler::dialects::DialectName;
 
+use crate::context::Context;
+use crate::index::meta::{FileMeta, source_meta};
 use crate::index::move_dir_iter;
-use lang::compiler::dialects::{DialectName};
-use crate::index::meta::{source_meta, FileMeta};
 use crate::manifest::{CheckoutParams, default_dialect, Git, MANIFEST, read_manifest};
-use move_core_types::account_address::AccountAddress;
 
 /// Git prefix.
 pub const PREFIX: &str = "git";
@@ -25,12 +26,49 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
     let checkout_params = CheckoutParams::try_from(git)?;
 
     let deps = ctx.path_for(&ctx.manifest.layout.target_deps);
-    let repo_path = deps.join(make_local_name(&git));
+    let local_name = make_local_name(&git);
+    let mut repo_path = deps.join(&local_name);
 
     if !repo_path.exists() {
+        if git.path.is_some() {
+            repo_path = repo_path.join("._tmp_dove_checkout_dir_");
+        }
+
         if let Err(err) = checkout(checkout_params, &repo_path) {
             fs::remove_dir_all(&repo_path)?;
             return Err(err);
+        }
+        if let Some(path_in_repo) = &git.path {
+            let source_path = repo_path
+                .join(&path_in_repo)
+                .canonicalize()
+                .map_err(|err| anyhow!("Invalid path in git repo.{} [{}]", git.git, err))?;
+
+            if !source_path.starts_with(&repo_path) {
+                if let Some(repo_path) = repo_path.parent() {
+                    fs::remove_dir_all(&repo_path)?;
+                }
+                return Err(anyhow!(
+                    "Invalid path in git repo.{} [Path is output of git directory]",
+                    git.git
+                ));
+            }
+            let target_path = deps.join(&local_name);
+            if source_path.is_file() {
+                fs::copy(source_path, target_path)?;
+            } else {
+                for entry in fs::read_dir(source_path)? {
+                    let source_path = entry?.path();
+                    if source_path.is_file() {
+                        if let Some(name) = source_path.file_name() {
+                            fs::copy(&source_path, target_path.join(name))?;
+                        }
+                    } else {
+                        fs_extra::dir::move_dir(&source_path, &target_path, &CopyOptions::new())?;
+                    }
+                }
+            }
+            fs::remove_dir_all(&repo_path)?;
         }
     }
 
@@ -146,6 +184,9 @@ fn make_local_name(git: &Git) -> String {
     }
     if let Some(rev) = &git.rev {
         digest.update(rev.as_bytes());
+    }
+    if let Some(path) = &git.path {
+        digest.update(path.as_bytes());
     }
     let mut output = [0; 32];
     digest.finalize(&mut output);
