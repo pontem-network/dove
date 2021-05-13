@@ -338,8 +338,12 @@ mod test_dove_cmd {
 
         print_color_green("[SUCCESS]");
         print_ln();
-
         assert_ne!(result, None, "failed: {}", &command_string);
+        assert!(
+            !project_target.exists(),
+            "Directory was not deleted: {}",
+            project_target.to_str().unwrap_or(" - ")
+        );
         // Удаляем временый проект
         remove_project(&project_folder, &project_name);
     }
