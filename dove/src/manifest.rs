@@ -14,8 +14,6 @@ use crate::context::Context;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
-/// Index name.
-pub const INDEX_FILE: &str = ".Dove.man";
 
 /// Movec manifest.
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
@@ -102,7 +100,7 @@ fn target() -> String {
 }
 
 fn index() -> String {
-    INDEX_FILE.to_owned()
+    "target/.Dove.man".to_owned()
 }
 
 fn code_code_address() -> String {
@@ -198,6 +196,8 @@ pub struct Git {
     pub rev: Option<String>,
     /// Tag.
     pub tag: Option<String>,
+    /// Path.
+    pub path: Option<String>,
 }
 
 /// Type of git dependency check out.
@@ -384,12 +384,14 @@ mod test {
                         branch: None,
                         rev: None,
                         tag: None,
+                        path: None,
                     }),
                     Dependence::Git(Git {
                         git: "https://github.com/dfinance/move-stdlib".to_owned(),
                         branch: Some("master".to_owned()),
                         rev: Some("969442fb28fc162c3e3de20ab0a3afdfa8d0f560".to_owned()),
                         tag: None,
+                        path: Some("/lang".to_owned()),
                     }),
                 ],
             }),
@@ -406,7 +408,7 @@ mod test {
                             {path = \"/stdlib\"},
                             {git = \"https://github.com/dfinance/move-stdlib\"},
                             {git = \"https://github.com/dfinance/move-stdlib\", \
-                            branch = \"master\", rev = \"969442fb28fc162c3e3de20ab0a3afdfa8d0f560\"}
+                            branch = \"master\", rev = \"969442fb28fc162c3e3de20ab0a3afdfa8d0f560\", path = \"/lang\"}
                         ]
                         dialect= \"dfinance\"
                         ";
