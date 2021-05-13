@@ -299,7 +299,7 @@ mod test_dove_cmd {
 
         // =========================================================================================
         // Запуск создания нового проекта
-        // $ cargo run -- new demoproject_1
+        // $ cargo run -- new demoproject_1 [-d ###] [-a ###] [-r ###]
         // =========================================================================================
         print_h2("Create project: ");
         let mut create_command = Command::new("cargo");
@@ -351,6 +351,17 @@ mod test_dove_cmd {
             print_ln();
             assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
         }
+
+        let mut project_path = dove_path.clone();
+        project_path.push(&project_name);
+
+        success_check_config(
+            &project_path,
+            &project_name,
+            &project_dialect,
+            &project_address,
+            &blockchain_api,
+        );
 
         print_color_green("[SUCCESS]");
         print_ln();
@@ -668,6 +679,14 @@ mod test_dove_cmd {
             assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
         }
 
+        success_check_config(
+            &project_folder.to_path_buf(),
+            &project_name,
+            &project_dialect,
+            &project_address,
+            &blockchain_api,
+        );
+
         print_color_green("[SUCCESS]");
         print_ln();
         // =========================================================================================
@@ -745,6 +764,74 @@ mod test_dove_cmd {
                 print_ln();
             }
         }
+    }
+
+    /// Проверка Dove.toml на ожидаемы конфиг
+    fn success_check_config(
+        path_project: &PathBuf,
+        need_name: &String,
+        need_dialect: &Option<String>,
+        need_address: &Option<String>,
+        need_blockchain_api: &Option<String>,
+    ) {
+        use std::fs::read_to_string;
+        use toml::Value;
+
+        let mut path_toml = path_project.clone();
+        path_toml.push("Dove.toml");
+
+        let toml_str = read_to_string(path_toml).unwrap();
+        let package = toml_str
+            .parse::<Value>()
+            .unwrap()
+            .get("package")
+            .map_or(toml::Value::String("- NULL -".to_string()), |d| d.clone());
+
+        let project_name = package
+            .get("name")
+            .and_then(|v| v.as_str())
+            .map_or("- NULL -".to_string(), |v| v.to_string());
+        assert_eq!(
+            project_name,
+            need_name.clone(),
+            "Dove.tom: invalid name or not found",
+        );
+
+        let project_dialect = package
+            .get("dialect")
+            .and_then(|v| v.as_str())
+            .map_or("- NULL -".to_string(), |v| v.to_string());
+        assert_eq!(
+            project_dialect,
+            need_dialect
+                .as_ref()
+                .map_or("- NULL -".to_string(), |s| s.clone()),
+            "Dove.tom: invalid dialect or not found",
+        );
+
+        let project_account_address = package
+            .get("account_address")
+            .and_then(|v| v.as_str())
+            .map_or("- NULL -".to_string(), |v| v.to_string());
+        assert_eq!(
+            project_account_address,
+            need_address
+                .as_ref()
+                .map_or("- NULL -".to_string(), |s| s.clone()),
+            "Dove.tom: invalid account_address or not found",
+        );
+
+        let project_api = package
+            .get("blockchain_api")
+            .and_then(|v| v.as_str())
+            .map_or("- NULL -".to_string(), |v| v.to_string());
+        assert_eq!(
+            project_api,
+            need_blockchain_api
+                .as_ref()
+                .map_or("- NULL -".to_string(), |s| s.clone()),
+            "Dove.tom: invalid blockchain_api or not found",
+        );
     }
     // =============================================================================================
     // Проекты
@@ -871,8 +958,10 @@ mod test_dove_cmd {
         use std::fs::read_to_string;
         use toml::Value;
 
-        let toml_str =
-            read_to_string(project_path.to_str().unwrap().to_string() + "/Dove.toml").unwrap();
+        let mut path_toml = project_path.clone();
+        path_toml.push("Dove.toml");
+
+        let toml_str = read_to_string(path_toml).unwrap();
         let package = toml_str
             .parse::<Value>()
             .unwrap()
