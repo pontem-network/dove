@@ -1,7 +1,3 @@
-/// Тестирование создания|инициализация проекта
-/// dove new demoproject_###
-/// dove init demoproject_###
-/// dove build -e demoproject_###
 #[cfg(test)]
 mod test_dove_cmd {
     use std::io::{Write};
@@ -14,42 +10,11 @@ mod test_dove_cmd {
     // =============================================================================================
     // Tests
     // =============================================================================================
-    /// Создание нового проекта
-    /// Считается корректным url
-    ///  http://demo.ru/api
-    ///  https://demo.ru/api
-    ///  http://127.0.0.1/api
-    ///  http://localhost/api
-    ///  http://localhost:8080/api
+    /// Create a new move project
+    /// Correct url: http://demo.ru/api, https://demo.ru/api, http://127.0.0.1/api, http://localhost/api, http://localhost:8080/api
+    ///
     /// $ cargo run -- new ### -d ### -a ### -r http://localhost/api
-    //  $ cargo run -- build -e ###
-    ///
-    /// $ cargo run -- new demoproject_1
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 -d pont
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 -d pont -a 5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 -d pont -a 0x1
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 -d dfinance
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 demoproject_7 -d dfinance -a 0x1
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 -d diem
-    /// $ cargo run -- build -e demoproject_1
-    ///
-    /// $ cargo run -- new demoproject_1 -d diem -a 0x1
-    /// $ cargo run -- build -e demoproject_1
+    /// $ dove new ### -d ### -a ### -r http://localhost/api
     #[test]
     fn success_create_new_project() {
         vec![
@@ -101,27 +66,11 @@ mod test_dove_cmd {
         });
     }
 
-    /// Создание нового проекта c несуществующим деалектом incorectdialect
-    /// Имя тестового проекта demoproject_2
-    /// Считается некорректным url
-    /// demo
-    /// /demo
-    /// /demo/api
-    /// //demo/api
-    /// //demo:8080/api
-    /// 127.0.0.1/api
-    /// ftp://demo.ru/api
-    /// ssh://demo.ru/api
-    /// smb://demo.ru/api
+    /// Fail is expected
+    /// Create a new move project
+    /// invalid url: demo, /demo, /demo/api, //demo/api, //demo:8080/api, 127.0.0.1/api, ftp://demo.ru/api, ssh://demo.ru/api, smb://demo.ru/api
     /// $ cargo run -- new ### -d ### -a ### -r URL
-    ///
-    ///
-    /// Ожидается ошибка
-    /// $ cargo run -- new demoproject_2 -d incorectdialect
-    /// $ cargo run -- new demoproject_2 -d pont -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
-    /// $ cargo run -- new demoproject_2 -d dfinance -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
-    /// $ cargo run -- new demoproject_2 -d diem -a w01234567890123456789012345678901234567890123456789012345678901234567890123456789
-    ///
+    /// $ dove new ### -d ### -a ### -r URL
     #[test]
     fn fail_create_new_project_dealect_incorectdialect() {
         vec![
@@ -175,47 +124,10 @@ mod test_dove_cmd {
         });
     }
 
-    /// Инициализация существующего проекта проекта
-    /// Имя тестового проекта demoproject_#
-    /// В тестовом режиме инициализировать можно только в каталоге dove.
-    /// Для инициализации в любом месте проект должен быть собран в бинарник через cargo не выйдет
+    /// Init directory as move project
+    /// valid url: http://demo.ru/api, https://demo.ru/api, http://127.0.0.1/api, http://localhost/api, http://localhost:8080/api
     ///
-    /// Считается корректным url
-    ///  http://demo.ru/api
-    ///  https://demo.ru/api
-    ///  http://127.0.0.1/api
-    ///  http://localhost/api
-    ///  http://localhost:8080/api
     /// $ cargo run -- init -d ### -a ### -r http://localhost/api
-    ///
-    /// Имя тестового проекта demoproject_1
-    /// $ cargo run -- init
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d pont
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d pont -a 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d pont -a 0x1
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d dfinance
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d dfinance -a wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d dfinance -a 0x1
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d diem
-    /// $ cargo run -- build
-    ///
-    /// $ cargo run -- init -d diem -a 0x1
-    /// $ cargo run -- build
-    ///
     #[test]
     fn success_init_project_in_folder() {
         vec![
@@ -267,7 +179,6 @@ mod test_dove_cmd {
     #[test]
     fn check_clean() {
         let project_name = "demoproject_4".to_string();
-        // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
         print_h1(format!("Dove: clean move project. {}", &project_name).as_str());
         print_ln();
@@ -323,7 +234,6 @@ mod test_dove_cmd {
 
         let result = create_command.output().map_or_else(
             |err| {
-                // Неудалось очистить проект. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
                 print_default(&command_string);
@@ -344,7 +254,7 @@ mod test_dove_cmd {
             "Directory was not deleted: {}",
             project_target.to_str().unwrap_or(" - ")
         );
-        // Удаляем временый проект
+        // Deleting a project folder
         remove_project(&project_folder, &project_name);
     }
 
@@ -380,7 +290,6 @@ mod test_dove_cmd {
         print_color_green("[SUCCESS]");
         print_ln();
         // =========================================================================================
-        // Вывод на экран данных по проекту
         // $ cargo run -- metadata
         // =========================================================================================
         print_h2("Metadata project: ");
@@ -394,7 +303,6 @@ mod test_dove_cmd {
 
         let result = create_command.output().map_or_else(
             |err| {
-                // Неудалось получить данные по проекту. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
                 print_default(&command_string);
@@ -411,7 +319,6 @@ mod test_dove_cmd {
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
         if code != 0 {
-            // При получении данных произошла ошибка
             print_ln();
             print_color_red("[ERROR] ");
             print_default(&command_string);
@@ -451,18 +358,16 @@ mod test_dove_cmd {
         remove_project(&project_folder, &project_name);
     }
     // =============================================================================================
-    /// Создать проект из указаных настроек. Ожидается успех
     fn success_create_new_project_and_build_with_settings(
         project_name: String,
         project_dialect: Option<String>,
         project_address: Option<String>,
         blockchain_api: Option<String>,
     ) {
-        // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
         print_h1(format!("Dove: New move project. {}", &project_name).as_str());
         print_ln();
-        // Шапка с исходными параметрами нового проекта
+        // Print project setting
         print_newproject_settings(
             &project_name,
             match &project_dialect {
@@ -479,11 +384,8 @@ mod test_dove_cmd {
             },
         );
 
-        // Поиск существующего проекта с таким именем. Если наден то удалить
         let mut list_projects = get_list_projects();
-        // Удалить проект если уже существует
         if_exists_project_then_remove(&mut list_projects, &project_name);
-        // Вывод уже существующих проектов
         print_h2("Existing projects: ");
         print_ln();
         print_projects(&list_projects);
@@ -508,10 +410,8 @@ mod test_dove_cmd {
 
         print_color_green("[SUCCESS]");
         print_ln();
-        // =========================================================================================
-        // Cборка проекта
-        // $ cargo run -- build -e demoproject_1
-        // =========================================================================================
+
+        // $ cargo run -- build -e demoproject_#
         print_h2("Building project ");
         let mut create_command = Command::new("cargo");
         create_command
@@ -521,7 +421,6 @@ mod test_dove_cmd {
         print!("{}", command_string);
         let result = create_command.output().map_or_else(
             |err| {
-                // Неудалось создать новый проект. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
                 print_default(&command_string);
@@ -539,7 +438,6 @@ mod test_dove_cmd {
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
         if code != 0 {
-            // При создании произошла ошибка
             print_ln();
             print_color_red("[ERROR] ");
             print_default(&command_string);
@@ -556,14 +454,13 @@ mod test_dove_cmd {
         print_color_green("[SUCCESS]");
         print_ln();
 
-        // Вывод уже существующих проектов
         list_projects = get_list_projects();
         print_ln();
         print_h2("Current list of projects: ");
         print_ln();
         print_projects(&list_projects);
 
-        // Удаление созданного проекта
+        // Deleting a project folder
         if let Some(finded) = list_projects.as_ref().unwrap().iter().find(|it| {
             it.as_os_str()
                 .to_str()
@@ -578,18 +475,16 @@ mod test_dove_cmd {
         }
         assert!(true);
     }
-    /// Создать проект из указаных настроек. Ожидается ошибка
     fn fail_create_new_project_with_settings(
         project_name: String,
         project_dialect: Option<String>,
         project_address: Option<String>,
         blockchain_api: Option<String>,
     ) {
-        // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
         print_h1(format!("Dove: New move project. {}", &project_name).as_str());
         print_ln();
-        // Шапка с исходными параметрами нового проекта
+        // Print project settings
         print_newproject_settings(
             &project_name,
             match &project_dialect {
@@ -606,20 +501,14 @@ mod test_dove_cmd {
             },
         );
 
-        // Поиск существующего проекта с таким именем. Если наден то удалить
         let mut list_projects = get_list_projects();
-        // Удалить проект если уже существует
         if_exists_project_then_remove(&mut list_projects, &project_name);
 
-        // Вывод уже существующих проектов
         print_h2("Existing projects: ");
         print_ln();
         print_projects(&list_projects);
 
-        // =========================================================================================
-        // Запуск создания нового проекта
         // $ cargo run -- new demoproject_### [-d dealect] [-a address]
-        // =========================================================================================
         print_h2("Create project: ");
         let mut create_command = Command::new("cargo");
         create_command
@@ -639,7 +528,6 @@ mod test_dove_cmd {
         print!("{}", command_string);
         let result = create_command.output().map_or_else(
             |err| {
-                // Неудалось создать новый проект. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
                 print_default(&command_string);
@@ -657,7 +545,6 @@ mod test_dove_cmd {
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
         if code == 0 {
-            // При создании произошла ошибка
             print_ln();
             print_color_red("[ERROR] was created: ");
             print_default(&command_string);
@@ -675,7 +562,6 @@ mod test_dove_cmd {
         print_ln();
         print_ln();
 
-        // Удаление созданного проекта
         if let Some(finded) = list_projects.as_ref().unwrap().iter().find(|it| {
             it.as_os_str()
                 .to_str()
@@ -690,14 +576,12 @@ mod test_dove_cmd {
         }
         assert!(true);
     }
-    /// Инициализировать проект из указаных настроек
     fn init_project_with_settings(
         project_name: String,
         project_dialect: Option<String>,
         project_address: Option<String>,
         blockchain_api: Option<String>,
     ) {
-        // Путь до Dove
         let dove_path = get_path_dove().expect("Dove path - not found");
         print_h1(format!("Dove: init move project. {}", &project_name).as_str());
         print_ln();
@@ -706,7 +590,6 @@ mod test_dove_cmd {
             dove_path.as_path().to_str().unwrap().to_string() + "/" + project_name.as_str();
         let project_folder = Path::new(&project_folder_str);
 
-        // Шапка с исходными параметрами нового проекта
         print_newproject_settings(
             &project_name,
             match &project_dialect {
@@ -726,7 +609,6 @@ mod test_dove_cmd {
         print_default(&project_folder_str);
         print_ln();
 
-        // Проверка на существование директории для проекта
         if project_folder.exists() {
             print_color_yellow("[WARNING] ");
             print_default(format!("directory exists {}", &project_folder_str).as_str());
@@ -764,7 +646,6 @@ mod test_dove_cmd {
             }
         }
         // =========================================================================================
-        // Запуск создания нового проекта
         // $ cargo run -- init
         // =========================================================================================
         print_h2("init project: ");
@@ -787,7 +668,6 @@ mod test_dove_cmd {
 
         let result = init_command.output().map_or_else(
             |err| {
-                // Неудалось создать новый проект. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
                 print_default(&command_string);
@@ -804,7 +684,6 @@ mod test_dove_cmd {
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
         if code != 0 {
-            // При создании произошла ошибка
             print_ln();
             print_color_red("[ERROR] ");
             print_default(&command_string);
@@ -829,7 +708,6 @@ mod test_dove_cmd {
         print_color_green("[SUCCESS]");
         print_ln();
         // =========================================================================================
-        // Cборка проекта
         // $ cargo run -- build
         // =========================================================================================
         print_h2("Building project ");
@@ -841,7 +719,6 @@ mod test_dove_cmd {
         print!("{}", command_string);
         let result = create_command.output().map_or_else(
             |err| {
-                // Неудалось создать новый проект. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
                 print_default(&command_string);
@@ -859,7 +736,6 @@ mod test_dove_cmd {
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
         if code != 0 {
-            // При создании произошла ошибка
             print_ln();
             print_color_red("[ERROR] ");
             print_default(&command_string);
@@ -882,7 +758,6 @@ mod test_dove_cmd {
         project_name: &str,
     ) {
         if let Some(list) = list_projects.as_ref() {
-            // Если найден удалить
             if let Some(finded) = list.iter().find(|it| {
                 it.as_os_str()
                     .to_str()
@@ -898,7 +773,6 @@ mod test_dove_cmd {
                     project_name
                 );
 
-                // Обновления списка проектов
                 *list_projects = get_list_projects();
                 print_ln();
             }
@@ -913,10 +787,7 @@ mod test_dove_cmd {
     ) {
         let dove_path = get_path_dove().expect("Dove path - not found");
 
-        // =========================================================================================
-        // Запуск создания нового проекта
         // $ cargo run -- new demoproject_### [-d ###] [-a ###] [-r ###]
-        // =========================================================================================
         print_h2("Create project: ");
         let mut create_command = Command::new("cargo");
         create_command
@@ -937,7 +808,6 @@ mod test_dove_cmd {
 
         let result = create_command.output().map_or_else(
             |err| {
-                // Неудалось создать новый проект. Вывод сообщения
                 print_ln();
                 print_color_red("[ERROR] ");
                 print_default(&command_string);
@@ -954,7 +824,6 @@ mod test_dove_cmd {
         let code = result.status.code().unwrap_or(0);
         let stderr = String::from_utf8(result.stderr).unwrap();
         if code != 0 {
-            // При создании произошла ошибка
             print_ln();
             print_color_red("[ERROR] ");
             print_default(&command_string);
@@ -968,7 +837,6 @@ mod test_dove_cmd {
             assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
         }
     }
-    /// Проверка Dove.toml на ожидаемы конфиг
     fn success_check_config(
         path_project: &PathBuf,
         need_name: &String,
@@ -996,7 +864,7 @@ mod test_dove_cmd {
         assert_eq!(
             project_name,
             need_name.clone(),
-            "Dove.tom: invalid name or not found",
+            "Dove.toml: invalid name or not found",
         );
 
         let project_dialect = package
@@ -1008,7 +876,7 @@ mod test_dove_cmd {
             need_dialect
                 .as_ref()
                 .map_or("- NULL -".to_string(), |s| s.clone()),
-            "Dove.tom: invalid dialect or not found",
+            "Dove.toml: invalid dialect or not found",
         );
 
         let project_account_address = package
@@ -1020,7 +888,7 @@ mod test_dove_cmd {
             need_address
                 .as_ref()
                 .map_or("- NULL -".to_string(), |s| s.clone()),
-            "Dove.tom: invalid account_address or not found",
+            "Dove.toml: invalid account_address or not found",
         );
 
         let project_api = package
@@ -1032,13 +900,10 @@ mod test_dove_cmd {
             need_blockchain_api
                 .as_ref()
                 .map_or("- NULL -".to_string(), |s| s.clone()),
-            "Dove.tom: invalid blockchain_api or not found",
+            "Dove.toml: invalid blockchain_api or not found",
         );
     }
     // =============================================================================================
-    // Проекты
-    // =============================================================================================
-    /// Получить путь до dove каталога
     fn get_path_dove() -> Option<PathBuf> {
         isset_path_dove(".").or(isset_path_dove("./dove"))
     }
@@ -1061,7 +926,6 @@ mod test_dove_cmd {
                 None
             })
     }
-    /// Получить все созданные проекты
     fn get_list_projects() -> Option<Vec<PathBuf>> {
         use std::fs::read_dir;
         let need_folders = vec!["modules", "scripts", "tests"];
@@ -1108,7 +972,6 @@ mod test_dove_cmd {
             })
     }
     fn remove_project(path: &PathBuf, project_name: &str) -> bool {
-        // Удаление директории со всем содержимым
         if let Err(error) = std::fs::remove_dir_all(path) {
             print_default(
                 format!("Couldn't delete project directory {}  ", project_name).as_str(),
@@ -1127,9 +990,8 @@ mod test_dove_cmd {
         }
     }
     // =============================================================================================
-    // Вывод
+    // Print
     // =============================================================================================
-    /// Вывод настроек создоваемого проекта
     fn print_newproject_settings(
         project_name: &str,
         project_dialect: &str,
@@ -1137,25 +999,23 @@ mod test_dove_cmd {
         blockchain_api: &str,
     ) {
         print_h2("New project settings:\n");
-        // Название проекта
         print_bold(format!("Project will be created: ").as_str());
         print_reset();
         print_default(format!("{} \n", project_name).as_str());
-        // Диалект проекта
+
         print_bold(format!("Dialect: ").as_str());
         print_reset();
         print_default(format!("{} \n", project_dialect).as_str());
-        // Адрес проекта
+
         print_bold(format!("Address: ").as_str());
         print_reset();
         print_default(format!("{} \n", project_address).as_str());
-        // Адрес проекта
+
         print_bold(format!("Blockchain API: ").as_str());
         print_reset();
         print_default(format!("{} \n", blockchain_api).as_str());
         print_ln();
     }
-    /// Вывод на экран проекта
     fn print_project(project_path: &PathBuf) {
         use std::fs::read_to_string;
         use toml::Value;
@@ -1192,34 +1052,31 @@ mod test_dove_cmd {
             .and_then(|v| v.as_str())
             .map_or("- NULL -".to_string(), |v| v.to_string());
 
-        // Заголовок вывода
         print_h3({ "Project: ".to_string() + &project_name }.as_str());
         print_ln();
 
-        // Название проекта
         print_bold("Name: ");
         print_default(&project_name);
         print_ln();
-        // Диалект проекта
+
         print_bold("Dialect: ");
         print_default(&project_dialect);
         print_ln();
-        // Адрес проекта
+
         print_bold("Account address: ");
         print_default(&project_account_address);
         print_ln();
-        // API
+
         print_bold("Blockchain API: ");
         print_default(&project_api);
         print_ln();
-        // Git проекта
+
         print_bold("Dependencies: ");
         print_default(&project_dependencies);
         print_ln();
 
         print_ln();
     }
-    /// Вывод на экран списка проектов
     fn print_projects(projects: &Option<Vec<PathBuf>>) {
         projects.as_ref().map_or_else(
             || {
@@ -1231,7 +1088,7 @@ mod test_dove_cmd {
         );
     }
     // =============================================================================================
-    // Консольное оформление
+    // Decoration
     // =============================================================================================
     fn print_reset() {
         let bufwrt = termcolor::BufferWriter::stdout(ColorChoice::Always);
