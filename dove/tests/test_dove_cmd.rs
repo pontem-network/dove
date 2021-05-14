@@ -418,7 +418,7 @@ mod test_dove_cmd {
         print_h2("Building project ");
         let mut create_command = Command::new("cargo");
         create_command
-            .args(&["run", "--", "build", &project_name])
+            .args(&["run", "--", "build"])
             .current_dir(&project_folder);
         let command_string = format!("{:?} ", create_command).replace("\"", "");
         print!("{}", command_string);
@@ -878,7 +878,7 @@ mod test_dove_cmd {
             project_dialect,
             need_dialect
                 .as_ref()
-                .map_or("- NULL -".to_string(), |s| s.clone()),
+                .map_or("pont".to_string(), |s| s.clone()),
             "Dove.toml: invalid dialect or not found",
         );
 
