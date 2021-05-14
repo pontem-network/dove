@@ -132,21 +132,21 @@ mod test_dove_cmd {
                 Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),
                 None
             ),
-            (Some("pont"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), Some("demo")),
-            (Some("pont"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), Some("/demo")),
-            (Some("pont"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), Some("/demo/api")),
-            (Some("pont"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), Some("//demo/api")),
-            (Some("pont"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), Some("//demo:8080/api")),
-            (Some("pont"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), Some("127.0.0.1/api")),
-            (Some("pont"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), Some("ftp://demo.ru/api")),
+            (Some("pont"), Some("5GuurAd1g85AqSk9fhvA8iZ6QLQUSUBrsfUGBbLQCG9Fg8ct"), Some("demo")),
+            (Some("pont"), Some("5F6mdBEfR19qj64hRK5yUSGyhAiqAHRUTuA2w3SATo46Y4ph"), Some("/demo")),
+            (Some("pont"), Some("5DDYt7bqnnWSJGyySkVgfB918NngEvj77v4AaF5S6zRpfLc2"), Some("/demo/api")),
+            (Some("pont"), Some("5DUcaioKfthyqaFfuLvpcxqhtpRt3XSJ6ouN9rmbXn4YEako"), Some("//demo/api")),
+            (Some("pont"), Some("5CmBg2tSBUqYxXzYS1uXXdb1N1XZLidD43pswY4TeLNLc4Rb"), Some("//demo:8080/api")),
+            (Some("pont"), Some("5D9uikgB3eK1hmN7neiopJxkXuh4bcAafiLpu2eVJmN3AmsG"), Some("127.0.0.1/api")),
+            (Some("pont"), Some("5CkHD1imfRDhSEg8yZ2vqot3zWnwmpi2EFaczzKp8WipFpMV"), Some("ftp://demo.ru/api")),
             (
                 Some("pont"),
-                Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),
+                Some("5D2Z74VUUkK6YDKDPhewG9KQRQRPPbmv8A8N2pG6rZ7sLdBP"),
                 Some("ssh://demo.ru/api")
             ),
             (
                 Some("pont"),
-                Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"),
+                Some("5FL5CCppHTKYEwZ2A6HdBvp4BcrauqmJ6bW3r7vJ8pgrJRnQ"),
                 Some("smb://demo.ru/api")
             ),
             // Max address 16 byte
@@ -155,14 +155,14 @@ mod test_dove_cmd {
                 Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),
                 None
             ),
-            (Some("dfinance"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), None),
+            (Some("dfinance"), Some("5CQ1xHD9FekYCBWRu7RmFqoF5obnym9agvSiotSoHsxftQyx"), None),
             // Max address 16 byte
             (
                 Some("diem"),
                 Some("w01234567890123456789012345678901234567890123456789012345678901234567890123456789"),
                 None
             ),
-            (Some("diem"), Some("5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"), None)
+            (Some("diem"), Some("5HTUSpP8tEbNDKWu2Jabd9Px7epMXHusSpyAMmDZkV5QucnF"), None)
         ]
         .iter()
         .for_each(|(dialect,address,api)| {
@@ -347,6 +347,109 @@ mod test_dove_cmd {
         // Удаляем временый проект
         remove_project(&project_folder, &project_name);
     }
+
+    /// demoproject_5
+    /// $ cargo run -- metadata
+    /// $ dove metadata
+    #[test]
+    fn check_metadata() {
+        let dove_path = get_path_dove().expect("Dove path - not found");
+
+        let project_name = "demoproject_5".to_string();
+        let project_dialect = Some("pont".to_string());
+        let blockchain_api = Some("https://localhost/api".to_string());
+        let project_address =
+            Some("5Csxuy81dNEVYbRA9K7tyHypu7PivHmwCZSKxcbU78Cy2v7v".to_string());
+
+        let project_folder = {
+            let mut folder = dove_path.clone();
+            folder.push(&project_name);
+            folder
+        };
+
+        if project_folder.exists() {
+            remove_project(&project_folder, &project_name);
+        }
+
+        new_project(
+            &project_name,
+            &project_dialect,
+            &project_address,
+            &blockchain_api,
+        );
+        print_color_green("[SUCCESS]");
+        print_ln();
+        // =========================================================================================
+        // Вывод на экран данных по проекту
+        // $ cargo run -- metadata
+        // =========================================================================================
+        print_h2("Metadata project: ");
+        let mut create_command = Command::new("cargo");
+        create_command
+            .args(&["run", "--", "metadata"])
+            .current_dir(&project_folder);
+
+        let command_string = format!("{:?} ", create_command).replace("\"", "");
+        print!("{}", command_string);
+
+        let result = create_command.output().map_or_else(
+            |err| {
+                // Неудалось получить данные по проекту. Вывод сообщения
+                print_ln();
+                print_color_red("[ERROR] ");
+                print_default(&command_string);
+                print_ln();
+                print_bold("Message: ");
+                print_default(err.to_string().as_str());
+                print_ln();
+                None
+            },
+            |result| Some(result),
+        );
+        assert_ne!(result, None, "failed: {}", &command_string);
+        let result = result.unwrap();
+        let code = result.status.code().unwrap_or(0);
+        let stderr = String::from_utf8(result.stderr).unwrap();
+        if code != 0 {
+            // При получении данных произошла ошибка
+            print_ln();
+            print_color_red("[ERROR] ");
+            print_default(&command_string);
+            print_ln();
+            print_bold("Code: ");
+            print_default(result.status.to_string().as_str());
+            print_ln();
+            print_bold("Message: ");
+            print_default(stderr.as_str());
+            print_ln();
+            assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
+        }
+        print_color_green("[SUCCESS]");
+        print_ln();
+        let stdout = String::from_utf8(result.stdout).unwrap();
+        assert!(
+            stdout.contains(&project_name),
+            "Not found in metadata name: {}",
+            &project_name
+        );
+        assert!(
+            stdout.contains(project_address.as_ref().unwrap()),
+            "Not found in metadata account_address: {}",
+            project_address.as_ref().unwrap()
+        );
+        assert!(
+            stdout.contains(project_dialect.as_ref().unwrap()),
+            "Not found in metadata dialect: {}",
+            project_dialect.as_ref().unwrap()
+        );
+        assert!(
+            stdout.contains(blockchain_api.as_ref().unwrap()),
+            "Not found in metadata blockchain_api: {}",
+            blockchain_api.as_ref().unwrap()
+        );
+
+        remove_project(&project_folder, &project_name);
+    }
     // =============================================================================================
     /// Создать проект из указаных настроек. Ожидается успех
     fn success_create_new_project_and_build_with_settings(
@@ -385,60 +488,12 @@ mod test_dove_cmd {
         print_ln();
         print_projects(&list_projects);
 
-        // =========================================================================================
-        // Запуск создания нового проекта
-        // $ cargo run -- new demoproject_1 [-d ###] [-a ###] [-r ###]
-        // =========================================================================================
-        print_h2("Create project: ");
-        let mut create_command = Command::new("cargo");
-        create_command
-            .args(&["run", "--", "new", &project_name])
-            .current_dir(&dove_path);
-        if let Some(dialect) = project_dialect.as_ref() {
-            create_command.args(&["-d", dialect]);
-        }
-        if let Some(address) = project_address.as_ref() {
-            create_command.args(&["-a", address]);
-        }
-        if let Some(api) = blockchain_api.as_ref() {
-            create_command.args(&["-r", api]);
-        }
-
-        let command_string = format!("{:?} ", create_command).replace("\"", "");
-        print!("{}", command_string);
-
-        let result = create_command.output().map_or_else(
-            |err| {
-                // Неудалось создать новый проект. Вывод сообщения
-                print_ln();
-                print_color_red("[ERROR] ");
-                print_default(&command_string);
-                print_ln();
-                print_bold("Message: ");
-                print_default(err.to_string().as_str());
-                print_ln();
-                None
-            },
-            |result| Some(result),
+        new_project(
+            &project_name,
+            &project_dialect,
+            &project_address,
+            &blockchain_api,
         );
-        assert_ne!(result, None, "failed: {}", &command_string);
-        let result = result.unwrap();
-        let code = result.status.code().unwrap_or(0);
-        let stderr = String::from_utf8(result.stderr).unwrap();
-        if code != 0 {
-            // При создании произошла ошибка
-            print_ln();
-            print_color_red("[ERROR] ");
-            print_default(&command_string);
-            print_ln();
-            print_bold("Code: ");
-            print_default(result.status.to_string().as_str());
-            print_ln();
-            print_bold("Message: ");
-            print_default(stderr.as_str());
-            print_ln();
-            assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
-        }
 
         let mut project_path = dove_path.clone();
         project_path.push(&project_name);
@@ -850,6 +905,69 @@ mod test_dove_cmd {
         }
     }
 
+    fn new_project(
+        name: &str,
+        dialect: &Option<String>,
+        address: &Option<String>,
+        blockchain_api: &Option<String>,
+    ) {
+        let dove_path = get_path_dove().expect("Dove path - not found");
+
+        // =========================================================================================
+        // Запуск создания нового проекта
+        // $ cargo run -- new demoproject_### [-d ###] [-a ###] [-r ###]
+        // =========================================================================================
+        print_h2("Create project: ");
+        let mut create_command = Command::new("cargo");
+        create_command
+            .args(&["run", "--", "new", &name])
+            .current_dir(&dove_path);
+        if let Some(dialect) = dialect.as_ref() {
+            create_command.args(&["-d", dialect]);
+        }
+        if let Some(address) = address.as_ref() {
+            create_command.args(&["-a", address]);
+        }
+        if let Some(api) = blockchain_api.as_ref() {
+            create_command.args(&["-r", api]);
+        }
+
+        let command_string = format!("{:?} ", create_command).replace("\"", "");
+        print!("{}", command_string);
+
+        let result = create_command.output().map_or_else(
+            |err| {
+                // Неудалось создать новый проект. Вывод сообщения
+                print_ln();
+                print_color_red("[ERROR] ");
+                print_default(&command_string);
+                print_ln();
+                print_bold("Message: ");
+                print_default(err.to_string().as_str());
+                print_ln();
+                None
+            },
+            |result| Some(result),
+        );
+        assert_ne!(result, None, "failed: {}", &command_string);
+        let result = result.unwrap();
+        let code = result.status.code().unwrap_or(0);
+        let stderr = String::from_utf8(result.stderr).unwrap();
+        if code != 0 {
+            // При создании произошла ошибка
+            print_ln();
+            print_color_red("[ERROR] ");
+            print_default(&command_string);
+            print_ln();
+            print_bold("Code: ");
+            print_default(result.status.to_string().as_str());
+            print_ln();
+            print_bold("Message: ");
+            print_default(stderr.as_str());
+            print_ln();
+            assert_eq!(code, 0, "[ERROR] {}", stderr.as_str());
+        }
+    }
     /// Проверка Dove.toml на ожидаемы конфиг
     fn success_check_config(
         path_project: &PathBuf,
