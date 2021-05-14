@@ -148,7 +148,7 @@ mod tests {
         let move_project_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("resources")
             .join("test_move_project");
-        let context = get_context(move_project_dir.clone()).unwrap();
+        let context = get_context(move_project_dir).unwrap();
 
         let metadata = into_metadata(context).unwrap();
 
