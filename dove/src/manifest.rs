@@ -146,6 +146,7 @@ pub struct Layout {
     pub target: String,
 
     /// Path to index.
+    #[serde(default = "index")]
     pub index: String,
 }
 
@@ -347,7 +348,7 @@ pub fn default_dialect() -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package};
+    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package, DoveToml};
 
     fn package() -> Package {
         Package {
@@ -394,5 +395,26 @@ mod test {
                         dialect= \"dfinance\"
                         ";
         assert_eq!(package(), toml::from_str::<Package>(deps).unwrap());
+    }
+
+    #[test]
+    fn parse_layout() {
+        let dove_toml = "
+                        [package]
+                            name = \"test_name\"
+                            dialect = \"pont\"
+                            dependencies = [
+                            ]
+                        [layout]
+                        tests_dir = \"runner_tests\"
+                        ";
+        let mut expected = DoveToml::default();
+
+        expected.package.name = Some("test_name".to_owned());
+        expected.package.dialect = Some("pont".to_owned());
+        expected.package.dependencies = Some(Dependencies { deps: vec![] });
+        expected.layout.tests_dir = "runner_tests".to_owned();
+
+        assert_eq!(expected, toml::from_str::<DoveToml>(dove_toml).unwrap());
     }
 }
