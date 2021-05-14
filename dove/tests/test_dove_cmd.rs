@@ -365,6 +365,9 @@ mod test_dove_cmd {
         blockchain_api: Option<String>,
     ) {
         let dove_path = get_path_dove().expect("Dove path - not found");
+        let mut project_folder = dove_path.clone();
+        project_folder.push(&project_name);
+
         print_h1(format!("Dove: New move project. {}", &project_name).as_str());
         print_ln();
         // Print project setting
@@ -411,12 +414,12 @@ mod test_dove_cmd {
         print_color_green("[SUCCESS]");
         print_ln();
 
-        // $ cargo run -- build -e demoproject_#
+        // $ cargo run -- build demoproject_#
         print_h2("Building project ");
         let mut create_command = Command::new("cargo");
         create_command
-            .args(&["run", "--", "build", "-e", &project_name])
-            .current_dir(&dove_path);
+            .args(&["run", "--", "build", &project_name])
+            .current_dir(&project_folder);
         let command_string = format!("{:?} ", create_command).replace("\"", "");
         print!("{}", command_string);
         let result = create_command.output().map_or_else(
