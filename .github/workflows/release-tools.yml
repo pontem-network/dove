@@ -155,12 +155,14 @@ jobs:
           mkdir -p $PKG_BIN_DIR
           cp build-info.txt $PKG_DIR/
 
+          set +e
           cp $RELEASE_DIR/executor$OS_BIN_EXT $PKG_BIN_DIR/$EXECUTOR_NAME
           cp $RELEASE_DIR/testrunner$OS_BIN_EXT $PKG_BIN_DIR/$TESTRUNNER_NAME
           cp $RELEASE_DIR/disassembler$OS_BIN_EXT $PKG_BIN_DIR/$DISASSEMBLER_NAME
           cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
           cp $RELEASE_DIR/move-resource-viewer$OS_BIN_EXT $PKG_BIN_DIR/$MRV_NAME
           cp $RELEASE_DIR/dove$OS_BIN_EXT $PKG_BIN_DIR/$DOVE_NAME
+          set -e
 
           echo "::set-output name=name::$PKG_NAME"
           echo "::set-output name=path::$PKG_DIR"
@@ -186,12 +188,14 @@ jobs:
           DISASSEMBLER_NAME=move-disassembler-${{ steps.disassembler.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           cd $RELEASE_DIR
 
+          set +e
           mv executor$OS_BIN_EXT $EXECUTOR_NAME
           mv testrunner$OS_BIN_EXT $TESTRUNNER_NAME
           mv disassembler$OS_BIN_EXT $DISASSEMBLER_NAME
           mv move-language-server$OS_BIN_EXT $MLS_NAME
           mv move-resource-viewer$OS_BIN_EXT $MRV_NAME
           mv dove$OS_BIN_EXT $DOVE_NAME
+          set -e
 
           echo "::set-output name=mls::$MLS_NAME"
           echo "::set-output name=mrv::$MRV_NAME"
