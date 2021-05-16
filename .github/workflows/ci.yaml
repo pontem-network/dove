@@ -19,7 +19,8 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v1
+      - name: restore rust cache
+        uses: Swatinem/rust-cache@v1
 
       - name: Check formatting
         uses: actions-rs/cargo@v1
@@ -33,7 +34,7 @@ jobs:
           args: --tests --examples -- -Dwarnings
 
   tests:
-    name: ${{ matrix.os }}::tests
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
 
     strategy:
