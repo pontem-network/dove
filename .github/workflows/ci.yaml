@@ -6,22 +6,50 @@ on:
       - master
 
 jobs:
-  tests:
-    name: Tests
-    runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
+  clippy:
+    name: clippy + rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
 
-    defaults:
-      run:
-        shell: bash
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: rustfmt, clippy
+
+      - name: restore rust cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check
+
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --tests --examples -- -Dwarnings
+
+  tests:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - macos-latest
-          - ubuntu-latest
-          # TODO: - windows-latest
+        include:
+          - name: macos
+            os: macos-latest
+            triplet: x64-osx
+          - name: ubuntu
+            os: ubuntu-latest
+            triplet: x64-linux
+          - name: windows
+            os: windows-latest
+            triplet: x64-windows-static-md
 
     env:
       RUSTFLAGS: -D warnings
@@ -33,13 +61,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # We need to disable the existing toolchain to avoid updating rust-docs
-      # which takes a long time. The fastest way to do this is to rename the
-      # existing folder, as deleting it takes about as much time as not doing
-      # anything and just updating rust-docs.
-      - name: Rename existing rust toolchain (Windows)
-        if: matrix.os == 'windows-latest'
-        run: mv -f /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc /C/Users/runneradmin/.rustup/toolchains/stable-x86_64-pc-windows-msvc.old
+      - name: Restore from cache and run vcpkg
+        uses: lukka/run-vcpkg@v7
+        with:
+          vcpkgArguments: openssl
+          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+          vcpkgTriplet: ${{ matrix.triplet }}
+          vcpkgGitCommitId: 3b4dd085b0f5b410d9f587b3c9f7ad08a07449aa
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -47,32 +75,17 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
-          components: rustfmt, clippy
 
-      - if: matrix.os == 'ubuntu-latest'
-        run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
-
-      - name: Check formatting
-        run: cargo fmt -- --check
+      - uses: Swatinem/rust-cache@v1
 
       - name: Test All
-        if: matrix.os != 'windows-latest'
-        run: >
-          cargo test --no-fail-fast --all
-
-      - name: Test on Win
-        if: matrix.os == 'windows-latest'
-        run: |
-          cargo test --no-fail-fast -p=move-language-server
-          pushd resource-viewer
-          cargo test -p=move-resource-viewer --no-default-features --features="dfinance_address, json-schema"
-          popd
-
-      - name: Run clippy
-        run: cargo clippy --tests --examples -- -Dwarnings
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-fail-fast --all
 
   wasm:
-    name: Wasm
+    name: wasm
     runs-on: ubuntu-latest
 
     defaults:
