@@ -176,7 +176,8 @@ fn get_dep_address(path: &Path) -> Result<Option<AccountAddress>, Error> {
     }
 }
 
-fn make_local_name(git: &Git) -> String {
+/// Returns unique repository name for git repository.
+pub fn make_local_name(git: &Git) -> String {
     let mut digest = Sha3::v256();
     digest.update(git.git.as_bytes());
     if let Some(branch) = &git.branch {
