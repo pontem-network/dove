@@ -977,7 +977,7 @@ mod test_dove_cmd {
     fn remove_project(path: &PathBuf, project_name: &str) -> bool {
         if let Err(error) = std::fs::remove_dir_all(path) {
             print_default(
-                format!("Couldn't delete project directory {}  ", project_name).as_str(),
+                format!("Couldn't delete project directory {} ", project_name).as_str(),
             );
             print_color_red("[ERROR]");
             print_ln();
