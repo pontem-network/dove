@@ -1,7 +1,7 @@
 /// $ cargo run -- test [-k ###]
 /// $ dove test [-k ###]
 #[cfg(test)]
-mod dove_run_cmd_success {
+mod dove_test_cmd_fail {
     use std::path::{Path, PathBuf};
     use std::process::{Command};
     use std::fs::{remove_dir_all, read_to_string};
