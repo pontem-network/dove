@@ -383,31 +383,30 @@ mod test {
 
     #[test]
     fn parse_deps() {
-        let deps = "
-                        account_address = \"0x01\"
-                        name = \"Foo\"
+        let deps = r#"
+                        account_address = "0x01"
+                        name = "Foo"
                         dependencies = [
-                            {path = \"/stdlib\"},
-                            {git = \"https://github.com/dfinance/move-stdlib\"},
-                            {git = \"https://github.com/dfinance/move-stdlib\", \
-                            branch = \"master\", rev = \"969442fb28fc162c3e3de20ab0a3afdfa8d0f560\", path = \"/lang\"}
+                            {path = "/stdlib"},
+                            {git = "https://github.com/dfinance/move-stdlib"},
+                            {git = "https://github.com/dfinance/move-stdlib", branch = "master", rev = "969442fb28fc162c3e3de20ab0a3afdfa8d0f560", path = "/lang"}
                         ]
-                        dialect= \"dfinance\"
-                        ";
+                        dialect= "dfinance"
+                        "#;
         assert_eq!(package(), toml::from_str::<Package>(deps).unwrap());
     }
 
     #[test]
     fn parse_layout() {
-        let dove_toml = "
+        let dove_toml = r#"
                         [package]
-                            name = \"test_name\"
-                            dialect = \"pont\"
+                            name = "test_name"
+                            dialect = "pont"
                             dependencies = [
                             ]
                         [layout]
-                        tests_dir = \"runner_tests\"
-                        ";
+                        tests_dir = "runner_tests"
+                        "#;
         let mut expected = DoveToml::default();
 
         expected.package.name = Some("test_name".to_owned());
