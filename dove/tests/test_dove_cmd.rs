@@ -13,7 +13,7 @@ mod test_dove_cmd {
     /// Init directory as move project
     /// valid url: http://demo.ru/api, https://demo.ru/api, http://127.0.0.1/api, http://localhost/api, http://localhost:8080/api
     ///
-    /// $ cargo run -- init -d ### -a ### -r http://localhost/api
+    /// $ cargo run -- init [-d ###] [-a ###] [-r ###]
     #[test]
     fn success_init_project_in_folder() {
         vec![

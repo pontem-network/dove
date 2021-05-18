@@ -122,7 +122,11 @@ mod dove_clean_cmd_success {
             let mut project_target = project_folder.clone();
             project_target.push("target");
 
-            assert!(!project_target.exists(), "Directory was not deleted: {}", project_target.to_str().unwrap_or(" - "));
+            assert!(
+                !project_target.exists(),
+                "Directory was not deleted: {}",
+                project_target.to_str().unwrap_or(" - ")
+            );
         }
 
         assert!(
