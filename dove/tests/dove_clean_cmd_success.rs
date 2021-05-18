@@ -1,13 +1,13 @@
-/// $ cargo run -- metadata
-/// $ dove metadata
+/// $ cargo run -- clean
+/// $ dove clean
 #[cfg(test)]
-mod dove_metadata_cmd_success {
+mod dove_clean_cmd_success {
     use std::path::{Path, PathBuf};
     use std::process::{Command};
     use std::fs::{remove_dir_all, read_to_string};
     use fs_extra::file::write_all;
 
-    /// project name: demoproject_15
+    /// project name: demoproject_16
     #[test]
     fn success() {
         // Path to dove folder
@@ -19,10 +19,7 @@ mod dove_metadata_cmd_success {
             folder
         };
         // Project name and path
-        let project_name = "demoproject_15";
-        let project_address = "5Csxuy81dNEVYbRA9K7tyHypu7PivHmwCZSKxcbU78Cy2v7v";
-        let blockchain_api = "https://localhost/api";
-        let project_dialect = "pont";
+        let project_name = "demoproject_16";
 
         let project_folder = {
             let mut folder = dove_folder.clone();
@@ -36,15 +33,13 @@ mod dove_metadata_cmd_success {
                 project_folder.to_str().unwrap()
             );
         }
-        // $ cargo run -- new demoproject_15 -d pont -a 5Csxuy81dNEVYbRA9K7tyHypu7PivHmwCZSKxcbU78Cy2v7v -r https://localhost/api
-        // $ dove new demoproject_15 -d pont
+        // $ cargo run -- new demoproject_16 -d pont
+        // $ dove new demoproject_16 -d pont
         {
             let mut dove_new = Command::new("cargo");
             dove_new
                 .args(&["run", "--", "new", project_name])
-                .args(&["-d", project_dialect])
-                .args(&["-r", blockchain_api])
-                .args(&["-a", project_address])
+                .args(&["-d", "pont"])
                 .current_dir(&dove_folder);
             let command_string = format!("{:?} ", dove_new).replace("\"", "");
             let result = dove_new.output();
@@ -69,15 +64,43 @@ mod dove_metadata_cmd_success {
             add_in_dove_toml_branch(&project_folder);
         }
 
-        // $ cargo run -- metadata
-        // $ dove metadata
+        // $ cargo run -- build
+        // $ dove build
         {
-            let mut dove_metadata = Command::new("cargo");
-            dove_metadata
-                .args(&["run", "--", "metadata"])
+            let mut dove_build = Command::new("cargo");
+            dove_build
+                .args(&["run", "--", "build"])
                 .current_dir(&project_folder);
-            let command_string = format!("{:?} ", dove_metadata).replace("\"", "");
-            let result = dove_metadata.output();
+            let command_string = format!("{:?} ", dove_build).replace("\"", "");
+            let result = dove_build.output();
+            assert!(
+                result.is_ok(),
+                "[ERROR]: {}\r\n[RUN]: {}",
+                result.err().unwrap(),
+                command_string
+            );
+
+            let result = result.unwrap();
+            let code = result.status.code().unwrap();
+            assert_eq!(
+                0,
+                code,
+                "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
+                command_string,
+                code,
+                String::from_utf8(result.stderr).unwrap()
+            );
+        }
+
+        // $ cargo run -- clean
+        // $ dove clean
+        {
+            let mut dove_build = Command::new("cargo");
+            dove_build
+                .args(&["run", "--", "clean"])
+                .current_dir(&project_folder);
+            let command_string = format!("{:?} ", dove_build).replace("\"", "");
+            let result = dove_build.output();
             assert!(
                 result.is_ok(),
                 "[ERROR]: {}\r\n[RUN]: {}",
@@ -96,27 +119,10 @@ mod dove_metadata_cmd_success {
                 String::from_utf8(result.stderr).unwrap()
             );
 
-            let stdout = String::from_utf8(result.stdout).unwrap();
-            assert!(
-                stdout.contains(&project_name),
-                "Not found in metadata name: {}",
-                &project_name
-            );
-            assert!(
-                stdout.contains(project_address),
-                "Not found in metadata account_address: {}",
-                project_address
-            );
-            assert!(
-                stdout.contains(project_dialect),
-                "Not found in metadata dialect: {}",
-                project_dialect
-            );
-            assert!(
-                stdout.contains(blockchain_api),
-                "Not found in metadata blockchain_api: {}",
-                blockchain_api
-            );
+            let mut project_target = project_folder.clone();
+            project_target.push("target");
+
+            assert!(!project_target.exists(), "Directory was not deleted: {}", project_target.to_str().unwrap_or(" - "));
         }
 
         assert!(

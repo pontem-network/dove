@@ -53,7 +53,7 @@ mod dove_run_cmd_success {
             assert_eq!(
                 0,
                 code,
-                "[ERROR] Command: {}; Code: {}; Message: {};",
+                "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
                 command_string,
                 code,
                 String::from_utf8(result.stderr).unwrap()
@@ -84,7 +84,7 @@ mod dove_run_cmd_success {
             assert_eq!(
                 0,
                 code,
-                "[ERROR] Command: {}; Code: {}; Message: {};",
+                "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
                 command_string,
                 code,
                 String::from_utf8(result.stderr).unwrap()
@@ -152,7 +152,7 @@ mod dove_run_cmd_success {
             assert_eq!(
                 0,
                 code,
-                "[ERROR] Command: {}; Code: {}; Message: {};",
+                "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
                 command_string,
                 code,
                 String::from_utf8(result.stderr).unwrap()
@@ -218,7 +218,7 @@ mod dove_run_cmd_success {
             assert_eq!(
                 0,
                 code,
-                "[ERROR] Command: {}; Code: {}; Message: {};",
+                "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
                 command_string,
                 code,
                 String::from_utf8(result.stderr).unwrap()
@@ -249,7 +249,7 @@ mod dove_run_cmd_success {
             assert_eq!(
                 0,
                 code,
-                "[ERROR] Command: {}; Code: {}; Message: {};",
+                "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
                 command_string,
                 code,
                 String::from_utf8(result.stderr).unwrap()
@@ -299,7 +299,7 @@ mod dove_run_cmd_success {
             assert_eq!(
                 0,
                 code,
-                "[ERROR] Command: {}; Code: {}; Message: {};",
+                "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
                 command_string,
                 code,
                 String::from_utf8(result.stderr.clone()).unwrap()
