@@ -1,5 +1,5 @@
 /// $ cargo run -- run rdemo.move [-a ### ### ..]
-/// $ dove run
+/// $ dove run rdemo.move [-a ### ### ..]
 #[cfg(test)]
 mod dove_run_cmd_success {
     use std::path::{Path, PathBuf};
@@ -94,7 +94,7 @@ mod dove_run_cmd_success {
         // $ cargo run -- run rdemo.move
         // $ dove run rdemo.move
         {
-            // project_folder/modules/demo_module.move
+            // project_folder/modules/mdemo.move
             let module_path = {
                 let mut path = project_folder.clone();
                 path.push("modules");
