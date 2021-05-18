@@ -203,13 +203,13 @@ mod dove_init_cmd_success {
                 assert_eq!(
                     0,
                     code,
-                    "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\nSettings: {:?} {:?} {:?}",
+                    "[Command]: {}\r\n[Settings]: {:?} {:?} {:?}\r\n[Code]: {}\r\n[Message]: {}",
                     command_string,
-                    code,
-                    String::from_utf8(result.stderr).unwrap(),
                     dialect,
                     address,
                     blockchain_api,
+                    code,
+                    String::from_utf8(result.stderr).unwrap(),
                 );
             }
 
