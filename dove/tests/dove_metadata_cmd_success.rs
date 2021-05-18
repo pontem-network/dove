@@ -1,15 +1,15 @@
-/// $ cargo run -- test [-k ###]
-/// $ dove test [-k ###]
+/// $ cargo run -- metadata
+/// $ dove metadata
 #[cfg(test)]
-mod dove_test_cmd_fail {
+mod dove_metadata_cmd_success {
     use std::path::{Path, PathBuf};
     use std::process::{Command};
     use std::fs::{remove_dir_all, read_to_string};
     use fs_extra::file::write_all;
 
-    /// project name: demoproject_12
+    /// project name: demoproject_15
     #[test]
-    fn fail() {
+    fn success() {
         // Path to dove folder
         let dove_folder = {
             let mut folder = Path::new(".").canonicalize().unwrap();
@@ -19,7 +19,11 @@ mod dove_test_cmd_fail {
             folder
         };
         // Project name and path
-        let project_name = "demoproject_12";
+        let project_name = "demoproject_15";
+        let project_address = "5Csxuy81dNEVYbRA9K7tyHypu7PivHmwCZSKxcbU78Cy2v7v";
+        let blockchain_api = "https://localhost/api";
+        let project_dialect = "pont";
+
         let project_folder = {
             let mut folder = dove_folder.clone();
             folder.push(project_name);
@@ -32,13 +36,15 @@ mod dove_test_cmd_fail {
                 project_folder.to_str().unwrap()
             );
         }
-        // $ cargo run -- new demoproject_12 -d pont
-        // $ dove new demoproject_12 -d pont
+        // $ cargo run -- new demoproject_15 -d pont -a 5Csxuy81dNEVYbRA9K7tyHypu7PivHmwCZSKxcbU78Cy2v7v -r https://localhost/api
+        // $ dove new demoproject_15 -d pont
         {
             let mut dove_new = Command::new("cargo");
             dove_new
                 .args(&["run", "--", "new", project_name])
-                .args(&["-d", "pont"])
+                .args(&["-d", project_dialect])
+                .args(&["-r", blockchain_api])
+                .args(&["-a", project_address])
                 .current_dir(&dove_folder);
             let command_string = format!("{:?} ", dove_new).replace("\"", "");
             let result = dove_new.output();
@@ -63,15 +69,15 @@ mod dove_test_cmd_fail {
             add_in_dove_toml_branch(&project_folder);
         }
 
-        // $ cargo run -- build
-        // $ dove build
+        // $ cargo run -- metadata
+        // $ dove metadata
         {
-            let mut dove_build = Command::new("cargo");
-            dove_build
-                .args(&["run", "--", "build"])
+            let mut dove_metadata = Command::new("cargo");
+            dove_metadata
+                .args(&["run", "--", "metadata"])
                 .current_dir(&project_folder);
-            let command_string = format!("{:?} ", dove_build).replace("\"", "");
-            let result = dove_build.output();
+            let command_string = format!("{:?} ", dove_metadata).replace("\"", "");
+            let result = dove_metadata.output();
             assert!(
                 result.is_ok(),
                 "[ERROR]: {}\r\n[RUN]: {}",
@@ -89,61 +95,30 @@ mod dove_test_cmd_fail {
                 code,
                 String::from_utf8(result.stderr).unwrap()
             );
-        }
-
-        // $ cargo run -- test
-        // $ dove test
-        {
-            // project_folder/tests/test_1.move
-            let test_1_path = {
-                let mut path = project_folder.clone();
-                path.push("tests");
-                path.push("test_1.move");
-                path
-            };
-            write_all(
-                &test_1_path,
-                "script {
-                    fun main() {
-                        assert((3+2)==4,1);
-                    }
-                }",
-            )
-            .unwrap();
-
-            let mut dove_run = Command::new("cargo");
-            dove_run
-                .args(&["run", "--", "test"])
-                .current_dir(&project_folder);
-            let command_string = format!("{:?} ", dove_run).replace("\"", "");
-            let result = dove_run.output();
-            assert!(
-                result.is_ok(),
-                "[ERROR]: {}\r\n[RUN]: {}\r\n",
-                result.err().unwrap(),
-                command_string,
-            );
-
-            let result = result.unwrap();
-            let code = result.status.code().unwrap();
-            assert_ne!(
-                0,
-                code,
-                "[ERROR] Command: {}\r\nCode: {}\r\nError: {}\r\nOut: {}",
-                command_string,
-                code,
-                String::from_utf8(result.stderr.clone()).unwrap(),
-                String::from_utf8(result.stdout.clone()).unwrap(),
-            );
 
             let stdout = String::from_utf8(result.stdout).unwrap();
             assert!(
-                stdout.contains("main ...... FAILED"),
-                "[ERROR] Command: {}. \r\nMessage: {}",
-                command_string,
-                stdout
+                stdout.contains(&project_name),
+                "Not found in metadata name: {}",
+                &project_name
+            );
+            assert!(
+                stdout.contains(project_address),
+                "Not found in metadata account_address: {}",
+                project_address
+            );
+            assert!(
+                stdout.contains(project_dialect),
+                "Not found in metadata dialect: {}",
+                project_dialect
+            );
+            assert!(
+                stdout.contains(blockchain_api),
+                "Not found in metadata blockchain_api: {}",
+                blockchain_api
             );
         }
+
         assert!(
             remove_dir_all(&project_folder).is_ok(),
             "[ERROR] Couldn't delete directory {}",

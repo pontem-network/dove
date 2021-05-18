@@ -1,6 +1,6 @@
 /// $ cargo run -- test [-k ###]
 /// $ dove test [-k ###]
-#![cfg(test)]
+#[cfg(test)]
 mod dove_test_cmd_success {
     use std::path::{Path, PathBuf};
     use std::process::{Command};
@@ -8,7 +8,6 @@ mod dove_test_cmd_success {
     use fs_extra::file::write_all;
 
     /// project name: demoproject_10
-    /// $ cargo run -- test
     #[test]
     fn success() {
         // Path to dove folder
