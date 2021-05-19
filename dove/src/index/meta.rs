@@ -18,23 +18,18 @@ use vm::errors::Location;
 /// Extracts metadata form source code.
 pub fn source_meta(
     file: &Path,
-    address: Option<AccountAddress>,
+    sender: Option<AccountAddress>,
     dialect: &dyn Dialect,
 ) -> Result<FileMeta, Error> {
     let name = ConstPool::push(file.to_str().unwrap_or("source"));
     let source = fs::read_to_string(file)?;
-
-    let sender = match address {
-        None => None,
-        Some(addr) => Some(dialect.parse_address(&format!("0x{}", addr))?),
-    };
 
     let (defs, _, errors, _) =
         parse_file(dialect, &mut HashMap::default(), name, &source, sender);
     if errors.is_empty() {
         let mut metadata = Vec::new();
         for def in defs {
-            for meta in DefinitionMeta::from_definition(def, address)
+            for meta in DefinitionMeta::from_definition(def, sender)
                 .map_err(|err| anyhow!("{} Path:{:?}", err, file))?
             {
                 metadata.push(meta);
