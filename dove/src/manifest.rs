@@ -10,6 +10,7 @@ use serde::{
 };
 use toml::Value;
 use move_core_types::language_storage::CORE_CODE_ADDRESS;
+use move_lang::shared::Address;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -103,7 +104,7 @@ fn index() -> String {
 }
 
 fn code_code_address() -> String {
-    format!("0x{}", CORE_CODE_ADDRESS)
+    Address::new(CORE_CODE_ADDRESS.to_u8()).to_string()
 }
 
 /// Project layout.
