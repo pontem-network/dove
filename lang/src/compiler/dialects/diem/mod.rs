@@ -37,8 +37,9 @@ impl Dialect for DiemDialect {
         let max_hex_len = self.address_length() * 2 + 2;
         if addr.len() > max_hex_len {
             return Err(anyhow::anyhow!(
-                "Unable to parse AccountAddress. Maximum address length is {}.",
-                max_hex_len
+                "Unable to parse AccountAddress. Maximum address length is {}. Actual {}",
+                max_hex_len,
+                addr
             ));
         }
 

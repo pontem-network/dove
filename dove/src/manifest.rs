@@ -3,13 +3,14 @@ use std::convert::TryFrom;
 use std::path::Path;
 
 use anyhow::Error;
-use move_core_types::language_storage::CORE_CODE_ADDRESS;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
     ser::Error as SerError,
 };
 use toml::Value;
+use move_core_types::language_storage::CORE_CODE_ADDRESS;
+use move_lang::shared::Address;
 use crate::context::Context;
 
 /// Dove manifest name.
@@ -104,7 +105,7 @@ fn index() -> String {
 }
 
 fn code_code_address() -> String {
-    format!("0x{}", CORE_CODE_ADDRESS)
+    Address::new(CORE_CODE_ADDRESS.to_u8()).to_string()
 }
 
 /// Project layout.
@@ -147,6 +148,7 @@ pub struct Layout {
     pub target: String,
 
     /// Path to index.
+    #[serde(default = "index")]
     pub index: String,
 }
 
@@ -366,7 +368,7 @@ pub fn default_dialect() -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package};
+    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package, DoveToml};
 
     fn package() -> Package {
         Package {
@@ -401,17 +403,37 @@ mod test {
 
     #[test]
     fn parse_deps() {
-        let deps = "
-                        account_address = \"0x01\"
-                        name = \"Foo\"
+        let deps = r#"
+                        account_address = "0x01"
+                        name = "Foo"
                         dependencies = [
-                            {path = \"/stdlib\"},
-                            {git = \"https://github.com/dfinance/move-stdlib\"},
-                            {git = \"https://github.com/dfinance/move-stdlib\", \
-                            branch = \"master\", rev = \"969442fb28fc162c3e3de20ab0a3afdfa8d0f560\", path = \"/lang\"}
+                            {path = "/stdlib"},
+                            {git = "https://github.com/dfinance/move-stdlib"},
+                            {git = "https://github.com/dfinance/move-stdlib", branch = "master", rev = "969442fb28fc162c3e3de20ab0a3afdfa8d0f560", path = "/lang"}
                         ]
-                        dialect= \"dfinance\"
-                        ";
+                        dialect= "dfinance"
+                        "#;
         assert_eq!(package(), toml::from_str::<Package>(deps).unwrap());
+    }
+
+    #[test]
+    fn parse_layout() {
+        let dove_toml = r#"
+                        [package]
+                            name = "test_name"
+                            dialect = "pont"
+                            dependencies = [
+                            ]
+                        [layout]
+                        tests_dir = "runner_tests"
+                        "#;
+        let mut expected = DoveToml::default();
+
+        expected.package.name = Some("test_name".to_owned());
+        expected.package.dialect = Some("pont".to_owned());
+        expected.package.dependencies = Some(Dependencies { deps: vec![] });
+        expected.layout.tests_dir = "runner_tests".to_owned();
+
+        assert_eq!(expected, toml::from_str::<DoveToml>(dove_toml).unwrap());
     }
 }
