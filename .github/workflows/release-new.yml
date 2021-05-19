@@ -31,7 +31,8 @@ jobs:
           echo "Generating changelog between tags: $TAG_FIRST...$TAG_SECOND"
 
           RESULT_FILE=generated-changelog.md
-          RESULT_LOG="$(git log $TAG_FIRST...$TAG_SECOND --pretty=format:'- %s [⃗](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
+          RESULT_LOG_ACT="$(git log $TAG_SECOND...${{ steps.version.outputs.value }} --pretty=format:'- %s [⃗](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
+          RESULT_LOG_POST="$(git log $TAG_FIRST...$TAG_SECOND --pretty=format:'- %s [⃗](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
 
           echo "
           ## TODO: EDIT ME BEFORE PUBLISH
@@ -47,17 +48,21 @@ jobs:
 
           - - -
 
-          __Changelog ${TAG_FIRST}__…${TAG_SECOND}
+          __Changelog ${{ steps.version.outputs.value }}__…${TAG_SECOND}
 
-          $RESULT_LOG
+          $RESULT_LOG_ACT
+
+          __Changelog ${TAG_SECOND}__…${TAG_FIRST}
+
+          $RESULT_LOG_POST
 
           <!-- Built with ♥️. -->
           " > $RESULT_FILE
 
-          echo ::set-output name=tag_from::"$TAG_FIRST"
-          echo ::set-output name=tag_to::"$TAG_SECOND"
+          # echo ::set-output name=tag_from::"$TAG_FIRST"
+          # echo ::set-output name=tag_to::"$TAG_SECOND"
           echo ::set-output name=file::"$RESULT_FILE"
-          echo ::set-output name=text::$RESULT_LOG
+          # echo ::set-output name=text::$RESULT_LOG
 
       - id: release
         name: Create release ${{ steps.version.outputs.value }}
