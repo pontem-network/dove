@@ -57,7 +57,7 @@ See `./target/` folder to get scripts/modules binaries.
 
 ### Arguments
 
-Command `ct` allows you to create transactions for `polkadot` chain with [Move Pallete](https://github.com/pontem-network/sp-move). 
+Command `ct` allows you to create transactions for `polkadot` chain with [Move Pallete](https://github.com/pontem-network/sp-move).
 
 `ct` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
 
@@ -144,7 +144,7 @@ dove ct -n store_u126
 
 You can define the file name by using '--file' or '-f' parameter.
 
-With this option 'ct' searches in a specified file. It may be useful when there is more than one script with the same name in different files. 
+With this option 'ct' searches in a specified file. It may be useful when there is more than one script with the same name in different files.
 Or the specified file has one script.
 
 Example:
@@ -222,7 +222,7 @@ See help:
 decompiler --help
 ```
 
-Try to decompiler `.mv` file:
+Try to decompile `.mv` file:
 
 ```
 decompiler --input <path to compiled module or script>

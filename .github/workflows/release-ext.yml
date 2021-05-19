@@ -161,7 +161,7 @@ jobs:
             lib-pre: lib
             lib-ext: so
           - name: macos-latest
-            platform: mac
+            platform: darwin
             lib-pre: lib
             lib-ext: dylib
           - name: windows-latest

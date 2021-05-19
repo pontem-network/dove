@@ -38,12 +38,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            platform: linux
-          - os: macos-latest
-            platform: mac
-          # TODO: - os: windows-latest
-          #   platform: win # gnu,mingw64
+          - platform: darwin
+            os: macos-latest
+            triplet: x64-osx
+          - platform: linux
+            os: ubuntu-latest
+            triplet: x64-linux
+          - platform: win
+            os: windows-latest
+            triplet: x64-windows-static-md
 
     defaults:
       run:
@@ -61,6 +64,14 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
+
+      - name: Restore from cache and run vcpkg
+        uses: lukka/run-vcpkg@v7
+        with:
+          vcpkgArguments: openssl
+          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+          vcpkgTriplet: ${{ matrix.triplet }}
+          vcpkgGitCommitId: 3b4dd085b0f5b410d9f587b3c9f7ad08a07449aa
 
       - name: Build all executables
         if: matrix.os != 'windows-latest'
@@ -144,12 +155,14 @@ jobs:
           mkdir -p $PKG_BIN_DIR
           cp build-info.txt $PKG_DIR/
 
+          set +e
           cp $RELEASE_DIR/executor$OS_BIN_EXT $PKG_BIN_DIR/$EXECUTOR_NAME
           cp $RELEASE_DIR/testrunner$OS_BIN_EXT $PKG_BIN_DIR/$TESTRUNNER_NAME
           cp $RELEASE_DIR/decompiler$OS_BIN_EXT $PKG_BIN_DIR/$DECOMPILER_NAME
           cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
           cp $RELEASE_DIR/move-resource-viewer$OS_BIN_EXT $PKG_BIN_DIR/$MRV_NAME
           cp $RELEASE_DIR/dove$OS_BIN_EXT $PKG_BIN_DIR/$DOVE_NAME
+          set -e
 
           echo "::set-output name=name::$PKG_NAME"
           echo "::set-output name=path::$PKG_DIR"
@@ -175,12 +188,14 @@ jobs:
           DECOMPILER_NAME=move-decompiler-${{ steps.decompiler.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           cd $RELEASE_DIR
 
+          set +e
           mv executor$OS_BIN_EXT $EXECUTOR_NAME
           mv testrunner$OS_BIN_EXT $TESTRUNNER_NAME
           mv decompiler$OS_BIN_EXT $DECOMPILER_NAME
           mv move-language-server$OS_BIN_EXT $MLS_NAME
           mv move-resource-viewer$OS_BIN_EXT $MRV_NAME
           mv dove$OS_BIN_EXT $DOVE_NAME
+          set -e
 
           echo "::set-output name=mls::$MLS_NAME"
           echo "::set-output name=mrv::$MRV_NAME"
