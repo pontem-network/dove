@@ -25,15 +25,15 @@ mod dove_new_cmd_fail {
         let project_folder = {
             let mut folder = dove_folder.clone();
             folder.push(project_name);
+            if folder.exists() {
+                remove_dir_all(&folder).expect(&format!(
+                    "[ERROR] Couldn't delete project directory: {}",
+                    folder.to_str().unwrap()
+                ));
+            }
             folder
         };
-        if project_folder.exists() {
-            assert!(
-                remove_dir_all(&project_folder).is_ok(),
-                "[ERROR] Couldn't delete project directory. Folder: {}",
-                project_folder.to_str().unwrap()
-            );
-        }
+
         // $ dove new demoproject_14 [-d ###] [-a ###] [-r ###]
         // $ dove build
         for (dialect, address, blockchain_api) in vec![
@@ -94,14 +94,7 @@ mod dove_new_cmd_fail {
                 }
 
                 let command_string = format!("{:?} ", dove_new).replace("\"", "");
-                let result = dove_new.output();
-                assert!(
-                    result.is_ok(),
-                    "[ERROR]: {}\r\n[RUN]: {}",
-                    result.err().unwrap(),
-                    command_string
-                );
-                let result = result.unwrap();
+                let result = dove_new.output().expect(&format!("[RUN]: {}", command_string));
                 let code = result.status.code().unwrap();
                 assert_ne!(code, 0, "[ERROR] was created\r\nCommand: {}\r\n", &command_string);
             }

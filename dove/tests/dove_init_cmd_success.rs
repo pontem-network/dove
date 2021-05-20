@@ -27,15 +27,15 @@ mod dove_init_cmd_success {
         let project_folder = {
             let mut folder = dove_folder.clone();
             folder.push(project_name);
+            if folder.exists() {
+                remove_dir_all(&folder).expect(&format!(
+                    "[ERROR] Couldn't delete project directory: {}",
+                    folder.to_str().unwrap()
+                ));
+            }
             folder
         };
-        if project_folder.exists() {
-            assert!(
-                remove_dir_all(&project_folder).is_ok(),
-                "[ERROR] Couldn't delete project directory. Folder: {}",
-                project_folder.to_str().unwrap()
-            );
-        }
+
 
         // $ dove init [-d ###] [-a ###] [-r ###]
         // $ dove build
@@ -102,14 +102,7 @@ mod dove_init_cmd_success {
                 }
 
                 let command_string = format!("{:?} ", dove_init).replace("\"", "");
-                let result = dove_init.output();
-                assert!(
-                    result.is_ok(),
-                    "[ERROR]: {}\r\nCommand: {}",
-                    result.err().unwrap(),
-                    command_string
-                );
-                let result = result.unwrap();
+                let result = dove_init.output().expect(&format!("[RUN]: {}", command_string));
                 let code = result.status.code().unwrap();
                 assert_eq!(
                     0,
@@ -119,8 +112,7 @@ mod dove_init_cmd_success {
                     code,
                     String::from_utf8(result.stderr).unwrap()
                 );
-                // @todo remove later
-                add_in_dove_toml_branch(&project_folder);
+                set_dependencies_local_move_stdlib(&project_folder);
             }
 
             // Check config
@@ -190,15 +182,7 @@ mod dove_init_cmd_success {
                     .args(&["run", "--", "build"])
                     .current_dir(&project_folder);
                 let command_string = format!("{:?} ", dove_build).replace("\"", "");
-                let result = dove_build.output();
-                assert!(
-                    result.is_ok(),
-                    "[ERROR]: {}\r\n[RUN]: {}",
-                    result.err().unwrap(),
-                    command_string
-                );
-
-                let result = result.unwrap();
+                let result = dove_build.output().expect(&format!("[RUN]: {}", command_string));
                 let code = result.status.code().unwrap();
                 assert_eq!(
                     0,
@@ -213,16 +197,16 @@ mod dove_init_cmd_success {
                 );
             }
 
-            assert!(
-                remove_dir_all(&project_folder).is_ok(),
-                "[ERROR] Couldn't delete directory {}",
-                project_folder.to_str().unwrap()
-            );
+            remove_dir_all(&folder).expect(&format!(
+                "[ERROR] Couldn't delete project directory: {}",
+                folder.to_str().unwrap()
+            ));
         }
     }
 
-    // @todo remove later
-    fn add_in_dove_toml_branch(project_path: &PathBuf) {
+    fn set_dependencies_local_move_stdlib(project_path: &PathBuf) {
+        use toml::Value;
+
         let mut dove_toml_path = project_path.clone();
         dove_toml_path.push("Dove.toml");
         let mut toml_value = read_to_string(&dove_toml_path)
@@ -235,11 +219,15 @@ mod dove_init_cmd_success {
                 .unwrap()
                 .get_mut("dependencies")
                 .unwrap()
-                .get_mut(0)
-                .unwrap()
-                .as_table_mut()
+                .as_array_mut()
                 .unwrap();
-            v.insert("branch".to_string(), Value::String("move-1.2".to_string()));
+            v.clear();
+            let mut dd = toml::map::Map::new();
+            dd.insert(
+                "path".to_string(),
+                Value::String("../tests/move-stdlib".to_string()),
+            );
+            v.push(Value::Table(dd));
         }
         write_all(
             &dove_toml_path,
