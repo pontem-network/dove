@@ -291,7 +291,7 @@ mod dove_ct_cmd_success {
                         fun main(_a1:u64,_a2:u64) { }
                     }",
                 )
-                    .unwrap();
+                .unwrap();
             }
             let mut dove_ct = Command::new("cargo");
             dove_ct
