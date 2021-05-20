@@ -5,17 +5,17 @@ address 0x1 {
 /// for every account.
 module Account {
 
-    use 0x1::Dfinance;
+    use 0x1::Pontem;
     use 0x1::Signer;
     use 0x1::Event;
 
     const ERR_ZERO_DEPOSIT: u64 = 7;
 
     /// holds account data, currently, only events
-    struct T has store, key {}
+    struct T has key {}
 
-    struct Balance<Token: store + key> has store, key {
-        coin: Dfinance::T<Token>
+    struct Balance<Token> has key {
+        coin: Pontem::T<Token>
     }
 
     /// Message for sent events
@@ -35,11 +35,11 @@ module Account {
     }
 
     /// Init wallet for measurable currency, hence accept <Token> currency
-    public fun accept<Token: store + key>(account: &signer) {
-        move_to<Balance<Token>>(account, Balance { coin: Dfinance::zero<Token>() })
+    public fun accept<Token: store>(account: &signer) {
+        move_to<Balance<Token>>(account, Balance { coin: Pontem::zero<Token>() })
     }
 
-    public fun has_balance<Token: store + key>(payee: address): bool {
+    public fun has_balance<Token: store>(payee: address): bool {
         exists<Balance<Token>>(payee)
     }
 
@@ -47,17 +47,17 @@ module Account {
         exists<T>(payee)
     }
 
-    public fun balance<Token: store + key>(account: &signer): u128 acquires Balance {
+    public fun balance<Token: store>(account: &signer): u128 acquires Balance {
         balance_for<Token>(Signer::address_of(account))
     }
 
-    public fun balance_for<Token: store + key>(addr: address): u128 acquires Balance {
-        Dfinance::value(&borrow_global<Balance<Token>>(addr).coin)
+    public fun balance_for<Token: store>(addr: address): u128 acquires Balance {
+        Pontem::value(&borrow_global<Balance<Token>>(addr).coin)
     }
 
-    public fun deposit_to_sender<Token: store + key>(
+    public fun deposit_to_sender<Token: store>(
         account: &signer,
-        to_deposit: Dfinance::T<Token>
+        to_deposit: Pontem::T<Token>
     ) acquires Balance {
         deposit<Token>(
             account,
@@ -66,10 +66,10 @@ module Account {
         )
     }
 
-    public fun deposit<Token: store + key>(
+    public fun deposit<Token: store>(
         account: &signer,
         payee: address,
-        to_deposit: Dfinance::T<Token>
+        to_deposit: Pontem::T<Token>
     ) acquires Balance {
         deposit_with_metadata<Token>(
             account,
@@ -79,10 +79,10 @@ module Account {
         )
     }
 
-    public fun deposit_with_metadata<Token: store + key>(
+    public fun deposit_with_metadata<Token: store>(
         account: &signer,
         payee: address,
-        to_deposit: Dfinance::T<Token>,
+        to_deposit: Pontem::T<Token>,
         metadata: vector<u8>
     ) acquires Balance {
         deposit_with_sender_and_metadata<Token>(
@@ -93,7 +93,7 @@ module Account {
         )
     }
 
-    public fun pay_from_sender<Token: store + key>(
+    public fun pay_from_sender<Token: store>(
         account: &signer,
         payee: address,
         amount: u128
@@ -103,7 +103,7 @@ module Account {
         )
     }
 
-    public fun pay_from_sender_with_metadata<Token: store + key>(
+    public fun pay_from_sender_with_metadata<Token: store>(
         account: &signer,
         payee: address,
         amount: u128,
@@ -118,16 +118,16 @@ module Account {
         )
     }
 
-    fun deposit_with_sender_and_metadata<Token: store + key>(
+    fun deposit_with_sender_and_metadata<Token: store>(
         sender: &signer,
         payee: address,
-        to_deposit: Dfinance::T<Token>,
+        to_deposit: Pontem::T<Token>,
         metadata: vector<u8>
     ) acquires Balance {
-        let amount = Dfinance::value(&to_deposit);
+        let amount = Pontem::value(&to_deposit);
         assert(amount > 0, ERR_ZERO_DEPOSIT);
 
-        let denom = Dfinance::denom<Token>();
+        let denom = Pontem::denom<Token>();
 
         // add event as sent into account
         Event::emit<SentPaymentEvent>(
@@ -152,7 +152,7 @@ module Account {
         let payee_balance = borrow_global_mut<Balance<Token>>(payee);
 
         // send money to payee
-        Dfinance::deposit(&mut payee_balance.coin, to_deposit);
+        Pontem::deposit(&mut payee_balance.coin, to_deposit);
         // update payee's account with new event
         Event::emit<ReceivedPaymentEvent>(
             sender,
@@ -165,24 +165,24 @@ module Account {
         )
     }
 
-    public fun withdraw_from_sender<Token: store + key>(
+    public fun withdraw_from_sender<Token: store>(
         account: &signer,
         amount: u128
-    ): Dfinance::T<Token> acquires Balance {
+    ): Pontem::T<Token> acquires Balance {
         let balance = borrow_global_mut<Balance<Token>>(Signer::address_of(account));
 
         withdraw_from_balance<Token>(balance, amount)
     }
 
-    fun withdraw_from_balance<Token: store + key>(balance: &mut Balance<Token>, amount: u128): Dfinance::T<Token> {
-        Dfinance::withdraw(&mut balance.coin, amount)
+    fun withdraw_from_balance<Token: store>(balance: &mut Balance<Token>, amount: u128): Pontem::T<Token> {
+        Pontem::withdraw(&mut balance.coin, amount)
     }
 
-    fun create_balance<Token: store + key>(addr: address) {
+    fun create_balance<Token: store>(addr: address) {
         let sig = create_signer(addr);
 
         move_to<Balance<Token>>(&sig, Balance {
-            coin: Dfinance::zero<Token>()
+            coin: Pontem::zero<Token>()
         });
 
         destroy_signer(sig);

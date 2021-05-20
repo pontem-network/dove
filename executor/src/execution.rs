@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use move_core_types::account_address::AccountAddress;
+use move_core_types::effects::{ChangeSet, Event};
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
 use move_core_types::vm_status::{StatusCode, VMStatus};
@@ -9,6 +10,7 @@ use move_vm_runtime::data_cache::RemoteCache;
 use move_vm_runtime::logging::NoContextLog;
 use move_vm_runtime::move_vm::MoveVM;
 use move_vm_types::gas_schedule::CostStrategy;
+use move_vm_types::natives::balance::{NativeBalance, WalletId};
 use vm::access::ModuleAccess;
 use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
@@ -19,12 +21,30 @@ use crate::explain::{
     StepExecutionResult,
 };
 use crate::meta::ExecutionMeta;
-use crate::oracles::{block_metadata, coin_balance_metadata, oracle_coins_module, time_metadata};
+use crate::oracles::{
+    block_metadata, coin_balance_metadata, oracle_coins_module, time_metadata, currency_struct,
+};
 use crate::session::ConstsMap;
-use move_core_types::effects::{ChangeSet, Event};
 
 pub type SerializedTransactionEffects = Vec<((AccountAddress, StructTag), Option<Vec<u8>>)>;
 pub type TransactionEffects = (ChangeSet, Vec<Event>);
+
+#[derive(Debug, Default)]
+struct AccountsBalance {
+    balances: HashMap<WalletId, u128>,
+}
+
+impl AccountsBalance {
+    pub fn insert(&mut self, wallet_id: WalletId, val: u128) {
+        self.balances.insert(wallet_id, val);
+    }
+}
+
+impl NativeBalance for AccountsBalance {
+    fn get_balance(&self, wallet_id: &WalletId) -> Option<u128> {
+        self.balances.get(wallet_id).cloned()
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -136,6 +156,7 @@ pub fn serialize_script(script: &CompiledScript) -> Result<Vec<u8>> {
 
 fn execute_script_with_runtime_session<R: RemoteCache>(
     data_store: &R,
+    balances: Box<dyn NativeBalance>,
     script: Vec<u8>,
     args: Vec<Vec<u8>>,
     ty_args: Vec<TypeTag>,
@@ -143,7 +164,7 @@ fn execute_script_with_runtime_session<R: RemoteCache>(
     cost_strategy: &mut CostStrategy,
 ) -> VMResult<TransactionEffects> {
     let vm = MoveVM::new();
-    let mut runtime_session = vm.new_session(data_store);
+    let mut runtime_session = vm.new_session_with_balance(data_store, balances);
 
     runtime_session.execute_script(
         script,
@@ -168,6 +189,7 @@ pub fn execute_script(
     let ExecutionMeta {
         signers,
         accounts_balance,
+        native_accounts_balance,
         oracle_prices,
         current_time,
         aborts_with,
@@ -200,15 +222,22 @@ pub fn execute_script(
         ds.resources
             .insert((std_addr, price_tag), bcs::to_bytes(&val).unwrap());
     }
+
+    let mut balances = AccountsBalance::default();
     for (account, coin, val) in accounts_balance {
         ds.resources.insert(
             (account, coin_balance_metadata(&coin)),
             bcs::to_bytes(&val).unwrap(),
         );
     }
+    for (account, coin, val) in native_accounts_balance {
+        let wallet_id = WalletId::new(account, currency_struct(&coin));
+        balances.insert(wallet_id, val);
+    }
 
     let res = execute_script_with_runtime_session(
         &ds,
+        Box::new(balances),
         serialize_script(&script)?,
         args,
         vec![],

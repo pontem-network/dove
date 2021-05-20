@@ -31,12 +31,27 @@ fn split_signers(s: &str) -> Vec<AccountAddress> {
 pub struct ExecutionMeta {
     pub signers: Vec<AccountAddress>,
     pub accounts_balance: Vec<(AccountAddress, String, u128)>,
+    pub native_accounts_balance: Vec<(AccountAddress, String, u128)>,
     pub oracle_prices: Vec<(StructTag, u128)>,
     pub current_time: Option<u64>,
     pub block: Option<u64>,
     pub aborts_with: Option<u64>,
     pub status: Option<u64>,
     pub dry_run: bool,
+}
+
+fn parse_balance_comment<'s>(val: &'s str, comment: &str) -> Option<(&'s str, &'s str, &'s str)> {
+    if !val.contains(' ') {
+        eprintln!("Invalid balance doc comment: {}", comment);
+        return None;
+    }
+    let (address, balance) = split_around(val, " ");
+    if !balance.contains(' ') {
+        eprintln!("Invalid balance doc comment: {}", comment);
+        return None;
+    }
+    let (coin, num) = split_around(balance, " ");
+    Some((address, coin, num))
 }
 
 impl ExecutionMeta {
@@ -48,21 +63,22 @@ impl ExecutionMeta {
         match key {
             "signers" => self.signers = split_signers(val),
             "balance" => {
-                if !val.contains(' ') {
-                    eprintln!("Invalid balance doc comment: {}", comment);
-                    return;
+                if let Some((address, coin, num)) = parse_balance_comment(val, &comment) {
+                    self.accounts_balance.push((
+                        AccountAddress::from_hex_literal(address).unwrap(),
+                        coin.to_string(),
+                        num.parse().unwrap(),
+                    ));
                 }
-                let (address, balance) = split_around(val, " ");
-                if !balance.contains(' ') {
-                    eprintln!("Invalid balance doc comment: {}", comment);
-                    return;
+            }
+            "native_balance" => {
+                if let Some((address, coin, num)) = parse_balance_comment(val, &comment) {
+                    self.native_accounts_balance.push((
+                        AccountAddress::from_hex_literal(address).unwrap(),
+                        coin.to_string(),
+                        num.parse().unwrap(),
+                    ));
                 }
-                let (coin, num) = split_around(balance, " ");
-                self.accounts_balance.push((
-                    AccountAddress::from_hex_literal(address).unwrap(),
-                    coin.to_string(),
-                    num.parse().unwrap(),
-                ));
             }
             "price" => {
                 if !val.contains(' ') {
