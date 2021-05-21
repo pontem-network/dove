@@ -25,7 +25,7 @@ impl Context {
         let mut abs_path = self.path_for(path);
 
         if abs_path.exists() {
-            abs_path = abs_path.canonicalize()?;
+            abs_path = dunce::canonicalize(abs_path)?;
         }
 
         abs_path
