@@ -1,14 +1,15 @@
 use anyhow::Error;
 use http::Uri;
-use crate::manifest::MANIFEST;
+use crate::manifest::{MANIFEST, DoveToml};
 use std::fs;
 use crate::cmd::Cmd;
-use crate::context::{Context, create_context};
+use crate::context::{Context, get_context};
 use structopt::StructOpt;
 use std::fs::OpenOptions;
 use std::io::Write;
 use lang::compiler::dialects::DialectName;
 use std::str::FromStr;
+use std::path::PathBuf;
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -49,8 +50,9 @@ impl Init {
 }
 
 impl Cmd for Init {
-    fn context(&self) -> Result<Context, Error> {
-        create_context()
+    fn context(&self, project_dir: PathBuf) -> Result<Context, Error> {
+        let manifest = DoveToml::default();
+        get_context(project_dir, manifest)
     }
 
     fn apply(self, ctx: Context) -> Result<(), Error> {

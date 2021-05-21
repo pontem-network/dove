@@ -2,10 +2,12 @@ use anyhow::Error;
 use http::Uri;
 use std::fs;
 use crate::cmd::Cmd;
-use crate::context::{Context, create_context};
+use crate::context::{Context, get_context};
 use crate::cmd::init::Init;
 use structopt::StructOpt;
 use move_core_types::identifier::Identifier;
+use std::path::PathBuf;
+use crate::manifest::DoveToml;
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -37,8 +39,9 @@ pub struct New {
 }
 
 impl Cmd for New {
-    fn context(&self) -> Result<Context, Error> {
-        create_context()
+    fn context(&self, project_dir: PathBuf) -> Result<Context, Error> {
+        let manifest = DoveToml::default();
+        get_context(project_dir, manifest)
     }
 
     fn apply(self, mut ctx: Context) -> Result<(), Error> {

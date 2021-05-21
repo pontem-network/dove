@@ -130,7 +130,7 @@ impl GitMetadata {
 mod tests {
     use std::path::{Path, PathBuf};
 
-    use crate::context::get_context;
+    use crate::context::{get_context, load_manifest};
 
     use super::*;
 
@@ -148,7 +148,8 @@ mod tests {
         let move_project_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("resources")
             .join("test_move_project");
-        let context = get_context(move_project_dir).unwrap();
+        let manifest = load_manifest(&move_project_dir).unwrap();
+        let context = get_context(move_project_dir, manifest).unwrap();
 
         let metadata = into_metadata(context).unwrap();
 
