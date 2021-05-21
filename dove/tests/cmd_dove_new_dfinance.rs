@@ -1,10 +1,11 @@
 #![cfg(test)]
+
 mod test_cmd_helper;
+use crate::test_cmd_helper::{project_start, project_remove, project_build, set_dependencies_local_move_stdlib};
 
 use std::fs::{read_to_string};
 use dove::cli::execute;
 use toml::Value;
-use crate::test_cmd_helper::{project_remove, project_build, set_dependencies_local_move_stdlib};
 
 /// $ dove new demoproject_32 -d dfinance
 /// project: demoproject_32
@@ -12,7 +13,7 @@ use crate::test_cmd_helper::{project_remove, project_build, set_dependencies_loc
 fn default() {
     // Path to dove folder, Project name and path
     let project_name = "demoproject_32";
-    let (dove_folder, project_folder) = test_cmd_helper::startup(project_name);
+    let (dove_folder, project_folder) =project_start(project_name);
 
     // $ dove new demoproject_32 -d dfinance
     let args = &["dove", "new", &project_name, "-d", "dfinance"];
@@ -61,7 +62,7 @@ fn default() {
 fn with_address() {
     // Path to dove folder, Project name and path
     let project_name = "demoproject_33";
-    let (dove_folder, project_folder) = test_cmd_helper::startup(project_name);
+    let (dove_folder, project_folder) = test_cmd_helper::project_start(project_name);
 
     for address in &["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"] {
         // $ dove new demoproject_33 -d dfinance -a ###
