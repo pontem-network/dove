@@ -18,6 +18,7 @@ use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::Cmd;
 use std::ffi::OsString;
+use std::path::PathBuf;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Dove", version = git_hash::crate_version_with_git_hash_short!())]
@@ -70,7 +71,7 @@ enum Opt {
 }
 
 /// Public interface for the CLI (useful for testing).
-pub fn execute<Args>(args: Args) -> Result<()>
+pub fn execute<Args>(args: Args, cwd: PathBuf) -> Result<()>
 where
     Args: IntoIterator,
     Args::Item: Into<OsString> + Clone,
@@ -79,14 +80,14 @@ where
 
     let _pool = ConstPool::new();
     match matches {
-        Opt::Clean { cmd } => cmd.execute(),
-        Opt::New { cmd } => cmd.execute(),
-        Opt::Init { cmd } => cmd.execute(),
-        Opt::Metadata { cmd } => cmd.execute(),
-        Opt::Fetch { cmd } => cmd.execute(),
-        Opt::Build { cmd } => cmd.execute(),
-        Opt::Test { cmd } => cmd.execute(),
-        Opt::Run { cmd } => cmd.execute(),
-        Opt::Ct { cmd } => cmd.execute(),
+        Opt::Clean { cmd } => cmd.execute(cwd),
+        Opt::New { cmd } => cmd.execute(cwd),
+        Opt::Init { cmd } => cmd.execute(cwd),
+        Opt::Metadata { cmd } => cmd.execute(cwd),
+        Opt::Fetch { cmd } => cmd.execute(cwd),
+        Opt::Build { cmd } => cmd.execute(cwd),
+        Opt::Test { cmd } => cmd.execute(cwd),
+        Opt::Run { cmd } => cmd.execute(cwd),
+        Opt::Ct { cmd } => cmd.execute(cwd),
     }
 }

@@ -1,12 +1,13 @@
 #![cfg(test)]
 
 use std::path::{Path, PathBuf};
-use std::fs::{remove_dir_all, read_to_string};
+use std::fs::{remove_dir_all, read_to_string, create_dir_all};
 use fs_extra::file::write_all;
+use toml::Value;
 use dove::cli::execute;
 
-/// $ dove run rdemo.move
-/// project name: demoproject_6
+/// $ dove init
+/// project name: demoproject_36
 #[test]
 fn default() {
     // Path to dove folder
@@ -18,7 +19,7 @@ fn default() {
         folder
     };
     // Project name and path
-    let project_name = "demoproject_6";
+    let project_name = "demoproject_36";
     let project_folder = {
         let mut folder = dove_folder.clone();
         folder.push(project_name);
@@ -31,77 +32,63 @@ fn default() {
         folder
     };
 
-    // $ cargo run -- new demoproject_6 -d pont
-    // $ dove new demoproject_6 -d pont
+    // Create project directory
+    create_dir_all(&project_folder).expect(&format!(
+        "Failed to create directory: {}",
+        project_folder.to_str().unwrap_or(" - "),
+    ));
+
+    // $ dove init
     {
-        let args = &["dove", "new", project_name];
+        let args = &["dove", "init"];
         let command_string: String = args.join(" ").to_string();
-        execute(args, dove_folder.clone()).expect(&format!("[COMMAND] {}", &command_string));
+        execute(args, project_folder.clone()).expect(&format!(
+            "[COMMAND] {}\r\n[FOLDER] {}",
+            &command_string,
+            project_folder.to_str().unwrap()
+        ));
         set_dependencies_local_move_stdlib(&project_folder);
     }
 
-    // $ cargo run -- build
+    // Check config
+    {
+        let mut path_toml = project_folder.clone();
+        path_toml.push("Dove.toml");
+
+        let package = read_to_string(path_toml)
+            .unwrap()
+            .parse::<Value>()
+            .unwrap()
+            .get("package")
+            .unwrap()
+            .clone();
+
+        assert!(
+            package
+                .get("name")
+                .expect(&format!("[ERROR] Dove.toml - name not found "))
+                .to_string()
+                .contains(project_name),
+            "Dove.toml: invalid name",
+        );
+
+        assert!(
+            package
+                .get("dialect")
+                .expect(&format!("[ERROR] Dove.toml - dialect not found "))
+                .to_string()
+                .contains("pont"),
+            "Dove.toml: invalid dialect",
+        );
+    }
+
     // $ dove build
     {
         let args = &["dove", "build"];
         let command_string: String = args.join(" ").to_string();
-        execute(args, project_folder.clone()).expect(&format!(
-            "[COMMAND] {}\r\n[FOLDER] {}",
-            &command_string,
-            project_folder.to_str().unwrap()
-        ));
+        execute(args, project_folder.clone()).expect(&format!("[COMMAND] {}", &command_string));
     }
 
-    // project_folder/modules/mdemo.move
-    {
-        let module_path = {
-            let mut path = project_folder.clone();
-            path.push("modules");
-            path.push("mdemo.move");
-            path
-        };
-        write_all(
-            &module_path,
-            "address 0x1 {
-                    module DemoModule {
-                        public fun value(): u8 {
-                            12
-                        }
-                    }
-                }",
-        )
-        .unwrap();
-    }
-    // project_folder/scripts/demo.move
-    {
-        let script_path = {
-            let mut path = project_folder.clone();
-            path.push("scripts");
-            path.push("rdemo.move");
-            path
-        };
-        write_all(
-            &script_path,
-            "script {
-                    use 0x1::DemoModule;
-                    fun main() {
-                        let _value = DemoModule::value();
-                    }
-                }",
-        )
-        .unwrap();
-    }
-    // $ cargo run -- run rdemo.move
-    // $ dove run rdemo.move
-    {
-        let args = &["dove", "run", "rdemo.move"];
-        let command_string: String = args.join(" ").to_string();
-        execute(args, project_folder.clone()).expect(&format!(
-            "[COMMAND] {}\r\n[FOLDER] {}",
-            &command_string,
-            project_folder.to_str().unwrap()
-        ));
-    }
     remove_dir_all(&project_folder).expect(&format!(
         "[ERROR] Couldn't delete project directory: {}",
         project_folder.to_str().unwrap()
@@ -109,8 +96,6 @@ fn default() {
 }
 
 fn set_dependencies_local_move_stdlib(project_path: &PathBuf) {
-    use toml::Value;
-
     let mut dove_toml_path = project_path.clone();
     dove_toml_path.push("Dove.toml");
     let mut toml_value = read_to_string(&dove_toml_path)

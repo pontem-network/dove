@@ -1,9 +1,9 @@
 #![cfg(test)]
 
 use std::path::{Path, PathBuf};
-use std::process::{Command};
 use std::fs::{remove_dir_all, read_to_string, remove_file};
 use fs_extra::file::write_all;
+use dove::cli::execute;
 
 /// $ dove ct -o ###
 /// project name: demoproject_21
@@ -34,85 +34,48 @@ fn output() {
     // $ cargo run -- new demoproject_21
     // $ dove new demoproject_21
     {
-        let mut dove_new = Command::new("cargo");
-        dove_new
-            .args(&["run", "--", "new", project_name])
-            .current_dir(&dove_folder);
-        let command_string = format!("{:?} ", dove_new).replace("\"", "");
-        let result = dove_new
-            .output()
-            .expect(&format!("[RUN]: {}", command_string));
-        let code = result.status.code().unwrap();
-        assert_eq!(
-            0,
-            code,
-            "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
-            command_string,
-            code,
-            String::from_utf8(result.stderr).unwrap()
-        );
+        let args = &["dove", "new", project_name];
+        let command_string: String = args.join(" ").to_string();
+        execute(args, dove_folder.clone()).expect(&format!("[COMMAND] {}", &command_string));
         set_dependencies_local_move_stdlib(&project_folder);
     }
 
     // $ cargo run -- build
     // $ dove build
     {
-        let mut dove_build = Command::new("cargo");
-        dove_build
-            .args(&["run", "--", "build"])
-            .current_dir(&project_folder);
-        let command_string = format!("{:?} ", dove_build).replace("\"", "");
-        let result = dove_build
-            .output()
-            .expect(&format!("[RUN]: {}", command_string));
-        let code = result.status.code().unwrap();
-        assert_eq!(
-            0,
-            code,
-            "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
-            command_string,
-            code,
-            String::from_utf8(result.stderr).unwrap()
-        );
+        let args = &["dove", "build"];
+        let command_string: String = args.join(" ").to_string();
+        execute(args, project_folder.clone()).expect(&format!(
+            "[COMMAND] {}\r\n[FOLDER] {}",
+            &command_string,
+            project_folder.to_str().unwrap()
+        ));
     }
-
-    // $ cargo run -- ct -o z
-    // $ dove ct -o z
+    // project_folder/scripts/sdemo.move
     {
-        // project_folder/scripts/sdemo.move
-        {
-            let mut path = project_folder.clone();
-            path.push("scripts");
-            path.push("sdemo.move");
-            write_all(
-                &path,
-                "script {
+        let mut path = project_folder.clone();
+        path.push("scripts");
+        path.push("sdemo.move");
+        write_all(
+            &path,
+            "script {
                         fun main() {
                             assert((1+3)==4,1);
                         }
                     }",
-            )
-            .unwrap();
-        }
-        let mut dove_ct = Command::new("cargo");
-        dove_ct
-            .args(&["run", "--", "ct", "-o", "z"])
-            .current_dir(&project_folder);
-        let command_string = format!("{:?} ", dove_ct).replace("\"", "");
-        let result = dove_ct
-            .output()
-            .expect(&format!("[RUN]: {}\r\n", command_string));
-        let code = result.status.code().unwrap();
-        assert_eq!(
-            0,
-            code,
-            "[ERROR] Command: {}\r\nCode: {}\r\nError: {}\r\nOut: {}",
-            command_string,
-            code,
-            String::from_utf8(result.stderr.clone()).unwrap(),
-            String::from_utf8(result.stdout.clone()).unwrap(),
-        );
-
+        )
+        .unwrap();
+    }
+    // $ cargo run -- ct -o z
+    // $ dove ct -o z
+    {
+        let args = &["dove", "ct", "-o", "z"];
+        let command_string: String = args.join(" ").to_string();
+        execute(args, project_folder.clone()).expect(&format!(
+            "[COMMAND] {}\r\n[FOLDER] {}",
+            &command_string,
+            project_folder.to_str().unwrap()
+        ));
         let tx_path = {
             let mut file = project_folder.clone();
             file.push("target");
