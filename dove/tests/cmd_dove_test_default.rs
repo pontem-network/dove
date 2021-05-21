@@ -1,9 +1,9 @@
 #![cfg(test)]
 
 use std::path::{Path, PathBuf};
-use std::process::{Command};
 use std::fs::{remove_dir_all, read_to_string};
 use fs_extra::file::write_all;
+use dove::cli::execute;
 
 /// $ dove test
 /// project name: demoproject_10
@@ -34,46 +34,22 @@ fn default() {
     // $ cargo run -- new demoproject_10
     // $ dove new demoproject_10
     {
-        let mut dove_new = Command::new("cargo");
-        dove_new
-            .args(&["run", "--", "new", project_name])
-            .current_dir(&dove_folder);
-        let command_string = format!("{:?} ", dove_new).replace("\"", "");
-        let result = dove_new
-            .output()
-            .expect(&format!("[RUN]: {}", command_string));
-        let code = result.status.code().unwrap();
-        assert_eq!(
-            0,
-            code,
-            "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
-            command_string,
-            code,
-            String::from_utf8(result.stderr).unwrap()
-        );
+        let args = &["dove", "new", project_name];
+        let command_string: String = args.join(" ").to_string();
+        execute(args, dove_folder.clone()).expect(&format!("[COMMAND] {}", &command_string));
         set_dependencies_local_move_stdlib(&project_folder);
     }
 
     // $ cargo run -- build
     // $ dove build
     {
-        let mut dove_build = Command::new("cargo");
-        dove_build
-            .args(&["run", "--", "build"])
-            .current_dir(&project_folder);
-        let command_string = format!("{:?} ", dove_build).replace("\"", "");
-        let result = dove_build
-            .output()
-            .expect(&format!("[RUN]: {}", command_string));
-        let code = result.status.code().unwrap();
-        assert_eq!(
-            0,
-            code,
-            "[ERROR] Command: {}\r\nCode: {}\r\nMessage: {}\r\n",
-            command_string,
-            code,
-            String::from_utf8(result.stderr).unwrap()
-        );
+        let args = &["dove", "build"];
+        let command_string: String = args.join(" ").to_string();
+        execute(args, project_folder.clone()).expect(&format!(
+            "[COMMAND] {}\r\n[FOLDER] {}",
+            &command_string,
+            project_folder.to_str().unwrap()
+        ));
     }
 
     // project_folder/modules/mdemo.move
@@ -139,38 +115,13 @@ fn default() {
     // $ cargo run -- test
     // $ dove test
     {
-        let mut dove_run = Command::new("cargo");
-        dove_run
-            .args(&["run", "--", "test"])
-            .current_dir(&project_folder);
-        let command_string = format!("{:?} ", dove_run).replace("\"", "");
-        let result = dove_run
-            .output()
-            .expect(&format!("[RUN]: {}", command_string));
-        let code = result.status.code().unwrap();
-        assert_eq!(
-            0,
-            code,
-            "[ERROR] Command: {}\r\nCode: {}\r\nError: {}\r\nOut: {}",
-            command_string,
-            code,
-            String::from_utf8(result.stderr.clone()).unwrap(),
-            String::from_utf8(result.stdout.clone()).unwrap(),
-        );
-
-        let stdout = String::from_utf8(result.stdout).unwrap();
-        assert!(
-            stdout.contains("test_1 ....... ok"),
-            "[ERROR] Command: {}. \r\nMessage: {}",
-            command_string,
-            stdout
-        );
-        assert!(
-            stdout.contains("test_2 ....... ok"),
-            "[ERROR] Command: {}. \r\nMessage: {}",
-            command_string,
-            stdout
-        );
+        let args = &["dove", "test"];
+        let command_string: String = args.join(" ").to_string();
+        execute(args, project_folder.clone()).expect(&format!(
+            "[COMMAND] {}\r\n[FOLDER] {}",
+            &command_string,
+            project_folder.to_str().unwrap()
+        ));
     }
     remove_dir_all(&project_folder).expect(&format!(
         "[ERROR] Couldn't delete directory {}",

@@ -1,4 +1,3 @@
-use std::env;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -74,11 +73,7 @@ impl Context {
     }
 }
 
-/// Create a new context for the current directory.
-pub fn create_context() -> Result<Context> {
-    let project_dir = env::current_dir()?;
-    let manifest = DoveToml::default();
-
+pub(crate) fn get_context(project_dir: PathBuf, manifest: DoveToml) -> Result<Context> {
     let dialect_name = manifest
         .package
         .dialect
@@ -93,25 +88,7 @@ pub fn create_context() -> Result<Context> {
     })
 }
 
-/// Returns project context.
-pub fn get_context(project_dir: PathBuf) -> Result<Context> {
-    let manifest = load_manifest(&project_dir)?;
-
-    let dialect_name = manifest
-        .package
-        .dialect
-        .clone()
-        .unwrap_or_else(default_dialect);
-    let dialect = DialectName::from_str(&dialect_name)?;
-
-    Ok(Context {
-        project_dir,
-        manifest,
-        dialect: dialect.get_dialect(),
-    })
-}
-
-fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
+pub(crate) fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
     let manifest = project_dir.join(MANIFEST);
     if !manifest.exists() {
         Err(anyhow!(
@@ -124,8 +101,7 @@ fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
     }
 }
 
-/// Convert path to string.
-pub fn str_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+pub(crate) fn str_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     let path = path.as_ref();
 
     path.to_str()

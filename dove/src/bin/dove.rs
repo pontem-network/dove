@@ -6,8 +6,10 @@ use dove::cli::execute;
 
 fn main() {
     let args = std::env::args_os();
+    // TODO: use handle_error?
+    let cwd = std::env::current_dir().expect("Current directory exists and accessible");
 
-    let res = execute(args);
+    let res = execute(args, cwd);
     handle_error(res)
 }
 
