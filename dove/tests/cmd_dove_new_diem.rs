@@ -26,7 +26,7 @@ fn default() {
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
             &command_string,
-            &base_folder.to_str().unwrap(),
+            &base_folder.display(),
             err.to_string()
         )
     });
@@ -76,7 +76,7 @@ fn with_address() {
             panic!(
                 "[COMMAND] {}\r\n[FOLDER] {}\r\n[ADDRESS] {}\r\n[ERROR] {}\r\n",
                 &command_string,
-                &base_folder.to_str().unwrap(),
+                &base_folder.display(),
                 address,
                 err.to_string()
             )

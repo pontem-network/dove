@@ -20,7 +20,7 @@ fn incorrect_dialect() {
     let args = &["dove", "new", &project_name, "-d", "incorrectdialect"];
     let command_string: String = args.join(" ").to_string();
     assert!(execute(args, base_folder.clone()).is_err(),
-            "[ERROR] There must be a mistake here. Invalid dialect\r\n[COMMAND] {}\r\n[DIALECT] incorrectdialect\r\n[FOLDER] {}\r\n", &command_string, &base_folder.to_str().unwrap())
+            "[ERROR] There must be a mistake here. Invalid dialect\r\n[COMMAND] {}\r\n[DIALECT] incorrectdialect\r\n[FOLDER] {}\r\n", &command_string, &base_folder.display())
 }
 
 /// Fail
@@ -54,7 +54,7 @@ fn incorrect_repo() {
             "[ERROR] There must be a mistake here. Invalid repo\r\n[COMMAND] {}\r\n[DIALECT] {}\r\n[FOLDER] {}\r\n",
             &command_string,
             api,
-            base_folder.to_str().unwrap()
+            base_folder.display()
         );
     }
 }

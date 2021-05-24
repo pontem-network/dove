@@ -14,7 +14,7 @@ pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
         remove_dir_all(&project_folder).unwrap_or_else(|_| {
             panic!(
                 "[ERROR] Couldn't delete project directory: {}",
-                project_folder.to_str().unwrap()
+                project_folder.display()
             )
         });
     }
@@ -47,7 +47,7 @@ pub fn project_new_default(base_folder: &Path, project_folder: &Path, project_na
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
             &command_string,
-            project_folder.to_str().unwrap(),
+            base_folder.display(),
             err.to_string()
         )
     });
@@ -78,7 +78,7 @@ pub fn project_new_with_args(
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
             &command_string,
-            base_folder.to_str().unwrap(),
+            base_folder.display(),
             err.to_string()
         )
     });
@@ -92,7 +92,7 @@ pub fn project_build(project_folder: &Path) {
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
             &command_string,
-            project_folder.to_str().unwrap(),
+            project_folder.display(),
             err.to_string()
         )
     });
@@ -102,7 +102,7 @@ pub fn project_remove(project_folder: &Path) {
         remove_dir_all(project_folder).unwrap_or_else(|err| {
             panic!(
                 "[ERROR] Couldn't delete project directory: {}\r\n[MESSAGE] {}\r\n",
-                project_folder.to_str().unwrap(),
+                project_folder.display(),
                 err.to_string()
             )
         });

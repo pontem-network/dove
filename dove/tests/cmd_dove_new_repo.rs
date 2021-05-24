@@ -36,7 +36,7 @@ fn valid_api_url() {
                 "[COMMAND] {}\r\n[API] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
                 &command_string,
                 api,
-                &base_folder.to_str().unwrap(),
+                &base_folder.display(),
                 err.to_string()
             )
         });

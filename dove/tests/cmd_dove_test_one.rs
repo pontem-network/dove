@@ -54,7 +54,7 @@ fn one_test() {
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
             &command_string,
-            project_folder.to_str().unwrap(),
+            project_folder.display(),
             err.to_string()
         )
     });

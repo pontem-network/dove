@@ -31,7 +31,7 @@ fn fail() {
         execute(args, project_folder.clone()).is_err(),
         "Expected error\r\n[COMMAND] {}\r\n[FOLDER] {}\r\n",
         &command_string,
-        project_folder.to_str().unwrap()
+        project_folder.display()
     );
 
     project_remove(&project_folder);
