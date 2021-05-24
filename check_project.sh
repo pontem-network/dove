@@ -20,4 +20,7 @@ cargo +stable clippy --tests --workspace -- -Dwarnings
 
 cargo test --all
 
-cargo run --bin testrunner -- --sender 0x1 --modules resources/assets/stdlib/ --modules resources/assets/modules/ resources/assets/runner_tests/
+cargo build
+cd ./resources/assets
+../../target/debug/dove test
+cd -
