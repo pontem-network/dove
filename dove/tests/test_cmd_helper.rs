@@ -18,7 +18,7 @@ pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
             )
         });
     }
-    (tmp_folder.clone(), project_folder)
+    (tmp_folder, project_folder)
 }
 pub fn project_start_for_init(project_name: &str) -> PathBuf {
     let (_, project_folder) = project_start(project_name);
@@ -42,7 +42,7 @@ pub fn project_start_nb(project_name: &str) -> PathBuf {
 /// $ dove new ###
 pub fn project_new_default(base_folder: &Path, project_folder: &Path, project_name: &str) {
     let args = &["dove", "new", project_name];
-    let command_string: String = args.join(" ").to_string();
+    let command_string: String = args.join(" ");
     execute(args, base_folder.to_path_buf()).unwrap_or_else(|err| {
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
@@ -73,7 +73,7 @@ pub fn project_new_with_args(
         "-a",
         project_address,
     ];
-    let command_string: String = args.join(" ").to_string();
+    let command_string: String = args.join(" ");
     execute(args, base_folder.to_path_buf()).unwrap_or_else(|err| {
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
@@ -84,10 +84,10 @@ pub fn project_new_with_args(
     });
     set_dependencies_local_move_stdlib(&project_folder);
 }
-/// $ dove build
+// @dove build
 pub fn project_build(project_folder: &Path) {
     let args = &["dove", "build"];
-    let command_string: String = args.join(" ").to_string();
+    let command_string: String = args.join(" ");
     execute(args, project_folder.to_path_buf()).unwrap_or_else(|err| {
         panic!(
             "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
@@ -140,4 +140,23 @@ pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
         toml::to_string(&toml_value).unwrap().as_str(),
     )
     .unwrap();
+}
+
+pub fn execute_dove_at(project_folder: &Path, args: &[&str]) {
+    execute(args, project_folder.to_path_buf()).unwrap_or_else(|err| {
+        panic!(
+            "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
+            &args.join(" "),
+            &project_folder.display(),
+            err.to_string()
+        )
+    });
+}
+pub fn execute_dove_at_wait_fail(project_folder: &Path, args: &[&str]) {
+    assert!(
+        execute(args, project_folder.to_path_buf()).is_err(),
+        "Expected error\r\n[COMMAND] {}\r\n[FOLDER] {}\r\n",
+        &args.join(" "),
+        project_folder.display()
+    );
 }

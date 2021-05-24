@@ -1,0 +1,297 @@
+#![cfg(test)]
+
+use std::fs::{remove_file};
+use fs_extra::file::write_all;
+use dove::cmd::ct::Transaction;
+
+mod test_cmd_helper;
+use crate::test_cmd_helper::{project_start_nb, project_remove, execute_dove_at};
+
+/// $ dove ct
+#[test]
+fn test_cmd_dove_ct_without_arguments() {
+    // Path to dove folder, project and project name
+    let project_name = "demoproject_19";
+    let project_folder = project_start_nb(project_name);
+
+    // project_folder/scripts/sdemo.move
+    write_all(
+        &project_folder.join("scripts/sdemo.move"),
+        "script {
+                    fun main() {
+                        assert((1+3)==4,1);
+                    }
+                }",
+    )
+    .unwrap();
+
+    let args = &["dove", "ct"];
+    execute_dove_at(&project_folder, args);
+    let tx_path = project_folder.join("target/transactions/main.mvt");
+    assert!(
+        tx_path.exists(),
+        "Transaction not found: {}\r\n[Command] {}",
+        tx_path.display(),
+        args.join(" "),
+    );
+    let tx_fmt = format!(
+        "{:?}",
+        bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+    );
+    assert!(tx_fmt.contains(" args: []"));
+    assert!(tx_fmt.contains(" type_args: []"));
+    assert!(tx_fmt.contains(" signers_count: 0"));
+
+    remove_file(&tx_path).unwrap();
+    project_remove(&project_folder);
+}
+
+/// $ dove ct 'sdemo_4<u8>(16)'
+#[test]
+fn test_cmd_dove_ct_with_type() {
+    // Path to dove folder, project and project name
+    let project_name = "demoproject_24";
+    let project_folder = project_start_nb(project_name);
+
+    // project_folder/modules/mdemo.move
+    write_all(
+        &project_folder.join("modules/mdemo.move"),
+        "module ModuleDemo{
+            struct T1 {}
+            struct T2 {}
+
+            struct Demo<T> has drop{
+                value:u8
+            }
+            public fun new<T:drop>(value:u8): Demo<T>{
+                Demo<T>{
+                    value
+                }
+            }
+        }",
+    )
+    .unwrap();
+    // project_folder/scripts/sdemo.move
+    write_all(
+        &project_folder.join("scripts/sdemo.move"),
+        "script {
+            use 0x1::ModuleDemo;
+
+            fun sdemo_4<T:drop>(value:u8) {
+                let _tmp:ModuleDemo::Demo<T> = ModuleDemo::new<T>(value);
+            }
+        }",
+    )
+    .unwrap();
+    let args = &["dove", "ct", "sdemo_4<u8>(16)"];
+    execute_dove_at(&project_folder, args);
+
+    let tx_path = project_folder.join("target/transactions/sdemo_4.mvt");
+    assert!(
+        tx_path.exists(),
+        "Transaction not found: {}\r\n[Command] {}",
+        tx_path.display(),
+        args.join(" "),
+    );
+
+    let tx_fmt = format!(
+        "{:?}",
+        bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+    );
+    assert!(tx_fmt.contains(" args: [U8(16)]"));
+    assert!(tx_fmt.contains(" type_args: [U8]"));
+    assert!(tx_fmt.contains(" signers_count: 0"));
+
+    remove_file(&tx_path).unwrap();
+    // @todo Add tests for $ dove ct -t ###, after bug fix
+    project_remove(&project_folder);
+}
+
+/// $ dove ct -o z
+#[test]
+fn test_cmd_dove_ct_with_output_file_name() {
+    // Path to dove folder, project and project name
+    let project_name = "demoproject_21";
+    let project_folder = project_start_nb(project_name);
+    // project_folder/scripts/sdemo.move
+    write_all(
+        &project_folder.join("scripts/sdemo.move"),
+        "script {
+                    fun main() {
+                        assert((1+3)==4,1);
+                    }
+                }",
+    )
+    .unwrap();
+
+    let args = &["dove", "ct", "-o", "z"];
+    execute_dove_at(&project_folder, args);
+
+    let tx_path = project_folder.join("target/transactions/z.mvt");
+    assert!(
+        tx_path.exists(),
+        "Transaction not found: {}\r\n[Command] {}",
+        tx_path.display(),
+        &args.join(" "),
+    );
+    remove_file(&tx_path).unwrap();
+    project_remove(&project_folder);
+}
+
+/// $ dove ct -n test_fun -f sdemo
+/// $ dove ct 'test_fun()' -f sdemo
+#[test]
+fn test_cmd_dove_ct_with_script_name() {
+    // Path to dove folder, project and project name
+    let project_name = "demoproject_23";
+    let project_folder = project_start_nb(project_name);
+
+    // project_folder/scripts/sdemo.move
+    write_all(
+        &project_folder.join("scripts/sdemo.move"),
+        "script {
+                    fun main(_a:u64,_b:u64) { }
+                }
+                script {
+                    fun test_fun() { }
+                }",
+    )
+    .unwrap();
+    // $ dove ct -n test_fun -f sdemo
+    {
+        let args = &["dove", "ct", "-f", "sdemo", "-n", "test_fun"];
+        execute_dove_at(&project_folder, args);
+
+        let tx_path = project_folder.join("target/transactions/test_fun.mvt");
+        assert!(
+            tx_path.exists(),
+            "Transaction not found: {}\r\n[Command] {}",
+            tx_path.display(),
+            &args.join(" "),
+        );
+
+        remove_file(&tx_path).unwrap();
+    }
+
+    // $ dove ct 'test_fun()' -f sdemo
+    {
+        let args = &["dove", "ct", "test_fun()", "-f", "sdemo"];
+        execute_dove_at(&project_folder, args);
+
+        let tx_path = project_folder.join("target/transactions/test_fun.mvt");
+        assert!(
+            tx_path.exists(),
+            "Transaction not found: {}\r\n[Command] {}",
+            tx_path.display(),
+            args.join(" "),
+        );
+        remove_file(&tx_path).unwrap();
+    }
+
+    project_remove(&project_folder);
+}
+/// $ dove ct -f sdemo_2
+#[test]
+fn test_cmd_dove_ct_with_script_file_name() {
+    // Path to dove folder, project and project name
+    let project_name = "demoproject_20";
+    let project_folder = project_start_nb(project_name);
+    // project_folder/scripts/sdemo_1.move
+    write_all(
+        &project_folder.join("scripts/sdemo_1.move"),
+        "script {
+                    fun sdemo_1() {
+                        assert((1+3)==4,1);
+                    }
+                }",
+    )
+    .unwrap();
+    // project_folder/scripts/sdemo_2.move
+    write_all(
+        &project_folder.join("scripts/sdemo_2.move"),
+        "script {
+                    fun sdemo_2() {
+                        assert((2+2)==4,1);
+                    }
+                }",
+    )
+    .unwrap();
+    let args = &["dove", "ct", "-f", "sdemo_2"];
+    execute_dove_at(&project_folder, args);
+
+    let tx_path = project_folder.join("target/transactions/sdemo_2.mvt");
+    assert!(
+        tx_path.exists(),
+        "Transaction not found: {}\r\n[Command] {}",
+        tx_path.display(),
+        args.join(" "),
+    );
+    remove_file(&tx_path).unwrap();
+
+    project_remove(&project_folder);
+}
+
+/// $ dove ct -a 1 2
+/// $ dove ct 'main(1,2)'
+#[test]
+fn test_cmd_dove_ct_with_script_method_args() {
+    // Path to dove folder, project and project name
+    let project_name = "demoproject_22";
+    let project_folder = project_start_nb(project_name);
+
+    // project_folder/scripts/sdemo.move
+    write_all(
+        &project_folder.join("scripts/sdemo.move"),
+        "script {
+                    fun main(_a1:u64,_a2:u64) { }
+                }",
+    )
+    .unwrap();
+    // $ dove ct -a 1 2
+    {
+        let args = &["dove", "ct", "-a", "1", "2"];
+        execute_dove_at(&project_folder, args);
+
+        let tx_path = project_folder.join("target/transactions/main.mvt");
+        assert!(
+            tx_path.exists(),
+            "Transaction not found: {}\r\n[Command] {}",
+            tx_path.display(),
+            &args.join(" "),
+        );
+        let tx_fmt = format!(
+            "{:?}",
+            bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+        );
+
+        assert!(tx_fmt.contains(" args: [U64(1), U64(2)]"));
+        assert!(tx_fmt.contains(" type_args: []"));
+        assert!(tx_fmt.contains(" signers_count: 0"));
+
+        remove_file(&tx_path).unwrap();
+    }
+    // $ dove ct 'main(1,2)'
+    {
+        let args = &["dove", "ct", "main(1,2)"];
+        execute_dove_at(&project_folder, args);
+
+        let tx_path = project_folder.join("target/transactions/main.mvt");
+        assert!(
+            tx_path.exists(),
+            "Transaction not found: {}\r\n[Command] {}",
+            tx_path.display(),
+            args.join(" "),
+        );
+        let tx_fmt = format!(
+            "{:?}",
+            bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+        );
+
+        assert!(tx_fmt.contains(" args: [U64(1), U64(2)]"));
+        assert!(tx_fmt.contains(" type_args: []"));
+        assert!(tx_fmt.contains(" signers_count: 0"));
+
+        remove_file(&tx_path).unwrap();
+    }
+    project_remove(&project_folder);
+}
