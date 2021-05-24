@@ -1,12 +1,14 @@
 extern crate anyhow;
 
 use std::fmt::Write;
+
 use anyhow::Error;
-use unit::{CompiledUnit as Unit, CompiledUnit, SourceUnit, UnitAccess};
-use imports::Imports;
+
 use generics::Generics;
+use imports::Imports;
 use module::Module as ModuleAst;
 use script::Script as ScriptAst;
+use unit::{CompiledUnit as Unit, CompiledUnit, SourceUnit, UnitAccess};
 
 /// Code decompiler.
 pub mod code;
@@ -135,14 +137,16 @@ pub fn write_array<E: Encode, W: Write>(
 #[cfg(test)]
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
-    use crate::{decompile_str, Config};
-    use lang::flow::builder::{MoveBuilder, Artifacts, StaticResolver};
-    use lang::compiler::dialects::DialectName;
-    use lang::compiler::file::MoveFile;
-    use lang::compiler::ConstPool;
     use move_lang::errors::report_errors_to_buffer;
     use vm::CompiledModule;
-    use vm::file_format::{Bytecode, FunctionDefinition, CodeUnit};
+    use vm::file_format::{Bytecode, CodeUnit, FunctionDefinition};
+
+    use lang::compiler::ConstPool;
+    use lang::compiler::dialects::DialectName;
+    use lang::compiler::file::MoveFile;
+    use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
+
+    use crate::{Config, decompile_str};
 
     fn compile(source: &str) -> Vec<u8> {
         let _pool = ConstPool::new();
