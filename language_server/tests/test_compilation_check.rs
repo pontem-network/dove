@@ -262,6 +262,7 @@ module MyModule {
             MoveFile::with_content(script_path(), source),
             config!({ "stdlib_folder": stdlib_path() }),
         );
+        println!("errors: {:?}", errors);
         assert!(errors.is_empty());
     }
 
@@ -784,6 +785,7 @@ script {
         let source = "script {\r\n\r\n\r\n func main() {} \r\n }";
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
+        println!("{:?}", errors);
         assert_eq!(errors[0].range, range((3, 1), (3, 5)));
     }
 
