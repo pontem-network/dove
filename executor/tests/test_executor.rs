@@ -988,13 +988,12 @@ script {
 fn test_set_balance_via_meta() {
     let _pool = ConstPool::new();
     let text = r#"
-/// signers: 0x1
 script {
-    use 0x1::Dfinance;
+    use 0x1::Pontem;
     use 0x1::Coins::ETH;
 
-    fun register_coins(standard_account: signer) {
-        Dfinance::register_coin<ETH>(&standard_account, b"eth", 18);
+    fun register_coins() {
+        Pontem::register_coin<ETH>(b"eth", 18);
     }
 }
 
@@ -1015,12 +1014,55 @@ script {
         vec![
             stdlib_mod("coins.move"),
             stdlib_mod("event.move"),
-            stdlib_mod("dfinance.move"),
             stdlib_mod("signer.move"),
+            stdlib_mod("pontem.move"),
             stdlib_mod("account.move"),
         ],
-        "diem",
-        "0x1",
+        "pont",
+        "0x2",
+        vec![],
+    )
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
+}
+
+#[test]
+fn test_set_native_balance_via_meta() {
+    let _pool = ConstPool::new();
+    let text = r#"
+script {
+    use 0x1::PONT;
+    use 0x1::Pontem;
+
+    fun register_coins() {
+        Pontem::register_coin<PONT::T>(b"pont", 18);
+    }
+}
+
+/// signers: 0x2
+/// native_balance: 0x2 pont 100
+script {
+    use 0x1::PONT;
+    use 0x1::Pontem;
+
+    fun main(s: signer) {
+        assert(Pontem::get_native_balance<PONT::T>(&s) == 100, 101)
+    }
+}
+    "#;
+
+    execute_script(
+        MoveFile::with_content(script_path(), text),
+        vec![
+            stdlib_mod("pont.move"),
+            stdlib_mod("event.move"),
+            stdlib_mod("signer.move"),
+            stdlib_mod("pontem.move"),
+        ],
+        "pont",
+        "0x2",
         vec![],
     )
     .unwrap()
