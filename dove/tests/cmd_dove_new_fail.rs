@@ -1,8 +1,9 @@
 #![cfg(test)]
 
-use std::path::{Path};
-use std::fs::{remove_dir_all};
 use dove::cli::execute;
+
+mod test_cmd_helper;
+use crate::test_cmd_helper::{project_remove, project_start};
 
 /// Fail
 /// $ dove new demoproject_37 -d incorrectdialect
@@ -10,31 +11,16 @@ use dove::cli::execute;
 /// project: demoproject_37
 #[test]
 fn incorrect_dialect() {
-    // Path to dove folder
-    let dove_folder = {
-        let mut folder = Path::new(".").canonicalize().unwrap();
-        if folder.to_str().unwrap().find("dove").is_none() {
-            folder.push("dove");
-        }
-        folder
-    };
     // Project name and path
     let project_name = "demoproject_37";
-    let mut folder = dove_folder.clone();
-    folder.push(project_name);
-    if folder.exists() {
-        remove_dir_all(&folder).expect(&format!(
-            "[ERROR] Couldn't delete project directory: {}",
-            folder.to_str().unwrap()
-        ));
-    }
+    let (base_folder, project_folder) = project_start(project_name);
+    project_remove(&project_folder);
 
     // $ dove new demoproject_37 -d incorrectdialect
-    {
-        let args = &["dove", "new", &project_name, "-d", "incorrectdialect"];
-        let command_string: String = args.join(" ").to_string();
-        assert!(execute(args, dove_folder.clone()).is_err(), "[ERROR] There must be a mistake here. Invalid dialect\r\n[COMMAND] {}\r\n[DIALECT] incorrectdialect", &command_string)
-    }
+    let args = &["dove", "new", &project_name, "-d", "incorrectdialect"];
+    let command_string: String = args.join(" ").to_string();
+    assert!(execute(args, base_folder.clone()).is_err(),
+            "[ERROR] There must be a mistake here. Invalid dialect\r\n[COMMAND] {}\r\n[DIALECT] incorrectdialect\r\n[FOLDER] {}\r\n", &command_string, &base_folder.to_str().unwrap())
 }
 
 /// Fail
@@ -46,26 +32,11 @@ fn incorrect_dialect() {
 #[test]
 #[ignore]
 fn incorrect_repo() {
-    // Path to dove folder
-    let dove_folder = {
-        let mut folder = Path::new(".").canonicalize().unwrap();
-        if folder.to_str().unwrap().find("dove").is_none() {
-            folder.push("dove");
-        }
-        folder
-    };
     // Project name and path
     let project_name = "demoproject_38";
-    {
-        let mut folder = dove_folder.clone();
-        folder.push(project_name);
-        if folder.exists() {
-            remove_dir_all(&folder).expect(&format!(
-                "[ERROR] Couldn't delete project directory: {}",
-                folder.to_str().unwrap()
-            ));
-        }
-    };
+    let (base_folder, project_folder) = project_start(project_name);
+    project_remove(&project_folder);
+
     for api in &[
         "demo",
         "/demo",
@@ -76,10 +47,14 @@ fn incorrect_repo() {
         "ftp://demo.ru/api",
     ] {
         // $ dove new demoproject_35 -r ###
-        {
-            let args = &["dove", "new", &project_name, "-r", api];
-            let command_string: String = args.join(" ").to_string();
-            assert!(execute(args, dove_folder.clone()).is_err(), "[ERROR] There must be a mistake here. Invalid repo\r\n[COMMAND] {}\r\n[DIALECT] {}", &command_string, api)
-        }
+        let args = &["dove", "new", &project_name, "-r", api];
+        let command_string: String = args.join(" ").to_string();
+        assert!(
+            execute(args, base_folder.clone()).is_err(),
+            "[ERROR] There must be a mistake here. Invalid repo\r\n[COMMAND] {}\r\n[DIALECT] {}\r\n[FOLDER] {}\r\n",
+            &command_string,
+            api,
+            base_folder.to_str().unwrap()
+        );
     }
 }

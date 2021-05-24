@@ -1,10 +1,13 @@
 #![cfg(test)]
 
-use std::path::{Path, PathBuf};
-use std::fs::{remove_dir_all, read_to_string};
-use fs_extra::file::write_all;
+use std::fs::{read_to_string};
 use dove::cli::execute;
 use toml::Value;
+
+mod test_cmd_helper;
+use crate::test_cmd_helper::{
+    project_remove, project_start, set_dependencies_local_move_stdlib, project_build,
+};
 
 /// Create a new move project
 /// Correct url: http://demo.ru/api, https://demo.ru/api, http://127.0.0.1/api, http://localhost/api, http://localhost:8080/api
@@ -13,27 +16,10 @@ use toml::Value;
 /// project name: demoproject_35
 #[test]
 fn valid_api_url() {
-    // Path to dove folder
-    let dove_folder = {
-        let mut folder = Path::new(".").canonicalize().unwrap();
-        if folder.to_str().unwrap().find("dove").is_none() {
-            folder.push("dove");
-        }
-        folder
-    };
     // Project name and path
     let project_name = "demoproject_35";
-    let project_folder = {
-        let mut folder = dove_folder.clone();
-        folder.push(project_name);
-        if folder.exists() {
-            remove_dir_all(&folder).expect(&format!(
-                "[ERROR] Couldn't delete project directory: {}",
-                folder.to_str().unwrap()
-            ));
-        }
-        folder
-    };
+    let (base_folder, project_folder) = project_start(project_name);
+    project_remove(&project_folder);
 
     for api in &[
         "http://demo.ru/api",
@@ -43,91 +29,49 @@ fn valid_api_url() {
         "http://localhost:8080/api",
     ] {
         // $ dove new demoproject_35 -r ###
-        {
-            let args = &["dove", "new", &project_name, "-r", api];
-            let command_string: String = args.join(" ").to_string();
-            execute(args, dove_folder.clone())
-                .expect(&format!("[COMMAND] {}\r\n[API] {}", &command_string, api));
-            set_dependencies_local_move_stdlib(&project_folder);
-        }
+        let args = &["dove", "new", &project_name, "-r", api];
+        let command_string: String = args.join(" ").to_string();
+        execute(args, base_folder.clone()).unwrap_or_else(|err| {
+            panic!(
+                "[COMMAND] {}\r\n[API] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
+                &command_string,
+                api,
+                &base_folder.to_str().unwrap(),
+                err.to_string()
+            )
+        });
         // Check config
-        {
-            let mut path_toml = project_folder.clone();
-            path_toml.push("Dove.toml");
-
-            let package = read_to_string(path_toml)
-                .unwrap()
-                .parse::<Value>()
-                .unwrap()
-                .get("package")
-                .unwrap()
-                .clone();
-            assert!(
-                package
-                    .get("name")
-                    .expect(&format!("[ERROR] Dove.toml - name not found "))
-                    .to_string()
-                    .contains(project_name),
-                "Dove.toml: invalid name",
-            );
-            assert!(
-                package
-                    .get("dialect")
-                    .expect(&format!("[ERROR] Dove.toml - dialect not found "))
-                    .to_string()
-                    .contains("pont"),
-                "Dove.toml: invalid dialect",
-            );
-            assert!(
-                package
-                    .get("blockchain_api")
-                    .expect(&format!("[ERROR] Dove.toml - blockchain_api not found "))
-                    .to_string()
-                    .contains(api),
-                "Dove.toml: invalid blockchain_api",
-            );
-        }
-        // $ dove build
-        {
-            let args = &["dove", "build"];
-            let command_string: String = args.join(" ").to_string();
-            execute(args, project_folder.clone())
-                .expect(&format!("[COMMAND] {}", &command_string));
-        }
-
-        remove_dir_all(&project_folder).expect(&format!(
-            "[ERROR] Couldn't delete project directory: {}",
-            project_folder.to_str().unwrap()
-        ));
-    }
-}
-
-fn set_dependencies_local_move_stdlib(project_path: &PathBuf) {
-    let mut dove_toml_path = project_path.clone();
-    dove_toml_path.push("Dove.toml");
-    let mut toml_value = read_to_string(&dove_toml_path)
-        .unwrap()
-        .parse::<Value>()
-        .unwrap();
-    {
-        let v = toml_value
-            .get_mut("package")
+        let package = read_to_string(project_folder.clone().join("Dove.toml"))
             .unwrap()
-            .get_mut("dependencies")
+            .parse::<Value>()
             .unwrap()
-            .as_array_mut()
-            .unwrap();
-        v.clear();
-        let mut dd = toml::map::Map::new();
-        dd.insert(
-            "path".to_string(),
-            Value::String("../tests/move-stdlib".to_string()),
+            .get("package")
+            .unwrap()
+            .clone();
+        assert!(
+            package
+                .get("name")
+                .unwrap()
+                .to_string()
+                .contains(project_name),
+            "Dove.toml: invalid name",
         );
-        v.push(Value::Table(dd));
+        assert!(
+            package.get("dialect").unwrap().to_string().contains("pont"),
+            "Dove.toml: invalid dialect",
+        );
+        assert!(
+            package
+                .get("blockchain_api")
+                .unwrap()
+                .to_string()
+                .contains(api),
+            "Dove.toml: invalid blockchain_api",
+        );
+
+        set_dependencies_local_move_stdlib(&project_folder);
+        // $ dove build
+        project_build(&project_folder);
+        project_remove(&project_folder);
     }
-    write_all(
-        &dove_toml_path,
-        toml::to_string(&toml_value).unwrap().as_str(),
-    )
-    .unwrap();
 }
