@@ -674,7 +674,7 @@ impl FromStr for Address {
 
 #[cfg(test)]
 mod test {
-    use crate::cmd::ct::TransactionBuilder;
+    use crate::cmd::tx::TransactionBuilder;
     use move_core_types::language_storage::{TypeTag, StructTag};
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_core_types::identifier::Identifier;
