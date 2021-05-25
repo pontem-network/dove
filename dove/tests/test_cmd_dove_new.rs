@@ -11,7 +11,7 @@ fn test_cmd_dove_new_without_arguments() {
     let (base_folder, project_folder) = project_start(project_name);
     project_remove(&project_folder);
 
-    execute_dove_at(&base_folder, &["dove", "new", project_name]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
     check_dove_toml(&project_folder, project_name, Some("pont"), None, None).unwrap_or_else(
@@ -33,7 +33,7 @@ fn test_cmd_dove_new_dialect() {
     project_remove(&project_folder);
 
     for dialect in &["pont", "diem", "dfinance"] {
-        execute_dove_at(&base_folder, &["dove", "new", &project_name, "-d", dialect])
+        execute_dove_at(&["dove", "new", &project_name, "-d", dialect], &base_folder)
             .unwrap_or_else(|err| {
                 panic!("{}", err);
             });
@@ -58,7 +58,6 @@ fn test_cmd_dove_new_difinance_with_address() {
 
     for address in &["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"] {
         execute_dove_at(
-            &base_folder,
             &[
                 "dove",
                 "new",
@@ -68,6 +67,7 @@ fn test_cmd_dove_new_difinance_with_address() {
                 "-a",
                 address,
             ],
+            &base_folder,
         )
         .unwrap_or_else(|err| {
             panic!("{}", err);
@@ -98,8 +98,8 @@ fn test_cmd_dove_new_diem_with_address() {
 
     for address in &["0x1"] {
         execute_dove_at(
-            &base_folder,
             &["dove", "new", &project_name, "-d", "diem", "-a", address],
+            &base_folder,
         )
         .unwrap_or_else(|err| {
             panic!("{}", err);
@@ -130,8 +130,8 @@ fn test_cmd_dove_new_pont_with_address() {
 
     for address in &["5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv", "0x1"] {
         execute_dove_at(
-            &base_folder,
             &["dove", "new", &project_name, "-d", "pont", "-a", address],
+            &base_folder,
         )
         .unwrap_or_else(|err| {
             panic!("{}", err);
@@ -167,7 +167,7 @@ fn test_cmd_dove_new_pont_with_repo() {
         "http://localhost/api",
         "http://localhost:8080/api",
     ] {
-        execute_dove_at(&base_folder, &["dove", "new", &project_name, "-r", api]).unwrap_or_else(
+        execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).unwrap_or_else(
             |err| {
                 panic!("{}", err);
             },
@@ -205,7 +205,7 @@ fn test_cmd_dove_new_pont_with_incorrect_repo() {
     ] {
         // $ dove new demoproject_35 -r ###
         assert!(
-            execute_dove_at(&base_folder, &["dove", "new", &project_name, "-r", api]).is_err()
+            execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).is_err()
         );
     }
 }
@@ -219,8 +219,8 @@ fn test_cmd_dove_new_incorrect_dialect() {
     project_remove(&project_folder);
 
     assert!(execute_dove_at(
-        &base_folder,
         &["dove", "new", &project_name, "-d", "incorrectdialect"],
+        &base_folder,
     )
     .is_err());
 }

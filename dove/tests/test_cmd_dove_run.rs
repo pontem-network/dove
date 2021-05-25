@@ -32,7 +32,7 @@ fn test_cmd_dove_run_without_arguments() {
             }",
     )
     .unwrap();
-    execute_dove_at(&project_folder, &["dove", "run", "rdemo.move"]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "run", "rdemo.move"], &project_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
 
@@ -57,8 +57,8 @@ fn test_cmd_dove_run_with_arguments() {
     )
     .unwrap();
     execute_dove_at(
-        &project_folder,
         &["dove", "run", "rdemo.move", "-a", "3", "5"],
+        &project_folder,
     )
     .unwrap_or_else(|err| {
         panic!("{}", err);

@@ -42,7 +42,7 @@ pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
 }
 /// $ dove new ###
 pub fn project_new_default(base_folder: &Path, project_folder: &Path, project_name: &str) {
-    execute_dove_at(&base_folder, &["dove", "new", project_name]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
     set_dependencies_local_move_stdlib(&project_folder);
@@ -57,7 +57,6 @@ pub fn project_new_with_args(
     project_blockchain_api: &str,
 ) {
     execute_dove_at(
-        &base_folder,
         &[
             "dove",
             "new",
@@ -69,6 +68,7 @@ pub fn project_new_with_args(
             "-a",
             project_address,
         ],
+        &base_folder,
     )
     .unwrap_or_else(|err| {
         panic!("{}", err);
@@ -77,7 +77,7 @@ pub fn project_new_with_args(
 }
 // @dove build
 pub fn project_build(project_folder: &Path) -> Result<String, String> {
-    execute_dove_at(&project_folder, &["dove", "build"])
+    execute_dove_at(&["dove", "build"], &project_folder)
 }
 pub fn project_remove(project_folder: &Path) {
     if project_folder.exists() {
@@ -122,7 +122,7 @@ pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
     )
     .unwrap();
 }
-pub fn execute_dove_at(project_folder: &Path, args: &[&str]) -> Result<String, String> {
+pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> Result<String, String> {
     execute(args, project_folder.to_path_buf()).map_or_else(
         |err| {
             Err(format!(

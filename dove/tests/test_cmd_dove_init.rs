@@ -12,7 +12,7 @@ fn test_cmd_dove_init_without_arguments() {
     let project_name = "demoproject_36";
     let project_folder = project_start_for_init(project_name);
 
-    execute_dove_at(&project_folder, &["dove", "init"]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "init"], &project_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
     check_dove_toml(&project_folder, project_name, None, None, None)
@@ -30,7 +30,7 @@ fn test_cmd_dove_init_with_dialect() {
     let project_folder = project_start_for_init(project_name);
 
     for dialect in &["pont", "diem", "dfinance"] {
-        execute_dove_at(&project_folder, &["dove", "init", "-d", dialect]).unwrap_or_else(
+        execute_dove_at(&["dove", "init", "-d", dialect], &project_folder).unwrap_or_else(
             |err| {
                 panic!("{}", err);
             },
@@ -57,8 +57,8 @@ fn test_cmd_dove_init_dfinance_with_address() {
             panic!("Failed to create directory: {}", project_folder.display(),)
         });
         execute_dove_at(
-            &project_folder,
             &["dove", "init", "-d", "dfinance", "-a", address],
+            &project_folder,
         )
         .unwrap_or_else(|err| {
             panic!("{}", err);
@@ -91,8 +91,8 @@ fn test_cmd_dove_init_diem_with_address() {
             panic!("Failed to create directory: {}", project_folder.display(),)
         });
         execute_dove_at(
-            &project_folder,
             &["dove", "init", "-d", "diem", "-a", address],
+            &project_folder,
         )
         .unwrap_or_else(|err| {
             panic!("{}", err);
@@ -126,8 +126,8 @@ fn test_cmd_dove_init_pont_with_address() {
         });
         // $ dove init -d pont -a ###
         execute_dove_at(
-            &project_folder,
             &["dove", "init", "-d", "pont", "-a", address],
+            &project_folder,
         )
         .unwrap_or_else(|err| {
             panic!("{}", err);
@@ -166,7 +166,7 @@ fn test_cmd_dove_init_pont_with_repo() {
         create_dir_all(&project_folder).unwrap_or_else(|_| {
             panic!("Failed to create directory: {}", project_folder.display(),)
         });
-        execute_dove_at(&project_folder, &["dove", "init", "-r", api]).unwrap_or_else(|err| {
+        execute_dove_at(&["dove", "init", "-r", api], &project_folder).unwrap_or_else(|err| {
             panic!("{}", err);
         });
         check_dove_toml(&project_folder, &project_name, None, None, Some(api))
@@ -186,7 +186,7 @@ fn itest_cmd_dove_init_incorrect_dialect() {
     let project_folder = project_start_for_init(project_name);
 
     assert!(
-        execute_dove_at(&project_folder, &["dove", "init", "-d", "incorrectdialect"]).is_err()
+        execute_dove_at(&["dove", "init", "-d", "incorrectdialect"], &project_folder,).is_err()
     );
     project_remove(&project_folder);
 }
@@ -209,7 +209,7 @@ fn test_cmd_dove_init_incorrect_repo() {
         "127.0.0.1/api",
         "ftp://demo.ru/api",
     ] {
-        assert!(execute_dove_at(&project_folder, &["dove", "init", "-r", api]).is_err());
+        assert!(execute_dove_at(&["dove", "init", "-r", api], &project_folder,).is_err());
     }
     project_remove(&project_folder);
 }

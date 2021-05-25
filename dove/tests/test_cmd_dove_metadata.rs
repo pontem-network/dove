@@ -18,7 +18,7 @@ fn test_cmd_dove_metadata() {
         "https://localhost/api",
     );
     project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
-    execute_dove_at(&project_folder, &["dove", "metadata"]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "metadata"], &project_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
     project_remove(&project_folder);

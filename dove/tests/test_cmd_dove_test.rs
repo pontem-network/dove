@@ -31,7 +31,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
             }",
     )
     .unwrap();
-    execute_dove_at(&project_folder, &["dove", "test"]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "test"], &project_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
     project_remove(&project_folder);
@@ -76,7 +76,7 @@ fn test_cmd_dove_test_run_one_test_in_project() {
             }",
     )
     .unwrap();
-    execute_dove_at(&project_folder, &["dove", "test", "-k", "test_2"]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "test", "-k", "test_2"], &project_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
     project_remove(&project_folder);
@@ -99,6 +99,6 @@ fn test_cmd_dove_test_fail_test_in_project() {
             }",
     )
     .unwrap();
-    assert!(execute_dove_at(&project_folder, &["dove", "test"]).is_err());
+    assert!(execute_dove_at(&["dove", "test"], &project_folder,).is_err());
     project_remove(&project_folder);
 }

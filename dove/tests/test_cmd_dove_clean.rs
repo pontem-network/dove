@@ -16,7 +16,7 @@ fn test_cmd_dove_clean() {
     );
 
     // $ dove clean
-    execute_dove_at(&project_folder, &["dove", "clean"]).unwrap_or_else(|err| {
+    execute_dove_at(&["dove", "clean"], &project_folder).unwrap_or_else(|err| {
         panic!("{}", err);
     });
     assert!(
