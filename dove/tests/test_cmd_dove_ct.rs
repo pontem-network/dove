@@ -1,5 +1,5 @@
 use fs_extra::file::write_all;
-use dove::cmd::ct::Transaction;
+use dove::cmd::tx::Transaction;
 
 mod helper;
 use crate::helper::{project_start_new_and_build, project_remove, execute_dove_at};
@@ -22,7 +22,7 @@ fn test_cmd_dove_ct_without_arguments() {
     )
     .unwrap();
 
-    let args = &["dove", "ct"];
+    let args = &["dove", "tx"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });
@@ -80,7 +80,7 @@ fn test_cmd_dove_ct_with_type() {
         }",
     )
     .unwrap();
-    let args = &["dove", "ct", "sdemo_4<u8>(16)"];
+    let args = &["dove", "tx", "sdemo_4<u8>(16)"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });
@@ -121,7 +121,7 @@ fn test_cmd_dove_ct_with_output_file_name() {
     )
     .unwrap();
 
-    let args = &["dove", "ct", "-o", "z"];
+    let args = &["dove", "tx", "-o", "z"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });
@@ -153,7 +153,7 @@ fn test_cmd_dove_ct_with_script_name_arg() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "ct", "-f", "sdemo", "-n", "test_fun"];
+    let args = &["dove", "tx", "-f", "sdemo", "-n", "test_fun"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });
@@ -186,7 +186,7 @@ fn test_cmd_dove_ct_with_script_name_option() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "ct", "test_fun()", "-f", "sdemo"];
+    let args = &["dove", "tx", "test_fun()", "-f", "sdemo"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });
@@ -226,7 +226,7 @@ fn test_cmd_dove_ct_with_script_file_name() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "ct", "-f", "sdemo_2"];
+    let args = &["dove", "tx", "-f", "sdemo_2"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });
@@ -256,7 +256,7 @@ fn test_cmd_dove_ct_with_script_method_args() {
     )
     .unwrap();
     // $ dove ct -a 1 2
-    let args = &["dove", "ct", "-a", "1", "2"];
+    let args = &["dove", "tx", "-a", "1", "2"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });
@@ -295,7 +295,7 @@ fn test_cmd_dove_ct_with_script_method_args_option() {
     )
     .unwrap();
     // $ dove ct 'main(1,2)'
-    let args = &["dove", "ct", "main(1,2)"];
+    let args = &["dove", "tx", "main(1,2)"];
     execute_dove_at(&project_folder, args).unwrap_or_else(|err| {
         panic!("{}", err);
     });

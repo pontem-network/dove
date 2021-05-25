@@ -101,22 +101,21 @@ pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
         .unwrap()
         .parse::<Value>()
         .unwrap();
-    {
-        let v = toml_value
-            .get_mut("package")
-            .unwrap()
-            .get_mut("dependencies")
-            .unwrap()
-            .as_array_mut()
-            .unwrap();
-        v.clear();
-        let mut dd = toml::map::Map::new();
-        dd.insert(
-            "path".to_string(),
-            Value::String(move_stdlib.to_str().unwrap().to_string()),
+
+    let mut dd = toml::map::Map::new();
+    dd.insert(
+        "path".to_string(),
+        Value::String(move_stdlib.to_str().unwrap().to_string()),
+    );
+    toml_value
+        .get_mut("package")
+        .unwrap()
+        .as_table_mut()
+        .unwrap()
+        .insert(
+            "dependencies".to_string(),
+            Value::Array(vec![Value::Table(dd)]),
         );
-        v.push(Value::Table(dd));
-    }
     write_all(
         &dove_toml_path,
         toml::to_string(&toml_value).unwrap().as_str(),
