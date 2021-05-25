@@ -1,15 +1,18 @@
-use anyhow::Error;
-use http::Uri;
-use crate::manifest::{MANIFEST, DoveToml};
 use std::fs;
-use crate::cmd::Cmd;
-use crate::context::{Context, get_context};
-use structopt::StructOpt;
 use std::fs::OpenOptions;
 use std::io::Write;
-use lang::compiler::dialects::DialectName;
-use std::str::FromStr;
 use std::path::PathBuf;
+use std::str::FromStr;
+
+use anyhow::Error;
+use http::Uri;
+use structopt::StructOpt;
+
+use lang::compiler::dialects::DialectName;
+
+use crate::cmd::Cmd;
+use crate::context::{Context, get_context};
+use crate::manifest::{DoveToml, MANIFEST};
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -91,15 +94,16 @@ impl Cmd for Init {
 
         writeln!(&mut f, "dialect = \"{}\"", self.dialect)?;
 
-        write!(
-            &mut f,
-            "\
+        if dialect.name() == DialectName::Pont {
+            write!(
+                &mut f,
+                r#"
 dependencies = [
-    {{ git = \"https://github.com/pontem-network/move-stdlib\" }}
+    {{ git = "https://github.com/pontem-network/move-stdlib", branch = "move-1.2" }}
 ]
-"
-        )?;
-
+"#
+            )?;
+        }
         Ok(())
     }
 }

@@ -57,13 +57,13 @@ See `./target/` folder to get scripts/modules binaries.
 
 ### Arguments
 
-Command `ct` allows you to create transactions for `polkadot` chain with [Move Pallete](https://github.com/pontem-network/sp-move).
+Command `tx` allows you to create transactions for `polkadot` chain with [Move Pallete](https://github.com/pontem-network/sp-move).
 
-`ct` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
+`tx` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
 
 Example:
 ```shell script
-dove ct 'store_u64(60)'
+dove tx 'store_u64(60)'
 ```
 This command searches for the script by name 'store_u64' in the script directory. Then it compiles it and creates a transaction file.
 
@@ -78,12 +78,12 @@ You can use type parameters like in the move language.
 
 Example:
 ```shell script
-dove ct 'create_account<0x01::PONT::T, 0x01::Coins::USDT>()'
+dove tx 'create_account<0x01::PONT::T, 0x01::Coins::USDT>()'
 ```
 
 You allow can use ss58 address format:
 ```shell script
-dove ct 'create_account<1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::MyToken::Token>()'
+dove tx 'create_account<1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::MyToken::Token>()'
 ```
 
 Supported types:
@@ -91,26 +91,26 @@ Supported types:
 **Numbers (u8, u64, u128):**
 
 ```shell script
-dove ct 'my_script(10, 1024)'
+dove tx 'my_script(10, 1024)'
 ```
 
 **Boolean:**
 
 ```shell script
-dove ct 'my_script(true, false)'
+dove tx 'my_script(true, false)'
 ```
 
 **Addresses:**
 
 ```shell script
-dove ct 'my_script(1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F)'
+dove tx 'my_script(1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F)'
 ```
 
 **Vectors:**
 
 ```shell script
-dove ct 'my_script([10, 20, 1024])' // Vector u64
-dove ct 'my_script([1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F, 0x01])' // Vector addresses.
+dove tx 'my_script([10, 20, 1024])' // Vector u64
+dove tx 'my_script([1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F, 0x01])' // Vector addresses.
 ```
 
 You can define or override script arguments by using '--args' or '-a' parameter.
@@ -118,10 +118,10 @@ You can define or override script arguments by using '--args' or '-a' parameter.
 Example:
 
 ```shell script
-dove ct 'store_u64()' -a [10, 1024] 10 0x01
+dove tx 'store_u64()' -a [10, 1024] 10 0x01
 ```
 ```shell script
-dove ct -n store_u64 -a [10, 1024] 10 0x01
+dove tx -n store_u64 -a [10, 1024] 10 0x01
 ```
 
 **Script name**
@@ -131,29 +131,29 @@ You can define or override script names by using '--name' or '-n' parameter.
 Example:
 
 ```shell script
-dove ct 'store_u64(60)' -n store_u126
+dove tx 'store_u64(60)' -n store_u126
 ```
 
 Define script name:
 
 ```shell script
-dove ct -n store_u126
+dove tx -n store_u126
 ```
 
 **Script file**
 
 You can define the file name by using '--file' or '-f' parameter.
 
-With this option 'ct' searches in a specified file. It may be useful when there is more than one script with the same name in different files.
+With this option 'tx' searches in a specified file. It may be useful when there is more than one script with the same name in different files.
 Or the specified file has one script.
 
 Example:
 
 ```shell script
-dove ct 'store_u64(60)' -n store_u126 -f script.move
+dove tx 'store_u64(60)' -n store_u126 -f script.move
 ```
 ```shell script
-dove ct -n store_u126 -f script
+dove tx -n store_u126 -f script
 ```
 
 **Types**
@@ -163,10 +163,10 @@ You can define or override script type parameters by using '--type' or '-t' para
 Example:
 
 ```shell script
-dove ct 'store_u64()' -t 0x01::Coins::USDT u8
+dove tx 'store_u64()' -t 0x01::Coins::USDT u8
 ```
 ```shell script
-dove ct -n store_u64 -t 0x01::Coin::USDT u8
+dove tx -n store_u64 -t 0x01::Coin::USDT u8
 ```
 
 ## Resource Viewer
