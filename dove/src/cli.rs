@@ -9,7 +9,7 @@ use lang::compiler::ConstPool;
 
 use crate::cmd::build::Build;
 use crate::cmd::clean::Clean;
-use crate::cmd::ct::CreateTransactionCmd;
+use crate::cmd::tx::CreateTransactionCmd;
 use crate::cmd::fetch::Fetch;
 use crate::cmd::init::Init;
 use crate::cmd::metadata::Metadata;
@@ -64,7 +64,7 @@ enum Opt {
         cmd: Run,
     },
     #[structopt(about = "Create transaction")]
-    Ct {
+    Tx {
         #[structopt(flatten)]
         cmd: CreateTransactionCmd,
     },
@@ -88,6 +88,6 @@ where
         Opt::Build { cmd } => cmd.execute(cwd),
         Opt::Test { cmd } => cmd.execute(cwd),
         Opt::Run { cmd } => cmd.execute(cwd),
-        Opt::Ct { cmd } => cmd.execute(cwd),
+        Opt::Tx { cmd } => cmd.execute(cwd),
     }
 }

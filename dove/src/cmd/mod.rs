@@ -12,8 +12,6 @@ use std::path::PathBuf;
 pub mod build;
 /// Project dependencies loader.
 pub mod clean;
-/// Create transaction.
-pub mod ct;
 /// Dependencies fetcher.
 pub mod fetch;
 /// Project initializer.
@@ -26,6 +24,8 @@ pub mod new;
 pub mod run;
 /// Test runner.
 pub mod test;
+/// Create transaction.
+pub mod tx;
 
 /// Move command.
 pub trait Cmd {
