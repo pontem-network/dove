@@ -1,15 +1,13 @@
-#![cfg(test)]
-
 use fs_extra::file::write_all;
-mod test_cmd_helper;
-use crate::test_cmd_helper::{execute_dove_at, project_start_nb, project_remove};
+mod helper;
+use crate::helper::{execute_dove_at, project_start_new_and_build, project_remove};
 
 /// $ dove run rdemo.move
 #[test]
 fn test_cmd_dove_run_without_arguments() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_6";
-    let project_folder = project_start_nb(project_name);
+    let project_folder = project_start_new_and_build(project_name);
 
     // project_folder/modules/mdemo.move
     write_all(
@@ -34,7 +32,9 @@ fn test_cmd_dove_run_without_arguments() {
             }",
     )
     .unwrap();
-    execute_dove_at(&project_folder, &["dove", "run", "rdemo.move"]);
+    execute_dove_at(&project_folder, &["dove", "run", "rdemo.move"]).unwrap_or_else(|err| {
+        panic!("{}", err);
+    });
 
     project_remove(&project_folder);
 }
@@ -44,7 +44,7 @@ fn test_cmd_dove_run_without_arguments() {
 fn test_cmd_dove_run_with_arguments() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_8";
-    let project_folder = project_start_nb(project_name);
+    let project_folder = project_start_new_and_build(project_name);
 
     // project_folder/scripts/demo.move
     write_all(
@@ -59,7 +59,10 @@ fn test_cmd_dove_run_with_arguments() {
     execute_dove_at(
         &project_folder,
         &["dove", "run", "rdemo.move", "-a", "3", "5"],
-    );
+    )
+    .unwrap_or_else(|err| {
+        panic!("{}", err);
+    });
 
     project_remove(&project_folder);
 }

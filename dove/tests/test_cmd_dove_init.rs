@@ -1,12 +1,8 @@
-#![cfg(test)]
-
-use std::fs::{read_to_string, create_dir_all};
-use toml::Value;
-
-mod test_cmd_helper;
-use crate::test_cmd_helper::{
+use std::fs::{create_dir_all};
+mod helper;
+use crate::helper::{
     project_start, project_start_for_init, project_remove, set_dependencies_local_move_stdlib,
-    project_build, execute_dove_at, execute_dove_at_wait_fail,
+    project_build, execute_dove_at, check_dove_toml,
 };
 
 /// $ dove init
@@ -16,32 +12,14 @@ fn test_cmd_dove_init_without_arguments() {
     let project_name = "demoproject_36";
     let project_folder = project_start_for_init(project_name);
 
-    execute_dove_at(&project_folder, &["dove", "init"]);
-    // Check config
-    let package = read_to_string(project_folder.join("Dove.toml"))
-        .unwrap()
-        .parse::<Value>()
-        .unwrap()
-        .get("package")
-        .unwrap()
-        .clone();
-
-    assert!(
-        package
-            .get("name")
-            .unwrap()
-            .to_string()
-            .contains(project_name),
-        "Dove.toml: invalid name",
-    );
-
-    assert!(
-        package.get("dialect").unwrap().to_string().contains("pont"),
-        "Dove.toml: invalid dialect",
-    );
+    execute_dove_at(&project_folder, &["dove", "init"]).unwrap_or_else(|err| {
+        panic!("{}", err);
+    });
+    check_dove_toml(&project_folder, project_name, None, None, None)
+        .unwrap_or_else(|err| panic!("{}", err));
 
     set_dependencies_local_move_stdlib(&project_folder);
-    project_build(&project_folder);
+    project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
     project_remove(&project_folder);
 }
 /// $ dove init -d ###
@@ -52,36 +30,16 @@ fn test_cmd_dove_init_with_dialect() {
     let project_folder = project_start_for_init(project_name);
 
     for dialect in &["pont", "diem", "dfinance"] {
-        execute_dove_at(&project_folder, &["dove", "init", "-d", dialect]);
-        // Check config
-        let package = read_to_string(project_folder.join("Dove.toml"))
-            .unwrap()
-            .parse::<Value>()
-            .unwrap()
-            .get("package")
-            .unwrap()
-            .clone();
-
-        assert!(
-            package
-                .get("name")
-                .unwrap()
-                .to_string()
-                .contains(project_name),
-            "Dove.toml: invalid name",
+        execute_dove_at(&project_folder, &["dove", "init", "-d", dialect]).unwrap_or_else(
+            |err| {
+                panic!("{}", err);
+            },
         );
-
-        assert!(
-            package
-                .get("dialect")
-                .unwrap()
-                .to_string()
-                .contains(dialect),
-            "Dove.toml: invalid dialect",
-        );
+        check_dove_toml(&project_folder, project_name, Some(dialect), None, None)
+            .unwrap_or_else(|err| panic!("{}", err));
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
+        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
         project_remove(&project_folder);
     }
 }
@@ -96,51 +54,26 @@ fn test_cmd_dove_init_dfinance_with_address() {
     for address in &["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"] {
         // Create project directory
         create_dir_all(&project_folder).unwrap_or_else(|_| {
-            panic!(
-                "Failed to create directory: {}",
-                project_folder.to_str().unwrap_or(" - "),
-            )
+            panic!("Failed to create directory: {}", project_folder.display(),)
         });
         execute_dove_at(
             &project_folder,
             &["dove", "init", "-d", "dfinance", "-a", address],
-        );
-
-        // Check config
-        let package = read_to_string(project_folder.join("Dove.toml"))
-            .unwrap()
-            .parse::<Value>()
-            .unwrap()
-            .get("package")
-            .unwrap()
-            .clone();
-        assert!(
-            package
-                .get("name")
-                .unwrap()
-                .to_string()
-                .contains(project_name),
-            "Dove.toml: invalid name",
-        );
-        assert!(
-            package
-                .get("dialect")
-                .unwrap()
-                .to_string()
-                .contains("dfinance"),
-            "Dove.toml: invalid dialect",
-        );
-        assert!(
-            package
-                .get("account_address")
-                .unwrap()
-                .to_string()
-                .contains(address),
-            "Dove.toml: invalid account_address",
-        );
+        )
+        .unwrap_or_else(|err| {
+            panic!("{}", err);
+        });
+        check_dove_toml(
+            &project_folder,
+            &project_name,
+            Some("dfinance"),
+            Some(address),
+            None,
+        )
+        .unwrap_or_else(|err| panic!("{}", err));
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
+        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
         project_remove(&project_folder);
     }
 }
@@ -155,46 +88,26 @@ fn test_cmd_dove_init_diem_with_address() {
     for address in &["0x1"] {
         // Create project directory
         create_dir_all(&project_folder).unwrap_or_else(|_| {
-            panic!(
-                "Failed to create directory: {}",
-                project_folder.to_str().unwrap_or(" - "),
-            )
+            panic!("Failed to create directory: {}", project_folder.display(),)
         });
         execute_dove_at(
             &project_folder,
             &["dove", "init", "-d", "diem", "-a", address],
-        );
-        // Check config
-        let package = read_to_string(project_folder.join("Dove.toml"))
-            .unwrap()
-            .parse::<Value>()
-            .unwrap()
-            .get("package")
-            .unwrap()
-            .clone();
-        assert!(
-            package
-                .get("name")
-                .unwrap()
-                .to_string()
-                .contains(project_name),
-            "Dove.toml: invalid name",
-        );
-        assert!(
-            package.get("dialect").unwrap().to_string().contains("diem"),
-            "Dove.toml: invalid dialect",
-        );
-        assert!(
-            package
-                .get("account_address")
-                .unwrap()
-                .to_string()
-                .contains(address),
-            "Dove.toml: invalid account_address",
-        );
+        )
+        .unwrap_or_else(|err| {
+            panic!("{}", err);
+        });
+        check_dove_toml(
+            &project_folder,
+            &project_name,
+            Some("diem"),
+            Some(address),
+            None,
+        )
+        .unwrap_or_else(|err| panic!("{}", err));
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
+        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
         project_remove(&project_folder);
     }
 }
@@ -209,47 +122,27 @@ fn test_cmd_dove_init_pont_with_address() {
     for address in &["5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv", "0x1"] {
         // Create project directory
         create_dir_all(&project_folder).unwrap_or_else(|_| {
-            panic!(
-                "Failed to create directory: {}",
-                project_folder.to_str().unwrap_or(" - "),
-            )
+            panic!("Failed to create directory: {}", project_folder.display(),)
         });
         // $ dove init -d pont -a ###
         execute_dove_at(
             &project_folder,
             &["dove", "init", "-d", "pont", "-a", address],
-        );
-        // Check config
-        let package = read_to_string(project_folder.join("Dove.toml"))
-            .unwrap()
-            .parse::<Value>()
-            .unwrap()
-            .get("package")
-            .unwrap()
-            .clone();
-        assert!(
-            package
-                .get("name")
-                .unwrap()
-                .to_string()
-                .contains(project_name),
-            "Dove.toml: invalid name",
-        );
-        assert!(
-            package.get("dialect").unwrap().to_string().contains("pont"),
-            "Dove.toml: invalid dialect",
-        );
-        assert!(
-            package
-                .get("account_address")
-                .unwrap()
-                .to_string()
-                .contains(address),
-            "Dove.toml: invalid account_address",
-        );
+        )
+        .unwrap_or_else(|err| {
+            panic!("{}", err);
+        });
+        check_dove_toml(
+            &project_folder,
+            &project_name,
+            Some("pont"),
+            Some(address),
+            None,
+        )
+        .unwrap_or_else(|err| panic!("{}", err));
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
+        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
         project_remove(&project_folder);
     }
 }
@@ -271,55 +164,30 @@ fn test_cmd_dove_init_pont_with_repo() {
     ] {
         // Create project directory
         create_dir_all(&project_folder).unwrap_or_else(|_| {
-            panic!(
-                "Failed to create directory: {}",
-                project_folder.to_str().unwrap_or(" - "),
-            )
+            panic!("Failed to create directory: {}", project_folder.display(),)
         });
-        execute_dove_at(&project_folder, &["dove", "init", "-r", api]);
-        // Check config
-        let package = read_to_string(project_folder.join("Dove.toml"))
-            .unwrap()
-            .parse::<Value>()
-            .unwrap()
-            .get("package")
-            .unwrap()
-            .clone();
-        assert!(
-            package
-                .get("name")
-                .unwrap()
-                .to_string()
-                .contains(project_name),
-            "Dove.toml: invalid name",
-        );
-        assert!(
-            package.get("dialect").unwrap().to_string().contains("pont"),
-            "Dove.toml: invalid dialect",
-        );
-        assert!(
-            package
-                .get("blockchain_api")
-                .unwrap()
-                .to_string()
-                .contains(api),
-            "Dove.toml: invalid blockchain_api",
-        );
+        execute_dove_at(&project_folder, &["dove", "init", "-r", api]).unwrap_or_else(|err| {
+            panic!("{}", err);
+        });
+        check_dove_toml(&project_folder, &project_name, None, None, Some(api))
+            .unwrap_or_else(|err| panic!("{}", err));
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
+        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
         project_remove(&project_folder);
     }
 }
 
 /// $ dove init -d incorrectdialect
 #[test]
-fn itest_cmd_dove_init_ncorrect_dialect() {
+fn itest_cmd_dove_init_incorrect_dialect() {
     // Project name and path
     let project_name = "demoproject_46";
     let project_folder = project_start_for_init(project_name);
 
-    execute_dove_at_wait_fail(&project_folder, &["dove", "init", "-d", "incorrectdialect"]);
+    assert!(
+        execute_dove_at(&project_folder, &["dove", "init", "-d", "incorrectdialect"]).is_err()
+    );
     project_remove(&project_folder);
 }
 
@@ -341,7 +209,7 @@ fn test_cmd_dove_init_incorrect_repo() {
         "127.0.0.1/api",
         "ftp://demo.ru/api",
     ] {
-        execute_dove_at_wait_fail(&project_folder, &["dove", "init", "-r", api]);
+        assert!(execute_dove_at(&project_folder, &["dove", "init", "-r", api]).is_err());
     }
     project_remove(&project_folder);
 }

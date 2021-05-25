@@ -1,7 +1,5 @@
-#![cfg(test)]
-
-mod test_cmd_helper;
-use crate::test_cmd_helper::{
+mod helper;
+use crate::helper::{
     project_remove, project_new_with_args, project_start, project_build, execute_dove_at,
 };
 
@@ -19,7 +17,9 @@ fn test_cmd_dove_metadata() {
         "5Csxuy81dNEVYbRA9K7tyHypu7PivHmwCZSKxcbU78Cy2v7v",
         "https://localhost/api",
     );
-    project_build(&project_folder);
-    execute_dove_at(&project_folder, &["dove", "metadata"]);
+    project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+    execute_dove_at(&project_folder, &["dove", "metadata"]).unwrap_or_else(|err| {
+        panic!("{}", err);
+    });
     project_remove(&project_folder);
 }

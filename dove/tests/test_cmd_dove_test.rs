@@ -1,17 +1,13 @@
-#![cfg(test)]
-
 use fs_extra::file::write_all;
-mod test_cmd_helper;
-use crate::test_cmd_helper::{
-    project_start_nb, project_remove, execute_dove_at, execute_dove_at_wait_fail,
-};
+mod helper;
+use crate::helper::{project_start_new_and_build, project_remove, execute_dove_at};
 
 /// $ dove test
 #[test]
 fn test_cmd_dove_test_run_all_test_in_project() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_10";
-    let project_folder = project_start_nb(project_name);
+    let project_folder = project_start_new_and_build(project_name);
 
     // project_folder/modules/mdemo.move
     write_all(
@@ -35,7 +31,9 @@ fn test_cmd_dove_test_run_all_test_in_project() {
             }",
     )
     .unwrap();
-    execute_dove_at(&project_folder, &["dove", "test"]);
+    execute_dove_at(&project_folder, &["dove", "test"]).unwrap_or_else(|err| {
+        panic!("{}", err);
+    });
     project_remove(&project_folder);
 }
 
@@ -44,7 +42,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
 fn test_cmd_dove_test_run_one_test_in_project() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_11";
-    let project_folder = project_start_nb(project_name);
+    let project_folder = project_start_new_and_build(project_name);
 
     // project_folder/modules/mdemo.move
     write_all(
@@ -78,7 +76,9 @@ fn test_cmd_dove_test_run_one_test_in_project() {
             }",
     )
     .unwrap();
-    execute_dove_at(&project_folder, &["dove", "test", "-k", "test_2"]);
+    execute_dove_at(&project_folder, &["dove", "test", "-k", "test_2"]).unwrap_or_else(|err| {
+        panic!("{}", err);
+    });
     project_remove(&project_folder);
 }
 
@@ -87,7 +87,7 @@ fn test_cmd_dove_test_run_one_test_in_project() {
 fn test_cmd_dove_test_fail_test_in_project() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_12";
-    let project_folder = project_start_nb(project_name);
+    let project_folder = project_start_new_and_build(project_name);
 
     // project_folder/tests/test_1.move
     write_all(
@@ -99,6 +99,6 @@ fn test_cmd_dove_test_fail_test_in_project() {
             }",
     )
     .unwrap();
-    execute_dove_at_wait_fail(&project_folder, &["dove", "test"]);
+    assert!(execute_dove_at(&project_folder, &["dove", "test"]).is_err());
     project_remove(&project_folder);
 }
