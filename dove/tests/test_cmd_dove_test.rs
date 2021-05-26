@@ -1,6 +1,8 @@
 use fs_extra::file::write_all;
 mod helper;
-use crate::helper::{project_start_new_and_build, project_remove, execute_dove_at};
+use crate::helper::{
+    project_start_new_and_build, project_remove, execute_dove_at, TErrPanicFormat, TOkPanicFormat
+};
 
 /// $ dove test
 #[test]
@@ -31,9 +33,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
             }",
     )
     .unwrap();
-    execute_dove_at(&["dove", "test"], &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(&["dove", "test"], &project_folder).err_panic_with_formatted();
     project_remove(&project_folder);
 }
 
@@ -76,9 +76,8 @@ fn test_cmd_dove_test_run_one_test_in_project() {
             }",
     )
     .unwrap();
-    execute_dove_at(&["dove", "test", "-k", "test_2"], &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(&["dove", "test", "-k", "test_2"], &project_folder)
+        .err_panic_with_formatted();
     project_remove(&project_folder);
 }
 
@@ -99,6 +98,6 @@ fn test_cmd_dove_test_fail_test_in_project() {
             }",
     )
     .unwrap();
-    assert!(execute_dove_at(&["dove", "test"], &project_folder,).is_err());
+    execute_dove_at(&["dove", "test"], &project_folder,).ok_panic_with_formatted();
     project_remove(&project_folder);
 }

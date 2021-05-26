@@ -37,14 +37,12 @@ pub fn project_start_for_init(project_name: &str) -> PathBuf {
 pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
     let (base_folder, project_folder) = project_start(project_name);
     project_new_default(&base_folder, &project_folder, project_name);
-    project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+    project_build(&project_folder).err_panic_with_formatted();
     project_folder
 }
 /// $ dove new ###
 pub fn project_new_default(base_folder: &Path, project_folder: &Path, project_name: &str) {
-    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(&["dove", "new", project_name], &base_folder).err_panic_with_formatted();
     set_dependencies_local_move_stdlib(&project_folder);
 }
 /// $ dove new ### -d ### -a ### -r ###
@@ -70,9 +68,7 @@ pub fn project_new_with_args(
         ],
         &base_folder,
     )
-    .unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    .err_panic_with_formatted();
     set_dependencies_local_move_stdlib(&project_folder);
 }
 // @dove build
@@ -126,7 +122,7 @@ pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> Result<String, S
     execute(args, project_folder.to_path_buf()).map_or_else(
         |err| {
             Err(format!(
-                "[COMMAND] {}\r\n[FOLDER] {}\r\n[ERROR] {}\r\n",
+                "[ERROR] {}\r\n[COMMAND] {}\r\n[FOLDER] {}\r\n",
                 &args.join(" "),
                 &project_folder.display(),
                 err.to_string()
@@ -172,4 +168,29 @@ pub fn check_dove_toml(
         return Err("Dove.toml: invalid blockchain_api\r\n".to_string());
     }
     Ok(())
+}
+#[inline]
+pub fn panic_with_formatted_error(err: String) -> String {
+    panic!("{} -", err);
+}
+
+pub trait TErrPanicFormat {
+    fn err_panic_with_formatted(&self);
+}
+pub trait TOkPanicFormat {
+    fn ok_panic_with_formatted(&self);
+}
+impl<T, String: std::fmt::Display> TErrPanicFormat for Result<T, String> {
+    fn err_panic_with_formatted(&self) {
+        if let Err(err) = self {
+            panic!("{} -", err);
+        }
+    }
+}
+impl<String: std::fmt::Display, T> TOkPanicFormat for Result<String, T> {
+    fn ok_panic_with_formatted(&self) {
+        if let Ok(ok) = self {
+            panic!("{} -", ok);
+        }
+    }
 }

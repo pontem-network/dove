@@ -1,5 +1,5 @@
 mod helper;
-use crate::helper::{project_start_new_and_build, project_remove, execute_dove_at};
+use crate::helper::{project_start_new_and_build, project_remove, execute_dove_at, TErrPanicFormat};
 
 /// $ dove clean
 #[test]
@@ -14,11 +14,7 @@ fn test_cmd_dove_clean() {
         "Target directory was not found: {}",
         project_target.display()
     );
-
-    // $ dove clean
-    execute_dove_at(&["dove", "clean"], &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(&["dove", "clean"], &project_folder).err_panic_with_formatted();
     assert!(
         !project_target.exists(),
         "Directory was not deleted: {}",

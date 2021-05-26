@@ -1,6 +1,8 @@
 use fs_extra::file::write_all;
 mod helper;
-use crate::helper::{execute_dove_at, project_start_new_and_build, project_remove};
+use crate::helper::{
+    execute_dove_at, project_start_new_and_build, project_remove, TErrPanicFormat,
+};
 
 /// $ dove run rdemo.move
 #[test]
@@ -32,9 +34,7 @@ fn test_cmd_dove_run_without_arguments() {
             }",
     )
     .unwrap();
-    execute_dove_at(&["dove", "run", "rdemo.move"], &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(&["dove", "run", "rdemo.move"], &project_folder).err_panic_with_formatted();
 
     project_remove(&project_folder);
 }
@@ -60,9 +60,7 @@ fn test_cmd_dove_run_with_arguments() {
         &["dove", "run", "rdemo.move", "-a", "3", "5"],
         &project_folder,
     )
-    .unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    .err_panic_with_formatted();
 
     project_remove(&project_folder);
 }

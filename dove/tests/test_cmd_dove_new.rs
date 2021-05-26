@@ -1,7 +1,7 @@
 mod helper;
 use crate::helper::{
     project_remove, project_start, project_build, set_dependencies_local_move_stdlib,
-    execute_dove_at, check_dove_toml,
+    execute_dove_at, check_dove_toml, TErrPanicFormat, TOkPanicFormat,
 };
 /// $ dove new demoproject_25
 #[test]
@@ -11,17 +11,12 @@ fn test_cmd_dove_new_without_arguments() {
     let (base_folder, project_folder) = project_start(project_name);
     project_remove(&project_folder);
 
-    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
-    check_dove_toml(&project_folder, project_name, Some("pont"), None, None).unwrap_or_else(
-        |err| {
-            panic!("{}", err);
-        },
-    );
+    execute_dove_at(&["dove", "new", project_name], &base_folder).err_panic_with_formatted();
+    check_dove_toml(&project_folder, project_name, Some("pont"), None, None)
+        .err_panic_with_formatted();
 
     set_dependencies_local_move_stdlib(&project_folder);
-    project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+    project_build(&project_folder).err_panic_with_formatted();
     project_remove(&project_folder);
 }
 /// $ dove new demoproject_32 -d ###
@@ -34,17 +29,11 @@ fn test_cmd_dove_new_dialect() {
 
     for dialect in &["pont", "diem", "dfinance"] {
         execute_dove_at(&["dove", "new", &project_name, "-d", dialect], &base_folder)
-            .unwrap_or_else(|err| {
-                panic!("{}", err);
-            });
-        check_dove_toml(&project_folder, project_name, Some(dialect), None, None).unwrap_or_else(
-            |err| {
-                panic!("{}", err);
-            },
-        );
+            .err_panic_with_formatted();
+        check_dove_toml(&project_folder, project_name, Some(dialect), None, None).err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+        project_build(&project_folder).err_panic_with_formatted();
         project_remove(&project_folder);
     }
 }
@@ -69,22 +58,17 @@ fn test_cmd_dove_new_difinance_with_address() {
             ],
             &base_folder,
         )
-        .unwrap_or_else(|err| {
-            panic!("{}", err);
-        });
+        .err_panic_with_formatted();
         check_dove_toml(
             &project_folder,
             project_name,
             Some("dfinance"),
             Some(address),
             None,
-        )
-        .unwrap_or_else(|err| {
-            panic!("{}", err);
-        });
+        ).err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+        project_build(&project_folder).err_panic_with_formatted();
         project_remove(&project_folder);
     }
 }
@@ -101,22 +85,17 @@ fn test_cmd_dove_new_diem_with_address() {
             &["dove", "new", &project_name, "-d", "diem", "-a", address],
             &base_folder,
         )
-        .unwrap_or_else(|err| {
-            panic!("{}", err);
-        });
+        .err_panic_with_formatted();
         check_dove_toml(
             &project_folder,
             project_name,
             Some("diem"),
             Some(address),
             None,
-        )
-        .unwrap_or_else(|err| {
-            panic!("{}", err);
-        });
+        ).err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+        project_build(&project_folder).err_panic_with_formatted();
         project_remove(&project_folder);
     }
 }
@@ -133,22 +112,17 @@ fn test_cmd_dove_new_pont_with_address() {
             &["dove", "new", &project_name, "-d", "pont", "-a", address],
             &base_folder,
         )
-        .unwrap_or_else(|err| {
-            panic!("{}", err);
-        });
+        .err_panic_with_formatted();
         check_dove_toml(
             &project_folder,
             project_name,
             Some("pont"),
             Some(address),
             None,
-        )
-        .unwrap_or_else(|err| {
-            panic!("{}", err);
-        });
+        ).err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+        project_build(&project_folder).err_panic_with_formatted();
         project_remove(&project_folder);
     }
 }
@@ -167,19 +141,12 @@ fn test_cmd_dove_new_pont_with_repo() {
         "http://localhost/api",
         "http://localhost:8080/api",
     ] {
-        execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).unwrap_or_else(
-            |err| {
-                panic!("{}", err);
-            },
-        );
-        check_dove_toml(&project_folder, project_name, None, None, Some(api)).unwrap_or_else(
-            |err| {
-                panic!("{}", err);
-            },
-        );
+        execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder)
+            .err_panic_with_formatted();
+        check_dove_toml(&project_folder, project_name, None, None, Some(api)).err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap_or_else(|err| panic!("{}", err));
+        project_build(&project_folder).err_panic_with_formatted();
         project_remove(&project_folder);
     }
 }
@@ -203,10 +170,7 @@ fn test_cmd_dove_new_pont_with_incorrect_repo() {
         "127.0.0.1/api",
         "ftp://demo.ru/api",
     ] {
-        // $ dove new demoproject_35 -r ###
-        assert!(
-            execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).is_err()
-        );
+        execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).ok_panic_with_formatted();
     }
 }
 
@@ -218,9 +182,8 @@ fn test_cmd_dove_new_incorrect_dialect() {
     let (base_folder, project_folder) = project_start(project_name);
     project_remove(&project_folder);
 
-    assert!(execute_dove_at(
+    execute_dove_at(
         &["dove", "new", &project_name, "-d", "incorrectdialect"],
         &base_folder,
-    )
-    .is_err());
+    ).ok_panic_with_formatted();
 }

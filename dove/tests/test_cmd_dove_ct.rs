@@ -2,7 +2,9 @@ use fs_extra::file::write_all;
 use dove::cmd::tx::Transaction;
 
 mod helper;
-use crate::helper::{project_start_new_and_build, project_remove, execute_dove_at};
+use crate::helper::{project_start_new_and_build, project_remove, execute_dove_at, TErrPanicFormat};
+
+// @todo Add tests for $ dove ct -t ###, after bug fix
 
 /// $ dove ct
 #[test]
@@ -23,9 +25,7 @@ fn test_cmd_dove_ct_without_arguments() {
     .unwrap();
 
     let args = &["dove", "tx"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
     let tx_path = project_folder.join("target/transactions/main.mvt");
     assert!(
         tx_path.exists(),
@@ -81,9 +81,7 @@ fn test_cmd_dove_ct_with_type() {
     )
     .unwrap();
     let args = &["dove", "tx", "sdemo_4<u8>(16)"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
 
     let tx_path = project_folder.join("target/transactions/sdemo_4.mvt");
     assert!(
@@ -101,7 +99,6 @@ fn test_cmd_dove_ct_with_type() {
     assert!(tx_fmt.contains(" type_args: [U8]"));
     assert!(tx_fmt.contains(" signers_count: 0"));
 
-    // @todo Add tests for $ dove ct -t ###, after bug fix
     project_remove(&project_folder);
 }
 /// $ dove ct -o z
@@ -122,9 +119,7 @@ fn test_cmd_dove_ct_with_output_file_name() {
     .unwrap();
 
     let args = &["dove", "tx", "-o", "z"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
 
     let tx_path = project_folder.join("target/transactions/z.mvt");
     assert!(
@@ -154,9 +149,7 @@ fn test_cmd_dove_ct_with_script_name_arg() {
     )
     .unwrap();
     let args = &["dove", "tx", "-f", "sdemo", "-n", "test_fun"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
 
     let tx_path = project_folder.join("target/transactions/test_fun.mvt");
     assert!(
@@ -187,9 +180,7 @@ fn test_cmd_dove_ct_with_script_name_option() {
     )
     .unwrap();
     let args = &["dove", "tx", "test_fun()", "-f", "sdemo"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
 
     let tx_path = project_folder.join("target/transactions/test_fun.mvt");
     assert!(
@@ -227,9 +218,7 @@ fn test_cmd_dove_ct_with_script_file_name() {
     )
     .unwrap();
     let args = &["dove", "tx", "-f", "sdemo_2"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
 
     let tx_path = project_folder.join("target/transactions/sdemo_2.mvt");
     assert!(
@@ -257,9 +246,7 @@ fn test_cmd_dove_ct_with_script_method_args() {
     .unwrap();
     // $ dove ct -a 1 2
     let args = &["dove", "tx", "-a", "1", "2"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
 
     let tx_path = project_folder.join("target/transactions/main.mvt");
     assert!(
@@ -296,9 +283,7 @@ fn test_cmd_dove_ct_with_script_method_args_option() {
     .unwrap();
     // $ dove ct 'main(1,2)'
     let args = &["dove", "tx", "main(1,2)"];
-    execute_dove_at(args, &project_folder).unwrap_or_else(|err| {
-        panic!("{}", err);
-    });
+    execute_dove_at(args, &project_folder).err_panic_with_formatted();
 
     let tx_path = project_folder.join("target/transactions/main.mvt");
     assert!(
