@@ -9,7 +9,7 @@ fn test_cmd_dove_run_without_arguments() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/modules/mdemo.move
     write_all(
-        &project_folder.join("modules/mdemo.move"),
+        &project_folder.join("modules").join("mdemo.move"),
         "address 0x1 {
                 module DemoModule {
                     public fun value(): u8 {
@@ -21,7 +21,7 @@ fn test_cmd_dove_run_without_arguments() {
     .unwrap();
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                 use 0x1::DemoModule;
                 fun main() {
@@ -41,7 +41,7 @@ fn test_cmd_dove_run_with_arguments() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                 fun main(x:u64,y:u64) {
                     let _result = x + y;
@@ -64,7 +64,7 @@ fn test_cmd_dove_run_with_signers() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
             fun main(_account: signer) { }
         }",

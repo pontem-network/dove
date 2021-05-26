@@ -10,7 +10,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/modules/mdemo.move
     write_all(
-        &project_folder.join("modules/mdemo.move"),
+        &project_folder.join("modules").join("mdemo.move"),
         "address 0x1 {
                 module DemoModule {
                     public fun value(): u8 {
@@ -22,7 +22,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
     .unwrap();
     // project_folder/tests/test_1.move
     write_all(
-        &project_folder.join("tests/test_1.move"),
+        &project_folder.join("tests").join("test_1.move"),
         "script {
                 fun main() {
                     assert((3+1)==4,1);
@@ -41,7 +41,7 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/modules/mdemo.move
     write_all(
-        &project_folder.join("modules/mdemo.move"),
+        &project_folder.join("modules").join("mdemo.move"),
         "address 0x1 {
                 module DemoModule {
                     public fun value(): u8 {
@@ -53,7 +53,7 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     .unwrap();
     // project_folder/tests/test_1.move
     write_all(
-        &project_folder.join("tests/test_1.move"),
+        &project_folder.join("tests").join("test_1.move"),
         "script {
                 fun main() {
                     assert((1+3)==4,1);
@@ -63,7 +63,7 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     .unwrap();
     // project_folder/tests/test_2.move
     write_all(
-        &project_folder.join("tests/test_2.move"),
+        &project_folder.join("tests").join("test_2.move"),
         "script {
                 fun main() {
                     assert((2+2)==4,2);
@@ -82,7 +82,7 @@ fn test_cmd_dove_test_fail_test_in_project() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/tests/test_1.move
     write_all(
-        &project_folder.join("tests/test_1.move"),
+        &project_folder.join("tests").join("test_1.move"),
         "script {
                 fun main() {
                     assert((3+2)==4,1);
