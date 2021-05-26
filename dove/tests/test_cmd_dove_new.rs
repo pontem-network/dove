@@ -30,7 +30,8 @@ fn test_cmd_dove_new_dialect() {
     for dialect in &["pont", "diem", "dfinance"] {
         execute_dove_at(&["dove", "new", &project_name, "-d", dialect], &base_folder)
             .err_panic_with_formatted();
-        check_dove_toml(&project_folder, project_name, Some(dialect), None, None).err_panic_with_formatted();
+        check_dove_toml(&project_folder, project_name, Some(dialect), None, None)
+            .err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder).err_panic_with_formatted();
@@ -65,7 +66,8 @@ fn test_cmd_dove_new_difinance_with_address() {
             Some("dfinance"),
             Some(address),
             None,
-        ).err_panic_with_formatted();
+        )
+        .err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder).err_panic_with_formatted();
@@ -92,7 +94,8 @@ fn test_cmd_dove_new_diem_with_address() {
             Some("diem"),
             Some(address),
             None,
-        ).err_panic_with_formatted();
+        )
+        .err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder).err_panic_with_formatted();
@@ -119,7 +122,8 @@ fn test_cmd_dove_new_pont_with_address() {
             Some("pont"),
             Some(address),
             None,
-        ).err_panic_with_formatted();
+        )
+        .err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder).err_panic_with_formatted();
@@ -143,7 +147,8 @@ fn test_cmd_dove_new_pont_with_repo() {
     ] {
         execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder)
             .err_panic_with_formatted();
-        check_dove_toml(&project_folder, project_name, None, None, Some(api)).err_panic_with_formatted();
+        check_dove_toml(&project_folder, project_name, None, None, Some(api))
+            .err_panic_with_formatted();
 
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder).err_panic_with_formatted();
@@ -170,7 +175,8 @@ fn test_cmd_dove_new_pont_with_incorrect_repo() {
         "127.0.0.1/api",
         "ftp://demo.ru/api",
     ] {
-        execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).ok_panic_with_formatted();
+        execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder)
+            .ok_panic_with_formatted();
     }
 }
 
@@ -185,5 +191,6 @@ fn test_cmd_dove_new_incorrect_dialect() {
     execute_dove_at(
         &["dove", "new", &project_name, "-d", "incorrectdialect"],
         &base_folder,
-    ).ok_panic_with_formatted();
+    )
+    .ok_panic_with_formatted();
 }

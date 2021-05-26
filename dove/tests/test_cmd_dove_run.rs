@@ -1,10 +1,8 @@
 use fs_extra::file::write_all;
 mod helper;
-use crate::helper::{
-    execute_dove_at, project_start_new_and_build, project_remove, TErrPanicFormat,
-};
+use crate::helper::{execute_dove_at, project_start_new_and_build, project_remove, TErrPanicFormat};
 
-/// $ dove run rdemo.move
+/// $ dove run sdemo.move
 #[test]
 fn test_cmd_dove_run_without_arguments() {
     // Path to dove folder, project and project name
@@ -23,9 +21,9 @@ fn test_cmd_dove_run_without_arguments() {
             }",
     )
     .unwrap();
-    // project_folder/scripts/demo.move
+    // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/rdemo.move"),
+        &project_folder.join("scripts/sdemo.move"),
         "script {
                 use 0x1::DemoModule;
                 fun main() {
@@ -34,21 +32,21 @@ fn test_cmd_dove_run_without_arguments() {
             }",
     )
     .unwrap();
-    execute_dove_at(&["dove", "run", "rdemo.move"], &project_folder).err_panic_with_formatted();
+    execute_dove_at(&["dove", "run", "sdemo.move"], &project_folder).err_panic_with_formatted();
 
     project_remove(&project_folder);
 }
 
-/// $ dove run rdemo.move -a 3 5
+/// $ dove run sdemo.move -a 3 5
 #[test]
 fn test_cmd_dove_run_with_arguments() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_8";
     let project_folder = project_start_new_and_build(project_name);
 
-    // project_folder/scripts/demo.move
+    // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/rdemo.move"),
+        &project_folder.join("scripts/sdemo.move"),
         "script {
                 fun main(x:u64,y:u64) {
                     let _result = x + y;
@@ -57,7 +55,31 @@ fn test_cmd_dove_run_with_arguments() {
     )
     .unwrap();
     execute_dove_at(
-        &["dove", "run", "rdemo.move", "-a", "3", "5"],
+        &["dove", "run", "sdemo.move", "-a", "3", "5"],
+        &project_folder,
+    )
+    .err_panic_with_formatted();
+
+    project_remove(&project_folder);
+}
+
+/// $ dove run sdemo.move --signers 0x1
+#[test]
+fn test_cmd_dove_run_with_signers() {
+    // Path to dove folder, project and project name
+    let project_name = "demoproject_5";
+    let project_folder = project_start_new_and_build(project_name);
+
+    // project_folder/scripts/sdemo.move
+    write_all(
+        &project_folder.join("scripts/sdemo.move"),
+        "script {
+            fun main(_account: signer) { }
+        }",
+    )
+    .unwrap();
+    execute_dove_at(
+        &["dove", "run", "sdemo.move", "--signers", "0x1"],
         &project_folder,
     )
     .err_panic_with_formatted();
