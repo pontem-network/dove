@@ -11,7 +11,7 @@ fn test_cmd_dove_ct_without_arguments() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                     fun main() {
                         assert((1+3)==4,1);
@@ -21,7 +21,10 @@ fn test_cmd_dove_ct_without_arguments() {
     .unwrap();
     let args = &["dove", "tx"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/main.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("main.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",
@@ -45,7 +48,7 @@ fn test_cmd_dove_ct_with_type() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/modules/mdemo.move
     write_all(
-        &project_folder.join("modules/mdemo.move"),
+        &project_folder.join("modules").join("mdemo.move"),
         "module ModuleDemo{
             struct T1 {}
             struct T2 {}
@@ -62,7 +65,7 @@ fn test_cmd_dove_ct_with_type() {
     .unwrap();
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
             use 0x1::ModuleDemo;
             fun sdemo_4<T:drop>(value:u8) {
@@ -73,7 +76,10 @@ fn test_cmd_dove_ct_with_type() {
     .unwrap();
     let args = &["dove", "tx", "sdemo_4<u8>(16)"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/sdemo_4.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("sdemo_4.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",
@@ -97,7 +103,7 @@ fn test_cmd_dove_ct_with_output_file_name() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                     fun main() {
                         assert((1+3)==4,1);
@@ -107,7 +113,10 @@ fn test_cmd_dove_ct_with_output_file_name() {
     .unwrap();
     let args = &["dove", "tx", "-o", "z"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/z.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("z.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",
@@ -124,7 +133,7 @@ fn test_cmd_dove_ct_with_script_name_arg() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                     fun main(_a:u64,_b:u64) { }
                 }
@@ -135,7 +144,10 @@ fn test_cmd_dove_ct_with_script_name_arg() {
     .unwrap();
     let args = &["dove", "tx", "-f", "sdemo", "-n", "test_fun"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/test_fun.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("test_fun.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",
@@ -152,7 +164,7 @@ fn test_cmd_dove_ct_with_script_name_option() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                     fun main(_a:u64,_b:u64) { }
                 }
@@ -163,7 +175,10 @@ fn test_cmd_dove_ct_with_script_name_option() {
     .unwrap();
     let args = &["dove", "tx", "test_fun()", "-f", "sdemo"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/test_fun.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("test_fun.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",
@@ -180,7 +195,7 @@ fn test_cmd_dove_ct_with_script_file_name() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo_1.move
     write_all(
-        &project_folder.join("scripts/sdemo_1.move"),
+        &project_folder.join("scripts").join("sdemo_1.move"),
         "script {
                     fun sdemo_1() {
                         assert((1+3)==4,1);
@@ -190,7 +205,7 @@ fn test_cmd_dove_ct_with_script_file_name() {
     .unwrap();
     // project_folder/scripts/sdemo_2.move
     write_all(
-        &project_folder.join("scripts/sdemo_2.move"),
+        &project_folder.join("scripts").join("sdemo_2.move"),
         "script {
                     fun sdemo_2() {
                         assert((2+2)==4,1);
@@ -200,7 +215,10 @@ fn test_cmd_dove_ct_with_script_file_name() {
     .unwrap();
     let args = &["dove", "tx", "-f", "sdemo_2"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/sdemo_2.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("sdemo_2.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",
@@ -217,7 +235,7 @@ fn test_cmd_dove_ct_with_script_method_args() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                     fun main(_a1:u64,_a2:u64) { }
                 }",
@@ -226,7 +244,10 @@ fn test_cmd_dove_ct_with_script_method_args() {
     // $ dove ct -a 1 2
     let args = &["dove", "tx", "-a", "1", "2"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/main.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("main.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",
@@ -250,7 +271,7 @@ fn test_cmd_dove_ct_with_script_method_args_option() {
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
-        &project_folder.join("scripts/sdemo.move"),
+        &project_folder.join("scripts").join("sdemo.move"),
         "script {
                     fun main(_a1:u64,_a2:u64) { }
                 }",
@@ -259,7 +280,10 @@ fn test_cmd_dove_ct_with_script_method_args_option() {
     // $ dove ct 'main(1,2)'
     let args = &["dove", "tx", "main(1,2)"];
     execute_dove_at(args, &project_folder).unwrap();
-    let tx_path = project_folder.join("target/transactions/main.mvt");
+    let tx_path = project_folder
+        .join("target")
+        .join("transactions")
+        .join("main.mvt");
     assert!(
         tx_path.exists(),
         "Transaction not found: {}\r\n[Command] {}",

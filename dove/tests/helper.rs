@@ -70,7 +70,8 @@ pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
     let move_stdlib = Path::new(".")
         .canonicalize()
         .unwrap()
-        .join("resources/test_move_project");
+        .join("resources")
+        .join("test_move_project");
     let mut dove_toml_path = project_path.to_path_buf();
     dove_toml_path.push("Dove.toml");
     let mut toml_value = read_to_string(&dove_toml_path)
