@@ -416,7 +416,7 @@ impl<'a> TransactionBuilder<'a> {
         args_type.iter().try_fold(
             (0, 0, Vec::new()),
             |(signers, args_index, mut values), (name, tp)| match tp.as_str() {
-                "&signer" => Ok((signers + 1, args_index, values)),
+                "signer" => Ok((signers + 1, args_index, values)),
                 "bool" => {
                     let arg = self.argument(args_index, total_args)?;
                     values.push(ScriptArg::Bool(
