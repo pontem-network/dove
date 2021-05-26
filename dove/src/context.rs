@@ -1,11 +1,13 @@
-use std::path::{PathBuf, Path};
-use crate::manifest::{DoveToml, MANIFEST, read_manifest, default_dialect};
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use anyhow::{Result, anyhow, Error};
-use std::env;
+
+use anyhow::{anyhow, Error, Result};
+use move_core_types::account_address::AccountAddress;
+
 use lang::compiler::dialects::{Dialect, DialectName};
-use lang::compiler::address::ProvidedAccountAddress;
+
 use crate::index::Index;
+use crate::manifest::{default_dialect, DoveToml, MANIFEST, read_manifest};
 
 /// Project context.
 pub struct Context {
@@ -18,6 +20,20 @@ pub struct Context {
 }
 
 impl Context {
+    /// Returns create absolute path in project as string.
+    pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
+        let mut abs_path = self.path_for(path);
+
+        if abs_path.exists() {
+            abs_path = dunce::canonicalize(abs_path)?;
+        }
+
+        abs_path
+            .to_str()
+            .map(|path| path.to_owned())
+            .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
+    }
+
     /// Create absolute path in project.
     pub fn path_for<P: AsRef<Path>>(&self, path: P) -> PathBuf {
         self.project_dir.join(path)
@@ -51,23 +67,13 @@ impl Context {
     }
 
     /// Returns provided account address.
-    pub fn account_address(&self) -> Result<ProvidedAccountAddress> {
-        let acc_addr = self
-            .manifest
-            .package
-            .account_address
-            .clone()
-            .ok_or_else(|| anyhow!("couldn't read account address from manifest"))?;
-
-        self.dialect.normalize_account_address(&acc_addr)
+    pub fn account_address(&self) -> Result<AccountAddress> {
+        self.dialect
+            .parse_address(&self.manifest.package.account_address)
     }
 }
 
-/// Create a new context for the current directory.
-pub fn create_context() -> Result<Context> {
-    let project_dir = env::current_dir()?;
-    let manifest = DoveToml::default();
-
+pub(crate) fn get_context(project_dir: PathBuf, manifest: DoveToml) -> Result<Context> {
     let dialect_name = manifest
         .package
         .dialect
@@ -82,25 +88,7 @@ pub fn create_context() -> Result<Context> {
     })
 }
 
-/// Returns project context.
-pub fn get_context(project_dir: PathBuf) -> Result<Context> {
-    let manifest = load_manifest(&project_dir)?;
-
-    let dialect_name = manifest
-        .package
-        .dialect
-        .clone()
-        .unwrap_or_else(default_dialect);
-    let dialect = DialectName::from_str(&dialect_name)?;
-
-    Ok(Context {
-        project_dir,
-        manifest,
-        dialect: dialect.get_dialect(),
-    })
-}
-
-fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
+pub(crate) fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
     let manifest = project_dir.join(MANIFEST);
     if !manifest.exists() {
         Err(anyhow!(
@@ -111,4 +99,12 @@ fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
     } else {
         read_manifest(&manifest)
     }
+}
+
+pub(crate) fn str_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    let path = path.as_ref();
+
+    path.to_str()
+        .map(|path| path.to_owned())
+        .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", path))
 }

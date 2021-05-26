@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 
 use clap::{App, Arg};
 
-use diem::move_lang::name_pool::ConstPool;
+use move_lang::name_pool::ConstPool;
 use lang::compiler::file::MoveFile;
 use lang::compiler::file;
 use lang::compiler::dialects::DialectName;
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
 
     let dialect = DialectName::from_str(dialect)?.get_dialect();
     let sender = dialect
-        .normalize_account_address(sender)
+        .parse_address(sender)
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), sender))?;
 
     let executor = Executor::new(dialect.as_ref(), sender, deps);

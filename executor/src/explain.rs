@@ -1,18 +1,22 @@
-use anyhow::Result;
 use std::fmt::Write;
 
-use diem::move_vm_runtime::data_cache::TransactionEffects;
-use crate::execution::FakeRemoteCache;
-use diem::diem_types::vm_status::{VMStatus, AbortLocation, StatusCode};
-use diem::vm::file_format::CompiledScript;
-use diem::move_core_types::account_address::AccountAddress;
-use diem::move_core_types::transaction_argument::TransactionArgument;
-use diem::vm::access::ScriptAccess;
-use diem::move_core_types::language_storage::{StructTag, TypeTag};
-use diem::move_vm_types::values::{ValueImpl, Container};
+use anyhow::{Result, anyhow};
+use move_core_types::account_address::AccountAddress;
+use move_core_types::language_storage::{StructTag, TypeTag};
+use move_core_types::transaction_argument::TransactionArgument;
+use move_core_types::vm_status::{AbortLocation, StatusCode, VMStatus};
+use move_lang::shared::Address;
+use move_vm_runtime::data_cache::TransactionDataCache;
+use move_vm_runtime::loader::Loader;
+use move_vm_runtime::logging::NoContextLog;
+use move_vm_types::natives::balance::ZeroBalance;
+use move_vm_types::values::{Container, ValueImpl, Value};
 use num_format::ToFormattedString;
+use vm::access::ScriptAccess;
+use vm::file_format::CompiledScript;
+
+use crate::execution::{FakeRemoteCache, TransactionEffects};
 use crate::session::ConstsMap;
-use diem::move_lang::shared::Address;
 
 pub type StepResultInfo = (String, u64, usize, StepExecutionResult);
 
@@ -119,11 +123,7 @@ impl ExplainedTransactionEffects {
 }
 
 fn short_address(addr: &AccountAddress) -> String {
-    let mut trimmed = addr.short_str().to_string();
-    if trimmed == "00000000" {
-        trimmed = addr.to_string().trim_start_matches('0').to_string();
-    }
-    format!("0x{}", trimmed)
+    Address::new(addr.to_u8()).to_string()
 }
 
 fn format_struct_tag(s: &StructTag) -> Result<String> {
@@ -178,11 +178,9 @@ fn format_container(
     num_custom_format: num_format::CustomFormat,
 ) -> Result<String> {
     match container {
-        Container::Locals(r)
-        | Container::VecC(r)
-        | Container::VecR(r)
-        | Container::StructC(r)
-        | Container::StructR(r) => display_list_of_values(r.borrow().iter(), format_value),
+        Container::Locals(r) | Container::Vec(r) | Container::Struct(r) => {
+            display_list_of_values(r.borrow().iter(), format_value)
+        }
         Container::VecU8(r) => display_list_of_values(r.borrow().iter(), |num| {
             Ok(num.to_formatted_string(&num_custom_format))
         }),
@@ -225,38 +223,67 @@ pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
 ) -> Result<ExplainedTransactionEffects> {
-    // effects shouldn't contain modules
-    assert!(effects.modules.is_empty());
+    let loader = Loader::new();
+    let log = NoContextLog::new();
+    let mut ds = TransactionDataCache::new(state, &loader, Box::new(ZeroBalance));
 
     let mut explained_effects = ExplainedTransactionEffects::default();
-    if !effects.events.is_empty() {
-        for (_, _, ty, _, event_data, _) in &effects.events {
+    if !effects.1.is_empty() {
+        for (_, _, ty, event_data, _) in &effects.1 {
             let formatted_ty = format_type_tag(ty)?;
-            explained_effects.events.push(ResourceChange(
-                formatted_ty,
-                Some(format_value(&&event_data.0)?),
-            ));
+
+            let tp = loader
+                .load_type(ty, &mut ds, &log)
+                .map_err(|err| anyhow!("Failed to load type:{:?}", err))?;
+            let layout = loader
+                .type_to_type_layout(&tp)
+                .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
+            if let Some(val) = Value::simple_deserialize(event_data, &layout) {
+                explained_effects
+                    .events
+                    .push(ResourceChange(formatted_ty, Some(format_value(&&val.0)?)));
+            }
         }
     }
-    for (addr, writes) in &effects.resources {
+
+    for (addr, writes) in &effects.0.accounts {
         let mut changes = vec![];
-        for (struct_tag, write_opt) in writes {
+        for (struct_tag, write_opt) in &writes.resources {
             let formatted_struct_tag = format_struct_tag(&struct_tag)?;
             changes.push(match write_opt {
-                Some((_, value)) => {
-                    if state
-                        .get_resource_bytes(*addr, struct_tag.clone())
-                        .is_some()
-                    {
-                        (
-                            "Changed".to_string(),
-                            ResourceChange(formatted_struct_tag, Some(format_value(&&value.0)?)),
-                        )
+                Some(value) => {
+                    let tp = loader
+                        .load_type(&TypeTag::Struct(struct_tag.clone()), &mut ds, &log)
+                        .map_err(|err| anyhow!("Failed to load type:{:?}", err))?;
+                    let layout = loader
+                        .type_to_type_layout(&tp)
+                        .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
+                    if let Some(val) = Value::simple_deserialize(&value, &layout) {
+                        if state
+                            .get_resource_bytes(*addr, struct_tag.clone())
+                            .is_some()
+                        {
+                            (
+                                "Changed".to_string(),
+                                ResourceChange(
+                                    formatted_struct_tag,
+                                    Some(format_value(&&val.0)?),
+                                ),
+                            )
+                        } else {
+                            (
+                                "Added".to_string(),
+                                ResourceChange(
+                                    formatted_struct_tag,
+                                    Some(format_value(&&val.0)?),
+                                ),
+                            )
+                        }
                     } else {
-                        (
-                            "Added".to_string(),
-                            ResourceChange(formatted_struct_tag, Some(format_value(&&value.0)?)),
-                        )
+                        return Err(anyhow!(
+                            "Failed to deserialize move value:{:?}",
+                            formatted_struct_tag
+                        ));
                     }
                 }
                 None => (
@@ -265,7 +292,7 @@ pub fn explain_effects(
                 ),
             });
         }
-        let trimmed_address = format!("0x{}", addr.to_string().trim_start_matches('0'));
+        let trimmed_address = Address::new(addr.to_u8()).to_string();
         let change = AddressResourceChanges::new(trimmed_address, changes);
         explained_effects.resources.push(change);
     }
@@ -277,7 +304,7 @@ pub fn explain_type_error(
     signers: &[AccountAddress],
     txn_args: &[TransactionArgument],
 ) -> String {
-    use diem::vm::file_format::SignatureToken::*;
+    use vm::file_format::SignatureToken::*;
 
     let script_params = script.signature_at(script.as_inner().parameters);
     let expected_num_signers = script_params
@@ -353,14 +380,14 @@ pub fn explain_execution_failure(vm_status: VMStatus, remote_cache: &FakeRemoteC
             code_offset,
         } => {
             let status_explanation = match status_code {
-                    StatusCode::RESOURCE_ALREADY_EXISTS => "a RESOURCE_ALREADY_EXISTS error (i.e., `move_to<T>(account)` when there is already a resource of type `T` under `account`)".to_string(),
-                    StatusCode::MISSING_DATA => "a RESOURCE_DOES_NOT_EXIST error (i.e., `move_from<T>(a)`, `borrow_global<T>(a)`, or `borrow_global_mut<T>(a)` when there is no resource of type `T` at address `a`)".to_string(),
-                    StatusCode::ARITHMETIC_ERROR => "an arithmetic error (i.e., integer overflow/underflow, div/mod by zero, or invalid shift)".to_string(),
-                    StatusCode::EXECUTION_STACK_OVERFLOW => "an execution stack overflow".to_string(),
-                    StatusCode::CALL_STACK_OVERFLOW => "a call stack overflow".to_string(),
-                    StatusCode::OUT_OF_GAS => "an out of gas error".to_string(),
-                    _ => format!("a {} error", status_code.status_type()),
-                };
+                StatusCode::RESOURCE_ALREADY_EXISTS => "a RESOURCE_ALREADY_EXISTS error (i.e., `move_to<T>(account)` when there is already a resource of type `T` under `account`)".to_string(),
+                StatusCode::MISSING_DATA => "a RESOURCE_DOES_NOT_EXIST error (i.e., `move_from<T>(a)`, `borrow_global<T>(a)`, or `borrow_global_mut<T>(a)` when there is no resource of type `T` at address `a`)".to_string(),
+                StatusCode::ARITHMETIC_ERROR => "an arithmetic error (i.e., integer overflow/underflow, div/mod by zero, or invalid shift)".to_string(),
+                StatusCode::EXECUTION_STACK_OVERFLOW => "an execution stack overflow".to_string(),
+                StatusCode::CALL_STACK_OVERFLOW => "a call stack overflow".to_string(),
+                StatusCode::OUT_OF_GAS => "an out of gas error".to_string(),
+                _ => format!("a {} error", status_code.status_type()),
+            };
             // TODO: map to source code location
             let location_explanation = match location {
                 AbortLocation::Module(id) => format!(
@@ -370,7 +397,7 @@ pub fn explain_execution_failure(vm_status: VMStatus, remote_cache: &FakeRemoteC
                 ),
                 AbortLocation::Script => "script".to_string(),
             };
-            // TODO: code offset is 1-indexed, but disassembler instruction numbering starts at zero
+            // TODO: code offset is 1-indexed, but decompiler instruction numbering starts at zero
             // This is potentially confusing to someone trying to understand where something failed
             // by looking at a code offset + disassembled bytecode; we should fix it
             return format!(

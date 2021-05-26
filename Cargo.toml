@@ -2,14 +2,14 @@
 members = [
     "language_server",
     "executor",
+    "net",
     "dove",
     "lang",
     "lang/compat",
-    "lang/disassembler",
+    "lang/decompiler",
     "resource-viewer",
     "resources",
     "common/git-hash",
-    "common/dnode-rest-client",
 ]
 
 [profile.release]

@@ -1,29 +1,50 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use diem::move_core_types::account_address::AccountAddress;
-use diem::move_core_types::identifier::Identifier;
-use diem::move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
-use diem::move_core_types::vm_status::{StatusCode, VMStatus};
-use diem::move_vm_runtime::data_cache::{RemoteCache, TransactionEffects};
-use diem::move_vm_runtime::move_vm::MoveVM;
-use diem::move_vm_types::gas_schedule::CostStrategy;
-use diem::move_vm_types::values::Value;
-use diem::vm::access::ModuleAccess;
-use diem::vm::CompiledModule;
-use diem::vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
-use diem::vm::file_format::{CompiledScript, FunctionDefinitionIndex};
+use move_core_types::account_address::AccountAddress;
+use move_core_types::effects::{ChangeSet, Event};
+use move_core_types::identifier::Identifier;
+use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
+use move_core_types::vm_status::{StatusCode, VMStatus};
+use move_vm_runtime::data_cache::RemoteCache;
+use move_vm_runtime::logging::NoContextLog;
+use move_vm_runtime::move_vm::MoveVM;
+use move_vm_types::gas_schedule::CostStrategy;
+use move_vm_types::natives::balance::{NativeBalance, WalletId};
+use vm::access::ModuleAccess;
+use vm::CompiledModule;
+use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
+use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
 
 use crate::explain::{
-    explain_effects, StepExecutionResult, explain_abort, explain_execution_failure,
-    explain_type_error,
+    explain_abort, explain_effects, explain_execution_failure, explain_type_error,
+    StepExecutionResult,
 };
 use crate::meta::ExecutionMeta;
-use crate::oracles::{oracle_coins_module, time_metadata, coin_balance_metadata, block_metadata};
-use diem::move_vm_runtime::logging::NoContextLog;
+use crate::oracles::{
+    block_metadata, coin_balance_metadata, oracle_coins_module, time_metadata, currency_struct,
+};
 use crate::session::ConstsMap;
 
 pub type SerializedTransactionEffects = Vec<((AccountAddress, StructTag), Option<Vec<u8>>)>;
+pub type TransactionEffects = (ChangeSet, Vec<Event>);
+
+#[derive(Debug, Default)]
+struct AccountsBalance {
+    balances: HashMap<WalletId, u128>,
+}
+
+impl AccountsBalance {
+    pub fn insert(&mut self, wallet_id: WalletId, val: u128) {
+        self.balances.insert(wallet_id, val);
+    }
+}
+
+impl NativeBalance for AccountsBalance {
+    fn get_balance(&self, wallet_id: &WalletId) -> Option<u128> {
+        self.balances.get(wallet_id).cloned()
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -76,18 +97,13 @@ impl FakeRemoteCache {
     ) -> (SerializedTransactionEffects, usize) {
         let mut resources_write_size = 0;
         let mut resources = vec![];
-        for (addr, changes) in effects.resources {
-            for (struct_tag, val) in changes {
-                match val {
-                    Some((layout, val)) => {
-                        let serialized = val.simple_serialize(&layout).expect("Valid value.");
-                        resources_write_size += serialized.len();
-                        resources.push(((addr, struct_tag), Some(serialized)));
-                    }
-                    None => {
-                        resources.push(((addr, struct_tag), None));
-                    }
+        let change_set = effects.0;
+        for (addr, changes) in change_set.accounts {
+            for (struct_tag, val) in changes.resources {
+                if let Some(val) = &val {
+                    resources_write_size += val.len();
                 }
+                resources.push(((addr, struct_tag), val));
             }
         }
         (resources, resources_write_size)
@@ -140,14 +156,15 @@ pub fn serialize_script(script: &CompiledScript) -> Result<Vec<u8>> {
 
 fn execute_script_with_runtime_session<R: RemoteCache>(
     data_store: &R,
+    balances: Box<dyn NativeBalance>,
     script: Vec<u8>,
-    args: Vec<Value>,
+    args: Vec<Vec<u8>>,
     ty_args: Vec<TypeTag>,
     senders: Vec<AccountAddress>,
     cost_strategy: &mut CostStrategy,
 ) -> VMResult<TransactionEffects> {
     let vm = MoveVM::new();
-    let mut runtime_session = vm.new_session(data_store);
+    let mut runtime_session = vm.new_session_with_balance(data_store, balances);
 
     runtime_session.execute_script(
         script,
@@ -164,7 +181,7 @@ pub fn execute_script(
     meta: ExecutionMeta,
     data_store: &mut FakeRemoteCache,
     script: CompiledScript,
-    args: Vec<Value>,
+    args: Vec<Vec<u8>>,
     cost_strategy: &mut CostStrategy,
     consts_map: &ConstsMap,
 ) -> Result<StepExecutionResult> {
@@ -172,6 +189,7 @@ pub fn execute_script(
     let ExecutionMeta {
         signers,
         accounts_balance,
+        native_accounts_balance,
         oracle_prices,
         current_time,
         aborts_with,
@@ -192,27 +210,34 @@ pub fn execute_script(
     if let Some(current_time) = current_time {
         ds.resources.insert(
             (std_addr, time_metadata()),
-            diem::bcs::to_bytes(&current_time).unwrap(),
+            bcs::to_bytes(&current_time).unwrap(),
         );
     }
     let block_height = block.unwrap_or(100);
     ds.resources.insert(
         (std_addr, block_metadata()),
-        diem::bcs::to_bytes(&block_height).unwrap(),
+        bcs::to_bytes(&block_height).unwrap(),
     );
     for (price_tag, val) in oracle_prices {
         ds.resources
-            .insert((std_addr, price_tag), diem::bcs::to_bytes(&val).unwrap());
+            .insert((std_addr, price_tag), bcs::to_bytes(&val).unwrap());
     }
+
+    let mut balances = AccountsBalance::default();
     for (account, coin, val) in accounts_balance {
         ds.resources.insert(
             (account, coin_balance_metadata(&coin)),
-            diem::bcs::to_bytes(&val).unwrap(),
+            bcs::to_bytes(&val).unwrap(),
         );
+    }
+    for (account, coin, val) in native_accounts_balance {
+        let wallet_id = WalletId::new(account, currency_struct(&coin));
+        balances.insert(wallet_id, val);
     }
 
     let res = execute_script_with_runtime_session(
         &ds,
+        Box::new(balances),
         serialize_script(&script)?,
         args,
         vec![],

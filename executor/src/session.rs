@@ -1,27 +1,25 @@
 use std::collections::BTreeMap;
 
 use anyhow::Error;
-use diem::move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
-use diem::move_ir_types::location::Loc;
-use diem::move_lang::{compiled_unit::CompiledUnit, FileCommentMap};
-use diem::move_vm_types::gas_schedule::CostStrategy;
-use diem::move_vm_types::values::Value;
-use diem::vm::CompiledModule;
-use diem::vm::file_format::CompiledScript;
+use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
+use move_ir_types::location::Loc;
+use move_lang::{compiled_unit::CompiledUnit, FileCommentMap, FullyCompiledProgram};
+use move_vm_types::gas_schedule::CostStrategy;
+use vm::CompiledModule;
+use vm::file_format::CompiledScript;
 
-use diem::account::AccountAddress;
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
-use lang::compiler::address::ProvidedAccountAddress;
 use lang::compiler::parser::{ParsingMeta, ParserArtifact};
 use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
-use diem::move_lang::errors::Errors;
+use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
 use crate::constants::extract_error_constants;
+use move_core_types::account_address::AccountAddress;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
@@ -42,7 +40,7 @@ impl ExecutionSession {
     pub fn execute(
         self,
         signers: Option<Vec<AccountAddress>>,
-        script_args: Vec<Value>,
+        script_args: Vec<Vec<u8>>,
         cost_table: CostTable,
     ) -> Result<PipelineExecutionResult, Error> {
         let mut data_store = FakeRemoteCache::new(self.modules())?;
@@ -139,16 +137,13 @@ pub type ConstsMap = BTreeMap<(String, String, u128), String>;
 
 pub struct SessionBuilder<'a> {
     dialect: &'a dyn Dialect,
-    sender: &'a ProvidedAccountAddress,
+    sender: AccountAddress,
     loc_map: Option<BTreeMap<String, Loc>>,
     consts: ConstsMap,
 }
 
 impl<'a> SessionBuilder<'a> {
-    pub fn new(
-        dialect: &'a dyn Dialect,
-        sender: &'a ProvidedAccountAddress,
-    ) -> SessionBuilder<'a> {
+    pub fn new(dialect: &'a dyn Dialect, sender: AccountAddress) -> SessionBuilder<'a> {
         SessionBuilder {
             dialect,
             sender,
@@ -157,24 +152,23 @@ impl<'a> SessionBuilder<'a> {
         }
     }
 
-    pub fn build(
-        self,
-        sources: &[MoveFile],
-        deps: &[MoveFile],
-    ) -> Result<ExecutionSession, CompilerError> {
-        compile(self.dialect, sources, deps, Some(&self.sender), self)
+    pub fn build(self, sources: &[&MoveFile]) -> Result<ExecutionSession, CompilerError> {
+        compile(self.dialect, sources, Some(self.sender), self)
     }
 }
 
 impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder<'a> {
-    fn after_parsing(
+    fn after_parse_program(
         &mut self,
         parser_artifact: ParserArtifact,
-    ) -> Step<Result<ExecutionSession, CompilerError>, ParserArtifact> {
+    ) -> Step<
+        Result<ExecutionSession, CompilerError>,
+        (ParserArtifact, Option<FullyCompiledProgram>),
+    > {
         if let Ok(program) = &parser_artifact.result {
             extract_error_constants(program, &mut self.consts)
         }
-        Step::Next(parser_artifact)
+        Step::Next((parser_artifact, None))
     }
 
     fn after_check(
@@ -237,7 +231,7 @@ impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder
                     }
                     // first signer is "sender" if no explicit "signer:" clauses passed
                     if meta.signers.is_empty() {
-                        meta.signers.push(self.sender.as_account_address());
+                        meta.signers.push(self.sender);
                     }
                     (Some(script_loc), ExecutionUnit::Script((key, script, meta)))
                 }

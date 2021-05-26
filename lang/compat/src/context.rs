@@ -1,15 +1,17 @@
-use std::io::Cursor;
-pub use vm::file_format_common::*;
+use vm::file_format_common::VersionedCursor;
 
-#[derive(Debug)]
 pub struct TableContext<'a, 'b> {
-    pub cursor: &'a mut Cursor<&'b [u8]>,
+    pub cursor: &'a mut VersionedCursor<'b>,
     old_pos: u64,
     pub len: u32,
 }
 
 impl<'a, 'b> TableContext<'a, 'b> {
-    pub fn new(cursor: &'a mut Cursor<&'b [u8]>, offset: u32, len: u32) -> TableContext<'a, 'b> {
+    pub fn new(
+        cursor: &'a mut VersionedCursor<'b>,
+        offset: u32,
+        len: u32,
+    ) -> TableContext<'a, 'b> {
         let old_pos = cursor.position();
         cursor.set_position(offset as u64);
 

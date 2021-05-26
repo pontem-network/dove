@@ -1,10 +1,7 @@
 use anyhow::Result;
 use lsp_types::{Diagnostic, DiagnosticRelatedInformation, Location, Range, Url};
-use diem::move_lang::errors::Error;
-use diem::move_ir_types::location::Loc;
-
-use serde::export::fmt::Debug;
-use serde::export::Formatter;
+use move_lang::errors::Error;
+use move_ir_types::location::Loc;
 use std::fmt;
 use crate::inner::config::Config;
 use crate::inner::change::{AnalysisChange, RootChange};
@@ -16,8 +13,8 @@ pub struct FileDiagnostic {
     pub diagnostic: Option<Diagnostic>,
 }
 
-impl Debug for FileDiagnostic {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Debug for FileDiagnostic {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_struct = f.debug_struct("FileDiagnostic");
 
         debug_struct.field("fpath", &self.fpath.to_string());

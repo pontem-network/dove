@@ -1,12 +1,18 @@
-use anyhow::Error;
-use http::Uri;
-use crate::manifest::MANIFEST;
 use std::fs;
-use crate::cmd::Cmd;
-use crate::context::{Context, create_context};
-use structopt::StructOpt;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::PathBuf;
+use std::str::FromStr;
+
+use anyhow::Error;
+use http::Uri;
+use structopt::StructOpt;
+
+use lang::compiler::dialects::DialectName;
+
+use crate::cmd::Cmd;
+use crate::context::{Context, get_context};
+use crate::manifest::{DoveToml, MANIFEST};
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -27,20 +33,17 @@ pub struct Init {
     address: Option<String>,
     #[structopt(
         help = "Compiler dialect",
+        default_value = "pont",
         name = "Dialect",
         long = "dialect",
         short = "d"
     )]
-    dialect: Option<String>,
+    dialect: String,
 }
 
 impl Init {
     /// Creates a new Init command.
-    pub fn new(
-        repository: Option<Uri>,
-        address: Option<String>,
-        dialect: Option<String>,
-    ) -> Init {
+    pub fn new(repository: Option<Uri>, address: Option<String>, dialect: String) -> Init {
         Init {
             repository,
             address,
@@ -50,8 +53,9 @@ impl Init {
 }
 
 impl Cmd for Init {
-    fn context(&self) -> Result<Context, Error> {
-        create_context()
+    fn context(&self, project_dir: PathBuf) -> Result<Context, Error> {
+        let manifest = DoveToml::default();
+        get_context(project_dir, manifest)
     }
 
     fn apply(self, ctx: Context) -> Result<(), Error> {
@@ -59,6 +63,7 @@ impl Cmd for Init {
         if manifest.exists() {
             return Err(anyhow!("init cannot be run on existing project."));
         }
+        let dialect = DialectName::from_str(&self.dialect)?.get_dialect();
 
         let name = ctx
             .project_dir
@@ -79,6 +84,7 @@ impl Cmd for Init {
         writeln!(&mut f, "name = \"{}\"", name)?;
 
         if let Some(adr) = &self.address {
+            dialect.parse_address(adr)?;
             writeln!(&mut f, "account_address = \"{}\"", adr)?;
         }
 
@@ -86,19 +92,18 @@ impl Cmd for Init {
             writeln!(&mut f, "blockchain_api = \"{}\"", url)?;
         }
 
-        if let Some(dialect) = &self.dialect {
-            writeln!(&mut f, "dialect = \"{}\"", dialect)?;
-        }
+        writeln!(&mut f, "dialect = \"{}\"", self.dialect)?;
 
-        write!(
-            &mut f,
-            "\
+        if dialect.name() == DialectName::Pont {
+            write!(
+                &mut f,
+                r#"
 dependencies = [
-    {{ git = \"https://github.com/pontem-network/move-stdlib\" }}
+    {{ git = "https://github.com/pontem-network/move-stdlib", branch = "move-1.2" }}
 ]
-"
-        )?;
-
+"#
+            )?;
+        }
         Ok(())
     }
 }

@@ -45,7 +45,7 @@ jobs:
         os:
           - ubuntu-latest
         crate:
-          - disassembler
+          - decompiler
 
     steps:
       - name: Checkout
@@ -169,8 +169,8 @@ jobs:
             lib-pre: ""
             lib-ext: dll
         crate:
-          - name: disassembler
-            path: ./lang/disassembler
+          - name: decompiler
+            path: ./lang/decompiler
             mod: src/ext/cffi.rs
 
     steps:

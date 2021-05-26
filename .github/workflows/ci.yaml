@@ -98,7 +98,7 @@ jobs:
         rust:
           - "1.50.0"
         crate:
-          - disassembler
+          - decompiler
 
     env:
       RUSTFLAGS: -D warnings
@@ -127,7 +127,7 @@ jobs:
 
       - uses: jetli/wasm-bindgen-action@v0.1.0
         with:
-          version: "0.2.73"
+          version: "0.2.74"
 
       - name: Gen JS/TS API
         run: |

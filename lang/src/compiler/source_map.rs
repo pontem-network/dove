@@ -1,13 +1,14 @@
 use std::collections::HashMap;
-use diem::move_lang::errors::Errors;
-use diem::move_ir_types::location::Loc;
+use move_lang::errors::Errors;
+use move_ir_types::location::Loc;
 use codespan::{Span, ByteIndex};
+use std::rc::Rc;
 
 pub fn len_difference(orig: &str, replacement: &str) -> isize {
     orig.len() as isize - replacement.len() as isize
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Layer {
     pub pos: usize,
     pub offset: isize,
@@ -23,10 +24,10 @@ impl Layer {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FileOffsetMap {
     layers: Vec<Layer>,
-    address_replacements: Vec<(String, String)>,
+    address_replacements: Vec<(String, Rc<String>)>,
 }
 
 impl FileOffsetMap {
@@ -38,14 +39,14 @@ impl FileOffsetMap {
         &mut self,
         original_end_pos: usize,
         original: String,
-        replacement: String,
+        replacement: Rc<String>,
     ) {
         let len_diff = len_difference(&original, &replacement);
         self.insert_layer(original_end_pos, len_diff);
         self.insert_address_replacement(original, replacement);
     }
 
-    pub fn insert_address_replacement(&mut self, original: String, replacement: String) {
+    pub fn insert_address_replacement(&mut self, original: String, replacement: Rc<String>) {
         self.address_replacements.push((original, replacement))
     }
 
@@ -73,7 +74,7 @@ impl FileOffsetMap {
 
     fn translate_message(&self, mut msg: String) -> String {
         for (orig, replacement) in self.address_replacements.iter().rev() {
-            msg = msg.replace(replacement, orig);
+            msg = msg.replace(replacement.as_ref(), orig);
         }
         msg
     }

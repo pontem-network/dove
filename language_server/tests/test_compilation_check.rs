@@ -121,7 +121,7 @@ mod tests {
         let _pool = ConstPool::new();
 
         let source = r"fun main() { return; }ффф";
-        let errors = diagnostics(MoveFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((0, 22), (0, 22)));
     }
@@ -135,7 +135,7 @@ script {
     fun main() {}
 }
 ";
-        let errors = diagnostics(MoveFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert!(errors.is_empty());
     }
 
@@ -203,11 +203,11 @@ module M {
 
         let source = r"script { public fun main() {} }";
 
-        let errors = diagnostics(MoveFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
-            "Extraneous 'public' modifier. Script functions are always public"
+            "Extraneous 'public' modifier. Script functions are always 'public(script)'"
         );
     }
 
@@ -221,7 +221,7 @@ module M {
 }
 ";
 
-        let errors = diagnostics(MoveFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -259,7 +259,7 @@ module MyModule {
 }
 ";
         let errors = diagnostics_with_config(
-            MoveFile::with_content("script", source),
+            MoveFile::with_content(script_path(), source),
             config!({ "stdlib_folder": stdlib_path() }),
         );
         assert!(errors.is_empty());
@@ -275,20 +275,21 @@ script {
     use 0x1::Signer;
     use 0x2::Record;
 
-    fun main(s: &signer) {
-        let signer_address = Signer::address_of(s);
+    fun main(s: signer) {
+        let signer_address = Signer::address_of(&s);
         let record = Record::get_record(signer_address);
-        Record::save(s, record);
+        Record::save(&s, record);
     }
 }
 ";
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "sender_address": "0x8572f83cee01047effd6e7d0b5c19743",
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()],
         });
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
@@ -316,20 +317,21 @@ script {
     use 0x1::Signer;
     use 0x2::Record;
 
-    fun main(s: &signer) {
-        let signer_address = Signer::address_of(s);
+    fun main(s: signer) {
+        let signer_address = Signer::address_of(&s);
         let record = Record::get_record(signer_address);
-        Record::save(s, record);
+        Record::save(&s, record);
     }
 }
 ";
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()],
             "sender_address": "0x1",
         });
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
@@ -342,7 +344,7 @@ script {
     use 0x1::Signer;
     use 0x2::Record;
 
-    fun main(s: &signer) {
+    fun main(s: signer) {
         let signer_address = Signer::address_of(s);
         let record: u8;
         record = Record::get_record(signer_address);
@@ -414,7 +416,7 @@ address 0x0 {
             "stdlib_folder": stdlib_path(),
         });
         let errors = diagnostics_with_config_and_filename(
-            MoveFile::with_content("script", source),
+            MoveFile::with_content(script_path(), source),
             config,
         );
         assert!(errors.is_empty(), "{:?}", errors);
@@ -473,7 +475,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             config!({"dialect": "dfinance"}),
         );
         assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].message, "Unused assignment or binding for local 'addr'. Consider removing or replacing it with '_'");
+        assert_eq!(errors[0].message, "Unused assignment or binding for local 'addr'. Consider removing, replacing with '_', or prefixing with '_' (e.g., '_addr')");
         assert_eq!(errors[0].range, range((4, 16), (4, 20)));
 
         let source = r"
@@ -511,7 +513,8 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -531,7 +534,8 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -551,7 +555,8 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "libra",
             "sender_address": "0x1111111111111111"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -619,7 +624,8 @@ address {{ sender }} {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
         assert_eq!(errors[0].range, range((7, 12), (7, 33)));
@@ -639,7 +645,8 @@ address {{sender}} {
             "dialect": "libra",
             "sender_address": "0x1"
         });
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -689,7 +696,8 @@ script {
         }
         ";
         let config = config!({"dialect": "dfinance"});
-        let errors = diagnostics_with_config(MoveFile::with_content("script", source), config);
+        let errors =
+            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -718,7 +726,7 @@ script {
         assert_eq!(errors[0].range, range((3, 16), (3, 44)));
         assert_eq!(
             errors[0].message,
-            "Unbound module \'wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Unknown\'"
+            "Unbound module \'0xDE5F86CE8AD7944F272D693CB4625A955B610150::Unknown\'"
         )
     }
 
@@ -733,7 +741,7 @@ script {
             struct T {}
         }
         }";
-        let errors = diagnostics(MoveFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 0);
     }
 
@@ -747,7 +755,7 @@ script {
                 UnknownPayments::send_payment_event();
             }
         }";
-        let errors = diagnostics(MoveFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -760,7 +768,7 @@ script {
         let _pool = ConstPool::new();
 
         let source = "script { fun main() {} \r\n } \r\n";
-        let errors = diagnostics(MoveFile::with_content("script", source));
+        let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
@@ -786,7 +794,7 @@ script {
         let source = r"
 /// signer: 0x1
 script {
-    fun main(_: &signer) {}
+    fun main(_: signer) {}
 }";
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert!(errors.is_empty(), "{:#?}", errors);

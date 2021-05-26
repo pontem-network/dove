@@ -3,18 +3,18 @@ use std::convert::TryFrom;
 use std::path::Path;
 
 use anyhow::Error;
-use diem::prelude::CORE_CODE_ADDRESS;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
     ser::Error as SerError,
 };
 use toml::Value;
+use move_core_types::language_storage::CORE_CODE_ADDRESS;
+use move_lang::shared::Address;
+use crate::context::Context;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
-/// Index name.
-pub const INDEX_FILE: &str = ".Dove.man";
 
 /// Movec manifest.
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
@@ -33,7 +33,7 @@ pub struct Package {
     pub name: Option<String>,
     /// Project account address.
     #[serde(default = "code_code_address")]
-    pub account_address: Option<String>,
+    pub account_address: String,
     /// Authors list.
     #[serde(default)]
     pub authors: Vec<String>,
@@ -101,12 +101,11 @@ fn target() -> String {
 }
 
 fn index() -> String {
-    INDEX_FILE.to_owned()
+    "target/.Dove.man".to_owned()
 }
 
-#[allow(clippy::unnecessary_wraps)]
-fn code_code_address() -> Option<String> {
-    Some(format!("0x{}", CORE_CODE_ADDRESS))
+fn code_code_address() -> String {
+    Address::new(CORE_CODE_ADDRESS.to_u8()).to_string()
 }
 
 /// Project layout.
@@ -149,7 +148,26 @@ pub struct Layout {
     pub target: String,
 
     /// Path to index.
+    #[serde(default = "index")]
     pub index: String,
+}
+
+impl Layout {
+    /// Returns layout instance with absolute paths.
+    pub fn to_absolute(&self, ctx: &Context) -> Result<Layout, Error> {
+        Ok(Layout {
+            module_dir: ctx.str_path_for(&self.module_dir)?,
+            script_dir: ctx.str_path_for(&self.script_dir)?,
+            tests_dir: ctx.str_path_for(&self.tests_dir)?,
+            module_output: ctx.str_path_for(&self.module_output)?,
+            packages_output: ctx.str_path_for(&self.packages_output)?,
+            script_output: ctx.str_path_for(&self.script_output)?,
+            transaction_output: ctx.str_path_for(&self.transaction_output)?,
+            target_deps: ctx.str_path_for(&self.target_deps)?,
+            target: ctx.str_path_for(&self.target)?,
+            index: ctx.str_path_for(&self.index)?,
+        })
+    }
 }
 
 impl Default for Layout {
@@ -180,6 +198,8 @@ pub struct Git {
     pub rev: Option<String>,
     /// Tag.
     pub tag: Option<String>,
+    /// Path.
+    pub path: Option<String>,
 }
 
 /// Type of git dependency check out.
@@ -341,19 +361,19 @@ pub fn read_manifest(path: &Path) -> Result<DoveToml, Error> {
     Ok(toml::from_str(&fs::read_to_string(path)?)?)
 }
 
-/// Default dialect name (dfinance).
+/// Default dialect name (pont).
 pub fn default_dialect() -> String {
-    "dfinance".to_owned()
+    "pont".to_owned()
 }
 
 #[cfg(test)]
 mod test {
-    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package};
+    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package, DoveToml};
 
     fn package() -> Package {
         Package {
             name: Some("Foo".to_owned()),
-            account_address: Some("0x01".to_owned()),
+            account_address: "0x01".to_owned(),
             authors: vec![],
             blockchain_api: None,
             dependencies: Some(Dependencies {
@@ -366,12 +386,14 @@ mod test {
                         branch: None,
                         rev: None,
                         tag: None,
+                        path: None,
                     }),
                     Dependence::Git(Git {
                         git: "https://github.com/dfinance/move-stdlib".to_owned(),
                         branch: Some("master".to_owned()),
                         rev: Some("969442fb28fc162c3e3de20ab0a3afdfa8d0f560".to_owned()),
                         tag: None,
+                        path: Some("/lang".to_owned()),
                     }),
                 ],
             }),
@@ -381,17 +403,37 @@ mod test {
 
     #[test]
     fn parse_deps() {
-        let deps = "
-                        account_address = \"0x01\"
-                        name = \"Foo\"
+        let deps = r#"
+                        account_address = "0x01"
+                        name = "Foo"
                         dependencies = [
-                            {path = \"/stdlib\"},
-                            {git = \"https://github.com/dfinance/move-stdlib\"},
-                            {git = \"https://github.com/dfinance/move-stdlib\", \
-                            branch = \"master\", rev = \"969442fb28fc162c3e3de20ab0a3afdfa8d0f560\"}
+                            {path = "/stdlib"},
+                            {git = "https://github.com/dfinance/move-stdlib"},
+                            {git = "https://github.com/dfinance/move-stdlib", branch = "master", rev = "969442fb28fc162c3e3de20ab0a3afdfa8d0f560", path = "/lang"}
                         ]
-                        dialect= \"dfinance\"
-                        ";
+                        dialect= "dfinance"
+                        "#;
         assert_eq!(package(), toml::from_str::<Package>(deps).unwrap());
+    }
+
+    #[test]
+    fn parse_layout() {
+        let dove_toml = r#"
+                        [package]
+                            name = "test_name"
+                            dialect = "pont"
+                            dependencies = [
+                            ]
+                        [layout]
+                        tests_dir = "runner_tests"
+                        "#;
+        let mut expected = DoveToml::default();
+
+        expected.package.name = Some("test_name".to_owned());
+        expected.package.dialect = Some("pont".to_owned());
+        expected.package.dependencies = Some(Dependencies { deps: vec![] });
+        expected.layout.tests_dir = "runner_tests".to_owned();
+
+        assert_eq!(expected, toml::from_str::<DoveToml>(dove_toml).unwrap());
     }
 }

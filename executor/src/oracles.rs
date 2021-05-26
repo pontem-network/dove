@@ -1,6 +1,6 @@
-use diem::move_core_types::language_storage::{StructTag, CORE_CODE_ADDRESS, TypeTag, ModuleId};
-use diem::move_core_types::identifier::Identifier;
-use diem::move_core_types::account_address::AccountAddress;
+use move_core_types::language_storage::{StructTag, CORE_CODE_ADDRESS, TypeTag, ModuleId};
+use move_core_types::identifier::Identifier;
+use move_core_types::account_address::AccountAddress;
 
 const COIN_MODULE: &str = "Coins";
 const PRICE_STRUCT: &str = "Price";
@@ -20,23 +20,27 @@ pub struct Price {
     pub price: u128,
 }
 
-fn currency_type(curr: &str) -> TypeTag {
+pub fn currency_struct(curr: &str) -> StructTag {
     let curr = curr.to_uppercase();
     if curr == PONT_MODULE {
-        TypeTag::Struct(StructTag {
+        StructTag {
             address: CORE_CODE_ADDRESS,
             module: Identifier::new(PONT_MODULE).expect("Valid module name."),
             name: Identifier::new(PONT_RESOURCE).expect("Valid currency name."),
             type_params: vec![],
-        })
+        }
     } else {
-        TypeTag::Struct(StructTag {
+        StructTag {
             address: CORE_CODE_ADDRESS,
             module: Identifier::new(COIN_MODULE).expect("Valid module name."),
             name: Identifier::new(curr).expect("Valid currency name."),
             type_params: vec![],
-        })
+        }
     }
+}
+
+fn currency_type(curr: &str) -> TypeTag {
+    TypeTag::Struct(currency_struct(curr))
 }
 
 pub fn oracle_coins_module() -> ModuleId {

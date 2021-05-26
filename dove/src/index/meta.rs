@@ -1,10 +1,7 @@
 use anyhow::{Result, Error};
 use std::path::Path;
 use lang::compiler::parser::parse_file;
-use diem::{prelude::*};
-use diem::{
-    move_lang::{errors, parser::ast::*, name_pool::ConstPool},
-};
+use move_lang::{errors, parser::ast::*, name_pool::ConstPool};
 
 use std::collections::{HashSet, HashMap};
 use termcolor::{StandardStream, ColorChoice};
@@ -12,32 +9,27 @@ use lang::compiler::dialects::Dialect;
 use std::fs;
 use rand::random;
 use std::rc::Rc;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::language_storage::{ModuleId, CORE_CODE_ADDRESS};
+use move_core_types::identifier::Identifier;
+use vm::CompiledModule;
+use vm::errors::Location;
 
 /// Extracts metadata form source code.
 pub fn source_meta(
     file: &Path,
-    address: Option<AccountAddress>,
+    sender: Option<AccountAddress>,
     dialect: &dyn Dialect,
 ) -> Result<FileMeta, Error> {
     let name = ConstPool::push(file.to_str().unwrap_or("source"));
     let source = fs::read_to_string(file)?;
 
-    let sender = match address {
-        None => None,
-        Some(addr) => Some(dialect.normalize_account_address(&format!("0x{}", addr))?),
-    };
-
-    let (defs, _, errors, _) = parse_file(
-        dialect,
-        &mut HashMap::default(),
-        name,
-        &source,
-        sender.as_ref(),
-    );
+    let (defs, _, errors, _) =
+        parse_file(dialect, &mut HashMap::default(), name, &source, sender);
     if errors.is_empty() {
         let mut metadata = Vec::new();
         for def in defs {
-            for meta in DefinitionMeta::from_definition(def, address)
+            for meta in DefinitionMeta::from_definition(def, sender)
                 .map_err(|err| anyhow!("{} Path:{:?}", err, file))?
             {
                 metadata.push(meta);
@@ -132,6 +124,9 @@ impl DefinitionMeta {
                 ModuleMember::Constant(constant) => {
                     meta.constant(constant)?;
                 }
+                ModuleMember::Friend(friend) => {
+                    meta.friend(friend)?;
+                }
             }
         }
 
@@ -145,9 +140,9 @@ impl DefinitionMeta {
             Use::Module(ident, _) => ident,
         };
 
-        let ident = &ident.0.value;
-        let name = Identifier::new(ident.name.0.value.to_owned())?;
-        let address = AccountAddress::new(ident.address.clone().to_u8());
+        let (address, name) = &ident.value;
+        let name = Identifier::new(name.to_owned())?;
+        let address = AccountAddress::new(address.to_u8());
         self.imports.insert(Rc::new(ModuleId::new(address, name)));
         Ok(())
     }
@@ -266,11 +261,7 @@ impl DefinitionMeta {
     fn access_usages(&mut self, access: &ModuleAccess_) -> Result<()> {
         match access {
             ModuleAccess_::QualifiedModuleAccess(ident, _name) => {
-                let ident = &ident.0.value;
-                self.imports.insert(Rc::new(ModuleId::new(
-                    AccountAddress::new(ident.address.clone().to_u8()),
-                    Identifier::new(ident.name.0.value.to_owned())?,
-                )));
+                self.ident(ident)?;
             }
             ModuleAccess_::ModuleAccess(_, _) | ModuleAccess_::Name(_) => { /*no-op*/ }
         }
@@ -405,6 +396,7 @@ impl DefinitionMeta {
                 self.expresion_usages(&e1.value)?;
                 self.s_type_usages(&s_type.value)?;
             }
+            Exp_::Quant(_, _, _, _, _) => {}
         }
         Ok(())
     }
@@ -415,16 +407,30 @@ impl DefinitionMeta {
         self.expresion_usages(&constant.value.value)
     }
 
+    fn friend(&mut self, friend: &Friend) -> Result<()> {
+        let friend = &friend.value;
+        match friend {
+            Friend_::Module(_) => { /*no-op*/ }
+            Friend_::QualifiedModule(ident) => {
+                self.ident(ident)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Extracts dependencies from use definition.
     fn uses(&mut self, u: &Use) -> Result<()> {
         let ident = match u {
             Use::Members(ident, _) => ident,
             Use::Module(ident, _) => ident,
         };
+        self.ident(ident)
+    }
 
-        let ident = &ident.0.value;
-        let name = Identifier::new(ident.name.0.value.to_owned())?;
-        let address = AccountAddress::new(ident.address.clone().to_u8());
+    fn ident(&mut self, ident: &ModuleIdent) -> Result<()> {
+        let (address, name) = &ident.value;
+        let name = Identifier::new(name.to_owned())?;
+        let address = AccountAddress::new(address.to_u8());
         self.imports.insert(Rc::new(ModuleId::new(address, name)));
         Ok(())
     }

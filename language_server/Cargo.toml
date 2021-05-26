@@ -1,6 +1,6 @@
 [package]
 name = "move-language-server"
-version = "0.4.0"
+version = "1.2.0"
 authors = ["Maxim Kurnikov <maxim.kurnikov@gmail.com>"]
 edition = "2018"
 
@@ -12,7 +12,7 @@ anyhow = "1.0.31"
 lsp-types = "0.89.0"
 lsp-server = "0.5.0"
 
-serde = { version = "=1.0.118", features = ["derive"] }
+serde = { version = "1.0.125", features = ["derive"] }
 serde_json = "1.0.48"
 threadpool = "1.8.1"
 crossbeam-channel = "0.5.1"
@@ -25,22 +25,6 @@ hex = "0.4.2"
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 
-diem = { package = "dfibra", git = "https://github.com/dfinance/libra.git", branch = "release-1.1.4" }
-
-[features]
-default = [
-    "ps_address",
-]
-
-diem_address = [
-    "lang/diem_address",
-    "diem/diem_address",
-]
-dfinance_address = [
-    "lang/dfinance_address",
-    "diem/dfinance_address",
-]
-ps_address = [
-    "lang/ps_address",
-    "diem/ps_address"
-]
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }

@@ -1,23 +1,23 @@
-use std::path::PathBuf;
-use anyhow::Result;
-
-use diem::prelude::*;
-
-use tiny_keccak::{Hasher, Sha3};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
+use std::path::PathBuf;
+
+use anyhow::Result;
 use http::Uri;
-use serde::{Deserialize, Serialize};
+use move_core_types::language_storage::ModuleId;
+use tiny_keccak::{Hasher, Sha3};
+
+use lang::compiler::dialects::Dialect;
+use net::{make_net, Net};
 
 /// Module loader.
-pub trait BytecodeLoader: Clone {
+pub trait BytecodeLoader {
     /// Loads module bytecode by it module id.
     fn load(&self, module_id: ModuleId) -> Result<Vec<u8>>;
 }
 
 /// Empty module loader.
 /// Mock.
-#[derive(Clone)]
 pub struct ZeroLoader;
 
 impl BytecodeLoader for ZeroLoader {
@@ -27,62 +27,26 @@ impl BytecodeLoader for ZeroLoader {
 }
 
 /// Bytecode loader which loads bytecode by dnode REST api.
-#[derive(Clone)]
 pub struct RestBytecodeLoader {
-    url: Uri,
+    net: Box<dyn Net>,
 }
 
 impl RestBytecodeLoader {
     /// Create a new `RestBytecodeLoader` with dnode api base url.
-    pub fn new(url: Uri) -> RestBytecodeLoader {
-        RestBytecodeLoader { url }
+    pub fn new(dialect: &dyn Dialect, url: Uri) -> Result<RestBytecodeLoader> {
+        Ok(RestBytecodeLoader {
+            net: make_net(url, dialect.name())?,
+        })
     }
 }
 
 impl BytecodeLoader for RestBytecodeLoader {
     fn load(&self, module_id: ModuleId) -> Result<Vec<u8>> {
-        let path = AccessPath::code_access_path(module_id);
-        let url = format!(
-            "{base_url}vm/data/{address}/{path}",
-            base_url = self.url,
-            address = hex::encode(&path.address),
-            path = hex::encode(path.path)
-        );
-
-        let resp = reqwest::blocking::get(&url)?;
-        if resp.status().is_success() {
-            let res: LoaderResponse = resp.json()?;
-            Ok(hex::decode(&res.result.value)?)
-        } else {
-            let res: LoaderErrorResponse = resp.json()?;
-            Err(anyhow!(
-                "Failed to load dependencies :'{}' [{}]",
-                url,
-                res.error
-            ))
-        }
+        self.net
+            .get_module(&module_id, &None)?
+            .map(|bytes| bytes.0)
+            .ok_or_else(|| anyhow!("Failed to load dependencies"))
     }
-}
-
-/// Api response.
-#[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct LoaderResponse {
-    /// Result.
-    pub result: Response,
-}
-
-/// Success response.
-#[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct Response {
-    /// Hex encoded bytecode.
-    pub value: String,
-}
-
-///Error response.
-#[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct LoaderErrorResponse {
-    /// Error message.
-    pub error: String,
 }
 
 /// Module loader.

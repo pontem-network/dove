@@ -1,5 +1,4 @@
 use core::fmt;
-use serde::export::Formatter;
 use std::cmp::min;
 use crate::inner::config::Config;
 
@@ -10,7 +9,7 @@ pub enum RootChange {
 }
 
 impl fmt::Debug for RootChange {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut s = f.debug_struct("RootChange");
         match self {
             RootChange::AddFile { path, text } => s

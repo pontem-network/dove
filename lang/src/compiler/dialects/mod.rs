@@ -1,41 +1,64 @@
-pub mod dfinance;
-pub mod libra;
-pub mod line_endings;
-pub mod polkadot;
+use std::str::FromStr;
 
 use anyhow::Result;
-use ::diem::move_core_types::gas_schedule::CostTable;
-use crate::compiler::source_map::FileOffsetMap;
-use std::str::FromStr;
-use crate::compiler::dialects::libra::LibraDialect;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::gas_schedule::CostTable;
+
 use crate::compiler::dialects::dfinance::DFinanceDialect;
-use crate::compiler::dialects::polkadot::PolkadotDialect;
-use crate::compiler::address::ProvidedAccountAddress;
+use crate::compiler::dialects::diem::DiemDialect;
+use crate::compiler::dialects::pontem::PontDialect;
+use crate::compiler::mut_string::MutString;
+use crate::compiler::source_map::FileOffsetMap;
+use std::fmt;
+
+pub mod dfinance;
+pub mod diem;
+pub mod line_endings;
+pub mod pontem;
 
 pub trait Dialect {
-    fn name(&self) -> &str;
+    /// Returns maximum number of bytes in the address.
+    fn address_length(&self) -> usize;
 
-    fn normalize_account_address(&self, addr: &str) -> Result<ProvidedAccountAddress>;
+    /// Returns dialect name.
+    fn name(&self) -> DialectName;
+
+    /// Returns the bytecode in the dialect format.
+    fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()>;
+
+    /// Returns the bytecode in the basis format.
+    fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()>;
+
+    fn adapt_address_to_target(&self, address: AccountAddress) -> Vec<u8>;
+
+    fn adapt_address_to_basis(&self, address: &[u8]) -> Result<AccountAddress>;
+
+    fn parse_address(&self, addr: &str) -> Result<AccountAddress>;
 
     fn cost_table(&self) -> CostTable;
 
-    fn replace_addresses(&self, source_text: &str, source_map: &mut FileOffsetMap) -> String;
+    fn replace_addresses(
+        &self,
+        source_text: &str,
+        mut_str: &mut MutString,
+        source_map: &mut FileOffsetMap,
+    );
 }
 
-#[derive(serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DialectName {
-    Libra,
+    Diem,
     DFinance,
-    Polkadot,
+    Pont,
 }
 
 impl DialectName {
     pub fn get_dialect(&self) -> Box<dyn Dialect> {
         match self {
-            DialectName::Libra => Box::new(LibraDialect::default()),
+            DialectName::Diem => Box::new(DiemDialect::default()),
             DialectName::DFinance => Box::new(DFinanceDialect::default()),
-            DialectName::Polkadot => Box::new(PolkadotDialect::default()),
+            DialectName::Pont => Box::new(PontDialect::default()),
         }
     }
 }
@@ -45,10 +68,24 @@ impl FromStr for DialectName {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "libra" => Ok(DialectName::Libra),
+            "diem" => Ok(DialectName::Diem),
             "dfinance" => Ok(DialectName::DFinance),
-            "polkadot" => Ok(DialectName::Polkadot),
+            "pont" => Ok(DialectName::Pont),
             _ => Err(anyhow::format_err!("Invalid dialect {:?}", s)),
         }
+    }
+}
+
+impl fmt::Display for DialectName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                DialectName::Diem => "diem",
+                DialectName::DFinance => "dfinance",
+                DialectName::Pont => "pont",
+            }
+        )
     }
 }

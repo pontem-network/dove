@@ -1,9 +1,7 @@
-use diem::move_lang::parser::ast::{
-    Constant, Exp_, Value_, ModuleDefinition, ModuleMember, Definition,
-};
-use diem::move_lang::shared::{Address, Identifier};
+use move_lang::parser::ast::{Constant, Exp_, Value_, ModuleDefinition, ModuleMember, Definition};
+use move_lang::shared::{Address, Identifier};
 use crate::session::ConstsMap;
-use diem::move_lang::parser::ast;
+use move_lang::parser::ast;
 
 fn extract_integer_constant_value(constant: &Constant) -> Option<u128> {
     match &constant.value.value {

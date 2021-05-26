@@ -1,19 +1,17 @@
 use std::collections::HashSet;
-use std::env;
 use std::rc::Rc;
 
 use anyhow::{Error, Result};
 
 use lang::compiler::file::MoveFile;
 
-use crate::context::{Context, get_context};
+use crate::context::{Context, get_context, load_manifest};
+use std::path::PathBuf;
 
 /// Project builder.
 pub mod build;
 /// Project dependencies loader.
 pub mod clean;
-/// Create transaction.
-pub mod ct;
 /// Dependencies fetcher.
 pub mod fetch;
 /// Project initializer.
@@ -26,14 +24,16 @@ pub mod new;
 pub mod run;
 /// Test runner.
 pub mod test;
+/// Create transaction.
+pub mod tx;
 
 /// Move command.
 pub trait Cmd {
     /// Returns project context.
     /// This function must be overridden if the command is used with a custom context.
-    fn context(&self) -> Result<Context> {
-        let project_dir = env::current_dir()?;
-        get_context(project_dir)
+    fn context(&self, project_dir: PathBuf) -> Result<Context> {
+        let manifest = load_manifest(&project_dir)?;
+        get_context(project_dir, manifest)
     }
 
     /// Apply command with given context.
@@ -42,11 +42,11 @@ pub trait Cmd {
         Self: std::marker::Sized;
 
     /// Functions create execution context and apply command with it.
-    fn execute(self) -> Result<()>
+    fn execute(self, project_dir: PathBuf) -> Result<()>
     where
         Self: std::marker::Sized,
     {
-        let context = self.context()?;
+        let context = self.context(project_dir)?;
         self.apply(context)
     }
 }

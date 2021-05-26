@@ -1,39 +1,53 @@
-use crate::compiler::dialects::Dialect;
+use crate::compiler::dialects::{Dialect, DialectName};
 use crate::compiler::source_map::FileOffsetMap;
 use anyhow::Context;
-use diem::move_core_types::account_address::AccountAddress;
+use move_core_types::account_address::AccountAddress;
 use anyhow::Result;
-use diem::move_core_types::gas_schedule::{CostTable, GasCost};
-use diem::move_vm_types::gas_schedule::new_from_instructions;
-use diem::move_vm_types::gas_schedule::NativeCostIndex as N;
-use diem::vm::{
-    file_format::{
-        ConstantPoolIndex, FieldHandleIndex, FieldInstantiationIndex, FunctionHandleIndex,
-        FunctionInstantiationIndex, StructDefInstantiationIndex, StructDefinitionIndex,
-    },
-    file_format_common::instruction_key,
-};
-use crate::compiler::address::ProvidedAccountAddress;
-use crate::compiler::bech32::{bech32_into_libra, HRP, replace_bech32_addresses};
+use move_core_types::gas_schedule::CostTable;
+use crate::compiler::address::bech32::{HRP, replace_bech32_addresses, bech32_into_address};
 
 #[derive(Default)]
 pub struct DFinanceDialect;
 
 impl Dialect for DFinanceDialect {
-    fn name(&self) -> &str {
-        "dfinance"
+    fn address_length(&self) -> usize {
+        20
     }
 
-    fn normalize_account_address(&self, addr: &str) -> Result<ProvidedAccountAddress> {
+    fn name(&self) -> DialectName {
+        DialectName::DFinance
+    }
+
+    fn adapt_to_target(&self, bytecode: &mut Vec<u8>) -> Result<()> {
+        compat::adapt_from_basis(bytecode, compat::AddressType::Dfninance)
+    }
+
+    fn adapt_to_basis(&self, bytecode: &mut Vec<u8>) -> Result<()> {
+        compat::adapt_to_basis(bytecode, compat::AddressType::Dfninance)
+    }
+
+    fn adapt_address_to_target(&self, address: AccountAddress) -> Vec<u8> {
+        compat::adapt_address_to_target(address, compat::AddressType::Dfninance)
+    }
+
+    fn adapt_address_to_basis(&self, address: &[u8]) -> Result<AccountAddress> {
+        compat::adapt_address_to_basis(address, compat::AddressType::Dfninance)
+    }
+
+    fn parse_address(&self, addr: &str) -> Result<AccountAddress> {
         let address_res = if addr.starts_with(HRP) {
-            bech32_into_libra(addr).map(|lowered_addr| {
-                ProvidedAccountAddress::new(addr.to_string(), addr.to_string(), lowered_addr)
-            })
+            bech32_into_address(addr)
         } else if addr.starts_with("0x") {
-            AccountAddress::from_hex_literal(addr).map(|address| {
-                let lowered_addr = format!("0x{}", address);
-                ProvidedAccountAddress::new(addr.to_string(), lowered_addr.clone(), lowered_addr)
-            })
+            let max_hex_len = self.address_length() * 2 + 2;
+            if addr.len() > max_hex_len {
+                return Err(anyhow::anyhow!(
+                    "Unable to parse AccountAddress. Maximum address length is {}.  Actual {}",
+                    max_hex_len,
+                    addr
+                ));
+            }
+
+            AccountAddress::from_hex_literal(addr).map_err(|err| err.into())
         } else {
             Err(anyhow::anyhow!("Does not start with either wallet1 or 0x"))
         };
@@ -41,17 +55,35 @@ impl Dialect for DFinanceDialect {
     }
 
     fn cost_table(&self) -> CostTable {
-        dfinance_cost_table()
+        INITIAL_GAS_SCHEDULE.deref().clone()
     }
 
-    fn replace_addresses(&self, source_text: &str, source_map: &mut FileOffsetMap) -> String {
-        replace_bech32_addresses(&source_text, source_map)
+    fn replace_addresses(
+        &self,
+        source_text: &str,
+        mut_str: &mut MutString,
+        source_map: &mut FileOffsetMap,
+    ) {
+        replace_bech32_addresses(source_text, mut_str, source_map)
     }
 }
 
-pub fn dfinance_cost_table() -> CostTable {
-    use diem::vm::file_format::Bytecode::*;
+use once_cell::sync::Lazy;
+use move_core_types::gas_schedule::GasCost;
+use std::ops::Deref;
+use crate::compiler::mut_string::MutString;
 
+pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
+    use move_vm_types::gas_schedule::{self, NativeCostIndex as N};
+    use vm::{
+        file_format::{
+            Bytecode, ConstantPoolIndex, FieldHandleIndex, FieldInstantiationIndex,
+            FunctionHandleIndex, FunctionInstantiationIndex, StructDefInstantiationIndex,
+            StructDefinitionIndex,
+        },
+        file_format_common::instruction_key,
+    };
+    use Bytecode::*;
     let mut instrs = vec![
         (MoveTo(StructDefinitionIndex::new(0)), GasCost::new(825, 1)),
         (
@@ -162,6 +194,8 @@ pub fn dfinance_cost_table() -> CostTable {
         ),
         (Nop, GasCost::new(10, 1)),
     ];
+    // Note that the DiemVM is expecting the table sorted by instruction order.
+    instrs.sort_by_key(|cost| instruction_key(&cost.0));
 
     let mut native_table = vec![
         (N::SHA2_256, GasCost::new(21, 1)),
@@ -193,13 +227,10 @@ pub fn dfinance_cost_table() -> CostTable {
         (N::U256_SUB, GasCost::new(10, 1)),
         (N::U256_ADD, GasCost::new(10, 1)),
     ];
-
-    instrs.sort_by_key(|cost| instruction_key(&cost.0));
     native_table.sort_by_key(|cost| cost.0 as u64);
     let raw_native_table = native_table
         .into_iter()
         .map(|(_, cost)| cost)
         .collect::<Vec<_>>();
-
-    new_from_instructions(instrs, raw_native_table)
-}
+    gas_schedule::new_from_instructions(instrs, raw_native_table)
+});

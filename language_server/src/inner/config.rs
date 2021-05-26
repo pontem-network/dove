@@ -1,23 +1,22 @@
 use std::path::PathBuf;
 
 use core::fmt;
-use serde::export::fmt::Debug;
-use serde::export::Formatter;
 use serde::Deserialize;
 use lang::compiler::dialects::{DialectName, Dialect};
-use lang::compiler::address::ProvidedAccountAddress;
 use lang::compiler::file::find_move_files;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 #[derive(Clone)]
 pub struct Config {
     pub dialect_name: DialectName,
     pub stdlib_folder: Option<PathBuf>,
     pub modules_folders: Vec<PathBuf>,
-    pub sender_address: ProvidedAccountAddress,
+    pub sender_address: AccountAddress,
 }
 
-impl Debug for Config {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Debug for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
             .field("dialect", &self.dialect_name)
             .field("stdlib_folder", &self.stdlib_folder)
@@ -30,12 +29,12 @@ impl Debug for Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            dialect_name: DialectName::Libra,
+            dialect_name: DialectName::Diem,
             stdlib_folder: None,
             modules_folders: vec![],
-            sender_address: DialectName::Libra
+            sender_address: DialectName::Diem
                 .get_dialect()
-                .normalize_account_address("0x1")
+                .parse_address("0x1")
                 .unwrap(),
         }
     }
@@ -64,8 +63,8 @@ impl Config {
         self.dialect_name.get_dialect()
     }
 
-    pub fn sender(&self) -> &ProvidedAccountAddress {
-        &self.sender_address
+    pub fn sender(&self) -> AccountAddress {
+        self.sender_address
     }
 
     pub fn update(&mut self, value: &serde_json::Value) {
@@ -108,15 +107,15 @@ impl Config {
         };
         self.sender_address = match get(value, "/sender_address") {
             None => {
-                log::info!("Using default account address 0x0");
-                ProvidedAccountAddress::default()
+                log::info!("Using default account address 0x1");
+                CORE_CODE_ADDRESS
             }
-            Some(address) => match self.dialect().normalize_account_address(address) {
+            Some(address) => match self.dialect().parse_address(address) {
                 Ok(provided_address) => provided_address,
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);
-                    log::info!("Using default account address 0x0");
-                    ProvidedAccountAddress::default()
+                    log::info!("Using default account address 0x1");
+                    CORE_CODE_ADDRESS
                 }
             },
         };

@@ -4,7 +4,7 @@ address 0x2 {
 
         const ERR_RECORD_DOES_NOT_EXIST: u64 = 101;
 
-        resource struct T {
+        struct T has store, key {
             age: u8
         }
 

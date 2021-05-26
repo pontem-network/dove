@@ -2,7 +2,7 @@ address 0x1 {
 
 module Block {
 
-    resource struct BlockMetadata {
+    struct BlockMetadata has store, key {
         // height of the current block
         height: u64,
     }

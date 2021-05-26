@@ -1,30 +1,31 @@
-use lang::compiler::dialects::Dialect;
-use lang::compiler::address::ProvidedAccountAddress;
-use lang::compiler::file::MoveFile;
-use anyhow::Error;
 use std::path::PathBuf;
+
 use anyhow::anyhow;
+use anyhow::Error;
 use anyhow::Result;
-use diem::move_core_types::parser::parse_transaction_argument;
-use diem::move_core_types::transaction_argument::TransactionArgument;
-use diem::move_vm_types::values::Value;
-use crate::explain::{PipelineExecutionResult, StepExecutionResult};
-use crate::session::SessionBuilder;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::parser::parse_transaction_argument;
+use move_core_types::transaction_argument::TransactionArgument;
+use move_lang::errors::report_errors;
+
+use lang::compiler::dialects::Dialect;
 use lang::compiler::error::CompilerError;
-use diem::move_lang::errors::report_errors;
-use diem::account::AccountAddress;
+use lang::compiler::file::MoveFile;
+
+use crate::explain::{PipelineExecutionResult, StepExecutionResult};
 use crate::format::format_step_result;
+use crate::session::SessionBuilder;
 
 pub struct Executor<'d, 'n, 'c> {
     dialect: &'d dyn Dialect,
-    sender: ProvidedAccountAddress,
+    sender: AccountAddress,
     deps: Vec<MoveFile<'n, 'c>>,
 }
 
 impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
     pub fn new(
         dialect: &'d dyn Dialect,
-        sender: ProvidedAccountAddress,
+        sender: AccountAddress,
         deps: Vec<MoveFile<'n, 'c>>,
     ) -> Executor<'d, 'n, 'c> {
         Executor {
@@ -52,30 +53,29 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
         let script_args = parse_script_arguments(args)?;
 
         let mut sources = Vec::with_capacity(self.deps.len() + 1);
-        sources.push(script);
-        sources.extend(self.deps.clone());
+        sources.push(&script);
+        for dep in &self.deps {
+            sources.push(&dep);
+        }
 
-        let session = SessionBuilder::new(self.dialect, &self.sender).build(&sources, &[])?;
+        let session = SessionBuilder::new(self.dialect, self.sender).build(&sources)?;
         session.execute(signers, script_args, self.dialect.cost_table())
     }
 }
 
-fn convert_txn_arg(arg: TransactionArgument) -> Result<Value> {
-    Ok(match arg {
-        TransactionArgument::U64(i) => Value::u64(i),
-        TransactionArgument::Address(a) => Value::address(a),
-        TransactionArgument::Bool(b) => Value::bool(b),
-        TransactionArgument::U8Vector(v) => Value::vector_u8(v),
-        _ => {
-            return Err(anyhow::Error::msg(format!(
-                "Unexpected transaction argument: {:?}",
-                arg
-            )));
-        }
-    })
+fn convert_txn_arg(arg: TransactionArgument) -> Result<Vec<u8>> {
+    match arg {
+        TransactionArgument::U64(v) => bcs::to_bytes(&v),
+        TransactionArgument::Address(v) => bcs::to_bytes(&v),
+        TransactionArgument::Bool(v) => bcs::to_bytes(&v),
+        TransactionArgument::U8Vector(v) => bcs::to_bytes(&v),
+        TransactionArgument::U8(v) => bcs::to_bytes(&v),
+        TransactionArgument::U128(v) => bcs::to_bytes(&v),
+    }
+    .map_err(|err| err.into())
 }
 
-fn parse_script_arguments(passed_args: Vec<String>) -> Result<Vec<Value>> {
+fn parse_script_arguments(passed_args: Vec<String>) -> Result<Vec<Vec<u8>>> {
     passed_args
         .into_iter()
         .map(|arg| parse_transaction_argument(&arg).and_then(convert_txn_arg))
@@ -103,7 +103,7 @@ pub fn render_test_result(
                 for step_result in exec_result.step_results {
                     print!(
                         "{}",
-                        textwrap::indent(&format_step_result(step_result, true, false), "    ",)
+                        textwrap::indent(&format_step_result(step_result, true, false), "    ")
                     );
                 }
                 println!();
