@@ -1,9 +1,7 @@
-use std::fs::{create_dir_all};
-
 mod helper;
 use crate::helper::{
-    execute_dove_at, project_start, project_start_for_init, project_remove,
-    set_dependencies_local_move_stdlib, project_build, check_dove_toml,
+    execute_dove_at, project_start_for_init, project_remove, set_dependencies_local_move_stdlib,
+    project_build, check_dove_toml,
 };
 /// $ dove init
 #[test]
@@ -22,8 +20,8 @@ fn test_cmd_dove_init_without_arguments() {
 fn test_cmd_dove_init_with_dialect() {
     // Project name and path
     let project_name = "demoproject_43";
-    let project_folder = project_start_for_init(project_name);
     for dialect in &["pont", "diem", "dfinance"] {
+        let project_folder = project_start_for_init(project_name);
         execute_dove_at(&["dove", "init", "-d", dialect], &project_folder).unwrap();
         check_dove_toml(&project_folder, project_name, Some(dialect), None, None).unwrap();
         set_dependencies_local_move_stdlib(&project_folder);
@@ -36,11 +34,8 @@ fn test_cmd_dove_init_with_dialect() {
 fn test_cmd_dove_init_dfinance_with_address() {
     // Project name and path
     let project_name = "demoproject_44";
-    let (_, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
     for address in &["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"] {
-        // Create project directory
-        create_dir_all(&project_folder).unwrap();
+        let project_folder = project_start_for_init(project_name);
         execute_dove_at(
             &["dove", "init", "-d", "dfinance", "-a", address],
             &project_folder,
@@ -64,11 +59,8 @@ fn test_cmd_dove_init_dfinance_with_address() {
 fn test_cmd_dove_init_diem_with_address() {
     // Project name and path
     let project_name = "demoproject_42";
-    let (_, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
     for address in &["0x1"] {
-        // Create project directory
-        create_dir_all(&project_folder).unwrap();
+        let project_folder = project_start_for_init(project_name);
         execute_dove_at(
             &["dove", "init", "-d", "diem", "-a", address],
             &project_folder,
@@ -92,11 +84,8 @@ fn test_cmd_dove_init_diem_with_address() {
 fn test_cmd_dove_init_pont_with_address() {
     // Project name and path
     let project_name = "demoproject_40";
-    let (_, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
     for address in &["5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv", "0x1"] {
-        // Create project directory
-        create_dir_all(&project_folder).unwrap();
+        let project_folder = project_start_for_init(project_name);
         // $ dove init -d pont -a ###
         execute_dove_at(
             &["dove", "init", "-d", "pont", "-a", address],
@@ -121,8 +110,6 @@ fn test_cmd_dove_init_pont_with_address() {
 fn test_cmd_dove_init_pont_with_repo() {
     // Project name and path
     let project_name = "demoproject_45";
-    let (_, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
     for api in &[
         "http://demo.ru/api",
         "https://demo.ru/api",
@@ -130,8 +117,7 @@ fn test_cmd_dove_init_pont_with_repo() {
         "http://localhost/api",
         "http://localhost:8080/api",
     ] {
-        // Create project directory
-        create_dir_all(&project_folder).unwrap();
+        let project_folder = project_start_for_init(project_name);
         execute_dove_at(&["dove", "init", "-r", api], &project_folder).unwrap();
         check_dove_toml(&project_folder, &project_name, None, None, Some(api)).unwrap();
         set_dependencies_local_move_stdlib(&project_folder);
