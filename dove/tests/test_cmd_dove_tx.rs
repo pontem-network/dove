@@ -2,10 +2,10 @@ use fs_extra::file::write_all;
 use dove::cmd::tx::Transaction;
 mod helper;
 use crate::helper::{execute_dove_at, project_start_new_and_build, project_remove};
-// @todo Add tests for $ dove ct -t ###, after bug fix
-/// $ dove ct
+// @todo Add tests for $ dove tx -t ###, after bug fix
+/// $ dove tx
 #[test]
-fn test_cmd_dove_ct_without_arguments() {
+fn test_cmd_dove_tx_without_arguments() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_19";
     let project_folder = project_start_new_and_build(project_name);
@@ -40,9 +40,9 @@ fn test_cmd_dove_ct_without_arguments() {
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
 }
-/// $ dove ct 'sdemo_4<u8>(16)'
+/// $ dove tx 'sdemo_4<u8>(16)'
 #[test]
-fn test_cmd_dove_ct_with_type() {
+fn test_cmd_dove_tx_with_type() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_24";
     let project_folder = project_start_new_and_build(project_name);
@@ -95,9 +95,9 @@ fn test_cmd_dove_ct_with_type() {
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
 }
-/// $ dove ct -o z
+/// $ dove tx -o z
 #[test]
-fn test_cmd_dove_ct_with_output_file_name() {
+fn test_cmd_dove_tx_with_output_file_name() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_21";
     let project_folder = project_start_new_and_build(project_name);
@@ -125,9 +125,9 @@ fn test_cmd_dove_ct_with_output_file_name() {
     );
     project_remove(&project_folder);
 }
-/// $ dove ct -n test_fun -f sdemo
+/// $ dove tx -n test_fun -f sdemo
 #[test]
-fn test_cmd_dove_ct_with_script_name_arg() {
+fn test_cmd_dove_tx_with_script_name_arg() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_23";
     let project_folder = project_start_new_and_build(project_name);
@@ -156,9 +156,9 @@ fn test_cmd_dove_ct_with_script_name_arg() {
     );
     project_remove(&project_folder);
 }
-/// $ dove ct 'test_fun()' -f sdemo
+/// $ dove tx 'test_fun()' -f sdemo
 #[test]
-fn test_cmd_dove_ct_with_script_name_option() {
+fn test_cmd_dove_tx_with_script_name_option() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_3";
     let project_folder = project_start_new_and_build(project_name);
@@ -187,9 +187,9 @@ fn test_cmd_dove_ct_with_script_name_option() {
     );
     project_remove(&project_folder);
 }
-/// $ dove ct -f sdemo_2
+/// $ dove tx -f sdemo_2
 #[test]
-fn test_cmd_dove_ct_with_script_file_name() {
+fn test_cmd_dove_tx_with_script_file_name() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_20";
     let project_folder = project_start_new_and_build(project_name);
@@ -227,9 +227,9 @@ fn test_cmd_dove_ct_with_script_file_name() {
     );
     project_remove(&project_folder);
 }
-/// $ dove ct -a 1 2
+/// $ dove tx -a 1 2
 #[test]
-fn test_cmd_dove_ct_with_script_method_args() {
+fn test_cmd_dove_tx_with_script_method_args() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_1";
     let project_folder = project_start_new_and_build(project_name);
@@ -241,7 +241,7 @@ fn test_cmd_dove_ct_with_script_method_args() {
                 }",
     )
     .unwrap();
-    // $ dove ct -a 1 2
+    // $ dove tx -a 1 2
     let args = &["dove", "tx", "-a", "1", "2"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
@@ -263,9 +263,9 @@ fn test_cmd_dove_ct_with_script_method_args() {
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
 }
-/// $ dove ct 'main(1,2)'
+/// $ dove tx 'main(1,2)'
 #[test]
-fn test_cmd_dove_ct_with_script_method_args_option() {
+fn test_cmd_dove_tx_with_script_method_args_option() {
     // Path to dove folder, project and project name
     let project_name = "demoproject_2";
     let project_folder = project_start_new_and_build(project_name);
@@ -277,7 +277,7 @@ fn test_cmd_dove_ct_with_script_method_args_option() {
                 }",
     )
     .unwrap();
-    // $ dove ct 'main(1,2)'
+    // $ dove tx 'main(1,2)'
     let args = &["dove", "tx", "main(1,2)"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
