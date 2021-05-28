@@ -2,13 +2,14 @@ use std::process::exit;
 use std::io::stdout;
 use anyhow::Error;
 use dove::cli::execute;
+use dove::stdout::set_buffer;
 
 fn main() {
     let args = std::env::args_os();
-    // TODO: use handle_error?
     let cwd = std::env::current_dir().expect("Current directory exists and accessible");
-
-    let res = execute(args, cwd, stdout());
+    set_buffer(stdout()).expect("Failed to set stdout");
+    let res = execute(args, cwd);
+    // TODO: use handle_error?
     handle_error(res)
 }
 

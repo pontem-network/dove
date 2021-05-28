@@ -6,6 +6,7 @@ use anyhow::Error;
 
 /// Stdout buffer for prints
 static STDOUT_STREAM: OnceCell<Mutex<Box<dyn TBufWrite + Send>>> = OnceCell::new();
+
 /// The stream / buffer to write
 pub trait TBufWrite {
     /// Write to buffer or stream
@@ -13,6 +14,7 @@ pub trait TBufWrite {
     /// Get data from the buffer if a string was used
     fn value(&self) -> Option<String>;
 }
+
 impl TBufWrite for Stdout {
     /// Write to buffer or stream
     fn print(&mut self, text: &str) -> Result<(), Error> {
@@ -24,6 +26,7 @@ impl TBufWrite for Stdout {
         None
     }
 }
+
 impl TBufWrite for String {
     /// Write to buffer or stream
     fn print(&mut self, text: &str) -> Result<(), Error> {
@@ -46,12 +49,14 @@ pub fn print(text: &str) -> Result<(), Error> {
         .as_mut()
         .print(text)
 }
+
 /// Get data from the buffer if a string was used
 pub fn get_buffer_value() -> Option<String> {
     STDOUT_STREAM
         .get()
         .and_then(|mt| mt.lock().map_or(None, |bx| bx.value()))
 }
+
 /// Set the stream / buffer to write
 pub fn set_buffer<Out>(stdout: Out) -> Result<(), Error>
 where
@@ -69,6 +74,7 @@ where
             .map_or_else(|_| Err(anyhow!("Failed to set buffer output")), |_| Ok(())),
     }
 }
+
 /// Prints to the output.
 #[macro_export]
 macro_rules! stdout {
