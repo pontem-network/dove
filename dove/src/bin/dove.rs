@@ -1,7 +1,6 @@
 use std::process::exit;
-
+use std::io::stdout;
 use anyhow::Error;
-
 use dove::cli::execute;
 
 fn main() {
@@ -9,7 +8,7 @@ fn main() {
     // TODO: use handle_error?
     let cwd = std::env::current_dir().expect("Current directory exists and accessible");
 
-    let res = execute(args, cwd);
+    let res = execute(args, cwd, stdout());
     handle_error(res)
 }
 

@@ -19,6 +19,7 @@ use crate::cmd::test::Test;
 use crate::cmd::Cmd;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use crate::stdout::{TBufWrite, set_buffer};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Dove", version = git_hash::crate_version_with_git_hash_short!())]
@@ -71,11 +72,16 @@ enum Opt {
 }
 
 /// Public interface for the CLI (useful for testing).
-pub fn execute<Args>(args: Args, cwd: PathBuf) -> Result<()>
+pub fn execute<Args, Out>(args: Args, cwd: PathBuf, stdout: Out) -> Result<()>
 where
     Args: IntoIterator,
     Args::Item: Into<OsString> + Clone,
+    Out: TBufWrite + Send,
+    Out: 'static,
 {
+    if let Err(err) = set_buffer(stdout) {
+        return Err(anyhow!(err));
+    }
     let matches = Opt::from_iter(args);
 
     let _pool = ConstPool::new();

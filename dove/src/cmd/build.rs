@@ -18,7 +18,7 @@ use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 
 use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
-
+use crate::stdoutln;
 /// Build dependencies.
 #[derive(StructOpt, Debug)]
 pub struct Build {
@@ -136,7 +136,6 @@ impl Build {
             Ok(())
         }
     }
-
     fn store_modules(&self, ctx: &Context, units: Vec<CompiledUnit>) -> Result<(), Error> {
         if !units.is_empty() {
             if self.package {
@@ -163,11 +162,11 @@ impl Build {
                     }
                 };
 
-                println!("Package content: ");
+                stdoutln!("Package content: ");
                 for unit in &units {
-                    println!("\t{}", unit.name());
+                    stdoutln!("\t{}", unit.name());
                 }
-                println!("Store: {:?}", pac_file.as_os_str());
+                stdoutln!("Store: {:?}", pac_file.as_os_str());
                 let package = ModulePackage::with_units(units);
                 File::create(&pac_file)?.write_all(&package.encode()?)?
             } else {
