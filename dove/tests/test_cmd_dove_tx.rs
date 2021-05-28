@@ -93,7 +93,7 @@ fn test_cmd_dove_tx_with_type() {
         "{:?}",
         bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
     );
-    assert!(tx_fmt.contains(" args: [U8(16)]"));
+    assert!(tx_fmt.contains(" args: [[16]]"));
     assert!(tx_fmt.contains(" type_args: [U8]"));
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
@@ -245,7 +245,7 @@ fn test_cmd_dove_tx_with_script_method_args() {
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
         "script {
-                    fun main(_a1:u64,_a2:u64) { }
+                    fun main(a1:u64,a2:u64) { assert((a1!=a2),1); }
                 }",
     )
     .unwrap();
@@ -266,7 +266,7 @@ fn test_cmd_dove_tx_with_script_method_args() {
         "{:?}",
         bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
     );
-    assert!(tx_fmt.contains(" args: [U64(1), U64(2)]"));
+    assert!(tx_fmt.contains(" args: [[1, 0, 0, 0, 0, 0, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0]]"));
     assert!(tx_fmt.contains(" type_args: []"));
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
@@ -303,7 +303,7 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
         "{:?}",
         bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
     );
-    assert!(tx_fmt.contains(" args: [U64(1), U64(2)]"));
+    assert!(tx_fmt.contains(" args: [[1, 0, 0, 0, 0, 0, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0]]"));
     assert!(tx_fmt.contains(" type_args: []"));
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
