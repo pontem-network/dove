@@ -19,6 +19,7 @@ use move_lang::compiled_unit::CompiledUnit;
 use move_core_types::account_address::AccountAddress;
 use lang::lexer::unwrap_spanned_ty;
 use lang::compiler::mut_string::MutString;
+use move_core_types::value::MoveValue;
 
 /// Create transaction.
 #[derive(StructOpt, Debug)]
@@ -538,7 +539,7 @@ impl<'a> TransactionBuilder<'a> {
 
         Ok((
             meta.name,
-            Transaction::new(signers as u8, unit, args, self.type_parameters),
+            Transaction::new(signers as u8, unit, args, self.type_parameters)?,
         ))
     }
 }
@@ -568,12 +569,37 @@ pub enum ScriptArg {
     VectorAddress(Vec<AccountAddress>),
 }
 
+impl From<ScriptArg> for MoveValue {
+    fn from(arg: ScriptArg) -> Self {
+        match arg {
+            ScriptArg::U8(val) => MoveValue::U8(val),
+            ScriptArg::U64(val) => MoveValue::U64(val),
+            ScriptArg::U128(val) => MoveValue::U128(val),
+            ScriptArg::Bool(val) => MoveValue::Bool(val),
+            ScriptArg::Address(val) => MoveValue::Address(val),
+            ScriptArg::VectorU8(val) => MoveValue::vector_u8(val),
+            ScriptArg::VectorU64(val) => {
+                MoveValue::Vector(val.into_iter().map(MoveValue::U64).collect())
+            }
+            ScriptArg::VectorU128(val) => {
+                MoveValue::Vector(val.into_iter().map(MoveValue::U128).collect())
+            }
+            ScriptArg::VectorBool(val) => {
+                MoveValue::Vector(val.into_iter().map(MoveValue::Bool).collect())
+            }
+            ScriptArg::VectorAddress(val) => {
+                MoveValue::Vector(val.into_iter().map(MoveValue::Address).collect())
+            }
+        }
+    }
+}
+
 /// Transaction model.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
     signers_count: u8,
     code: Vec<u8>,
-    args: Vec<ScriptArg>,
+    args: Vec<Vec<u8>>,
     type_args: Vec<TypeTag>,
 }
 
@@ -584,13 +610,20 @@ impl Transaction {
         code: Vec<u8>,
         args: Vec<ScriptArg>,
         type_args: Vec<TypeTag>,
-    ) -> Transaction {
-        Transaction {
+    ) -> Result<Transaction, Error> {
+        let args = args
+            .into_iter()
+            .map(ScriptArg::into)
+            .map(|val: MoveValue| bcs::to_bytes(&val))
+            .collect::<Result<_, _>>()
+            .map_err(Error::msg)?;
+
+        Ok(Transaction {
             signers_count,
             code,
             args,
             type_args,
-        }
+        })
     }
 }
 
