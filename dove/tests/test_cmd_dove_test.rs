@@ -2,11 +2,12 @@ use fs_extra::file::write_all;
 
 mod helper;
 use crate::helper::{execute_dove_at, project_start_new_and_build, project_remove};
+
 /// $ dove test
 #[test]
 fn test_cmd_dove_test_run_all_test_in_project() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_10";
+    let project_name = "project_test_run_all_test_in_project";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/modules/mdemo.move
     write_all(
@@ -33,11 +34,12 @@ fn test_cmd_dove_test_run_all_test_in_project() {
     execute_dove_at(&["dove", "test"], &project_folder).unwrap();
     project_remove(&project_folder);
 }
+
 /// $ dove test -k test_2
 #[test]
 fn test_cmd_dove_test_run_one_test_in_project() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_11";
+    let project_name = "project_test_run_one_test_in_project";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/modules/mdemo.move
     write_all(
@@ -74,11 +76,12 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     execute_dove_at(&["dove", "test", "-k", "test_2"], &project_folder).unwrap();
     project_remove(&project_folder);
 }
+
 /// $ dove test
 #[test]
 fn test_cmd_dove_test_fail_test_in_project() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_12";
+    let project_name = "project_test_fail_test_in_project";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/tests/test_1.move
     write_all(

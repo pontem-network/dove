@@ -2,12 +2,14 @@ use fs_extra::file::write_all;
 use dove::cmd::tx::Transaction;
 mod helper;
 use crate::helper::{execute_dove_at, project_start_new_and_build, project_remove};
+
 // @todo Add tests for $ dove tx -t ###, after bug fix
+
 /// $ dove tx
 #[test]
 fn test_cmd_dove_tx_without_arguments() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_19";
+    let project_name = "project_tx_without_arguments";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
@@ -27,7 +29,7 @@ fn test_cmd_dove_tx_without_arguments() {
         .join("main.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         args.join(" "),
     );
@@ -40,11 +42,12 @@ fn test_cmd_dove_tx_without_arguments() {
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
 }
+
 /// $ dove tx 'sdemo_4<u8>(16)'
 #[test]
 fn test_cmd_dove_tx_with_type() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_24";
+    let project_name = "project_tx_with_type";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/modules/mdemo.move
     write_all(
@@ -82,7 +85,7 @@ fn test_cmd_dove_tx_with_type() {
         .join("sdemo_4.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         args.join(" "),
     );
@@ -95,11 +98,12 @@ fn test_cmd_dove_tx_with_type() {
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
 }
+
 /// $ dove tx -o z
 #[test]
 fn test_cmd_dove_tx_with_output_file_name() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_21";
+    let project_name = "project_tx_with_output_file_name";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
@@ -119,17 +123,18 @@ fn test_cmd_dove_tx_with_output_file_name() {
         .join("z.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         &args.join(" "),
     );
     project_remove(&project_folder);
 }
+
 /// $ dove tx -n test_fun -f sdemo
 #[test]
 fn test_cmd_dove_tx_with_script_name_arg() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_23";
+    let project_name = "project_tx_with_script_name_arg";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
@@ -150,17 +155,18 @@ fn test_cmd_dove_tx_with_script_name_arg() {
         .join("test_fun.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         &args.join(" "),
     );
     project_remove(&project_folder);
 }
+
 /// $ dove tx 'test_fun()' -f sdemo
 #[test]
 fn test_cmd_dove_tx_with_script_name_option() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_3";
+    let project_name = "project_tx_with_script_name_option";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
@@ -181,17 +187,18 @@ fn test_cmd_dove_tx_with_script_name_option() {
         .join("test_fun.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         args.join(" "),
     );
     project_remove(&project_folder);
 }
+
 /// $ dove tx -f sdemo_2
 #[test]
 fn test_cmd_dove_tx_with_script_file_name() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_20";
+    let project_name = "project_tx_with_script_file_name";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo_1.move
     write_all(
@@ -221,17 +228,18 @@ fn test_cmd_dove_tx_with_script_file_name() {
         .join("sdemo_2.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         args.join(" "),
     );
     project_remove(&project_folder);
 }
+
 /// $ dove tx -a 1 2
 #[test]
 fn test_cmd_dove_tx_with_script_method_args() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_1";
+    let project_name = "project_tx_with_script_method_args";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
@@ -250,7 +258,7 @@ fn test_cmd_dove_tx_with_script_method_args() {
         .join("main.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         &args.join(" "),
     );
@@ -263,11 +271,12 @@ fn test_cmd_dove_tx_with_script_method_args() {
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
 }
+
 /// $ dove tx 'main(1,2)'
 #[test]
 fn test_cmd_dove_tx_with_script_method_args_option() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_2";
+    let project_name = "project_tx_with_script_method_args_option";
     let project_folder = project_start_new_and_build(project_name);
     // project_folder/scripts/sdemo.move
     write_all(
@@ -286,7 +295,7 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
         .join("main.mvt");
     assert!(
         tx_path.exists(),
-        "Transaction not found: {}\r\n[Command] {}",
+        "Transaction not found: {}\n[Command] {}",
         tx_path.display(),
         args.join(" "),
     );

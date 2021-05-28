@@ -6,7 +6,7 @@ use crate::helper::{
 #[test]
 fn test_cmd_dove_metadata() {
     // Project name and path
-    let project_name = "demoproject_15";
+    let project_name = "project_metadata";
     let (base_folder, project_folder) = project_start(project_name);
     project_new_with_args(
         &base_folder,

@@ -5,7 +5,7 @@ use crate::helper::{execute_dove_at, project_start_new_and_build, project_remove
 #[test]
 fn test_cmd_dove_clean() {
     // Path to dove folder, project and project name
-    let project_name = "demoproject_16";
+    let project_name = "project_clean";
     let project_folder = project_start_new_and_build(project_name);
     let project_target = project_folder.join("target");
     assert!(
