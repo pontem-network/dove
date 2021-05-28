@@ -17,7 +17,6 @@ pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
 
 pub fn project_start_for_init(project_name: &str) -> PathBuf {
     let (_, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
     // Create project directory
     create_dir_all(&project_folder).unwrap();
     project_folder
