@@ -8,9 +8,11 @@ use structopt::StructOpt;
 use move_core_types::identifier::Identifier;
 use std::path::PathBuf;
 use crate::manifest::DoveToml;
+use crate::stdoutln;
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct New {
     #[structopt(help = "Project name.")]
     project_name: String,
@@ -36,6 +38,8 @@ pub struct New {
         short = "d"
     )]
     dialect: String,
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
     #[structopt(
         help = "Creates only Dove.toml without dependencies.",
         name = "minimal",
@@ -59,6 +63,7 @@ impl Cmd for New {
             return Err(anyhow!("destination `{:?}` already exists", project_dir));
         }
 
+        stdoutln!("Creating project directory...");
         fs::create_dir(&project_dir)?;
 
         ctx.project_dir = project_dir.clone();
