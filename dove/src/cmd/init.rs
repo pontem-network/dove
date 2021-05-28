@@ -99,7 +99,7 @@ impl Cmd for Init {
                 &mut f,
                 r#"
 dependencies = [
-    {{ git = "https://github.com/pontem-network/move-stdlib", branch = "move-1.2" }}
+    {{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.1.2" }}
 ]
 "#
             )?;
