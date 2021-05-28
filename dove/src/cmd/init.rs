@@ -17,8 +17,12 @@ use crate::manifest::{DoveToml, MANIFEST};
 const PONT_STDLIB: &str =
     r#"{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.1.2" }"#;
 
+use crate::stdoutln;
+use crate::stdout::colorize::good;
+
 /// Init project command.
 #[derive(StructOpt, Debug)]
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Init {
     #[structopt(
         help = "Basic uri to blockchain api.",
@@ -50,6 +54,8 @@ pub struct Init {
         short = "m"
     )]
     minimal: bool,
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
 }
 
 impl Init {
@@ -65,6 +71,7 @@ impl Init {
             address,
             dialect,
             minimal,
+            color: None,
         }
     }
 }
@@ -89,11 +96,18 @@ impl Cmd for Init {
             .ok_or_else(|| anyhow!("Failed to extract directory name."))?;
 
         if !self.minimal {
+            stdoutln!(
+                "Creating default directories(to omit those, use --minimal): \n\
+                \t./modules\n\
+                \t./scripts\n\
+                \t./tests"
+            );
             fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.modules_dir))?;
             fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.scripts_dir))?;
             fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.tests_dir))?;
         }
 
+        stdoutln!("Generating default Dove.toml file...");
         let mut f = OpenOptions::new()
             .create(true)
             .read(true)
@@ -117,7 +131,7 @@ impl Cmd for Init {
 
         writeln!(&mut f, "dialect = \"{}\"", self.dialect)?;
 
-        if !self.minimal && dialect.name() == DialectName::Pont {
+        if dialect.name() == DialectName::Pont {
             write!(
                 &mut f,
                 r#"
@@ -128,6 +142,12 @@ dependencies = [
                 PONT_STDLIB
             )?;
         }
+        stdoutln!(
+            "Projest {} initislized in {}",
+            good("successfully"),
+            ctx.project_dir.display()
+        );
+
         Ok(())
     }
 }

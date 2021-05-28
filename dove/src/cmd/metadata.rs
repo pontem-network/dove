@@ -43,7 +43,11 @@ fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
 
 /// Metadata project command.
 #[derive(StructOpt, Debug)]
-pub struct Metadata {}
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+pub struct Metadata {
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
+}
 
 impl Cmd for Metadata {
     fn apply(self, ctx: Context) -> Result<(), Error> {
