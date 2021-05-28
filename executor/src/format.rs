@@ -58,7 +58,7 @@ fn format_effects(out: &mut String, effects: ExplainedTransactionEffects) {
 
 fn format_exec_status(step_exec_result: &StepExecutionResult) -> String {
     match step_exec_result {
-        StepExecutionResult::Error(_) => "FAILED",
+        StepExecutionResult::Error(_) => "failed",
         _ => "ok",
     }
     .to_string()
