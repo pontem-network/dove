@@ -109,6 +109,20 @@ pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
 pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> anyhow::Result<()> {
     execute(args, project_folder.to_path_buf())
 }
+pub fn execute_dove_bin_at(args: &[&str], project_folder: &Path) -> anyhow::Result<String> {
+    assert!(project_folder.exists());
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_dove"))
+        .current_dir(project_folder)
+        .args(args.iter().skip(1)) // TODO: remove first argument `dove` on callee side
+        .output()?;
+    anyhow::ensure!(
+        output.status.success(),
+        "Command {:?} failed with code {}",
+        args,
+        output.status
+    );
+    Ok(String::from_utf8(output.stdout)?)
+}
 
 pub fn check_dove_toml(
     project_folder: &Path,

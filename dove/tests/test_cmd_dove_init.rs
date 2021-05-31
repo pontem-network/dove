@@ -164,7 +164,7 @@ fn test_cmd_dove_init_incorrect_repo() {
         "127.0.0.1/api",
         "ftp://demo.ru/api",
     ] {
-        assert!(execute_dove_at(&["dove", "init", "-r", api], &project_folder).is_err());
+        assert!(execute_dove_bin_at(&["dove", "init", "-r", api], &project_folder).is_err());
     }
     project_remove(&project_folder);
 }
