@@ -109,6 +109,9 @@ impl Cmd for Init {
         }
 
         if let Some(url) = &self.repository {
+            if !regex::Regex::new(r"^http(s)?://[a-z\d_\-.]+")?.is_match(&url.to_string()) {
+                return Err(anyhow!("url must start with http|https"));
+            }
             writeln!(&mut f, "blockchain_api = \"{}\"", url)?;
         }
 
