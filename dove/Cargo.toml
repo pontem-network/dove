@@ -34,7 +34,7 @@ serde_json = "1.0.52"
 git2 = "0.13"
 bcs = "0.1.2"
 dunce = "1.0.1"
-atty = "*"
+atty = "0.2"
 
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
