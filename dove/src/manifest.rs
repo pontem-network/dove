@@ -84,8 +84,8 @@ fn transaction_output() -> String {
     "artifacts/transactions".to_owned()
 }
 
-fn packages_output() -> String {
-    "artifacts/packages".to_owned()
+fn bundle_output() -> String {
+    "artifacts/bundles".to_owned()
 }
 
 fn deps() -> String {
@@ -124,8 +124,8 @@ pub struct Layout {
     pub module_output: String,
 
     /// Directory with module package.
-    #[serde(default = "packages_output")]
-    pub packages_output: String,
+    #[serde(default = "bundle_output")]
+    pub bundle_output: String,
 
     /// Directory with compiled scripts.
     #[serde(default = "script_output")]
@@ -156,7 +156,7 @@ impl Layout {
             script_dir: ctx.str_path_for(&self.script_dir)?,
             tests_dir: ctx.str_path_for(&self.tests_dir)?,
             module_output: ctx.str_path_for(&self.module_output)?,
-            packages_output: ctx.str_path_for(&self.packages_output)?,
+            bundle_output: ctx.str_path_for(&self.bundle_output)?,
             script_output: ctx.str_path_for(&self.script_output)?,
             transaction_output: ctx.str_path_for(&self.transaction_output)?,
             deps: ctx.str_path_for(&self.deps)?,
@@ -173,7 +173,7 @@ impl Default for Layout {
             script_dir: script_dir(),
             tests_dir: tests_dir(),
             module_output: module_output(),
-            packages_output: packages_output(),
+            bundle_output: bundle_output(),
             script_output: script_output(),
             transaction_output: transaction_output(),
             deps: deps(),

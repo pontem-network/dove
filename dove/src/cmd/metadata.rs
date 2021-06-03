@@ -160,7 +160,7 @@ mod tests {
         check_absolute(&metadata.layout.script_dir);
         check_absolute(&metadata.layout.tests_dir);
         check_absolute(&metadata.layout.module_output);
-        check_absolute(&metadata.layout.packages_output);
+        check_absolute(&metadata.layout.bundle_output);
         check_absolute(&metadata.layout.script_output);
         check_absolute(&metadata.layout.transaction_output);
         check_absolute(&metadata.layout.deps);

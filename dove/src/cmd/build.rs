@@ -140,7 +140,7 @@ impl Build {
     fn store_modules(&self, ctx: &Context, units: Vec<CompiledUnit>) -> Result<(), Error> {
         if !units.is_empty() {
             if self.package {
-                let packages_dir = ctx.path_for(&ctx.manifest.layout.packages_output);
+                let packages_dir = ctx.path_for(&ctx.manifest.layout.bundle_output);
                 if !packages_dir.exists() {
                     fs::create_dir_all(&packages_dir)?;
                 }
