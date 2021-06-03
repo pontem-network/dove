@@ -38,7 +38,7 @@ pub struct Index<'a> {
 impl<'a> Index<'a> {
     /// Build modules index.
     pub fn build(&mut self) -> Result<(), Error> {
-        let deps_path = self.ctx.path_for(&self.ctx.manifest.layout.target_deps);
+        let deps_path = self.ctx.path_for(&self.ctx.manifest.layout.deps);
         if !deps_path.exists() {
             fs::create_dir_all(&deps_path)?;
         }

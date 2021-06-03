@@ -103,7 +103,7 @@ pub struct GitMetadata {
 impl GitMetadata {
     /// Create a new git metadata.
     pub fn new(git: Git, ctx: &Context) -> Result<GitMetadata, Error> {
-        let path: &Path = ctx.manifest.layout.target_deps.as_ref();
+        let path: &Path = ctx.manifest.layout.deps.as_ref();
         let path = ctx.path_for(path.join(&git::make_local_name(&git)));
         let local_path = if path.exists() {
             Some(str_path(path)?)
@@ -163,8 +163,8 @@ mod tests {
         check_absolute(&metadata.layout.packages_output);
         check_absolute(&metadata.layout.script_output);
         check_absolute(&metadata.layout.transaction_output);
-        check_absolute(&metadata.layout.target_deps);
-        check_absolute(&metadata.layout.target);
+        check_absolute(&metadata.layout.deps);
+        check_absolute(&metadata.layout.artifacts);
         check_absolute(&metadata.layout.index);
     }
 }

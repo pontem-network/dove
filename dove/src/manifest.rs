@@ -73,31 +73,31 @@ fn tests_dir() -> String {
 }
 
 fn module_output() -> String {
-    "target/modules".to_owned()
+    "artifacts/modules".to_owned()
 }
 
 fn script_output() -> String {
-    "target/scripts".to_owned()
+    "artifacts/scripts".to_owned()
 }
 
 fn transaction_output() -> String {
-    "target/transactions".to_owned()
+    "artifacts/transactions".to_owned()
 }
 
 fn packages_output() -> String {
-    "target/packages".to_owned()
+    "artifacts/packages".to_owned()
 }
 
-fn target_deps() -> String {
-    "target/.external".to_owned()
+fn deps() -> String {
+    "artifacts/.external".to_owned()
 }
 
-fn target() -> String {
-    "target".to_owned()
+fn artifacts() -> String {
+    "artifacts".to_owned()
 }
 
 fn index() -> String {
-    "target/.Dove.man".to_owned()
+    "artifacts/.Dove.man".to_owned()
 }
 
 fn code_code_address() -> String {
@@ -136,12 +136,12 @@ pub struct Layout {
     pub transaction_output: String,
 
     /// Directory with external dependencies.
-    #[serde(default = "target_deps")]
-    pub target_deps: String,
+    #[serde(default = "deps")]
+    pub deps: String,
 
-    /// Target directory.
-    #[serde(default = "target")]
-    pub target: String,
+    /// Artifacts directory.
+    #[serde(default = "artifacts")]
+    pub artifacts: String,
 
     /// Path to index.
     #[serde(default = "index")]
@@ -159,8 +159,8 @@ impl Layout {
             packages_output: ctx.str_path_for(&self.packages_output)?,
             script_output: ctx.str_path_for(&self.script_output)?,
             transaction_output: ctx.str_path_for(&self.transaction_output)?,
-            target_deps: ctx.str_path_for(&self.target_deps)?,
-            target: ctx.str_path_for(&self.target)?,
+            deps: ctx.str_path_for(&self.deps)?,
+            artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
         })
     }
@@ -176,8 +176,8 @@ impl Default for Layout {
             packages_output: packages_output(),
             script_output: script_output(),
             transaction_output: transaction_output(),
-            target_deps: target_deps(),
-            target: target(),
+            deps: deps(),
+            artifacts: artifacts(),
             index: index(),
         }
     }

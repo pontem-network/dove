@@ -25,7 +25,7 @@ pub const PREFIX: &str = "git";
 pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
     let checkout_params = CheckoutParams::try_from(git)?;
 
-    let deps = ctx.path_for(&ctx.manifest.layout.target_deps);
+    let deps = ctx.path_for(&ctx.manifest.layout.deps);
     let local_name = make_local_name(&git);
     let mut repo_path = deps.join(&local_name);
 
