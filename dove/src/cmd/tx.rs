@@ -208,7 +208,7 @@ impl<'a> TransactionBuilder<'a> {
     fn lookup_script_by_file_name(&self, fname: &str) -> Result<(MoveFile, Meta), Error> {
         let script_path = self
             .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.script_dir);
+            .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
         let file_path = if !fname.ends_with("move") {
             let mut path = script_path.join(fname);
             path.set_extension("move");
@@ -258,7 +258,7 @@ impl<'a> TransactionBuilder<'a> {
     fn lookup_script_by_name(&self, name: &str) -> Result<(MoveFile, Meta), Error> {
         let script_path = self
             .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.script_dir);
+            .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
         let sender = self.dove_ctx.account_address()?;
         let mut files = find_move_files(&script_path)?
             .iter()
@@ -333,7 +333,7 @@ impl<'a> TransactionBuilder<'a> {
 
         let script_path = self
             .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.script_dir);
+            .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
         let files = find_move_files(&script_path)?;
         if files.len() == 1 {
             let mf = MoveFile::load(&files[0])?;
@@ -357,7 +357,7 @@ impl<'a> TransactionBuilder<'a> {
 
         let module_dir = self
             .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.module_dir)
+            .path_for(&self.dove_ctx.manifest.layout.modules_dir)
             .to_str()
             .map(|path| path.to_owned())
             .ok_or_else(|| anyhow!("Failed to convert module dir path"))?;
@@ -672,7 +672,7 @@ where
 }
 
 fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), Error> {
-    let tx_dir = ctx.path_for(&ctx.manifest.layout.transaction_output);
+    let tx_dir = ctx.path_for(&ctx.manifest.layout.transactions_output);
     if !tx_dir.exists() {
         fs::create_dir_all(&tx_dir)?;
     }

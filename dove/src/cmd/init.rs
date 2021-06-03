@@ -89,8 +89,8 @@ impl Cmd for Init {
             .ok_or_else(|| anyhow!("Failed to extract directory name."))?;
 
         if !self.minimal {
-            fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.module_dir))?;
-            fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.script_dir))?;
+            fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.modules_dir))?;
+            fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.scripts_dir))?;
             fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.tests_dir))?;
         }
 

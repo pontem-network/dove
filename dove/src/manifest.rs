@@ -60,11 +60,11 @@ fn dialect() -> Option<String> {
     Some(default_dialect())
 }
 
-fn module_dir() -> String {
+fn modules_dir() -> String {
     "modules".to_owned()
 }
 
-fn script_dir() -> String {
+fn scripts_dir() -> String {
     "scripts".to_owned()
 }
 
@@ -72,19 +72,19 @@ fn tests_dir() -> String {
     "tests".to_owned()
 }
 
-fn module_output() -> String {
+fn modules_output() -> String {
     "artifacts/modules".to_owned()
 }
 
-fn script_output() -> String {
+fn scripts_output() -> String {
     "artifacts/scripts".to_owned()
 }
 
-fn transaction_output() -> String {
+fn transactions_output() -> String {
     "artifacts/transactions".to_owned()
 }
 
-fn bundle_output() -> String {
+fn bundles_output() -> String {
     "artifacts/bundles".to_owned()
 }
 
@@ -108,32 +108,32 @@ fn code_code_address() -> String {
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Layout {
     /// Directory with module sources.
-    #[serde(default = "module_dir")]
-    pub module_dir: String,
+    #[serde(default = "modules_dir")]
+    pub modules_dir: String,
 
     /// Directory with script sources.
-    #[serde(default = "script_dir")]
-    pub script_dir: String,
+    #[serde(default = "scripts_dir")]
+    pub scripts_dir: String,
 
     /// Directory with tests.
     #[serde(default = "tests_dir")]
     pub tests_dir: String,
 
     /// Directory with compiled modules.
-    #[serde(default = "module_output")]
-    pub module_output: String,
+    #[serde(default = "modules_output")]
+    pub modules_output: String,
 
     /// Directory with module package.
-    #[serde(default = "bundle_output")]
-    pub bundle_output: String,
+    #[serde(default = "bundles_output")]
+    pub bundles_output: String,
 
     /// Directory with compiled scripts.
-    #[serde(default = "script_output")]
-    pub script_output: String,
+    #[serde(default = "scripts_output")]
+    pub scripts_output: String,
 
     /// Directory with transactions.
-    #[serde(default = "transaction_output")]
-    pub transaction_output: String,
+    #[serde(default = "transactions_output")]
+    pub transactions_output: String,
 
     /// Directory with external dependencies.
     #[serde(default = "deps")]
@@ -152,13 +152,13 @@ impl Layout {
     /// Returns layout instance with absolute paths.
     pub fn to_absolute(&self, ctx: &Context) -> Result<Layout, Error> {
         Ok(Layout {
-            module_dir: ctx.str_path_for(&self.module_dir)?,
-            script_dir: ctx.str_path_for(&self.script_dir)?,
+            modules_dir: ctx.str_path_for(&self.modules_dir)?,
+            scripts_dir: ctx.str_path_for(&self.scripts_dir)?,
             tests_dir: ctx.str_path_for(&self.tests_dir)?,
-            module_output: ctx.str_path_for(&self.module_output)?,
-            bundle_output: ctx.str_path_for(&self.bundle_output)?,
-            script_output: ctx.str_path_for(&self.script_output)?,
-            transaction_output: ctx.str_path_for(&self.transaction_output)?,
+            modules_output: ctx.str_path_for(&self.modules_output)?,
+            bundles_output: ctx.str_path_for(&self.bundles_output)?,
+            scripts_output: ctx.str_path_for(&self.scripts_output)?,
+            transactions_output: ctx.str_path_for(&self.transactions_output)?,
             deps: ctx.str_path_for(&self.deps)?,
             artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
@@ -169,13 +169,13 @@ impl Layout {
 impl Default for Layout {
     fn default() -> Self {
         Layout {
-            module_dir: module_dir(),
-            script_dir: script_dir(),
+            modules_dir: modules_dir(),
+            scripts_dir: scripts_dir(),
             tests_dir: tests_dir(),
-            module_output: module_output(),
-            bundle_output: bundle_output(),
-            script_output: script_output(),
-            transaction_output: transaction_output(),
+            modules_output: modules_output(),
+            bundles_output: bundles_output(),
+            scripts_output: scripts_output(),
+            transactions_output: transactions_output(),
             deps: deps(),
             artifacts: artifacts(),
             index: index(),

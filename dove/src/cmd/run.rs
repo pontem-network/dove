@@ -25,12 +25,12 @@ pub struct Run {
 
 impl Cmd for Run {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let script_dir = ctx.path_for(&ctx.manifest.layout.script_dir);
+        let script_dir = ctx.path_for(&ctx.manifest.layout.scripts_dir);
         let script = script_dir.join(self.script).with_extension("move");
         if !script.exists() {
             return Err(anyhow!("Cannot open {:?}", script));
         }
-        let module_dir = ctx.path_for(&ctx.manifest.layout.module_dir);
+        let module_dir = ctx.path_for(&ctx.manifest.layout.modules_dir);
 
         let mut index = ctx.build_index()?;
 

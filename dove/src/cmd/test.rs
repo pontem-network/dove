@@ -24,8 +24,8 @@ impl Cmd for Test {
         }
 
         let mut dirs = ctx.paths_for(&[
-            &ctx.manifest.layout.script_dir,
-            &ctx.manifest.layout.module_dir,
+            &ctx.manifest.layout.scripts_dir,
+            &ctx.manifest.layout.modules_dir,
         ]);
 
         dirs.push(tests_dir.clone());

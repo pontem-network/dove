@@ -156,13 +156,13 @@ mod tests {
         check_absolute(&metadata.package.local_dependencies[0]);
         check_absolute(&metadata.package.local_dependencies[1]);
 
-        check_absolute(&metadata.layout.module_dir);
-        check_absolute(&metadata.layout.script_dir);
+        check_absolute(&metadata.layout.modules_dir);
+        check_absolute(&metadata.layout.scripts_dir);
         check_absolute(&metadata.layout.tests_dir);
-        check_absolute(&metadata.layout.module_output);
-        check_absolute(&metadata.layout.bundle_output);
-        check_absolute(&metadata.layout.script_output);
-        check_absolute(&metadata.layout.transaction_output);
+        check_absolute(&metadata.layout.modules_output);
+        check_absolute(&metadata.layout.bundles_output);
+        check_absolute(&metadata.layout.scripts_output);
+        check_absolute(&metadata.layout.transactions_output);
         check_absolute(&metadata.layout.deps);
         check_absolute(&metadata.layout.artifacts);
         check_absolute(&metadata.layout.index);
