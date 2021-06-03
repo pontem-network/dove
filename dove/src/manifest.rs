@@ -16,7 +16,7 @@ use crate::context::Context;
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
 
-/// Movec manifest.
+/// Dove manifest.
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
 pub struct DoveToml {
     /// Project info.
@@ -34,9 +34,6 @@ pub struct Package {
     /// Project account address.
     #[serde(default = "code_code_address")]
     pub account_address: String,
-    /// Authors list.
-    #[serde(default)]
-    pub authors: Vec<String>,
     /// dnode base url.
     pub blockchain_api: Option<String>,
     /// Dependency list.
@@ -51,7 +48,6 @@ impl Default for Package {
         Package {
             name: None,
             account_address: code_code_address(),
-            authors: Default::default(),
             blockchain_api: None,
             dependencies: None,
             dialect: None,
@@ -374,7 +370,6 @@ mod test {
         Package {
             name: Some("Foo".to_owned()),
             account_address: "0x01".to_owned(),
-            authors: vec![],
             blockchain_api: None,
             dependencies: Some(Dependencies {
                 deps: vec![

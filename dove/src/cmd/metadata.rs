@@ -29,7 +29,6 @@ fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
     let package_metadata = PackageMetadata {
         name: ctx.project_name(),
         account_address: ctx.manifest.package.account_address,
-        authors: ctx.manifest.package.authors,
         blockchain_api: ctx.manifest.package.blockchain_api,
         git_dependencies: git_deps,
         local_dependencies: local_deps,
@@ -74,9 +73,6 @@ pub struct PackageMetadata {
     /// Project AccountAddress.
     #[serde(default = "code_code_address")]
     pub account_address: String,
-    /// Authors list.
-    #[serde(default)]
-    pub authors: Vec<String>,
     /// dnode base url.
     pub blockchain_api: Option<String>,
     /// Git dependency list.
