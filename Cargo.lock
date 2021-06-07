@@ -13,6 +13,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "abigen"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "bytecode-verifier",
+ "diem-types",
+ "diem-workspace-hack",
+ "heck",
+ "log",
+ "move-core-types",
+ "move-model",
+ "serde",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -326,6 +343,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e91831deabf0d6d7ec49552e489aed63b7456a7a3c46cff62adad428110b0af0"
 
 [[package]]
+name = "async-trait"
+version = "0.1.50"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b98e84bbb4cbcdd97da190ba0c58a1bb0de2c1fdf67d159e192ed766aeca722"
+dependencies = [
+ "proc-macro2 1.0.27",
+ "quote 1.0.9",
+ "syn 1.0.72",
+]
+
+[[package]]
 name = "atomic"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -510,6 +538,63 @@ dependencies = [
 ]
 
 [[package]]
+name = "boogie-backend"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "boogie-backend-v2",
+ "bytecode",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-workspace-hack",
+ "futures 0.3.15",
+ "handlebars",
+ "itertools 0.10.0",
+ "log",
+ "move-core-types",
+ "move-model",
+ "num",
+ "once_cell",
+ "pretty",
+ "rand 0.8.3",
+ "regex",
+ "serde",
+ "serde_json",
+ "tokio 1.6.0",
+ "vm",
+]
+
+[[package]]
+name = "boogie-backend-v2"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bytecode",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-workspace-hack",
+ "futures 0.3.15",
+ "handlebars",
+ "itertools 0.10.0",
+ "log",
+ "move-core-types",
+ "move-model",
+ "num",
+ "once_cell",
+ "pretty",
+ "rand 0.8.3",
+ "regex",
+ "serde",
+ "serde_json",
+ "tokio 1.6.0",
+ "vm",
+]
+
+[[package]]
 name = "borrow-graph"
 version = "0.0.1"
 source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
@@ -557,6 +642,28 @@ name = "byte-tools"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
+
+[[package]]
+name = "bytecode"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "borrow-graph",
+ "bytecode-verifier",
+ "diem-types",
+ "diem-workspace-hack",
+ "ir-to-bytecode",
+ "itertools 0.10.0",
+ "log",
+ "move-core-types",
+ "move-model",
+ "num",
+ "once_cell",
+ "petgraph",
+ "serde",
+ "serde_json",
+ "vm",
+]
 
 [[package]]
 name = "bytecode-source-map"
@@ -1111,6 +1218,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "diem-temppath"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "diem-workspace-hack",
+ "hex",
+ "rand 0.8.3",
+]
+
+[[package]]
 name = "diem-types"
 version = "0.0.1"
 source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
@@ -1215,12 +1332,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "docgen"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "anyhow",
+ "bytecode",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-workspace-hack",
+ "itertools 0.10.0",
+ "log",
+ "move-model",
+ "num",
+ "once_cell",
+ "regex",
+ "serde",
+]
+
+[[package]]
 name = "dove"
 version = "1.2.0"
 dependencies = [
  "anyhow",
  "bcs",
  "bech32",
+ "boogie-backend-v2",
  "decompiler",
  "dunce",
  "fs_extra",
@@ -1236,6 +1373,7 @@ dependencies = [
  "move-core-types",
  "move-executor",
  "move-lang",
+ "move-prover",
  "net",
  "once_cell",
  "rand 0.7.3",
@@ -1398,6 +1536,20 @@ version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0465971a8cc1fa2455c8465aaa377131e1f1cf4983280f474a13e68793aa770c"
 dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "errmapgen"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "diem-workspace-hack",
+ "log",
+ "move-core-types",
+ "move-model",
  "serde",
 ]
 
@@ -1929,6 +2081,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "handlebars"
+version = "3.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4498fc115fa7d34de968184e473529abb40eeb6be8bc5f7faba3d08c316cb3e3"
+dependencies = [
+ "log",
+ "pest",
+ "pest_derive",
+ "quick-error 2.0.1",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "hash-db"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1984,7 +2150,7 @@ dependencies = [
  "headers-core",
  "http",
  "mime",
- "sha-1",
+ "sha-1 0.9.6",
  "time",
 ]
 
@@ -2129,7 +2295,7 @@ version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
 dependencies = [
- "quick-error",
+ "quick-error 1.2.3",
 ]
 
 [[package]]
@@ -3086,6 +3252,69 @@ dependencies = [
 ]
 
 [[package]]
+name = "move-model"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "anyhow",
+ "bytecode-source-map",
+ "bytecode-verifier",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-workspace-hack",
+ "itertools 0.10.0",
+ "log",
+ "move-core-types",
+ "move-ir-types",
+ "move-lang",
+ "num",
+ "once_cell",
+ "regex",
+ "serde",
+ "vm",
+]
+
+[[package]]
+name = "move-prover"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#8e60a94405e69d25ca9a4a5dae8c68b7b1b30abb"
+dependencies = [
+ "abigen",
+ "anyhow",
+ "async-trait",
+ "boogie-backend",
+ "boogie-backend-v2",
+ "bytecode",
+ "bytecode-source-map",
+ "clap 2.33.3",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
+ "diem-temppath",
+ "diem-workspace-hack",
+ "docgen",
+ "errmapgen",
+ "futures 0.3.15",
+ "handlebars",
+ "hex",
+ "itertools 0.10.0",
+ "log",
+ "move-ir-types",
+ "move-lang",
+ "move-model",
+ "num",
+ "once_cell",
+ "pretty",
+ "rand 0.8.3",
+ "regex",
+ "serde",
+ "serde_json",
+ "simplelog",
+ "tokio 1.6.0",
+ "toml",
+ "vm",
+]
+
+[[package]]
 name = "move-resource-viewer"
 version = "1.2.0"
 dependencies = [
@@ -3173,7 +3402,7 @@ dependencies = [
  "blake2b_simd",
  "blake2s_simd",
  "digest 0.9.0",
- "sha-1",
+ "sha-1 0.9.6",
  "sha2 0.9.5",
  "sha3",
  "unsigned-varint 0.5.1",
@@ -3196,7 +3425,7 @@ dependencies = [
  "log",
  "mime",
  "mime_guess",
- "quick-error",
+ "quick-error 1.2.3",
  "rand 0.7.3",
  "safemem",
  "tempfile",
@@ -3693,6 +3922,49 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
 
 [[package]]
+name = "pest"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10f4872ae94d7b90ae48754df22fd42ad52ce740b8f370b03da4835417403e53"
+dependencies = [
+ "ucd-trie",
+]
+
+[[package]]
+name = "pest_derive"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "833d1ae558dc601e9a60366421196a8d94bc0ac980476d0b67e1d0988d72b2d0"
+dependencies = [
+ "pest",
+ "pest_generator",
+]
+
+[[package]]
+name = "pest_generator"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99b8db626e31e5b81787b9783425769681b347011cc59471e33ea46d2ea0cf55"
+dependencies = [
+ "pest",
+ "pest_meta",
+ "proc-macro2 1.0.27",
+ "quote 1.0.9",
+ "syn 1.0.72",
+]
+
+[[package]]
+name = "pest_meta"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54be6e404f5317079812fc8f9f5279de376d8856929e21c184ecf6bbd692a11d"
+dependencies = [
+ "maplit",
+ "pest",
+ "sha-1 0.8.2",
+]
+
+[[package]]
 name = "petgraph"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3795,6 +4067,16 @@ name = "ppv-lite86"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
+
+[[package]]
+name = "pretty"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad9940b913ee56ddd94aec2d3cd179dd47068236f42a1a6415ccf9d880ce2a61"
+dependencies = [
+ "arrayvec 0.5.2",
+ "typed-arena",
+]
 
 [[package]]
 name = "primitive-types"
@@ -3989,6 +4271,12 @@ name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
+
+[[package]]
+name = "quick-error"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
 
 [[package]]
 name = "quote"
@@ -4506,7 +4794,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb3dcc6e454c328bb824492db107ab7c0ae8fcffe4ad210136ef014458c1bc4f"
 dependencies = [
  "fnv",
- "quick-error",
+ "quick-error 1.2.3",
  "tempfile",
  "wait-timeout",
 ]
@@ -4762,6 +5050,18 @@ dependencies = [
 
 [[package]]
 name = "sha-1"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7d94d0bede923b3cea61f3f1ff57ff8cdfd77b400fb8f9998949e0cf04163df"
+dependencies = [
+ "block-buffer 0.7.3",
+ "digest 0.8.1",
+ "fake-simd",
+ "opaque-debug 0.2.3",
+]
+
+[[package]]
+name = "sha-1"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c4cfa741c5832d0ef7fab46cabed29c2aae926db0b11bb2069edd8db5e64e16"
@@ -4849,6 +5149,17 @@ name = "signature"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0f0242b8e50dd9accdd56170e94ca1ebd223b098eb9c83539a6e367d0f36ae68"
+
+[[package]]
+name = "simplelog"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bc0ffd69814a9b251d43afcabf96dad1b29f5028378056257be9e3fecc9f720"
+dependencies = [
+ "chrono",
+ "log",
+ "termcolor",
+]
 
 [[package]]
 name = "slab"
@@ -5931,7 +6242,7 @@ dependencies = [
  "input_buffer",
  "log",
  "rand 0.8.3",
- "sha-1",
+ "sha-1 0.9.6",
  "url 2.2.2",
  "utf-8",
 ]
@@ -5952,15 +6263,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04f8ab788026715fa63b31960869617cba39117e520eb415b0139543e325ab59"
 dependencies = [
  "cfg-if 0.1.10",
- "rand 0.7.3",
+ "rand 0.4.6",
  "static_assertions",
 ]
+
+[[package]]
+name = "typed-arena"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0685c84d5d54d1c26f7d3eb96cd41550adb97baed141a761cf335d3d33bcd0ae"
 
 [[package]]
 name = "typenum"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "879f6906492a7cd215bfa4cf595b600146ccfac0c79bcbd1f3000162af5e8b06"
+
+[[package]]
+name = "ucd-trie"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56dee185309b50d1f11bfedef0fe6d036842e3fb77413abef29f8f8d1c5d4c1c"
 
 [[package]]
 name = "uint"

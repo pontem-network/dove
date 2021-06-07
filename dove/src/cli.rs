@@ -9,6 +9,7 @@ use lang::compiler::ConstPool;
 
 use crate::cmd::build::Build;
 use crate::cmd::clean::Clean;
+use crate::cmd::prover::Prover;
 use crate::cmd::tx::CreateTransactionCmd;
 use crate::cmd::fetch::Fetch;
 use crate::cmd::init::Init;
@@ -68,6 +69,11 @@ enum Opt {
         #[structopt(flatten)]
         cmd: CreateTransactionCmd,
     },
+    #[structopt(about = "Run move prover")]
+    Prove {
+        #[structopt(flatten)]
+        cmd: Prove,
+    },
 }
 
 /// Public interface for the CLI (useful for testing).
@@ -89,5 +95,6 @@ where
         Opt::Test { cmd } => cmd.execute(cwd),
         Opt::Run { cmd } => cmd.execute(cwd),
         Opt::Tx { cmd } => cmd.execute(cwd),
+        Opt::Prove { cmd } => cmd.execute(cwd),
     }
 }

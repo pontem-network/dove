@@ -26,6 +26,8 @@ pub mod run;
 pub mod test;
 /// Create transaction.
 pub mod tx;
+/// Run move prover.
+pub mod prover;
 
 /// Move command.
 pub trait Cmd {
