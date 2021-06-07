@@ -33,9 +33,12 @@ where
             *buff = Box::new(stdout);
             Ok(())
         }
-        None => STDOUT_STREAM
-            .set(Mutex::new(Box::new(stdout)))
-            .map_or_else(|_| Err(anyhow!("Failed to set STDOUT_COLOR")), |_| Ok(())),
+        None => {
+            STDOUT_STREAM
+                .set(Mutex::new(Box::new(stdout)))
+                .map_err(|_| anyhow!("Failed to set STDOUT_COLOR"))?;
+            Ok(())
+        }
     }
 }
 
