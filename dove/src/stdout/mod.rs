@@ -29,7 +29,7 @@ where
 
     match STDOUT_STREAM.get() {
         Some(mt) => {
-            let mut buff = mt.lock().unwrap();
+            let mut buff = mt.lock().expect("Couldn't get STDOUT_STREAM");
             *buff = Box::new(stdout);
             Ok(())
         }

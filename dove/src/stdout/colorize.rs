@@ -11,7 +11,7 @@ static STDOUT_COLOR: OnceCell<Mutex<Box<ColorChoice>>> = OnceCell::new();
 /// get marker to highlight
 fn get_stdout_color() -> ColorChoice {
     match STDOUT_COLOR.get() {
-        Some(mt) => *(mt.lock().unwrap()).clone(),
+        Some(mt) => *(mt.lock().expect("Couldn't get STDOUT_COLOR")).clone(),
         None => ColorChoice::Auto,
     }
 }
@@ -46,7 +46,7 @@ where
     };
     match STDOUT_COLOR.get() {
         Some(mt) => {
-            let mut buff = mt.lock().unwrap();
+            let mut buff = mt.lock().expect("Couldn't get STDOUT_COLOR");
             *buff = Box::new(color_flag);
             Ok(())
         }
@@ -63,7 +63,7 @@ pub fn colorize_text(text: &str, spec: &mut ColorSpec) -> String {
         .set_color(spec)
         .and(write!(&mut buffer, "{}", text))
         .and(buffer.reset())
-        .unwrap();
+        .expect("Couldn't color the text");
     String::from_utf8_lossy(buffer.as_slice()).to_string()
 }
 

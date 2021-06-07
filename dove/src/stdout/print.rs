@@ -22,12 +22,12 @@ macro_rules! stdoutln {
 pub fn print(text: &str) {
     STDOUT_STREAM
         .get()
-        .unwrap()
+        .expect("Stdout stream is not initialized")
         .lock()
-        .unwrap()
+        .expect("Failed to get stdout")
         .as_mut()
         .print(text)
-        .unwrap()
+        .expect("Failed write to stdout")
 }
 
 /// Print output with a newline.
