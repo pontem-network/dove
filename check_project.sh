@@ -18,7 +18,7 @@ fi
 # clippy available in stable channel only
 cargo +stable clippy --tests --workspace -- -Dwarnings
 
-cargo test --all -- --test-threads=1
+cargo test --all
 
 cargo build
 cd ./resources/assets

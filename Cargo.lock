@@ -1219,6 +1219,7 @@ name = "dove"
 version = "1.2.0"
 dependencies = [
  "anyhow",
+ "atty",
  "bcs",
  "bech32",
  "decompiler",

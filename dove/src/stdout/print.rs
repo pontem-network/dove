@@ -46,17 +46,11 @@ mod tests {
         set_buffer(String::new()).unwrap();
         stdout!("test value");
         assert_eq!(Some("test value".to_string()), get_buffer_value());
-    }
 
-    #[test]
-    fn test_stdoutln_string_buff() {
         set_buffer(String::new()).unwrap();
         stdoutln!("test value");
         assert_eq!(Some("test value\n".to_string()), get_buffer_value());
-    }
 
-    #[test]
-    fn test_stdoutln_string_buff_with_color() {
         set_buffer(String::new()).unwrap();
         stdout!("{}", good("test value"));
         assert_eq!(Some("test value".to_string()), get_buffer_value());
