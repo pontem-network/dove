@@ -29,7 +29,6 @@ fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
     let package_metadata = PackageMetadata {
         name: ctx.project_name(),
         account_address: ctx.manifest.package.account_address,
-        authors: ctx.manifest.package.authors,
         blockchain_api: ctx.manifest.package.blockchain_api,
         git_dependencies: git_deps,
         local_dependencies: local_deps,
@@ -74,9 +73,6 @@ pub struct PackageMetadata {
     /// Project AccountAddress.
     #[serde(default = "code_code_address")]
     pub account_address: String,
-    /// Authors list.
-    #[serde(default)]
-    pub authors: Vec<String>,
     /// dnode base url.
     pub blockchain_api: Option<String>,
     /// Git dependency list.
@@ -107,7 +103,7 @@ pub struct GitMetadata {
 impl GitMetadata {
     /// Create a new git metadata.
     pub fn new(git: Git, ctx: &Context) -> Result<GitMetadata, Error> {
-        let path: &Path = ctx.manifest.layout.target_deps.as_ref();
+        let path: &Path = ctx.manifest.layout.deps.as_ref();
         let path = ctx.path_for(path.join(&git::make_local_name(&git)));
         let local_path = if path.exists() {
             Some(str_path(path)?)
@@ -160,15 +156,15 @@ mod tests {
         check_absolute(&metadata.package.local_dependencies[0]);
         check_absolute(&metadata.package.local_dependencies[1]);
 
-        check_absolute(&metadata.layout.module_dir);
-        check_absolute(&metadata.layout.script_dir);
+        check_absolute(&metadata.layout.modules_dir);
+        check_absolute(&metadata.layout.scripts_dir);
         check_absolute(&metadata.layout.tests_dir);
-        check_absolute(&metadata.layout.module_output);
-        check_absolute(&metadata.layout.packages_output);
-        check_absolute(&metadata.layout.script_output);
-        check_absolute(&metadata.layout.transaction_output);
-        check_absolute(&metadata.layout.target_deps);
-        check_absolute(&metadata.layout.target);
+        check_absolute(&metadata.layout.modules_output);
+        check_absolute(&metadata.layout.bundles_output);
+        check_absolute(&metadata.layout.scripts_output);
+        check_absolute(&metadata.layout.transactions_output);
+        check_absolute(&metadata.layout.deps);
+        check_absolute(&metadata.layout.artifacts);
         check_absolute(&metadata.layout.index);
     }
 }

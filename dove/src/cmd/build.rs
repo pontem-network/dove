@@ -56,8 +56,8 @@ pub struct Build {
 impl Cmd for Build {
     fn apply(self, ctx: Context) -> Result<(), Error> {
         let dirs = ctx.paths_for(&[
-            &ctx.manifest.layout.script_dir,
-            &ctx.manifest.layout.module_dir,
+            &ctx.manifest.layout.scripts_dir,
+            &ctx.manifest.layout.modules_dir,
         ]);
 
         let mut index = ctx.build_index()?;
@@ -140,7 +140,7 @@ impl Build {
     fn store_modules(&self, ctx: &Context, units: Vec<CompiledUnit>) -> Result<(), Error> {
         if !units.is_empty() {
             if self.package {
-                let packages_dir = ctx.path_for(&ctx.manifest.layout.packages_output);
+                let packages_dir = ctx.path_for(&ctx.manifest.layout.bundles_output);
                 if !packages_dir.exists() {
                     fs::create_dir_all(&packages_dir)?;
                 }
@@ -171,7 +171,7 @@ impl Build {
                 let package = ModulePackage::with_units(units);
                 File::create(&pac_file)?.write_all(&package.encode()?)?
             } else {
-                let modules_dir = ctx.path_for(&ctx.manifest.layout.module_output);
+                let modules_dir = ctx.path_for(&ctx.manifest.layout.modules_output);
                 if modules_dir.exists() {
                     fs::remove_dir_all(&modules_dir)?;
                 }
@@ -185,7 +185,7 @@ impl Build {
 
     fn store_scripts(&self, ctx: &Context, units: Vec<CompiledUnit>) -> Result<(), Error> {
         if !units.is_empty() {
-            let scripts_dir = ctx.path_for(&ctx.manifest.layout.script_output);
+            let scripts_dir = ctx.path_for(&ctx.manifest.layout.scripts_output);
             if scripts_dir.exists() {
                 fs::remove_dir_all(&scripts_dir)?;
             }

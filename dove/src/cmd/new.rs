@@ -36,6 +36,13 @@ pub struct New {
         short = "d"
     )]
     dialect: String,
+    #[structopt(
+        help = "Creates only Dove.toml without dependencies.",
+        name = "minimal",
+        long = "minimal",
+        short = "m"
+    )]
+    minimal: bool,
 }
 
 impl Cmd for New {
@@ -55,7 +62,7 @@ impl Cmd for New {
         fs::create_dir(&project_dir)?;
 
         ctx.project_dir = project_dir.clone();
-        let init = Init::new(self.repository, self.address, self.dialect);
+        let init = Init::new(self.repository, self.address, self.dialect, self.minimal);
         if let Err(err) = init.apply(ctx) {
             fs::remove_dir_all(&project_dir)?;
             Err(err)

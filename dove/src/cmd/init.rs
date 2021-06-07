@@ -14,6 +14,9 @@ use crate::cmd::Cmd;
 use crate::context::{Context, get_context};
 use crate::manifest::{DoveToml, MANIFEST};
 
+const PONT_STDLIB: &str =
+    r#"{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.1.2" }"#;
+
 /// Init project command.
 #[derive(StructOpt, Debug)]
 pub struct Init {
@@ -39,15 +42,29 @@ pub struct Init {
         short = "d"
     )]
     dialect: String,
+
+    #[structopt(
+        help = "Creates only Dove.toml.",
+        name = "minimal",
+        long = "minimal",
+        short = "m"
+    )]
+    minimal: bool,
 }
 
 impl Init {
     /// Creates a new Init command.
-    pub fn new(repository: Option<Uri>, address: Option<String>, dialect: String) -> Init {
+    pub fn new(
+        repository: Option<Uri>,
+        address: Option<String>,
+        dialect: String,
+        minimal: bool,
+    ) -> Init {
         Init {
             repository,
             address,
             dialect,
+            minimal,
         }
     }
 }
@@ -70,9 +87,12 @@ impl Cmd for Init {
             .file_name()
             .and_then(|name| name.to_str())
             .ok_or_else(|| anyhow!("Failed to extract directory name."))?;
-        fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.module_dir))?;
-        fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.script_dir))?;
-        fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.tests_dir))?;
+
+        if !self.minimal {
+            fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.modules_dir))?;
+            fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.scripts_dir))?;
+            fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.tests_dir))?;
+        }
 
         let mut f = OpenOptions::new()
             .create(true)
@@ -94,14 +114,15 @@ impl Cmd for Init {
 
         writeln!(&mut f, "dialect = \"{}\"", self.dialect)?;
 
-        if dialect.name() == DialectName::Pont {
+        if !self.minimal && dialect.name() == DialectName::Pont {
             write!(
                 &mut f,
                 r#"
 dependencies = [
-    {{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.1.2" }}
+    {}
 ]
-"#
+"#,
+                PONT_STDLIB
             )?;
         }
         Ok(())

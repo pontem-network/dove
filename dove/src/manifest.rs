@@ -16,7 +16,7 @@ use crate::context::Context;
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
 
-/// Movec manifest.
+/// Dove manifest.
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
 pub struct DoveToml {
     /// Project info.
@@ -34,9 +34,6 @@ pub struct Package {
     /// Project account address.
     #[serde(default = "code_code_address")]
     pub account_address: String,
-    /// Authors list.
-    #[serde(default)]
-    pub authors: Vec<String>,
     /// dnode base url.
     pub blockchain_api: Option<String>,
     /// Dependency list.
@@ -51,7 +48,6 @@ impl Default for Package {
         Package {
             name: None,
             account_address: code_code_address(),
-            authors: Default::default(),
             blockchain_api: None,
             dependencies: None,
             dialect: None,
@@ -64,11 +60,11 @@ fn dialect() -> Option<String> {
     Some(default_dialect())
 }
 
-fn module_dir() -> String {
+fn modules_dir() -> String {
     "modules".to_owned()
 }
 
-fn script_dir() -> String {
+fn scripts_dir() -> String {
     "scripts".to_owned()
 }
 
@@ -76,32 +72,32 @@ fn tests_dir() -> String {
     "tests".to_owned()
 }
 
-fn module_output() -> String {
-    "target/modules".to_owned()
+fn modules_output() -> String {
+    "artifacts/modules".to_owned()
 }
 
-fn script_output() -> String {
-    "target/scripts".to_owned()
+fn scripts_output() -> String {
+    "artifacts/scripts".to_owned()
 }
 
-fn transaction_output() -> String {
-    "target/transactions".to_owned()
+fn transactions_output() -> String {
+    "artifacts/transactions".to_owned()
 }
 
-fn packages_output() -> String {
-    "target/packages".to_owned()
+fn bundles_output() -> String {
+    "artifacts/bundles".to_owned()
 }
 
-fn target_deps() -> String {
-    "target/.external".to_owned()
+fn deps() -> String {
+    "artifacts/.external".to_owned()
 }
 
-fn target() -> String {
-    "target".to_owned()
+fn artifacts() -> String {
+    "artifacts".to_owned()
 }
 
 fn index() -> String {
-    "target/.Dove.man".to_owned()
+    "artifacts/.Dove.man".to_owned()
 }
 
 fn code_code_address() -> String {
@@ -112,40 +108,40 @@ fn code_code_address() -> String {
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Layout {
     /// Directory with module sources.
-    #[serde(default = "module_dir")]
-    pub module_dir: String,
+    #[serde(default = "modules_dir")]
+    pub modules_dir: String,
 
     /// Directory with script sources.
-    #[serde(default = "script_dir")]
-    pub script_dir: String,
+    #[serde(default = "scripts_dir")]
+    pub scripts_dir: String,
 
     /// Directory with tests.
     #[serde(default = "tests_dir")]
     pub tests_dir: String,
 
     /// Directory with compiled modules.
-    #[serde(default = "module_output")]
-    pub module_output: String,
+    #[serde(default = "modules_output")]
+    pub modules_output: String,
 
     /// Directory with module package.
-    #[serde(default = "packages_output")]
-    pub packages_output: String,
+    #[serde(default = "bundles_output")]
+    pub bundles_output: String,
 
     /// Directory with compiled scripts.
-    #[serde(default = "script_output")]
-    pub script_output: String,
+    #[serde(default = "scripts_output")]
+    pub scripts_output: String,
 
     /// Directory with transactions.
-    #[serde(default = "transaction_output")]
-    pub transaction_output: String,
+    #[serde(default = "transactions_output")]
+    pub transactions_output: String,
 
     /// Directory with external dependencies.
-    #[serde(default = "target_deps")]
-    pub target_deps: String,
+    #[serde(default = "deps")]
+    pub deps: String,
 
-    /// Target directory.
-    #[serde(default = "target")]
-    pub target: String,
+    /// Artifacts directory.
+    #[serde(default = "artifacts")]
+    pub artifacts: String,
 
     /// Path to index.
     #[serde(default = "index")]
@@ -156,15 +152,15 @@ impl Layout {
     /// Returns layout instance with absolute paths.
     pub fn to_absolute(&self, ctx: &Context) -> Result<Layout, Error> {
         Ok(Layout {
-            module_dir: ctx.str_path_for(&self.module_dir)?,
-            script_dir: ctx.str_path_for(&self.script_dir)?,
+            modules_dir: ctx.str_path_for(&self.modules_dir)?,
+            scripts_dir: ctx.str_path_for(&self.scripts_dir)?,
             tests_dir: ctx.str_path_for(&self.tests_dir)?,
-            module_output: ctx.str_path_for(&self.module_output)?,
-            packages_output: ctx.str_path_for(&self.packages_output)?,
-            script_output: ctx.str_path_for(&self.script_output)?,
-            transaction_output: ctx.str_path_for(&self.transaction_output)?,
-            target_deps: ctx.str_path_for(&self.target_deps)?,
-            target: ctx.str_path_for(&self.target)?,
+            modules_output: ctx.str_path_for(&self.modules_output)?,
+            bundles_output: ctx.str_path_for(&self.bundles_output)?,
+            scripts_output: ctx.str_path_for(&self.scripts_output)?,
+            transactions_output: ctx.str_path_for(&self.transactions_output)?,
+            deps: ctx.str_path_for(&self.deps)?,
+            artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
         })
     }
@@ -173,15 +169,15 @@ impl Layout {
 impl Default for Layout {
     fn default() -> Self {
         Layout {
-            module_dir: module_dir(),
-            script_dir: script_dir(),
+            modules_dir: modules_dir(),
+            scripts_dir: scripts_dir(),
             tests_dir: tests_dir(),
-            module_output: module_output(),
-            packages_output: packages_output(),
-            script_output: script_output(),
-            transaction_output: transaction_output(),
-            target_deps: target_deps(),
-            target: target(),
+            modules_output: modules_output(),
+            bundles_output: bundles_output(),
+            scripts_output: scripts_output(),
+            transactions_output: transactions_output(),
+            deps: deps(),
+            artifacts: artifacts(),
             index: index(),
         }
     }
@@ -374,7 +370,6 @@ mod test {
         Package {
             name: Some("Foo".to_owned()),
             account_address: "0x01".to_owned(),
-            authors: vec![],
             blockchain_api: None,
             dependencies: Some(Dependencies {
                 deps: vec![

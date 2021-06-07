@@ -85,7 +85,7 @@ impl<'a> ChainIndex<'a> {
 }
 
 fn make_path(ctx: &Context, module_id: &ModuleId) -> PathBuf {
-    let deps_dir = ctx.path_for(&ctx.manifest.layout.target_deps);
+    let deps_dir = ctx.path_for(&ctx.manifest.layout.deps);
     deps_dir.join(make_local_name(module_id))
 }
 
