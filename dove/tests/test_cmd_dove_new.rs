@@ -1,5 +1,4 @@
-mod helper;
-use crate::helper::*;
+use dove::tests_helper::*;
 /// $ dove new demoproject_25
 #[test]
 fn test_cmd_dove_new_without_arguments() {
@@ -160,10 +159,12 @@ fn test_cmd_dove_new_pont_with_incorrect_repo() {
         "127.0.0.1/api",
         "ftp://demo.ru/api",
     ] {
-        assert!(
-            execute_dove_bin_at(&["dove", "new", &project_name, "-r", api], &base_folder)
-                .is_err()
-        );
+        assert!(execute_dove_bin_at(
+            &["dove", "new", &project_name, "-r", api],
+            &base_folder,
+            env!("CARGO_BIN_EXE_dove")
+        )
+        .is_err());
     }
 }
 

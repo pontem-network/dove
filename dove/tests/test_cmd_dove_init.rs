@@ -1,5 +1,4 @@
-mod helper;
-use crate::helper::*;
+use dove::tests_helper::*;
 /// $ dove init
 #[test]
 fn test_cmd_dove_init_without_arguments() {
@@ -159,7 +158,12 @@ fn test_cmd_dove_init_incorrect_repo() {
         "127.0.0.1/api",
         "ftp://demo.ru/api",
     ] {
-        assert!(execute_dove_bin_at(&["dove", "init", "-r", api], &project_folder).is_err());
+        assert!(execute_dove_bin_at(
+            &["dove", "init", "-r", api],
+            &project_folder,
+            env!("CARGO_BIN_EXE_dove")
+        )
+        .is_err());
     }
     project_remove(&project_folder);
 }
