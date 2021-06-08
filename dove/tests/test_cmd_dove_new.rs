@@ -8,8 +8,8 @@ fn test_cmd_dove_new_without_arguments() {
     let (base_folder, project_folder) = project_start(project_name);
     project_remove(&project_folder);
     execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap();
-    check_dove_toml(&project_folder, project_name, Some("pont"), None, None);
-    check_base_directories_exist(&project_folder);
+    assert_valid_dove_toml(&project_folder, project_name, Some("pont"), None, None);
+    assert_basic_project_dirs_exist(&project_folder);
     set_dependencies_local_move_stdlib(&project_folder);
     project_build(&project_folder);
     project_remove(&project_folder);
@@ -24,8 +24,8 @@ fn test_cmd_dove_new_dialect() {
     project_remove(&project_folder);
     for dialect in &["pont", "diem", "dfinance"] {
         execute_dove_at(&["dove", "new", &project_name, "-d", dialect], &base_folder).unwrap();
-        check_dove_toml(&project_folder, project_name, Some(dialect), None, None);
-        check_base_directories_exist(&project_folder);
+        assert_valid_dove_toml(&project_folder, project_name, Some(dialect), None, None);
+        assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder);
         project_remove(&project_folder);
@@ -53,14 +53,14 @@ fn test_cmd_dove_new_difinance_with_address() {
             &base_folder,
         )
         .unwrap();
-        check_dove_toml(
+        assert_valid_dove_toml(
             &project_folder,
             project_name,
             Some("dfinance"),
             Some(address),
             None,
         );
-        check_base_directories_exist(&project_folder);
+        assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder);
         project_remove(&project_folder);
@@ -80,14 +80,14 @@ fn test_cmd_dove_new_diem_with_address() {
             &base_folder,
         )
         .unwrap();
-        check_dove_toml(
+        assert_valid_dove_toml(
             &project_folder,
             project_name,
             Some("diem"),
             Some(address),
             None,
         );
-        check_base_directories_exist(&project_folder);
+        assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder);
         project_remove(&project_folder);
@@ -107,14 +107,14 @@ fn test_cmd_dove_new_pont_with_address() {
             &base_folder,
         )
         .unwrap();
-        check_dove_toml(
+        assert_valid_dove_toml(
             &project_folder,
             project_name,
             Some("pont"),
             Some(address),
             None,
         );
-        check_base_directories_exist(&project_folder);
+        assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder);
         project_remove(&project_folder);
@@ -136,8 +136,8 @@ fn test_cmd_dove_new_pont_with_repo() {
         "http://localhost:8080/api",
     ] {
         execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).unwrap();
-        check_dove_toml(&project_folder, project_name, None, None, Some(api));
-        check_base_directories_exist(&project_folder);
+        assert_valid_dove_toml(&project_folder, project_name, None, None, Some(api));
+        assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder);
         project_remove(&project_folder);

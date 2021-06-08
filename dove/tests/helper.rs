@@ -62,9 +62,9 @@ pub fn project_new_with_args(
     set_dependencies_local_move_stdlib(&project_folder);
 }
 
-// @dove build
+// $ dove build
 pub fn project_build(project_folder: &Path) {
-    assert!(execute_dove_at(&["dove", "build"], &project_folder).is_ok())
+    execute_dove_at(&["dove", "build"], &project_folder).unwrap()
 }
 
 pub fn project_remove(project_folder: &Path) {
@@ -110,7 +110,7 @@ pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> anyhow::Result<(
     execute(args, project_folder.to_path_buf())
 }
 pub fn execute_dove_bin_at(args: &[&str], project_folder: &Path) -> anyhow::Result<String> {
-    assert!(project_folder.exists());
+    assert!(project_folder.exists(), "project_folder not exists");
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_dove"))
         .current_dir(project_folder)
         .args(args.iter().skip(1)) // TODO: remove first argument `dove` on callee side
@@ -124,7 +124,7 @@ pub fn execute_dove_bin_at(args: &[&str], project_folder: &Path) -> anyhow::Resu
     Ok(String::from_utf8(output.stdout)?)
 }
 
-pub fn check_dove_toml(
+pub fn assert_valid_dove_toml(
     project_folder: &Path,
     project_name: &str,
     dialect: Option<&str>,
@@ -137,20 +137,45 @@ pub fn check_dove_toml(
         .replace(" ", "")
         .replace("\t", "");
 
-    assert!(dove_toml_string.contains(&format!("name=\"{}\"", project_name)));
+    assert!(
+        dove_toml_string.contains(&format!("name=\"{}\"", project_name)),
+        "Expected name = {}",
+        project_name
+    );
     if let Some(dialect) = dialect {
-        assert!(dove_toml_string.contains(&format!("dialect=\"{}\"", dialect)));
+        assert!(
+            dove_toml_string.contains(&format!("dialect=\"{}\"", dialect)),
+            "Expected dialect = {}",
+            dialect
+        );
     }
     if let Some(address) = address {
-        assert!(dove_toml_string.contains(&format!("account_address=\"{}\"", address)));
+        assert!(
+            dove_toml_string.contains(&format!("account_address=\"{}\"", address)),
+            "Expected account_address = {}",
+            address
+        );
     }
     if let Some(api) = api {
-        assert!(dove_toml_string.contains(&format!("blockchain_api=\"{}\"", api)));
+        assert!(
+            dove_toml_string.contains(&format!("blockchain_api=\"{}\"", api)),
+            "Expected blockchain_api = {}",
+            api
+        );
     }
 }
 
-pub fn check_base_directories_exist(project_folder: &Path) {
-    assert!(project_folder.join("modules").exists());
-    assert!(project_folder.join("scripts").exists());
-    assert!(project_folder.join("scripts").exists());
+pub fn assert_basic_project_dirs_exist(project_folder: &Path) {
+    assert!(
+        project_folder.join("modules").exists(),
+        "Folder modules not found"
+    );
+    assert!(
+        project_folder.join("scripts").exists(),
+        "Folder scripts not found"
+    );
+    assert!(
+        project_folder.join("tests").exists(),
+        "Folder tests not found"
+    );
 }
