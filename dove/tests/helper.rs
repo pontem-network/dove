@@ -110,7 +110,11 @@ pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> anyhow::Result<(
     execute(args, project_folder.to_path_buf())
 }
 pub fn execute_dove_bin_at(args: &[&str], project_folder: &Path) -> anyhow::Result<String> {
-    assert!(project_folder.exists(), "project_folder does not exist");
+    assert!(
+        project_folder.exists(),
+        "Project folder {:?} does not exist",
+        project_folder.display()
+    );
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_dove"))
         .current_dir(project_folder)
         .args(args.iter().skip(1)) // TODO: remove first argument `dove` on callee side
