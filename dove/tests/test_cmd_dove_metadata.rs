@@ -16,7 +16,7 @@ fn test_cmd_dove_metadata() {
         "5Csxuy81dNEVYbRA9K7tyHypu7PivHmwCZSKxcbU78Cy2v7v",
         "https://localhost/api",
     );
-    project_build(&project_folder).unwrap();
+    project_build(&project_folder);
     execute_dove_at(&["dove", "metadata"], &project_folder).unwrap();
     project_remove(&project_folder);
 }

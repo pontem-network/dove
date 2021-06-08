@@ -1,10 +1,10 @@
 #![allow(dead_code)]
+
 use std::path::{PathBuf, Path};
 use std::fs::{remove_dir_all, read_to_string, create_dir_all};
 use fs_extra::file::write_all;
 use toml::Value;
 use dove::cli::execute;
-use anyhow::{ensure, Error};
 
 pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
     let tmp_folder = std::env::temp_dir();
@@ -25,7 +25,7 @@ pub fn project_start_for_init(project_name: &str) -> PathBuf {
 pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
     let (base_folder, project_folder) = project_start(project_name);
     project_new_default(&base_folder, &project_folder, project_name);
-    project_build(&project_folder).unwrap();
+    project_build(&project_folder);
     project_folder
 }
 
@@ -63,8 +63,8 @@ pub fn project_new_with_args(
 }
 
 // @dove build
-pub fn project_build(project_folder: &Path) -> anyhow::Result<()> {
-    execute_dove_at(&["dove", "build"], &project_folder)
+pub fn project_build(project_folder: &Path) {
+    assert!(execute_dove_at(&["dove", "build"], &project_folder).is_ok())
 }
 
 pub fn project_remove(project_folder: &Path) {
@@ -130,52 +130,27 @@ pub fn check_dove_toml(
     dialect: Option<&str>,
     address: Option<&str>,
     api: Option<&str>,
-) -> Result<(), Error> {
+) {
     // Check config
     let dove_toml_string = read_to_string(project_folder.join("Dove.toml"))
         .unwrap()
         .replace(" ", "")
         .replace("\t", "");
 
-    ensure!(
-        dove_toml_string.contains(&format!("name=\"{}\"", project_name)),
-        "Dove.toml: invalid name\n".to_string()
-    );
+    assert!(dove_toml_string.contains(&format!("name=\"{}\"", project_name)));
     if let Some(dialect) = dialect {
-        ensure!(
-            dove_toml_string.contains(&format!("dialect=\"{}\"", dialect)),
-            "Dove.toml: invalid dialect"
-        );
+        assert!(dove_toml_string.contains(&format!("dialect=\"{}\"", dialect)));
     }
     if let Some(address) = address {
-        ensure!(
-            dove_toml_string.contains(&format!("account_address=\"{}\"", address)),
-            "Dove.toml: invalid account_address\n"
-        );
+        assert!(dove_toml_string.contains(&format!("account_address=\"{}\"", address)));
     }
     if let Some(api) = api {
-        ensure!(
-            dove_toml_string.contains(&format!("blockchain_api=\"{}\"", api)),
-            "Dove.toml: invalid blockchain_api\n"
-        );
+        assert!(dove_toml_string.contains(&format!("blockchain_api=\"{}\"", api)));
     }
-
-    Ok(())
 }
 
-pub fn check_for_base_categories(project_folder: &Path) -> Result<(), Error> {
-    ensure!(
-        project_folder.join("modules").exists(),
-        "Modules folder: not found\n".to_string()
-    );
-    ensure!(
-        project_folder.join("scripts").exists(),
-        "Scripts folder: not found\n".to_string()
-    );
-    ensure!(
-        project_folder.join("scripts").exists(),
-        "Scripts folder: not found\n".to_string()
-    );
-
-    Ok(())
+pub fn check_base_directories_exist(project_folder: &Path) {
+    assert!(project_folder.join("modules").exists());
+    assert!(project_folder.join("scripts").exists());
+    assert!(project_folder.join("scripts").exists());
 }

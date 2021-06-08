@@ -8,10 +8,10 @@ fn test_cmd_dove_init_without_arguments() {
     let project_folder = project_start_for_init(project_name);
     execute_dove_at(&["dove", "init"], &project_folder).unwrap();
 
-    check_dove_toml(&project_folder, project_name, None, None, None).unwrap();
-    check_for_base_categories(&project_folder).unwrap();
+    check_dove_toml(&project_folder, project_name, None, None, None);
+    check_base_directories_exist(&project_folder);
     set_dependencies_local_move_stdlib(&project_folder);
-    project_build(&project_folder).unwrap();
+    project_build(&project_folder);
     project_remove(&project_folder);
 }
 
@@ -23,10 +23,10 @@ fn test_cmd_dove_init_with_dialect() {
     for dialect in &["pont", "diem", "dfinance"] {
         let project_folder = project_start_for_init(project_name);
         execute_dove_at(&["dove", "init", "-d", dialect], &project_folder).unwrap();
-        check_dove_toml(&project_folder, project_name, Some(dialect), None, None).unwrap();
-        check_for_base_categories(&project_folder).unwrap();
+        check_dove_toml(&project_folder, project_name, Some(dialect), None, None);
+        check_base_directories_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap();
+        project_build(&project_folder);
         project_remove(&project_folder);
     }
 }
@@ -49,11 +49,10 @@ fn test_cmd_dove_init_dfinance_with_address() {
             Some("dfinance"),
             Some(address),
             None,
-        )
-        .unwrap();
-        check_for_base_categories(&project_folder).unwrap();
+        );
+        check_base_directories_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap();
+        project_build(&project_folder);
         project_remove(&project_folder);
     }
 }
@@ -76,11 +75,10 @@ fn test_cmd_dove_init_diem_with_address() {
             Some("diem"),
             Some(address),
             None,
-        )
-        .unwrap();
-        check_for_base_categories(&project_folder).unwrap();
+        );
+        check_base_directories_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap();
+        project_build(&project_folder);
         project_remove(&project_folder);
     }
 }
@@ -104,11 +102,10 @@ fn test_cmd_dove_init_pont_with_address() {
             Some("pont"),
             Some(address),
             None,
-        )
-        .unwrap();
-        check_for_base_categories(&project_folder).unwrap();
+        );
+        check_base_directories_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap();
+        project_build(&project_folder);
         project_remove(&project_folder);
     }
 }
@@ -127,10 +124,10 @@ fn test_cmd_dove_init_pont_with_repo() {
     ] {
         let project_folder = project_start_for_init(project_name);
         execute_dove_at(&["dove", "init", "-r", api], &project_folder).unwrap();
-        check_dove_toml(&project_folder, &project_name, None, None, Some(api)).unwrap();
-        check_for_base_categories(&project_folder).unwrap();
+        check_dove_toml(&project_folder, &project_name, None, None, Some(api));
+        check_base_directories_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder).unwrap();
+        project_build(&project_folder);
         project_remove(&project_folder);
     }
 }
