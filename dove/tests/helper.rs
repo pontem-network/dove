@@ -139,27 +139,27 @@ pub fn assert_valid_dove_toml(
 
     assert!(
         dove_toml_string.contains(&format!("name=\"{}\"", project_name)),
-        "Expected name = {}",
+        "Missing name = {}",
         project_name
     );
     if let Some(dialect) = dialect {
         assert!(
             dove_toml_string.contains(&format!("dialect=\"{}\"", dialect)),
-            "Expected dialect = {}",
+            "Missing dialect = {}",
             dialect
         );
     }
     if let Some(address) = address {
         assert!(
             dove_toml_string.contains(&format!("account_address=\"{}\"", address)),
-            "Expected account_address = {}",
+            "Missing account_address = {}",
             address
         );
     }
     if let Some(api) = api {
         assert!(
             dove_toml_string.contains(&format!("blockchain_api=\"{}\"", api)),
-            "Expected blockchain_api = {}",
+            "Missing blockchain_api = {}",
             api
         );
     }
