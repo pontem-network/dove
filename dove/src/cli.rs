@@ -9,7 +9,7 @@ use lang::compiler::ConstPool;
 
 use crate::cmd::build::Build;
 use crate::cmd::clean::Clean;
-use crate::cmd::prover::Prover;
+use crate::cmd::prover::Prove;
 use crate::cmd::tx::CreateTransactionCmd;
 use crate::cmd::fetch::Fetch;
 use crate::cmd::init::Init;

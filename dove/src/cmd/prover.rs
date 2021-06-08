@@ -25,8 +25,8 @@ impl Cmd for Prove {
     where
         Self: std::marker::Sized,
     {
-        let boogie_exe = self.boogie_exe.unwrap_or(BOOGIE_EXE.to_string());
-        anyhow::ensure!(is_boogie_available(&boogie_exe), "boogie executable not found in PATH. Please install it from https://github.com/boogie-org/boogie");
+        let boogie_exe = self.boogie_exe.unwrap_or_else(|| BOOGIE_EXE.to_string());
+        ensure!(is_boogie_available(&boogie_exe), "boogie executable not found in PATH. Please install it from https://github.com/boogie-org/boogie");
 
         let dirs = ctx.paths_for(&[
             &ctx.manifest.layout.script_dir,
