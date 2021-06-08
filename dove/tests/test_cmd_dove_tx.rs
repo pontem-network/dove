@@ -24,7 +24,7 @@ fn test_cmd_dove_tx_without_arguments() {
     let args = &["dove", "tx"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("main.mvt");
     assert!(
@@ -80,7 +80,7 @@ fn test_cmd_dove_tx_with_type() {
     let args = &["dove", "tx", "sdemo_4<u8>(16)"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("sdemo_4.mvt");
     assert!(
@@ -118,7 +118,7 @@ fn test_cmd_dove_tx_with_output_file_name() {
     let args = &["dove", "tx", "-o", "z"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("z.mvt");
     assert!(
@@ -150,7 +150,7 @@ fn test_cmd_dove_tx_with_script_name_arg() {
     let args = &["dove", "tx", "-f", "sdemo", "-n", "test_fun"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("test_fun.mvt");
     assert!(
@@ -182,7 +182,7 @@ fn test_cmd_dove_tx_with_script_name_option() {
     let args = &["dove", "tx", "test_fun()", "-f", "sdemo"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("test_fun.mvt");
     assert!(
@@ -223,7 +223,7 @@ fn test_cmd_dove_tx_with_script_file_name() {
     let args = &["dove", "tx", "-f", "sdemo_2"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("sdemo_2.mvt");
     assert!(
@@ -253,7 +253,7 @@ fn test_cmd_dove_tx_with_script_method_args() {
     let args = &["dove", "tx", "-a", "1", "2"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("main.mvt");
     assert!(
@@ -290,7 +290,7 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
     let args = &["dove", "tx", "main(1,2)"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
-        .join("target")
+        .join("artifacts")
         .join("transactions")
         .join("main.mvt");
     assert!(
