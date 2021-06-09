@@ -1,7 +1,14 @@
+use lang::compiler::dialects::Dialect;
+use lang::compiler::{file::find_move_files, parser};
+use lang::compiler::mut_string::MutString;
 use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
 use structopt::StructOpt;
 use anyhow::{ensure, Result};
+
 use crate::context::Context;
+
+use std::path::{Path, PathBuf};
+use std::process::Stdio;
 
 use super::Cmd;
 
@@ -39,10 +46,13 @@ impl Cmd for Prove {
             .into_iter()
             .map(|s| s.to_string())
             .collect();
-        let move_sources = dirs
-            .into_iter()
-            .map(|p| p.to_string_lossy().to_string())
-            .collect();
+
+        let artifacts_dir = ctx
+            .path_for(&ctx.manifest.layout.artifacts)
+            .join("move-prover");
+        let dialect = &*ctx.dialect;
+        let sender = Some(ctx.manifest.package.account_address);
+        prepare_sources(dialect, sender, &dirs, &artifacts_dir)?;
 
         let options = Options {
             backend: boogie_backend_v2::options::BoogieOptions {
@@ -50,16 +60,51 @@ impl Cmd for Prove {
                 ..Default::default()
             },
             move_deps,
-            move_sources,
+            move_sources: vec![artifacts_dir.to_string_lossy().to_string()],
             ..Default::default()
         };
         run_move_prover_errors_to_stderr(options)
     }
 }
 
+/// Normalizes move files sources and outputs them into `output_dir`.
+///
+/// Namely, replaces `{{sender}}` placeholders with the actual value and translates addresses
+/// to current dialect.
+fn prepare_sources(
+    dialect: &dyn Dialect,
+    sender: Option<String>,
+    dirs: &[PathBuf],
+    output_dir: &Path,
+) -> Result<()> {
+    if output_dir.exists() {
+        std::fs::remove_dir_all(output_dir)?;
+    }
+    std::fs::create_dir_all(output_dir)?;
+
+    for dir in dirs {
+        let move_files = find_move_files(dir)?;
+        for file_path in move_files {
+            let content = std::fs::read_to_string(&file_path)?;
+            let mut mut_content = MutString::new(&content);
+            parser::normalize_source_text(dialect, (&content, &mut mut_content), &sender);
+            let content = mut_content.freeze();
+            let new_path =
+                output_dir.join(PathBuf::from(file_path).file_name().expect("No file name"));
+            std::fs::write(&new_path, content)?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Checks if `boogie` executable is available in path by running it with `/help` flag.
 fn is_boogie_available(boogie_exe: &str) -> bool {
-    let status = std::process::Command::new(boogie_exe).arg("/help").status();
+    let status = std::process::Command::new(boogie_exe)
+        .arg("/help")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
     match status {
         Ok(status) => status.success(),
         Err(_) => false,
