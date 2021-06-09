@@ -145,9 +145,7 @@ fn test_cmd_dove_new_pont_with_repo() {
 }
 
 /// $ dove new demoproject_38 -r ###
-/// @todo Need to add validation on repo
 #[test]
-#[ignore]
 fn test_cmd_dove_new_pont_with_incorrect_repo() {
     // Project name and path
     let project_name = "project_new_pont_with_incorrect_repo";

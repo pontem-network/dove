@@ -145,9 +145,7 @@ fn itest_cmd_dove_init_incorrect_dialect() {
 }
 
 /// $ dove init -r ###
-/// @todo Need to add validation on repo
 #[test]
-#[ignore]
 fn test_cmd_dove_init_incorrect_repo() {
     // Project name and path
     let project_name = "project_init_incorrect_repo";
