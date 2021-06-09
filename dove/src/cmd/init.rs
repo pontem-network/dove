@@ -109,6 +109,9 @@ impl Cmd for Init {
         }
 
         if let Some(url) = &self.repository {
+            if url.scheme_str() != Some("https") && url.scheme_str() != Some("http") {
+                return Err(anyhow!("url must start with http|https"));
+            }
             writeln!(&mut f, "blockchain_api = \"{}\"", url)?;
         }
 
