@@ -2,8 +2,8 @@ use std::path::{PathBuf, Path};
 use std::fs::{remove_dir_all, read_to_string, create_dir_all};
 use fs_extra::file::write_all;
 use toml::Value;
-use dove::cli::execute;
-use dove::stdout::{set_print_to_string, get_buffer_value_and_erase};
+use crate::cli::execute;
+use crate::stdout::{set_print_to_string, get_buffer_value_and_erase};
 
 /// get tmp_folder, project_folder and remove project folder if exist
 pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
@@ -119,9 +119,9 @@ pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> anyhow::Result<S
 
 /// run bin dove
 pub fn execute_dove_bin_at(
+    cargo_bin_path: &str,
     args: &[&str],
     project_folder: &Path,
-    cargo_bin_path: &str,
 ) -> anyhow::Result<String> {
     assert!(
         project_folder.exists(),

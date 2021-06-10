@@ -159,9 +159,9 @@ fn test_cmd_dove_init_incorrect_repo() {
         "ftp://demo.ru/api",
     ] {
         assert!(execute_dove_bin_at(
+            env!("CARGO_BIN_EXE_dove"),
             &["dove", "init", "-r", api],
-            &project_folder,
-            env!("CARGO_BIN_EXE_dove")
+            &project_folder
         )
         .is_err());
     }

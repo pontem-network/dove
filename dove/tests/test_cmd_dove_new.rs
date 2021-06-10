@@ -160,9 +160,9 @@ fn test_cmd_dove_new_pont_with_incorrect_repo() {
         "ftp://demo.ru/api",
     ] {
         assert!(execute_dove_bin_at(
+            env!("CARGO_BIN_EXE_dove"),
             &["dove", "new", &project_name, "-r", api],
-            &base_folder,
-            env!("CARGO_BIN_EXE_dove")
+            &base_folder
         )
         .is_err());
     }
