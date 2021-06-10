@@ -17,3 +17,5 @@ pub mod context;
 pub mod index;
 /// Dove configuration.
 pub mod manifest;
+/// StdOut stream
+pub mod stdout;

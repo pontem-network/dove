@@ -16,6 +16,7 @@ use crate::context::Context;
 use crate::index::meta::{FileMeta, source_meta};
 use crate::index::move_dir_iter;
 use crate::manifest::{CheckoutParams, default_dialect, Git, MANIFEST, read_manifest};
+use crate::stdoutln;
 
 /// Git prefix.
 pub const PREFIX: &str = "git";
@@ -195,7 +196,7 @@ pub fn make_local_name(git: &Git) -> String {
 }
 
 fn clone(git: &CheckoutParams, path: &Path) -> Result<Repository, Error> {
-    println!("Download:[{}]", git.repo());
+    stdoutln!("Download:[{}]", git.repo());
     RepoBuilder::new()
         .clone(&git.repo(), path)
         .map_err(|err| anyhow!("Failed to clone repository :[{}]:{}", git.repo(), err))

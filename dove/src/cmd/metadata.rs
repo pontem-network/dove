@@ -1,12 +1,13 @@
 use anyhow::{Error, Result};
 use serde::Serialize;
 use structopt::StructOpt;
+use std::path::Path;
 
 use crate::index::resolver::git;
 use crate::cmd::Cmd;
 use crate::context::{Context, str_path};
 use crate::manifest::{Dependence, Git, Layout};
-use std::path::Path;
+use crate::stdoutln;
 
 fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
     let layout = ctx.manifest.layout.to_absolute(&ctx)?;
@@ -47,7 +48,7 @@ pub struct Metadata {}
 impl Cmd for Metadata {
     fn apply(self, ctx: Context) -> Result<(), Error> {
         let metadata = into_metadata(ctx)?;
-        println!(
+        stdoutln!(
             "{}",
             serde_json::to_string_pretty::<DoveMetadata>(&metadata)?
         );

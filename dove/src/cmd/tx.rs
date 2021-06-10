@@ -20,6 +20,7 @@ use move_core_types::account_address::AccountAddress;
 use lang::lexer::unwrap_spanned_ty;
 use lang::compiler::mut_string::MutString;
 use move_core_types::value::MoveValue;
+use crate::stdoutln;
 
 /// Create transaction.
 #[derive(StructOpt, Debug)]
@@ -685,7 +686,7 @@ fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), E
     if tx_file.exists() {
         fs::remove_file(&tx_file)?;
     }
-    println!("Store transaction:{:?}", tx_file);
+    stdoutln!("Store transaction:{:?}", tx_file);
     Ok(fs::write(&tx_file, bcs::to_bytes(&tx)?)?)
 }
 
