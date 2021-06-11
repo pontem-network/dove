@@ -33,7 +33,7 @@ pub fn set_print_to_stdout() {
             },
             |_| Ok(()),
         )
-        .and(colorize::set_colorchoise_for_stdout())
+        .and(colorize::set_colorchoice_for_stdout())
         .expect("failed set print to stdout");
 }
 
@@ -51,7 +51,7 @@ pub fn set_print_to_string() {
             },
             |_| Ok(()),
         )
-        .and(colorize::set_colorchoise_never())
+        .and(colorize::set_colorchoice_never())
         .expect("failed set print to string");
 }
 

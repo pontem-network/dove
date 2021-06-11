@@ -8,7 +8,7 @@ use termcolor::{ColorSpec, Color, BufferWriter, WriteColor, ColorChoice};
 static STDOUT_COLOR: OnceCell<Mutex<Box<ColorChoice>>> = OnceCell::new();
 
 /// get marker to highlight
-fn get_colorchoise_color() -> ColorChoice {
+fn get_colorchoice_color() -> ColorChoice {
     match STDOUT_COLOR.get() {
         Some(mt) => *(mt.lock().expect("Couldn't get STDOUT_COLOR")).clone(),
         None => ColorChoice::Never,
@@ -16,7 +16,7 @@ fn get_colorchoise_color() -> ColorChoice {
 }
 
 /// set by flag --color=.. auto|always|never|ansi and stdout
-pub fn set_colorchoise_for_stdout() -> Result<(), Error> {
+pub fn set_colorchoice_for_stdout() -> Result<(), Error> {
     let flag = std::env::args()
         .find_map(|it| {
             if it.to_lowercase().contains("--color=") {
@@ -39,16 +39,16 @@ pub fn set_colorchoise_for_stdout() -> Result<(), Error> {
         }
         _ => ColorChoice::Never,
     };
-    set_colorchoise(color_flag)
+    set_colorchoice(color_flag)
 }
 
-/// STDOUT_COLOR = ColorChoise::Never
-pub fn set_colorchoise_never() -> Result<(), Error> {
-    set_colorchoise(ColorChoice::Never)
+/// STDOUT_COLOR = colorchoice::Never
+pub fn set_colorchoice_never() -> Result<(), Error> {
+    set_colorchoice(ColorChoice::Never)
 }
 
 /// set print to stdout
-fn set_colorchoise(color: ColorChoice) -> Result<(), Error> {
+fn set_colorchoice(color: ColorChoice) -> Result<(), Error> {
     STDOUT_COLOR.set(Mutex::new(Box::new(color))).or_else(|mt| {
         let mut bx = mt
             .lock()
@@ -60,7 +60,7 @@ fn set_colorchoise(color: ColorChoice) -> Result<(), Error> {
 
 /// colorize text for output
 pub fn colorize_text(text: &str, spec: &mut ColorSpec) -> String {
-    let mut buffer = BufferWriter::stdout(get_colorchoise_color()).buffer();
+    let mut buffer = BufferWriter::stdout(get_colorchoice_color()).buffer();
     buffer
         .set_color(spec)
         .and(write!(&mut buffer, "{}", text))
