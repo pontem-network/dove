@@ -3,18 +3,23 @@ use crate::stdout::STDOUT_STREAM;
 /// Prints output.
 #[macro_export]
 macro_rules! stdout {
+        ($e:expr) => (
+            $crate::stdout::print::print($e)
+        );
         ($($args:tt)*) => {
-            $crate::stdout::print::print(&format!($($args)*));
+            $crate::stdout!(&format!($($args)*));
         };
     }
 
 /// Prints output with a newline.
 #[macro_export]
 macro_rules! stdoutln {
-        () => ($crate::stdout::print::print("\n"));
-        ($e:expr) => ($crate::stdout::print::println($e));
+        () => (
+            $crate::stdout!("\n")
+        );
         ($($args:expr),*) => (
-            $crate::stdout::print::println(&format!($($args),*));
+            $crate::stdout!(&format!($($args),*));
+            $crate::stdout!("\n");
         )
     }
 
@@ -22,37 +27,34 @@ macro_rules! stdoutln {
 pub fn print(text: &str) {
     STDOUT_STREAM
         .get()
-        .expect("Stdout stream is not initialized")
+        .expect("STDOUT_STREAM is not initialized")
         .lock()
-        .expect("Failed to get stdout")
+        .expect("Failed to get STDOUT_STREAM")
         .as_mut()
         .print(text)
-        .expect("Failed write to stdout")
-}
-
-/// Print output with a newline.
-pub fn println(text: &str) {
-    print(text);
-    print("\n");
+        .expect("Failed write to STDOUT_STREAM")
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::stdout::{set_buffer, get_buffer_value};
+    use crate::stdout::{get_buffer_value_and_erase, set_print_to_string};
     use crate::stdout::colorize::good;
 
     #[test]
-    fn test_stdout_string_buff() {
-        set_buffer(String::new()).unwrap();
+    fn test_print_to_string() {
+        set_print_to_string();
         stdout!("test value");
-        assert_eq!(Some("test value".to_string()), get_buffer_value());
+        assert_eq!(Some("test value".to_string()), get_buffer_value_and_erase());
 
-        set_buffer(String::new()).unwrap();
+        set_print_to_string();
         stdoutln!("test value");
-        assert_eq!(Some("test value\n".to_string()), get_buffer_value());
+        assert_eq!(
+            Some("test value\n".to_string()),
+            get_buffer_value_and_erase()
+        );
 
-        set_buffer(String::new()).unwrap();
+        set_print_to_string();
         stdout!("{}", good("test value"));
-        assert_eq!(Some("test value".to_string()), get_buffer_value());
+        assert_eq!(Some("test value".to_string()), get_buffer_value_and_erase());
     }
 }

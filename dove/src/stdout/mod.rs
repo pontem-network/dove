@@ -1,8 +1,8 @@
 use once_cell::sync::OnceCell;
 use std::fmt::Write as FmtWriter;
-use std::io::{Write, Stdout};
+use std::io::{Write, Stdout, stdout};
 use std::sync::Mutex;
-use anyhow::Error;
+use anyhow::{Result, Error};
 
 /// colorize text for output
 pub mod colorize;
@@ -12,74 +12,78 @@ pub mod print;
 /// Stdout buffer for prints
 static STDOUT_STREAM: OnceCell<Mutex<Box<dyn BufWrite + Send>>> = OnceCell::new();
 
-/// Get data from the buffer if a string was used
-pub fn get_buffer_value() -> Option<String> {
+/// Get data from the buffer, if a string was used, and clear the buffer
+pub fn get_buffer_value_and_erase() -> Option<String> {
     STDOUT_STREAM
         .get()
-        .and_then(|mt| mt.lock().map_or(None, |bx| bx.value()))
+        .and_then(|mt| mt.lock().map_or(None, |mut bx| bx.get_value_and_erase()))
 }
 
-/// Set the stream / buffer to write
-pub fn set_buffer<Out>(stdout: Out) -> Result<(), Error>
-where
-    Out: BufWrite + Send,
-    Out: 'static,
-{
-    colorize::set_stdout_by_argv_flag_color(&stdout)?;
+/// set print to stdout
+pub fn set_print_to_stdout() {
+    STDOUT_STREAM
+        .set(Mutex::new(Box::new(stdout())))
+        .map_or_else(
+            |mt| {
+                let mut ou = mt
+                    .lock()
+                    .map_err(|_| anyhow!("couldn't get access to STDOUT_STREAM"))?;
+                *ou = Box::new(stdout());
+                Ok(())
+            },
+            |_| Ok(()),
+        )
+        .and(colorize::set_colorchoice_for_stdout())
+        .expect("failed set print to stdout");
+}
 
-    match STDOUT_STREAM.get() {
-        Some(mt) => {
-            let mut buff = mt.lock().expect("Couldn't get STDOUT_STREAM");
-            *buff = Box::new(stdout);
-            Ok(())
-        }
-        None => {
-            STDOUT_STREAM
-                .set(Mutex::new(Box::new(stdout)))
-                .map_err(|_| anyhow!("Failed to set STDOUT_COLOR"))?;
-            Ok(())
-        }
-    }
+/// set print to string.
+pub fn set_print_to_string() {
+    STDOUT_STREAM
+        .set(Mutex::new(Box::new(String::new())))
+        .map_or_else(
+            |mt| {
+                let mut ou = mt
+                    .lock()
+                    .map_err(|_| anyhow!("couldn't get access to STDOUT_STREAM"))?;
+                *ou = Box::new(String::new());
+                Ok(())
+            },
+            |_| Ok(()),
+        )
+        .and(colorize::set_colorchoice_never())
+        .expect("failed set print to string");
 }
 
 /// The stream / buffer to write
-pub trait BufWrite {
+trait BufWrite {
     /// Write to buffer or stream
     fn print(&mut self, text: &str) -> Result<(), Error>;
-    /// Get data from the buffer if a string was used
-    fn value(&self) -> Option<String>;
-    /// is stdout
-    fn is_stdout(&self) -> bool;
+    /// Get data from the buffer, if a string was used, and clear the buffer
+    fn get_value_and_erase(&mut self) -> Option<String> {
+        None
+    }
 }
 
 impl BufWrite for Stdout {
-    /// Write to buffer or stream
+    /// Write to stream
     fn print(&mut self, text: &str) -> Result<(), Error> {
         self.write(text.as_bytes())
             .map_or_else(|err| Err(anyhow!(err.to_string())), |_| Ok(()))
     }
-    /// Get data from the buffer if a string was used
-    fn value(&self) -> Option<String> {
-        None
-    }
-    /// is_stdout
-    fn is_stdout(&self) -> bool {
-        true
-    }
 }
 
 impl BufWrite for String {
-    /// Write to buffer or stream
+    /// Write to buffer
     fn print(&mut self, text: &str) -> Result<(), Error> {
         self.write_str(text)
             .map_or_else(|err| Err(anyhow!(err)), |_| Ok(()))
     }
-    /// Get data from the buffer if a string was used
-    fn value(&self) -> Option<String> {
-        Some(self.clone())
-    }
-    /// is stdout
-    fn is_stdout(&self) -> bool {
-        false
+
+    /// Get data from the buffer and clear the buffer
+    fn get_value_and_erase(&mut self) -> Option<String> {
+        let buff = self.clone();
+        *self = String::new();
+        Some(buff)
     }
 }

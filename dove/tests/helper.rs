@@ -5,6 +5,7 @@ use std::fs::{remove_dir_all, read_to_string, create_dir_all};
 use fs_extra::file::write_all;
 use toml::Value;
 use dove::cli::execute;
+use dove::stdout::{set_print_to_string, get_buffer_value_and_erase};
 
 pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
     let tmp_folder = std::env::temp_dir();
@@ -64,7 +65,7 @@ pub fn project_new_with_args(
 
 // $ dove build
 pub fn project_build(project_folder: &Path) {
-    execute_dove_at(&["dove", "build"], &project_folder).unwrap()
+    execute_dove_at(&["dove", "build"], &project_folder).unwrap();
 }
 
 pub fn project_remove(project_folder: &Path) {
@@ -106,8 +107,10 @@ pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
     .unwrap();
 }
 
-pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> anyhow::Result<()> {
+pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> anyhow::Result<String> {
+    set_print_to_string();
     execute(args, project_folder.to_path_buf())
+        .map(|_| get_buffer_value_and_erase().unwrap_or_else(|| "".to_string()))
 }
 pub fn execute_dove_bin_at(args: &[&str], project_folder: &Path) -> anyhow::Result<String> {
     assert!(
