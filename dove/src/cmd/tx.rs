@@ -93,7 +93,13 @@ impl<'a> TransactionBuilder<'a> {
                     replace_ss58_addresses(tp, &mut mut_string, &mut Default::default());
                     mut_string.freeze()
                 })
-                .map(|tp| parse_type_params(&mut Lexer::new(&tp, "tp", Default::default())))
+                .map(|tp| {
+                    let mut lexer = Lexer::new(&tp, "tp", Default::default());
+                    lexer
+                        .advance()
+                        .map_err(|err| Error::msg(format!("{:?}", err)))?;
+                    parse_type_params(&mut lexer)
+                })
                 .collect::<Result<_, _>>()?;
         }
 
