@@ -7,7 +7,7 @@ use anyhow::{ensure, Result};
 
 use crate::context::Context;
 
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf, Path};
 use std::process::Stdio;
 
 use super::Cmd;
@@ -50,9 +50,16 @@ impl Cmd for Prove {
         let artifacts_dir = ctx
             .path_for(&ctx.manifest.layout.artifacts)
             .join("move-prover");
+        if artifacts_dir.exists() {
+            std::fs::remove_dir_all(&artifacts_dir)?;
+        }
+        std::fs::create_dir_all(artifacts_dir.join("modules"))?;
+        std::fs::create_dir_all(artifacts_dir.join("scripts"))?;
+
         let dialect = &*ctx.dialect;
-        let sender = Some(ctx.manifest.package.account_address);
-        prepare_sources(dialect, sender, &dirs, &artifacts_dir)?;
+        let sender = Some(ctx.manifest.package.account_address.clone());
+        prepare_sources(dialect, &sender, &ctx.path_for(&ctx.manifest.layout.modules_dir), &artifacts_dir.join("modules"))?;
+        prepare_sources(dialect, &sender, &ctx.path_for(&ctx.manifest.layout.scripts_dir), &artifacts_dir.join("scripts"))?;
 
         let options = Options {
             backend: boogie_backend_v2::options::BoogieOptions {
@@ -73,26 +80,20 @@ impl Cmd for Prove {
 /// to current dialect.
 fn prepare_sources(
     dialect: &dyn Dialect,
-    sender: Option<String>,
-    dirs: &[PathBuf],
+    sender: &Option<String>,
+    dir: &Path,
     output_dir: &Path,
 ) -> Result<()> {
-    if output_dir.exists() {
-        std::fs::remove_dir_all(output_dir)?;
-    }
-    std::fs::create_dir_all(output_dir)?;
+    let move_files = find_move_files(dir)?.into_iter().map(PathBuf::from);
+    for file_path in move_files {
+        let content = std::fs::read_to_string(&file_path)?;
+        let mut mut_content = MutString::new(&content);
+        parser::normalize_source_text(dialect, (&content, &mut mut_content), &sender);
+        let content = mut_content.freeze();
 
-    for dir in dirs {
-        let move_files = find_move_files(dir)?;
-        for file_path in move_files {
-            let content = std::fs::read_to_string(&file_path)?;
-            let mut mut_content = MutString::new(&content);
-            parser::normalize_source_text(dialect, (&content, &mut mut_content), &sender);
-            let content = mut_content.freeze();
-            let new_path =
-                output_dir.join(PathBuf::from(file_path).file_name().expect("No file name"));
-            std::fs::write(&new_path, content)?;
-        }
+        let relative_path = file_path.strip_prefix(&dir).expect("File path does not contain parent dir");
+        let output_path = output_dir.join(relative_path);
+        std::fs::write(&output_path, content)?;
     }
 
     Ok(())
