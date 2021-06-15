@@ -1359,7 +1359,6 @@ dependencies = [
  "boogie-backend-v2",
  "decompiler",
  "dunce",
- "env_logger 0.8.4",
  "fs_extra",
  "git-hash",
  "git2",

@@ -9,7 +9,6 @@ authors = [
 edition = "2018"
 
 [dependencies]
-env_logger = "*"
 structopt = "0.3"
 http = "0.2"
 serde = "1.0.125"
