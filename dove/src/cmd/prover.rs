@@ -68,8 +68,18 @@ impl Cmd for Prove {
 
         let dialect = &*ctx.dialect;
         let sender = Some(ctx.manifest.package.account_address.clone());
-        prepare_sources(dialect, &sender, &ctx.path_for(&ctx.manifest.layout.modules_dir), &artifacts_dir.join("modules"))?;
-        prepare_sources(dialect, &sender, &ctx.path_for(&ctx.manifest.layout.scripts_dir), &artifacts_dir.join("scripts"))?;
+        prepare_sources(
+            dialect,
+            &sender,
+            &ctx.path_for(&ctx.manifest.layout.modules_dir),
+            &artifacts_dir.join("modules"),
+        )?;
+        prepare_sources(
+            dialect,
+            &sender,
+            &ctx.path_for(&ctx.manifest.layout.scripts_dir),
+            &artifacts_dir.join("scripts"),
+        )?;
 
         let options = Options {
             backend: boogie_backend_v2::options::BoogieOptions {
@@ -104,7 +114,9 @@ fn prepare_sources(
         parser::normalize_source_text(dialect, (&content, &mut mut_content), &sender);
         let content = mut_content.freeze();
 
-        let relative_path = file_path.strip_prefix(&dir).expect("File path does not contain parent dir");
+        let relative_path = file_path
+            .strip_prefix(&dir)
+            .expect("File path does not contain parent dir");
         let output_path = output_dir.join(relative_path);
         std::fs::write(&output_path, content)?;
     }
@@ -121,7 +133,10 @@ fn is_z3_available(z3_exe: &str) -> bool {
 }
 
 /// Checks if executable is available in path by running it.
-fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item=S>>(executable: &str, args: I) -> bool {
+fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item = S>>(
+    executable: &str,
+    args: I,
+) -> bool {
     let status = std::process::Command::new(executable)
         .args(args)
         .stdout(Stdio::null())
