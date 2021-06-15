@@ -69,6 +69,7 @@ impl Cmd for Prove {
             },
             move_deps,
             move_sources: vec![artifacts_dir.to_string_lossy().to_string()],
+            account_address: ctx.manifest.package.account_address.clone(),
             ..Default::default()
         };
         options.setup_logging();
