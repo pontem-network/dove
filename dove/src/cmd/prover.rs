@@ -1,3 +1,4 @@
+use std::ffi::OsStr;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::{file::find_move_files, parser};
 use lang::compiler::mut_string::MutString;
@@ -14,9 +15,13 @@ use super::Cmd;
 
 #[cfg(target_family = "unix")]
 const BOOGIE_EXE: &str = "boogie";
+#[cfg(target_family = "unix")]
+const Z3_EXE: &str = "z3";
 
 #[cfg(target_family = "windows")]
 const BOOGIE_EXE: &str = "boogie.exe";
+#[cfg(target_family = "windows")]
+const Z3_EXE: &str = "z3.exe";
 
 /// Run move-prover on project files.
 /// Prints output to stderr.
@@ -25,6 +30,9 @@ pub struct Prove {
     /// Override path to boogie executable.
     #[structopt(long)]
     boogie_exe: Option<String>,
+    /// Override path to z3 executable.
+    #[structopt(long)]
+    z3_exe: Option<String>,
 }
 
 impl Cmd for Prove {
@@ -34,6 +42,8 @@ impl Cmd for Prove {
     {
         let boogie_exe = self.boogie_exe.unwrap_or_else(|| BOOGIE_EXE.to_string());
         ensure!(is_boogie_available(&boogie_exe), "boogie executable not found in PATH. Please install it from https://github.com/boogie-org/boogie");
+        let z3_exe = self.z3_exe.unwrap_or_else(|| Z3_EXE.to_string());
+        ensure!(is_z3_available(&z3_exe), "z3 executable not found in PATH. Please install it from https://github.com/Z3Prover/z3");
 
         let dirs = ctx.paths_for(&[
             &ctx.manifest.layout.scripts_dir,
@@ -64,7 +74,7 @@ impl Cmd for Prove {
         let options = Options {
             backend: boogie_backend_v2::options::BoogieOptions {
                 boogie_exe,
-                z3_exe: "z3".into(),
+                z3_exe,
                 ..Default::default()
             },
             move_deps,
@@ -102,10 +112,18 @@ fn prepare_sources(
     Ok(())
 }
 
-/// Checks if `boogie` executable is available in path by running it with `/help` flag.
 fn is_boogie_available(boogie_exe: &str) -> bool {
-    let status = std::process::Command::new(boogie_exe)
-        .arg("/help")
+    is_executable_available(boogie_exe, &["/help"])
+}
+
+fn is_z3_available(z3_exe: &str) -> bool {
+    is_executable_available(z3_exe, &["-h"])
+}
+
+/// Checks if executable is available in path by running it.
+fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item=S>>(executable: &str, args: I) -> bool {
+    let status = std::process::Command::new(executable)
+        .args(args)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status();
