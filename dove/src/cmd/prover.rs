@@ -64,12 +64,14 @@ impl Cmd for Prove {
         let options = Options {
             backend: boogie_backend_v2::options::BoogieOptions {
                 boogie_exe,
+                z3_exe: "z3".into(),
                 ..Default::default()
             },
             move_deps,
             move_sources: vec![artifacts_dir.to_string_lossy().to_string()],
             ..Default::default()
         };
+        options.setup_logging();
         run_move_prover_errors_to_stderr(options)
     }
 }

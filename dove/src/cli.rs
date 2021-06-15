@@ -9,7 +9,6 @@ use lang::compiler::ConstPool;
 
 use crate::cmd::build::Build;
 use crate::cmd::clean::Clean;
-use crate::cmd::prover::Prove;
 use crate::cmd::tx::CreateTransactionCmd;
 use crate::cmd::fetch::Fetch;
 use crate::cmd::init::Init;
@@ -69,10 +68,11 @@ enum Opt {
         #[structopt(flatten)]
         cmd: CreateTransactionCmd,
     },
+    #[cfg(feature = "prover")]
     #[structopt(about = "Run move prover")]
     Prove {
         #[structopt(flatten)]
-        cmd: Prove,
+        cmd: crate::cmd::prover::Prove,
     },
 }
 
@@ -95,6 +95,7 @@ where
         Opt::Test { cmd } => cmd.execute(cwd),
         Opt::Run { cmd } => cmd.execute(cwd),
         Opt::Tx { cmd } => cmd.execute(cwd),
+        #[cfg(feature = "prover")]
         Opt::Prove { cmd } => cmd.execute(cwd),
     }
 }

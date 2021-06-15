@@ -20,14 +20,16 @@ pub mod init;
 pub mod metadata;
 /// Project creator.
 pub mod new;
-/// Run move prover.
-pub mod prover;
 /// Script executor.
 pub mod run;
 /// Test runner.
 pub mod test;
 /// Create transaction.
 pub mod tx;
+
+#[cfg(feature = "prover")]
+/// Run move prover.
+pub mod prover;
 
 /// Move command.
 pub trait Cmd {

@@ -9,6 +9,7 @@ authors = [
 edition = "2018"
 
 [dependencies]
+env_logger = "*"
 structopt = "0.3"
 http = "0.2"
 serde = "1.0.125"
@@ -44,5 +45,11 @@ net = { path = "../net" }
 vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-boogie-backend-v2 = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+
+# move-prover deps
+move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", optional = true }
+boogie-backend-v2 = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", optional = true }
+
+[features]
+default = []
+prover = ['move-prover', 'boogie-backend-v2']
