@@ -5,7 +5,6 @@ use crate::cmd::Cmd;
 use crate::context::{Context, get_context};
 use crate::cmd::init::Init;
 use structopt::StructOpt;
-use move_core_types::identifier::Identifier;
 use std::path::PathBuf;
 use crate::manifest::DoveToml;
 
@@ -52,8 +51,6 @@ impl Cmd for New {
     }
 
     fn apply(self, mut ctx: Context) -> Result<(), Error> {
-        Identifier::new(self.project_name.as_str())?;
-
         let project_dir = ctx.project_dir.join(&self.project_name);
         if project_dir.exists() {
             return Err(anyhow!("destination `{:?}` already exists", project_dir));

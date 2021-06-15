@@ -13,6 +13,8 @@ use lang::compiler::dialects::DialectName;
 use crate::cmd::Cmd;
 use crate::context::{Context, get_context};
 use crate::manifest::{DoveToml, MANIFEST};
+use lazy_static::lazy_static;
+use regex::Regex;
 
 const PONT_STDLIB: &str =
     r#"{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.1.2" }"#;
@@ -88,6 +90,12 @@ impl Cmd for Init {
             .and_then(|name| name.to_str())
             .ok_or_else(|| anyhow!("Failed to extract directory name."))?;
 
+        if !is_valid_name(name) {
+            return Err(anyhow!(
+                "Invalid project name. Allowed symbols a-z, A-Z, 0-9,_,-"
+            ));
+        }
+
         if !self.minimal {
             fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.modules_dir))?;
             fs::create_dir_all(ctx.path_for(&ctx.manifest.layout.scripts_dir))?;
@@ -130,4 +138,11 @@ dependencies = [
         }
         Ok(())
     }
+}
+
+fn is_valid_name(text: &str) -> bool {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"^[\w\-_]{1,64}$").unwrap();
+    }
+    RE.is_match(text)
 }
