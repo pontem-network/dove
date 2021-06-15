@@ -1,12 +1,13 @@
+use std::path::Path;
+
 use anyhow::{Error, Result};
 use serde::Serialize;
 use structopt::StructOpt;
-use std::path::Path;
 
-use crate::index::resolver::git;
 use crate::cmd::Cmd;
 use crate::context::{Context, str_path};
-use crate::manifest::{Dependence, Git, Layout};
+use crate::index::resolver::git;
+use crate::manifest::{Dependence, Git, Layout, MANIFEST, read_manifest};
 use crate::stdoutln;
 
 fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
@@ -107,6 +108,20 @@ impl GitMetadata {
         let path: &Path = ctx.manifest.layout.deps.as_ref();
         let path = ctx.path_for(path.join(&git::make_local_name(&git)));
         let local_path = if path.exists() {
+            let manifest = path.join(MANIFEST);
+            let path = if manifest.exists() {
+                let manifest = read_manifest(&manifest)
+                    .map_err(|err| anyhow!("Failed to parse manifest:{:?}. Err:{}", path, err))?;
+                let modules_dir = path.join(manifest.layout.modules_dir);
+                if modules_dir.exists() {
+                    modules_dir
+                } else {
+                    path
+                }
+            } else {
+                path
+            };
+
             Some(str_path(path)?)
         } else {
             None
