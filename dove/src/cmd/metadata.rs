@@ -1,12 +1,13 @@
+use std::path::Path;
+
 use anyhow::{Error, Result};
 use serde::Serialize;
 use structopt::StructOpt;
-use std::path::Path;
 
-use crate::index::resolver::git;
 use crate::cmd::Cmd;
 use crate::context::{Context, str_path};
-use crate::manifest::{Dependence, Git, Layout};
+use crate::index::resolver::git;
+use crate::manifest::{Dependence, Git, Layout, MANIFEST, read_manifest};
 use crate::stdoutln;
 
 fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
@@ -98,19 +99,59 @@ pub struct GitMetadata {
     /// Path.
     pub path: Option<String>,
     /// Local path.
-    pub local_path: Option<String>,
+    pub local_paths: Vec<String>,
 }
 
 impl GitMetadata {
     /// Create a new git metadata.
     pub fn new(git: Git, ctx: &Context) -> Result<GitMetadata, Error> {
         let path: &Path = ctx.manifest.layout.deps.as_ref();
-        let path = ctx.path_for(path.join(&git::make_local_name(&git)));
-        let local_path = if path.exists() {
-            Some(str_path(path)?)
-        } else {
-            None
-        };
+        let pac_path = ctx.path_for(path.join(&git::make_local_name(&git)));
+        let mut local_paths = Vec::new();
+
+        if pac_path.exists() {
+            let manifest_path = pac_path.join(MANIFEST);
+
+            let manifest = if manifest_path.exists() {
+                match read_manifest(&manifest_path) {
+                    Ok(manifest) => Some(manifest),
+                    Err(err) => {
+                        log::error!("Failed to parse dove manifest:{:?}. Err:{}", pac_path, err);
+                        None
+                    }
+                }
+            } else {
+                None
+            };
+
+            if let Some(manifest) = manifest {
+                let modules_dir = pac_path.join(manifest.layout.modules_dir);
+                if modules_dir.exists() {
+                    local_paths.push(str_path(modules_dir)?);
+                }
+                if let Some(deps) = manifest.package.dependencies {
+                    for dep in deps.deps.iter() {
+                        if let Dependence::Path(path) = dep {
+                            let local_dep_path = pac_path.join(path.as_ref()).canonicalize();
+                            if let Ok(local_dep_path) = local_dep_path {
+                                if local_dep_path.starts_with(&pac_path) {
+                                    local_paths.push(str_path(local_dep_path)?);
+                                    continue;
+                                }
+                            }
+
+                            log::warn!(
+                                "Package '{}' has invalid dependency:{:?}.",
+                                git.git,
+                                path
+                            );
+                        }
+                    }
+                }
+            } else {
+                local_paths.push(str_path(pac_path)?);
+            }
+        }
 
         Ok(GitMetadata {
             git: git.git,
@@ -118,7 +159,7 @@ impl GitMetadata {
             rev: git.rev,
             tag: git.tag,
             path: git.path,
-            local_path,
+            local_paths,
         })
     }
 }

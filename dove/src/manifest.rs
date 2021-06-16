@@ -277,6 +277,12 @@ pub struct DepPath {
     pub path: String,
 }
 
+impl AsRef<str> for DepPath {
+    fn as_ref(&self) -> &str {
+        &self.path
+    }
+}
+
 /// Project dependencies.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Dependencies {

@@ -39,6 +39,11 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
             fs::remove_dir_all(&repo_path)?;
             return Err(err);
         }
+
+        if let Err(err) = fs::remove_dir_all(&repo_path.join(".git")) {
+            warn!("Failed to remove .git in repo {:?}. {}", repo_path, err);
+        }
+
         if let Some(path_in_repo) = &git.path {
             let source_path = repo_path
                 .join(&path_in_repo)
