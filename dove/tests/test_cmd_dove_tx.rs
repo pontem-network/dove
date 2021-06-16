@@ -1,5 +1,5 @@
 use fs_extra::file::write_all;
-use dove::cmd::tx::Transaction;
+use dove::transaction::Transaction;
 use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_remove};
 use std::fs::remove_file;
 
