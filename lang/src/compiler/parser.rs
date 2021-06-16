@@ -136,23 +136,23 @@ pub fn parse_file(
     Errors,
     FileOffsetMap,
 ) {
+    files.insert(fname, source_buffer.to_owned());
+
     let sender_str = sender.map(|sender| format!("{:#x}", sender));
     let mut mut_source = MutString::new(source_buffer);
     let file_source_map =
         normalize_source_text(dialect, (source_buffer, &mut mut_source), &sender_str);
 
-    let source_buffer = mut_source.freeze();
+    let mutated_source = mut_source.freeze();
 
-    let (no_comments_buffer, comment_map) = match strip_comments_and_verify(fname, &source_buffer)
-    {
-        Err(errors) => {
-            files.insert(fname, source_buffer);
-            return (vec![], Default::default(), errors, file_source_map);
-        }
-        Ok(result) => result,
-    };
+    let (no_comments_buffer, comment_map) =
+        match strip_comments_and_verify(fname, &mutated_source) {
+            Err(errors) => {
+                return (vec![], Default::default(), errors, file_source_map);
+            }
+            Ok(result) => result,
+        };
 
-    files.insert(fname, source_buffer);
     match parse_file_string(fname, &no_comments_buffer, FileCommentMap::default()) {
         Ok((defs, _)) => (defs, comment_map, Vec::default(), file_source_map),
         Err(errors) => (vec![], comment_map, errors, file_source_map),

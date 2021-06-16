@@ -14,6 +14,7 @@ use move_core_types::language_storage::{ModuleId, CORE_CODE_ADDRESS};
 use move_core_types::identifier::Identifier;
 use vm::CompiledModule;
 use vm::errors::Location;
+use lang::compiler::source_map::ProjectOffsetMap;
 
 /// Extracts metadata form source code.
 pub fn source_meta(
@@ -24,8 +25,10 @@ pub fn source_meta(
     let name = ConstPool::push(file.to_str().unwrap_or("source"));
     let source = fs::read_to_string(file)?;
 
-    let (defs, _, errors, _) =
-        parse_file(dialect, &mut HashMap::default(), name, &source, sender);
+    let mut files = HashMap::new();
+
+    let (defs, _, errors, file_offset_map) =
+        parse_file(dialect, &mut files, name, &source, sender);
     if errors.is_empty() {
         let mut metadata = Vec::new();
         for def in defs {
@@ -46,15 +49,15 @@ pub fn source_meta(
             meta: metadata,
         })
     } else {
-        let mut files = HashMap::new();
-        files.insert(name, source);
+        let offsets_map = ProjectOffsetMap::with_file_map(name, file_offset_map);
         let mut writer = StandardStream::stderr(ColorChoice::Auto);
-        errors::output_errors(&mut writer, files, errors);
+        errors::output_errors(&mut writer, files, offsets_map.transform(errors));
         Err(anyhow!("Failed to parse move file:{}", name))
     }
 }
 
 /// Move definition metadata.
+#[derive(Debug)]
 pub struct DefinitionMeta {
     /// Module identifier.
     pub module_id: ModuleId,
@@ -63,6 +66,7 @@ pub struct DefinitionMeta {
 }
 
 /// Move file metadata.
+#[derive(Debug)]
 pub struct FileMeta {
     /// File path.
     pub path: Rc<str>,
