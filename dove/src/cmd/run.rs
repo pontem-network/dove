@@ -1,60 +1,53 @@
 use anyhow::Error;
 use structopt::StructOpt;
+use move_executor::executor::render_execution_result;
 
-use lang::compiler::file::{load_move_files, MoveFile};
-use move_executor::executor::{Executor, render_execution_result};
-
-use crate::cmd::{Cmd, load_dependencies};
+use crate::cmd::Cmd;
 use crate::context::Context;
-use crate::stdoutln;
+use crate::transaction::TransactionBuilder;
 
 /// Run script.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Run {
-    #[structopt(help = "Script file name.")]
-    script: String,
-    #[structopt(name = "Script signers.", long = "signers", short = "s")]
-    signers: Vec<String>,
+    #[structopt(help = "Script call declaration.\
+        Example: 'create_balance([10,10], true, 68656c6c6f776f726c64, 100, 0x1)'")]
+    call: Option<String>,
+    #[structopt(help = "Script name.", long = "name", short = "n")]
+    script_name: Option<String>,
+    #[structopt(help = "Script file name.", long = "file", short = "f")]
+    file_name: Option<String>,
     #[structopt(
         help = r#"Number of script main() function arguments in quotes, e.g. "10 20 30""#,
         name = "Script args.",
         long = "args",
         short = "a"
     )]
-    args: Vec<String>,
+    args: Option<Vec<String>>,
+    #[structopt(name = "Script signers.", long = "signers", short = "s")]
+    signers: Option<Vec<String>>,
     #[structopt(long, hidden = true)]
     color: Option<String>,
 }
 
 impl Cmd for Run {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let scripts_dir = ctx.path_for(&ctx.manifest.layout.scripts_dir);
-        let script = scripts_dir.join(self.script).with_extension("move");
-        if !script.exists() {
-            return Err(anyhow!("Cannot open {:?}", script));
-        }
-        stdoutln!("Script: {}", script.display());
-        let module_dir = ctx.path_for(&ctx.manifest.layout.modules_dir);
+        let trbuild = TransactionBuilder::from_run_cmd(&self, &ctx)?;
+        render_execution_result(trbuild.run())
+    }
+}
 
-        let mut index = ctx.build_index()?;
+impl<'a> TransactionBuilder<'a> {
+    /// Create a TransactionBuilder based on the transmitted data
+    pub fn from_run_cmd(cmd: &'a Run, ctx: &'a Context) -> Result<TransactionBuilder<'a>, Error> {
+        let mut trbuild = Self::new(ctx);
+        trbuild.script_file_name = cmd.file_name.clone();
+        trbuild
+            .set_from_cmd_call(cmd.call.as_ref())?
+            .set_script_name_from_cmd(cmd.script_name.clone())
+            .set_args_from_cmd(cmd.args.clone())
+            .set_signers_from_cmd(cmd.signers.clone())?;
 
-        let dep_set = index.make_dependency_set(&[&script, &module_dir])?;
-        let mut dep_list = load_dependencies(dep_set)?;
-        dep_list.extend(load_move_files(&[module_dir])?);
-
-        let mut signers = self
-            .signers
-            .iter()
-            .map(|signer| ctx.dialect.parse_address(signer))
-            .collect::<Result<Vec<_>, Error>>()?;
-
-        if signers.is_empty() {
-            signers.push(ctx.account_address()?);
-        }
-        let executor = Executor::new(ctx.dialect.as_ref(), signers[0], dep_list);
-        let script = MoveFile::load(script)?;
-
-        render_execution_result(executor.execute_script(script, Some(signers), self.args))
+        Ok(trbuild)
     }
 }
