@@ -15,9 +15,9 @@ bcs = "0.1.2"
 
 lang = { path = "../lang" }
 
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
-move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool", features = ["debug_module"] }
-vm = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", features = ["debug_module"] }
+vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 
 # ps:
 [dependencies.substrate-api-client]

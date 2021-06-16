@@ -30,7 +30,7 @@ compat = { path = "../compat", package = "move-compat" }
 git-hash = { path = "../../common/git-hash" }
 
 [dev-dependencies]
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 
 [features]
 cffi = []

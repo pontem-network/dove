@@ -10,12 +10,12 @@ edition = "2018"
 publish = false
 
 [dependencies]
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
-vm = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
-move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
-move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
-ir-to-bytecode-syntax = { git = "https://github.com/pontem-network/diem.git", branch = "ponc-151-constpool" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+ir-to-bytecode-syntax = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 
 compat = { path = "compat", package = "move-compat" }
 
