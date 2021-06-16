@@ -141,7 +141,6 @@ mod tests {
     use vm::CompiledModule;
     use vm::file_format::{Bytecode, CodeUnit, FunctionDefinition};
 
-    use lang::compiler::ConstPool;
     use lang::compiler::dialects::DialectName;
     use lang::compiler::file::MoveFile;
     use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
@@ -149,7 +148,6 @@ mod tests {
     use crate::{Config, decompile_str};
 
     fn compile(source: &str) -> Vec<u8> {
-        let _pool = ConstPool::new();
         let dialect = DialectName::DFinance.get_dialect();
 
         let sender = dialect.parse_address("0x1").unwrap();

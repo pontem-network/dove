@@ -12,7 +12,6 @@ use move_language_server::server::run_server;
 use move_language_server::inner::config::Config;
 use lang::compiler::dialects::DialectName;
 use lang::compiler::file::MoveFile;
-use lang::compiler::ConstPool;
 use resources::assets_dir;
 
 const SHUTDOWN_REQ_ID: i32 = 10;
@@ -172,9 +171,6 @@ fn test_server_config_change() {
 
 #[test]
 fn test_removed_file_not_present_in_the_diagnostics() {
-    // TODO: use or rem ConstPool
-    let _pool = ConstPool::new();
-
     let script_path = assets_dir().join("script.move");
     let (client_conn, server_conn) = Connection::memory();
 

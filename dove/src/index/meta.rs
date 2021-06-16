@@ -1,7 +1,7 @@
 use anyhow::{Result, Error};
 use std::path::Path;
 use lang::compiler::parser::parse_file;
-use move_lang::{errors, parser::ast::*, name_pool::ConstPool};
+use move_lang::{leak_str, errors, parser::ast::*};
 
 use std::collections::{HashSet, HashMap};
 use termcolor::{StandardStream, ColorChoice};
@@ -21,7 +21,7 @@ pub fn source_meta(
     sender: Option<AccountAddress>,
     dialect: &dyn Dialect,
 ) -> Result<FileMeta, Error> {
-    let name = ConstPool::push(file.to_str().unwrap_or("source"));
+    let name = leak_str(file.to_str().unwrap_or("source"));
     let source = fs::read_to_string(file)?;
 
     let (defs, _, errors, _) =
