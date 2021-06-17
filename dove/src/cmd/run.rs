@@ -37,11 +37,9 @@ impl Cmd for Run {
         stdoutln!("Script: {}", script.display());
         let module_dir = ctx.path_for(&ctx.manifest.layout.modules_dir);
 
-        stdoutln!("Build project index...");
         let mut index = ctx.build_index()?;
 
         let dep_set = index.make_dependency_set(&[&script, &module_dir])?;
-        stdoutln!("Load dependencies...");
         let mut dep_list = load_dependencies(dep_set)?;
         dep_list.extend(load_move_files(&[module_dir])?);
 
@@ -54,11 +52,9 @@ impl Cmd for Run {
         if signers.is_empty() {
             signers.push(ctx.account_address()?);
         }
-        stdoutln!("Load move files...");
         let executor = Executor::new(ctx.dialect.as_ref(), signers[0], dep_list);
         let script = MoveFile::load(script)?;
 
-        stdoutln!();
         render_execution_result(executor.execute_script(script, Some(signers), self.args))
     }
 }

@@ -4,7 +4,6 @@ use anyhow::Error;
 use structopt::StructOpt;
 use lang::compiler::file::load_move_files;
 use move_executor::executor::{Executor, render_test_result};
-use crate::stdoutln;
 
 /// Run tests.
 #[derive(StructOpt, Debug)]
@@ -34,11 +33,9 @@ impl Cmd for Test {
 
         dirs.push(tests_dir.clone());
 
-        stdoutln!("Build project index...");
         let mut index = ctx.build_index()?;
 
         let dep_set = index.make_dependency_set(&dirs)?;
-        stdoutln!("Load dependencies...");
         let mut dep_list = load_dependencies(dep_set)?;
 
         dep_list.extend(load_move_files(&dirs[..dirs.len() - 1])?);
@@ -47,7 +44,6 @@ impl Cmd for Test {
 
         let mut has_failures = false;
 
-        stdoutln!();
         for test in load_move_files(&[tests_dir])? {
             let test_name = Executor::script_name(&test)?;
 

@@ -58,7 +58,6 @@ impl Cmd for CreateTransactionCmd {
         let output_filename = self.output.take();
 
         let builder = TransactionBuilder::new(self, &ctx)?;
-        stdoutln!("Build project index...");
         let (script_name, transaction) = builder.build()?;
 
         store_transaction(&ctx, &output_filename.unwrap_or(script_name), transaction)

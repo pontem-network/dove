@@ -2,8 +2,6 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
-use crate::stdoutln;
-use crate::stdout::colorize::good;
 
 /// Fetch dependencies.
 #[derive(StructOpt, Debug)]
@@ -15,9 +13,7 @@ pub struct Fetch {
 
 impl Cmd for Fetch {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        stdoutln!("Build project index...");
         ctx.build_index()?;
-        stdoutln!("Fetch dependencies {}", good("completed"));
         Ok(())
     }
 }
