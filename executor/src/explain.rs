@@ -179,7 +179,7 @@ fn format_container(
 ) -> Result<String> {
     match container {
         Container::Locals(r) | Container::Vec(r) | Container::Struct(r) => {
-            display_list_of_values(r.borrow().iter(), format_value)
+            display_list_of_values(r.borrow().iter(), |v| format_value(*v))
         }
         Container::VecU8(r) => display_list_of_values(r.borrow().iter(), |num| {
             Ok(num.to_formatted_string(&num_custom_format))
@@ -199,7 +199,7 @@ fn format_container(
     }
 }
 
-fn format_value(value: &&ValueImpl) -> Result<String> {
+fn format_value(value: &ValueImpl) -> Result<String> {
     let format = num_format::CustomFormat::builder().separator("").build()?;
     let mut out = String::new();
     match value {
@@ -259,26 +259,11 @@ pub fn explain_effects(
                         .type_to_type_layout(&tp)
                         .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
                     if let Some(val) = Value::simple_deserialize(&value, &layout) {
-                        if state
-                            .get_resource_bytes(*addr, struct_tag.clone())
-                            .is_some()
-                        {
-                            (
-                                "Changed".to_string(),
-                                ResourceChange(
-                                    formatted_struct_tag,
-                                    Some(format_value(&&val.0)?),
-                                ),
-                            )
-                        } else {
-                            (
-                                "Added".to_string(),
-                                ResourceChange(
-                                    formatted_struct_tag,
-                                    Some(format_value(&&val.0)?),
-                                ),
-                            )
-                        }
+                        let state_string = match state.get_resource_bytes(*addr, struct_tag.clone()) {
+                            Some(_) => "Changed".to_string(),
+                            None => "Added".to_string(),
+                        };
+                        (state_string, ResourceChange(formatted_struct_tag, Some(format_value(&val.0)?)))
                     } else {
                         return Err(anyhow!(
                             "Failed to deserialize move value:{:?}",
