@@ -5,8 +5,6 @@ use std::env;
 use anyhow::Result;
 use structopt::StructOpt;
 
-use lang::compiler::ConstPool;
-
 use crate::cmd::build::Build;
 use crate::cmd::clean::Clean;
 use crate::cmd::tx::CreateTransactionCmd;
@@ -78,7 +76,6 @@ where
 {
     let matches = Opt::from_iter(args);
 
-    let _pool = ConstPool::new();
     match matches {
         Opt::Clean { cmd } => cmd.execute(cwd),
         Opt::New { cmd } => cmd.execute(cwd),

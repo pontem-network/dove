@@ -3,7 +3,6 @@ use move_core_types::account_address::AccountAddress;
 use move_lang::{cfgir, FullyCompiledProgram, move_continue_up_to, Pass, PassResult};
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
-pub use move_lang::name_pool::ConstPool;
 use move_lang::shared::Address;
 
 use parser::parse_program;

@@ -1,7 +1,7 @@
 use anyhow::{Result, Context};
 use clap::{App, Arg};
 use std::path::PathBuf;
-use lang::compiler::{ConstPool, file};
+use lang::compiler::file;
 use move_executor::executor::{Executor, render_test_result};
 use lang::compiler::dialects::DialectName;
 use std::str::FromStr;
@@ -33,7 +33,6 @@ fn cli() -> App<'static, 'static> {
 
 pub fn main() -> Result<()> {
     let cli_arguments = cli().get_matches();
-    let _pool = ConstPool::new();
 
     let verbose_output = cli_arguments.is_present("verbose");
     let test_name_pattern = cli_arguments.value_of("name-pattern");

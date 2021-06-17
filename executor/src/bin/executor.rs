@@ -4,7 +4,6 @@ use anyhow::{Context, Result};
 
 use clap::{App, Arg};
 
-use move_lang::name_pool::ConstPool;
 use lang::compiler::file::MoveFile;
 use lang::compiler::file;
 use lang::compiler::dialects::DialectName;
@@ -44,7 +43,6 @@ fn cli() -> App<'static, 'static> {
 
 fn main() -> Result<()> {
     let cli_arguments = cli().get_matches();
-    let _pool = ConstPool::new();
 
     let script =
         MoveFile::load(cli_arguments.value_of("SCRIPT").unwrap()).with_context(|| {

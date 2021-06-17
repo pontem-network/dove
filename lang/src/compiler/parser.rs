@@ -4,7 +4,7 @@ use anyhow::Result;
 use move_core_types::account_address::AccountAddress;
 use move_lang::{FileCommentMap, parser, strip_comments_and_verify};
 use move_lang::errors::{Errors, FilesSourceText};
-use move_lang::name_pool::ConstPool;
+use move_lang::leak_str;
 use move_lang::parser::syntax::parse_file_string;
 
 use crate::compiler::dialects::{Dialect, line_endings};
@@ -38,7 +38,7 @@ pub fn parse_target(
     let mut errors: Errors = Vec::new();
 
     for target in targets {
-        let name = ConstPool::push(target.name());
+        let name = leak_str(target.name());
         let (defs, comments, es, offsets_map) =
             parse_file(dialect, &mut files, name, target.content(), sender);
         source_definitions.extend(defs);
@@ -88,7 +88,7 @@ pub fn parse_program(
             let mut lib_definitions = Vec::new();
             let mut errors: Errors = Vec::new();
             for dep in deps {
-                let name = ConstPool::push(&dep.name());
+                let name = leak_str(&dep.name());
                 let (defs, _, es, offsets_map) =
                     parse_file(dialect, &mut source_map, name, dep.content(), sender);
                 project_offsets_map.0.insert(name, offsets_map);

@@ -11,6 +11,7 @@ use move_language_server::global_state::{
 };
 use lang::compiler::file::*;
 use move_language_server::inner::change::AnalysisChange;
+use move_lang::leak_str;
 
 macro_rules! config {
     () => {{
@@ -114,12 +115,9 @@ mod tests {
     use move_language_server::inner::db::RootDatabase;
     use move_language_server::inner::analysis::Analysis;
     use std::collections::HashMap;
-    use lang::compiler::ConstPool;
 
     #[test]
     fn test_fail_on_non_ascii_character() {
-        let _pool = ConstPool::new();
-
         let source = r"fun main() { return; }ффф";
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
@@ -128,8 +126,6 @@ mod tests {
 
     #[test]
     fn test_successful_compilation() {
-        let _pool = ConstPool::new();
-
         let source = r"
 script {
     fun main() {}
@@ -141,8 +137,6 @@ script {
 
     #[test]
     fn test_function_parse_error() {
-        let _pool = ConstPool::new();
-
         let source = "module M { struc S { f: u64 } }";
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
@@ -153,8 +147,6 @@ script {
 
     #[test]
     fn test_main_function_parse_error() {
-        let _pool = ConstPool::new();
-
         let source = "script { main() {} }";
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
@@ -163,8 +155,6 @@ script {
 
     #[test]
     fn test_multiline_function_parse_error() {
-        let _pool = ConstPool::new();
-
         let source = r"
 module M {
     struc S {
@@ -179,8 +169,6 @@ module M {
 
     #[test]
     fn test_expansion_checks_duplicates() {
-        let _pool = ConstPool::new();
-
         let source = r"
 module M {
     struct S {
@@ -199,8 +187,6 @@ module M {
 
     #[test]
     fn test_expansion_checks_public_main_redundancy() {
-        let _pool = ConstPool::new();
-
         let source = r"script { public fun main() {} }";
 
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
@@ -213,8 +199,6 @@ module M {
 
     #[test]
     fn test_naming_checks_generics_with_type_parameters() {
-        let _pool = ConstPool::new();
-
         let source = r"
 module M {
     struct S<T> { f: T<u64> }
@@ -231,8 +215,6 @@ module M {
 
     #[test]
     fn test_typechecking_invalid_local_borrowing() {
-        let _pool = ConstPool::new();
-
         let source = r"
 module M {
     fun t0(r: &u64) {
@@ -247,8 +229,6 @@ module M {
 
     #[test]
     fn test_stdlib_modules_are_available_if_loaded() {
-        let _pool = ConstPool::new();
-
         let source = r"
 module MyModule {
     use 0x1::Signer;
@@ -267,8 +247,6 @@ module MyModule {
 
     #[test]
     fn test_compile_check_script_with_additional_dependencies() {
-        let _pool = ConstPool::new();
-
         // hardcoded sender address
         let source = r"
 script {
@@ -295,8 +273,6 @@ script {
 
     #[test]
     fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
-        let _pool = ConstPool::new();
-
         let record = MoveFile::load(modules_path().join("record.move")).unwrap();
         let config = config!({
             "stdlib_folder": stdlib_path(),
@@ -309,8 +285,6 @@ script {
 
     #[test]
     fn test_compile_with_sender_address_specified() {
-        let _pool = ConstPool::new();
-
         // hardcoded sender address
         let source = r"
 script {
@@ -337,8 +311,6 @@ script {
 
     #[test]
     fn test_compiler_out_of_bounds_multimessage_diagnostic() {
-        let _pool = ConstPool::new();
-
         let source = r"
 script {
     use 0x1::Signer;
@@ -363,8 +335,6 @@ script {
 
     #[test]
     fn test_syntax_error_in_dependency() {
-        let _pool = ConstPool::new();
-
         let config = config!({ "modules_folders": [modules_path()] });
 
         let mut files = HashMap::new();
@@ -401,8 +371,6 @@ script {
 
     #[test]
     fn test_check_one_of_the_stdlib_modules_no_duplicate_definition() {
-        let _pool = ConstPool::new();
-
         let source = r"
 address 0x0 {
     module Debug {
@@ -424,8 +392,6 @@ address 0x0 {
 
     #[test]
     fn invalid_valid_in_precense_of_bech32_address() {
-        let _pool = ConstPool::new();
-
         let source = r"
 address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     module Debug {
@@ -444,8 +410,6 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 
     #[test]
     fn two_bech32_addresses_one_in_the_middle_of_script() {
-        let _pool = ConstPool::new();
-
         let source = r"
 address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     module Debug {
@@ -500,8 +464,6 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 
     #[test]
     fn pass_bech32_address_as_sender() {
-        let _pool = ConstPool::new();
-
         let source = r"
         address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             module Debug {
@@ -520,8 +482,6 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 
     #[test]
     fn test_substitude_sender_as_template_syntax() {
-        let _pool = ConstPool::new();
-
         let source = r"
         address {{sender}} {
             module Debug {
@@ -541,8 +501,6 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 
     #[test]
     fn test_substitude_sender_as_template_syntax_with_spaces() {
-        let _pool = ConstPool::new();
-
         let source = r"
         address {{ sender }} {
             module Debug {
@@ -562,8 +520,6 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 
     #[test]
     fn test_sender_substitution_with_errors() {
-        let _pool = ConstPool::new();
-
         let source = r"
 address {{sender}} {
     module Debug {
@@ -584,8 +540,6 @@ address {{sender}} {
 
     #[test]
     fn test_multiple_substitutions_with_sender() {
-        let _pool = ConstPool::new();
-
         let source = r"
 address {{sender}} {
     module Debug {
@@ -607,8 +561,6 @@ address {{sender}} {
 
     #[test]
     fn test_bech32_and_sender_substitution_with_errors() {
-        let _pool = ConstPool::new();
-
         let source = "
 address {{ sender }} {
     module Debug {
@@ -633,8 +585,6 @@ address {{ sender }} {
 
     #[test]
     fn test_replace_with_longer_form_if_sender_shorter_than_template_string() {
-        let _pool = ConstPool::new();
-
         let source = r"
 address {{sender}} {
     module Debug {
@@ -652,8 +602,6 @@ address {{sender}} {
 
     #[test]
     fn test_sender_replacement_in_script() {
-        let _pool = ConstPool::new();
-
         let module = r"
 address {{sender}} {
     module Debug {
@@ -676,7 +624,7 @@ script {
         let error = diagnostics_with_deps(
             MoveFile::with_content(script_path(), source),
             vec![MoveFile::with_content(
-                ConstPool::push(&modules_path().join("debug.move").to_str().unwrap()),
+                leak_str(&modules_path().join("debug.move").to_str().unwrap()),
                 module,
             )],
             config,
@@ -686,8 +634,6 @@ script {
 
     #[test]
     fn test_error_message_for_unbound_module_with_bech32_address() {
-        let _pool = ConstPool::new();
-
         let source = r"
         script {
             fun main() {
@@ -707,8 +653,6 @@ script {
 
     #[test]
     fn test_error_message_unbound_module_with_bech32_address_and_sender() {
-        let _pool = ConstPool::new();
-
         let source = r"
 script {
     fun main() {
@@ -732,8 +676,6 @@ script {
 
     #[test]
     fn test_dfinance_documentation_issue_should_not_crash_with_span_overflow() {
-        let _pool = ConstPool::new();
-
         let source = r"
         address 0x0 {
         /// docs
@@ -747,8 +689,6 @@ script {
 
     #[test]
     fn test_when_module_resolution_fails_error_should_be_at_use_site() {
-        let _pool = ConstPool::new();
-
         let source = r"script {
             use 0x0::UnknownPayments;
             fun main(s: &signer) {
@@ -765,8 +705,6 @@ script {
 
     #[test]
     fn test_windows_line_endings_are_allowed() {
-        let _pool = ConstPool::new();
-
         let source = "script { fun main() {} \r\n } \r\n";
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert!(errors.is_empty(), "{:#?}", errors);
@@ -774,8 +712,6 @@ script {
 
     #[test]
     fn test_windows_line_endings_do_not_offset_errors() {
-        let _pool = ConstPool::new();
-
         let source = "script {\r\n func main() {} \r\n }";
         let errors = diagnostics(MoveFile::with_content(script_path(), source));
         assert_eq!(errors.len(), 1);
@@ -789,8 +725,6 @@ script {
 
     #[test]
     fn test_docstrings_are_allowed_on_scripts() {
-        let _pool = ConstPool::new();
-
         let source = r"
 /// signer: 0x1
 script {

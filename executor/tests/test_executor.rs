@@ -1,5 +1,4 @@
 use move_executor::explain::{AddressResourceChanges, ResourceChange, PipelineExecutionResult};
-use lang::compiler::ConstPool;
 use lang::compiler::file::MoveFile;
 use resources::{assets_dir, stdlib_path, modules_path};
 use lang::compiler::error::CompilerError;
@@ -46,8 +45,6 @@ fn execute_script(
 
 #[test]
 fn test_show_compilation_errors() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     fun main() {
@@ -71,8 +68,6 @@ script {
 
 #[test]
 fn test_execute_custom_script_with_stdlib_module() {
-    let _pool = ConstPool::new();
-
     let text = r"
     script {
         use 0x1::Signer;
@@ -93,8 +88,6 @@ fn test_execute_custom_script_with_stdlib_module() {
 
 #[test]
 fn test_execute_script_and_record_resource_changes() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     use 0x2::Record;
@@ -131,8 +124,6 @@ script {
 
 #[test]
 fn missing_write_set_for_move_to_sender() {
-    let _pool = ConstPool::new();
-
     let module_text = r"
     address 0x1 {
         module M {
@@ -179,8 +170,6 @@ fn missing_write_set_for_move_to_sender() {
 
 #[test]
 fn test_run_with_non_default_dfinance_dialect() {
-    let _pool = ConstPool::new();
-
     let module_text = r"
     address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
         module M {
@@ -228,8 +217,6 @@ fn test_run_with_non_default_dfinance_dialect() {
 
 #[test]
 fn test_pass_arguments_to_script() {
-    let _pool = ConstPool::new();
-
     let module_text = r"
     address 0x1 {
         module Module {
@@ -277,8 +264,6 @@ fn test_pass_arguments_to_script() {
 
 #[test]
 fn test_sender_string_in_script() {
-    let _pool = ConstPool::new();
-
     let module_text = r"
     address {{sender}} {
         module Debug {
@@ -314,8 +299,6 @@ fn test_sender_string_in_script() {
 
 #[test]
 fn test_bech32_address_and_sender_in_compiler_error() {
-    let _pool = ConstPool::new();
-
     let text = r"
     script {
         fun main() {
@@ -344,8 +327,6 @@ fn test_bech32_address_and_sender_in_compiler_error() {
 
 #[test]
 fn test_show_executor_gas_spent() {
-    let _pool = ConstPool::new();
-
     let text = r"
     script {
         use 0x1::Signer;
@@ -368,8 +349,6 @@ fn test_show_executor_gas_spent() {
 
 #[test]
 fn test_dfinance_executor_allows_0x0() {
-    let _pool = ConstPool::new();
-
     let text = r"
     script {
         fun main() {}
@@ -396,8 +375,6 @@ fn test_dfinance_executor_allows_0x0() {
 
 #[test]
 fn test_execute_script_with_custom_signer() {
-    let _pool = ConstPool::new();
-
     let text = r"
     /// signers: 0x2
     script {
@@ -433,8 +410,6 @@ fn test_execute_script_with_custom_signer() {
 
 #[test]
 fn test_multiple_signers() {
-    let _pool = ConstPool::new();
-
     let text = r"
     /// signers: 0x1, 0x2
     script {
@@ -485,8 +460,6 @@ fn test_multiple_signers() {
 
 #[test]
 fn test_execute_script_with_module_in_the_same_file() {
-    let _pool = ConstPool::new();
-
     let text = r"
 address 0x2 {
     module Record {
@@ -540,8 +513,6 @@ script {
 
 #[test]
 fn test_fail_with_assert() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     fun main() {
@@ -567,8 +538,6 @@ script {
 
 #[test]
 fn test_script_starts_from_line_0() {
-    let _pool = ConstPool::new();
-
     let text = r"script { fun main() { assert(false, 401); } }";
     let res = execute_script(
         MoveFile::with_content(script_path(), text),
@@ -588,8 +557,6 @@ fn test_script_starts_from_line_0() {
 
 #[test]
 fn test_doc_comment_starts_at_line_0() {
-    let _pool = ConstPool::new();
-
     let text = r"/// signers: 0x1
 script { fun main(_: signer) { assert(false, 401); } }";
     let res = execute_script(
@@ -610,8 +577,6 @@ script { fun main(_: signer) { assert(false, 401); } }";
 
 #[test]
 fn test_coin_price_fails_if_no_coins_module_available() {
-    let _pool = ConstPool::new();
-
     let text = r"
 /// price: btc_usdt 100
 script {
@@ -636,8 +601,6 @@ script {
 
 #[test]
 fn test_initialize_coin_price_before_run() {
-    let _pool = ConstPool::new();
-
     let text = r"
 /// price: btc_usdt 100
 script {
@@ -665,8 +628,6 @@ script {
 
 #[test]
 fn test_run_scripts_in_sequential_order() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     use 0x2::Record;
@@ -711,8 +672,6 @@ script {
 
 #[test]
 fn test_failure_in_first_script() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     fun step_1() {
@@ -745,8 +704,6 @@ script {
 
 #[test]
 fn test_failure_in_second_script() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     fun step_1() {
@@ -779,8 +736,6 @@ script {
 
 #[test]
 fn test_run_scripts_and_set_oracles_before_each_step() {
-    let _pool = ConstPool::new();
-
     let text = r"
 /// price: btc_usdt 100
 script {
@@ -818,8 +773,6 @@ script {
 
 #[test]
 fn test_set_current_time() {
-    let _pool = ConstPool::new();
-
     let text = r"
 /// current_time: 100
 script {
@@ -849,8 +802,6 @@ script {
 
 #[test]
 fn test_shows_size_of_transaction_writeset() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     use 0x2::Record;
@@ -877,8 +828,6 @@ script {
 
 #[test]
 fn test_aborts_with() {
-    let _pool = ConstPool::new();
-
     let text = r"
 /// aborts_with: 101
 script {
@@ -907,7 +856,6 @@ script {
 
 #[test]
 fn test_extract_error_name_if_prefixed_with_err() {
-    let _pool = ConstPool::new();
     let text = r"
         script {
             use 0x1::Signer;
@@ -939,7 +887,6 @@ fn test_extract_error_name_if_prefixed_with_err() {
 
 #[test]
 fn test_dry_run_do_not_apply_writeset_changes() {
-    let _pool = ConstPool::new();
     let text = r"
 script {
     use 0x2::Record;
@@ -986,7 +933,6 @@ script {
 
 #[test]
 fn test_set_balance_via_meta() {
-    let _pool = ConstPool::new();
     let text = r#"
 script {
     use 0x1::Pontem;
@@ -1030,7 +976,6 @@ script {
 
 #[test]
 fn test_set_native_balance_via_meta() {
-    let _pool = ConstPool::new();
     let text = r#"
 script {
     use 0x1::PONT;
@@ -1073,8 +1018,6 @@ script {
 
 #[test]
 fn test_fail_with_arithmetic_error() {
-    let _pool = ConstPool::new();
-
     let text = r"
 /// status: ARITHMETIC_ERROR
 script {
@@ -1103,8 +1046,6 @@ script {
 
 #[test]
 fn test_set_block_height() {
-    let _pool = ConstPool::new();
-
     let text = r"
 /// block: 1024
 script {
@@ -1130,8 +1071,6 @@ script {
 
 #[test]
 fn test_block_height_default_100() {
-    let _pool = ConstPool::new();
-
     let text = r"
 script {
     use 0x1::Block;
