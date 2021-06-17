@@ -57,14 +57,14 @@ impl Cmd for Prove {
             .map(|s| s.to_string())
             .collect();
 
-        let artifacts_dir = ctx
-            .path_for(&ctx.manifest.layout.artifacts)
-            .join("move-prover");
-        if artifacts_dir.exists() {
-            std::fs::remove_dir_all(&artifacts_dir)?;
+        let output_dir = ctx.path_for(&ctx.manifest.layout.move_prover_output);
+        if output_dir.exists() {
+            std::fs::remove_dir_all(&output_dir)?;
         }
-        std::fs::create_dir_all(artifacts_dir.join("modules"))?;
-        std::fs::create_dir_all(artifacts_dir.join("scripts"))?;
+        let output_modules_dir = output_dir.join("modules");
+        let output_scripts_dir = output_dir.join("scripts");
+        std::fs::create_dir_all(&output_modules_dir)?;
+        std::fs::create_dir_all(&output_scripts_dir)?;
 
         let dialect = &*ctx.dialect;
         let sender = Some(ctx.manifest.package.account_address.clone());
@@ -72,13 +72,13 @@ impl Cmd for Prove {
             dialect,
             &sender,
             &ctx.path_for(&ctx.manifest.layout.modules_dir),
-            &artifacts_dir.join("modules"),
+            &output_modules_dir,
         )?;
         prepare_sources(
             dialect,
             &sender,
             &ctx.path_for(&ctx.manifest.layout.scripts_dir),
-            &artifacts_dir.join("scripts"),
+            &output_scripts_dir,
         )?;
 
         let options = Options {
@@ -88,7 +88,7 @@ impl Cmd for Prove {
                 ..Default::default()
             },
             move_deps,
-            move_sources: vec![artifacts_dir.to_string_lossy().to_string()],
+            move_sources: vec![output_dir.to_string_lossy().to_string()],
             account_address: ctx.manifest.package.account_address.clone(),
             ..Default::default()
         };
