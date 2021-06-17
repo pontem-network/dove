@@ -159,7 +159,7 @@ pub fn parse_file(
     }
 }
 
-fn normalize_source_text<'a, 'b>(
+pub fn normalize_source_text<'a, 'b>(
     dialect: &dyn Dialect,
     (source_text, mut_str): (&'a str, &mut MutString<'a, 'b>),
     sender: &'b Option<String>,

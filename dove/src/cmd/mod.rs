@@ -27,6 +27,10 @@ pub mod test;
 /// Create transaction.
 pub mod tx;
 
+#[cfg(feature = "prover")]
+/// Run move prover.
+pub mod prover;
+
 /// Move command.
 pub trait Cmd {
     /// Returns project context.

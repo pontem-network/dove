@@ -88,6 +88,10 @@ fn bundles_output() -> String {
     "artifacts/bundles".to_owned()
 }
 
+fn move_prover_output() -> String {
+    "artifacts/move_prover".to_owned()
+}
+
 fn deps() -> String {
     "artifacts/.external".to_owned()
 }
@@ -135,6 +139,10 @@ pub struct Layout {
     #[serde(default = "transactions_output")]
     pub transactions_output: String,
 
+    /// Directory with move-prover intermediate artifacts.
+    #[serde(default = "move_prover_output")]
+    pub move_prover_output: String,
+
     /// Directory with external dependencies.
     #[serde(default = "deps")]
     pub deps: String,
@@ -159,6 +167,7 @@ impl Layout {
             bundles_output: ctx.str_path_for(&self.bundles_output)?,
             scripts_output: ctx.str_path_for(&self.scripts_output)?,
             transactions_output: ctx.str_path_for(&self.transactions_output)?,
+            move_prover_output: ctx.str_path_for(&self.move_prover_output)?,
             deps: ctx.str_path_for(&self.deps)?,
             artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
@@ -176,6 +185,7 @@ impl Default for Layout {
             bundles_output: bundles_output(),
             scripts_output: scripts_output(),
             transactions_output: transactions_output(),
+            move_prover_output: move_prover_output(),
             deps: deps(),
             artifacts: artifacts(),
             index: index(),
