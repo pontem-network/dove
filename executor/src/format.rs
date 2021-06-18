@@ -31,27 +31,14 @@ fn format_effects(out: &mut String, effects: ExplainedTransactionEffects) {
     for changes in effects.resources() {
         let AddressResourceChanges { address, changes } = changes;
         write!(out, "{}", textwrap::indent(address, &indent(1))).unwrap();
-        for (operation, change) in changes {
-            write!(
-                out,
-                "{}",
-                textwrap::indent(
-                    &format!("{} {}", operation, formatted_resource_change(change)),
-                    &indent(2)
-                )
-            )
-            .unwrap();
+        for change in changes {
+            write!(out, "{}", textwrap::indent(&change.to_string(), &indent(2))).unwrap();
         }
     }
     if !effects.events().is_empty() {
         write!(out, "{}", textwrap::indent("Events:", &indent(2))).unwrap();
         for event_change in effects.events() {
-            write!(
-                out,
-                "{}",
-                textwrap::indent(&formatted_resource_change(event_change), &indent(3))
-            )
-            .unwrap();
+            write!(out, "{}", textwrap::indent(&event_change, &indent(3))).unwrap();
         }
     }
 }

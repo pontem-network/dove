@@ -7,7 +7,7 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{StructTag, TypeTag};
 use move_core_types::transaction_argument::TransactionArgument;
 use move_core_types::vm_status::{AbortLocation, StatusCode, VMStatus};
-use move_core_types::effects::Event;
+use move_core_types::effects::Event as MoveCoreEvent;
 use move_lang::shared::Address;
 use move_vm_runtime::data_cache::TransactionDataCache;
 use move_vm_runtime::loader::Loader;
@@ -82,33 +82,37 @@ impl StepExecutionResult {
     }
 }
 
-#[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
-pub enum ChangeType {
+type Resource = String;
+type ResourceType = String;
+
+#[derive(Debug, Clone, serde::Serialize, PartialEq, Eq)]
+pub enum ResourceChange {
     /// Resource was added.
-    Added,
+    Added(Resource),
     /// Resource was modified.
-    Changed,
+    Changed(Resource),
     /// Resource was removed.
-    Deleted,
+    Deleted(ResourceType),
 }
 
-impl std::fmt::Display for ChangeType {
+impl std::fmt::Display for ResourceChange {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            Self::Added(resource) => write!(f, "Added: {}", resource),
+            Self::Changed(resource) => write!(f, "Changed: {}", resource),
+            Self::Deleted(resource_type) => write!(f, "Deleted: {}", resource_type),
+        }
     }
 }
 
 #[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
-pub struct ResourceChange(pub String, pub Option<String>);
-
-#[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct AddressResourceChanges {
     pub address: String,
-    pub changes: Vec<(ChangeType, ResourceChange)>,
+    pub changes: Vec<ResourceChange>,
 }
 
 impl AddressResourceChanges {
-    pub fn new<S: ToString>(address: S, changes: Vec<(ChangeType, ResourceChange)>) -> Self {
+    pub fn new<S: ToString>(address: S, changes: Vec<ResourceChange>) -> Self {
         AddressResourceChanges {
             address: address.to_string(),
             changes,
@@ -116,15 +120,17 @@ impl AddressResourceChanges {
     }
 }
 
+pub type Event = String;
+
 #[derive(Debug, Default, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct ExplainedTransactionEffects {
-    events: Vec<ResourceChange>,
+    events: Vec<Event>,
     resources: Vec<AddressResourceChanges>,
     write_set_size: usize,
 }
 
 impl ExplainedTransactionEffects {
-    pub fn events(&self) -> &Vec<ResourceChange> {
+    pub fn events(&self) -> &Vec<Event> {
         &self.events
     }
 
@@ -253,7 +259,7 @@ fn format_struct(
 /// It's probably a mistake or architectural flow that Event != ContractEvent.
 /// It might be fixed in the future. For now, we just need to make a conversion and prey if it is
 /// valid (because of tuple-typing, we can't be sure if these vectors are actually valid).
-fn contract_event(event: &Event) -> ContractEvent {
+fn contract_event(event: &MoveCoreEvent) -> ContractEvent {
     // to build EventKey, we need not only sender address, but also an id of event stream
     // it's easier to fake it, as MoveValueAnnotator doesn't use this field
     let event_key = EventKey::new([0; EventKey::LENGTH]);
@@ -261,7 +267,7 @@ fn contract_event(event: &Event) -> ContractEvent {
     ContractEvent::new(event_key, event.1, event.2.clone(), event.3.clone())
 }
 
-fn format_event(state: &FakeRemoteCache, event: &Event) -> Result<String> {
+fn format_event(state: &FakeRemoteCache, event: &MoveCoreEvent) -> Result<String> {
     let annotator = resource_viewer::MoveValueAnnotator::new_no_stdlib(state);
     let annotated_event = annotator.view_contract_event(&contract_event(event))?;
     let mut result = String::new();
@@ -290,10 +296,7 @@ pub fn explain_effects(
                 .type_to_type_layout(&tp)
                 .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
             if let Some(_val) = Value::simple_deserialize(event_data, &layout) {
-                explained_effects.events.push(ResourceChange(
-                    formatted_ty,
-                    Some(format_event(state, event)?),
-                ));
+                explained_effects.events.push(format_event(state, event)?);
             }
         }
     }
@@ -311,19 +314,11 @@ pub fn explain_effects(
                         .type_to_type_layout(&tp)
                         .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
                     if Value::simple_deserialize(&value, &layout).is_some() {
-                        let state_string =
-                            match state.get_resource_bytes(*addr, struct_tag.clone()) {
-                                Some(_) => ChangeType::Changed,
-                                None => ChangeType::Added,
-                            };
-
-                        (
-                            state_string,
-                            ResourceChange(
-                                formatted_struct_tag,
-                                Some(format_struct(state, struct_tag, &value)?),
-                            ),
-                        )
+                        let resource = format_struct(state, struct_tag, &value)?;
+                        match state.get_resource_bytes(*addr, struct_tag.clone()) {
+                            Some(_) => ResourceChange::Changed(resource),
+                            None => ResourceChange::Added(resource),
+                        }
                     } else {
                         return Err(anyhow!(
                             "Failed to deserialize move value:{:?}",
@@ -331,10 +326,7 @@ pub fn explain_effects(
                         ));
                     }
                 }
-                None => (
-                    ChangeType::Deleted,
-                    ResourceChange(formatted_struct_tag, None),
-                ),
+                None => ResourceChange::Deleted(formatted_struct_tag),
             });
         }
         let trimmed_address = Address::new(addr.to_u8()).to_string();
