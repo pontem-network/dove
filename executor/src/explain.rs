@@ -9,12 +9,6 @@ use move_core_types::transaction_argument::TransactionArgument;
 use move_core_types::vm_status::{AbortLocation, StatusCode, VMStatus};
 use move_core_types::effects::Event as MoveCoreEvent;
 use move_lang::shared::Address;
-use move_vm_runtime::data_cache::TransactionDataCache;
-use move_vm_runtime::loader::Loader;
-use move_vm_runtime::logging::NoContextLog;
-use move_vm_types::natives::balance::ZeroBalance;
-use move_vm_types::values::{Container, ValueImpl};
-use num_format::ToFormattedString;
 use vm::access::ScriptAccess;
 use vm::file_format::CompiledScript;
 
@@ -178,70 +172,6 @@ fn format_type_tag(type_tag: &TypeTag) -> Result<String> {
         TypeTag::Bool => write!(f, "Bool"),
     }?;
     Ok(f)
-}
-
-fn display_list_of_values<T, I, F>(items: I, format_value: F) -> Result<String>
-where
-    F: Fn(&T) -> Result<String>,
-    I: IntoIterator<Item = T>,
-{
-    let mut out = String::new();
-    write!(out, "[")?;
-    let mut items = items.into_iter();
-    if let Some(x) = items.next() {
-        write!(out, "{}", format_value(&x)?)?;
-        for x in items {
-            write!(out, ", {}", format_value(&x)?)?;
-        }
-    }
-    write!(out, "]")?;
-    Ok(out)
-}
-
-fn format_container(
-    container: Container,
-    num_custom_format: num_format::CustomFormat,
-) -> Result<String> {
-    match container {
-        Container::Locals(r) | Container::Vec(r) | Container::Struct(r) => {
-            display_list_of_values(r.borrow().iter(), |v| format_value(*v))
-        }
-        Container::VecU8(r) => display_list_of_values(r.borrow().iter(), |num| {
-            Ok(num.to_formatted_string(&num_custom_format))
-        }),
-        Container::VecU64(r) => display_list_of_values(r.borrow().iter(), |num| {
-            Ok(num.to_formatted_string(&num_custom_format))
-        }),
-        Container::VecU128(r) => display_list_of_values(r.borrow().iter(), |num| {
-            Ok(num.to_formatted_string(&num_custom_format))
-        }),
-        Container::VecBool(r) => {
-            display_list_of_values(r.borrow().iter(), |b| Ok(format!("{}", b)))
-        }
-        Container::VecAddress(r) => {
-            display_list_of_values(r.borrow().iter(), |b| Ok(short_address(b)))
-        }
-    }
-}
-
-fn format_value(value: &ValueImpl) -> Result<String> {
-    let format = num_format::CustomFormat::builder().separator("").build()?;
-    let mut out = String::new();
-    match value {
-        ValueImpl::Invalid => write!(out, "Invalid"),
-
-        ValueImpl::U8(num) => write!(out, "U8({})", num.to_formatted_string(&format)),
-        ValueImpl::U64(num) => write!(out, "U64({})", num.to_formatted_string(&format)),
-        ValueImpl::U128(num) => write!(out, "U128({})", num.to_formatted_string(&format)),
-        ValueImpl::Bool(b) => write!(out, "{}", b),
-        ValueImpl::Address(addr) => write!(out, "Address({})", short_address(addr)),
-
-        ValueImpl::Container(r) => write!(out, "{}", format_container(r.clone(), format)?),
-
-        ValueImpl::ContainerRef(r) => write!(out, "{}", r),
-        ValueImpl::IndexedRef(r) => write!(out, "{}", r),
-    }?;
-    Ok(out)
 }
 
 fn format_struct(
