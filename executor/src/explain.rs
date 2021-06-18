@@ -1,10 +1,13 @@
 use std::fmt::Write;
 
 use anyhow::{Result, anyhow};
+use diem_types::contract_event::ContractEvent;
+use diem_types::event::EventKey;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{StructTag, TypeTag};
 use move_core_types::transaction_argument::TransactionArgument;
 use move_core_types::vm_status::{AbortLocation, StatusCode, VMStatus};
+use move_core_types::effects::Event;
 use move_lang::shared::Address;
 use move_vm_runtime::data_cache::TransactionDataCache;
 use move_vm_runtime::loader::Loader;
@@ -245,6 +248,25 @@ fn format_struct(
     Ok(result)
 }
 
+/// It's probably a mistake or architectural flow that Event != ContractEvent.
+/// It might be fixed in the future. For now, we just need to make a conversion and prey if it is
+/// valid (because of tuple-typing, we can't be sure if these vectors are actually valid).
+fn contract_event(event: &Event) -> ContractEvent {
+    // to build EventKey, we need not only sender address, but also an id of event stream
+    // it's easier to fake it, as MoveValueAnnotator doesn't use this field
+    let event_key = EventKey::new([0; EventKey::LENGTH]);
+
+    ContractEvent::new(event_key, event.1, event.2.clone(), event.3.clone())
+}
+
+fn format_event(state: &FakeRemoteCache, event: &Event) -> Result<String> {
+    let annotator = resource_viewer::MoveValueAnnotator::new_no_stdlib(state);
+    let annotated_event = annotator.view_contract_event(&contract_event(event))?;
+    let mut result = String::new();
+    writeln!(result, "{}", annotated_event)?;
+    Ok(result)
+}
+
 pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
@@ -255,7 +277,8 @@ pub fn explain_effects(
 
     let mut explained_effects = ExplainedTransactionEffects::default();
     if !effects.1.is_empty() {
-        for (_, _, ty, event_data, _) in &effects.1 {
+        for event in &effects.1 {
+            let (_, _, ty, event_data, _) = &event;
             let formatted_ty = format_type_tag(ty)?;
 
             let tp = loader
@@ -264,10 +287,11 @@ pub fn explain_effects(
             let layout = loader
                 .type_to_type_layout(&tp)
                 .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
-            if let Some(val) = Value::simple_deserialize(event_data, &layout) {
-                explained_effects
-                    .events
-                    .push(ResourceChange(formatted_ty, Some(format_value(&&val.0)?)));
+            if let Some(_val) = Value::simple_deserialize(event_data, &layout) {
+                explained_effects.events.push(ResourceChange(
+                    formatted_ty,
+                    Some(format_event(state, event)?),
+                ));
             }
         }
     }

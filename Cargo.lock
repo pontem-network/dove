@@ -3167,6 +3167,7 @@ dependencies = [
  "anyhow",
  "bcs",
  "clap 2.33.3",
+ "diem-types",
  "enum-iterator",
  "git-hash",
  "lang",
