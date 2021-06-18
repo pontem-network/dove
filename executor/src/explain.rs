@@ -219,6 +219,18 @@ fn format_value(value: &ValueImpl) -> Result<String> {
     Ok(out)
 }
 
+fn format_struct(
+    state: &FakeRemoteCache,
+    struct_tag: &StructTag,
+    value: &[u8],
+) -> Result<String> {
+    let annotator = resource_viewer::MoveValueAnnotator::new_no_stdlib(state);
+    let annotated_struct = annotator.view_resource(struct_tag, value)?;
+    let mut result = String::new();
+    writeln!(result, "{}", annotated_struct)?;
+    Ok(result)
+}
+
 pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
@@ -258,12 +270,20 @@ pub fn explain_effects(
                     let layout = loader
                         .type_to_type_layout(&tp)
                         .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
-                    if let Some(val) = Value::simple_deserialize(&value, &layout) {
-                        let state_string = match state.get_resource_bytes(*addr, struct_tag.clone()) {
-                            Some(_) => "Changed".to_string(),
-                            None => "Added".to_string(),
-                        };
-                        (state_string, ResourceChange(formatted_struct_tag, Some(format_value(&val.0)?)))
+                    if Value::simple_deserialize(&value, &layout).is_some() {
+                        let state_string =
+                            match state.get_resource_bytes(*addr, struct_tag.clone()) {
+                                Some(_) => "Changed".to_string(),
+                                None => "Added".to_string(),
+                            };
+
+                        (
+                            state_string,
+                            ResourceChange(
+                                formatted_struct_tag,
+                                Some(format_struct(state, struct_tag, &value)?),
+                            ),
+                        )
                     } else {
                         return Err(anyhow!(
                             "Failed to deserialize move value:{:?}",

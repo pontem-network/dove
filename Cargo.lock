@@ -3176,6 +3176,7 @@ dependencies = [
  "move-vm-runtime",
  "move-vm-types",
  "num-format",
+ "resource-viewer",
  "resources",
  "serde",
  "serde_json",
