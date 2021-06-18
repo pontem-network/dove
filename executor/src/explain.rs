@@ -88,6 +88,8 @@ pub enum ChangeType {
     Added,
     /// Resource was modified.
     Changed,
+    /// Resource was removed.
+    Deleted,
 }
 
 impl std::fmt::Display for ChangeType {
@@ -311,8 +313,8 @@ pub fn explain_effects(
                     if Value::simple_deserialize(&value, &layout).is_some() {
                         let state_string =
                             match state.get_resource_bytes(*addr, struct_tag.clone()) {
-                                Some(_) => ChangeType::Added,
-                                None => ChangeType::Changed,
+                                Some(_) => ChangeType::Changed,
+                                None => ChangeType::Added,
                             };
 
                         (
@@ -330,7 +332,7 @@ pub fn explain_effects(
                     }
                 }
                 None => (
-                    ChangeType::Added,
+                    ChangeType::Deleted,
                     ResourceChange(formatted_struct_tag, None),
                 ),
             });
