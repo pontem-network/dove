@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use diem_types::contract_event::ContractEvent;
 use diem_types::event::EventKey;
 use move_core_types::account_address::AccountAddress;
@@ -13,7 +13,7 @@ use move_vm_runtime::data_cache::TransactionDataCache;
 use move_vm_runtime::loader::Loader;
 use move_vm_runtime::logging::NoContextLog;
 use move_vm_types::natives::balance::ZeroBalance;
-use move_vm_types::values::{Container, ValueImpl, Value};
+use move_vm_types::values::{Container, ValueImpl};
 use num_format::ToFormattedString;
 use vm::access::ScriptAccess;
 use vm::file_format::CompiledScript;
@@ -279,60 +279,33 @@ pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
 ) -> Result<ExplainedTransactionEffects> {
-    let loader = Loader::new();
-    let log = NoContextLog::new();
-    let mut ds = TransactionDataCache::new(state, &loader, Box::new(ZeroBalance));
-
     let mut explained_effects = ExplainedTransactionEffects::default();
-    if !effects.1.is_empty() {
-        for event in &effects.1 {
-            let (_, _, ty, event_data, _) = &event;
-            let formatted_ty = format_type_tag(ty)?;
 
-            let tp = loader
-                .load_type(ty, &mut ds, &log)
-                .map_err(|err| anyhow!("Failed to load type:{:?}", err))?;
-            let layout = loader
-                .type_to_type_layout(&tp)
-                .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
-            if let Some(_val) = Value::simple_deserialize(event_data, &layout) {
-                explained_effects.events.push(format_event(state, event)?);
-            }
-        }
+    for event in &effects.1 {
+        explained_effects.events.push(format_event(state, event)?);
     }
 
     for (addr, writes) in &effects.0.accounts {
-        let mut changes = vec![];
-        for (struct_tag, write_opt) in &writes.resources {
-            let formatted_struct_tag = format_struct_tag(&struct_tag)?;
-            changes.push(match write_opt {
+        let mut changes = Vec::with_capacity(writes.resources.len());
+
+        for (struct_tag, written_data) in &writes.resources {
+            let resource_change = match written_data {
                 Some(value) => {
-                    let tp = loader
-                        .load_type(&TypeTag::Struct(struct_tag.clone()), &mut ds, &log)
-                        .map_err(|err| anyhow!("Failed to load type:{:?}", err))?;
-                    let layout = loader
-                        .type_to_type_layout(&tp)
-                        .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
-                    if Value::simple_deserialize(&value, &layout).is_some() {
-                        let resource = format_struct(state, struct_tag, &value)?;
-                        match state.get_resource_bytes(*addr, struct_tag.clone()) {
-                            Some(_) => ResourceChange::Changed(resource),
-                            None => ResourceChange::Added(resource),
-                        }
-                    } else {
-                        return Err(anyhow!(
-                            "Failed to deserialize move value:{:?}",
-                            formatted_struct_tag
-                        ));
+                    let resource = format_struct(state, struct_tag, &value)?;
+                    match state.get_resource_bytes(*addr, struct_tag.clone()) {
+                        Some(_) => ResourceChange::Changed(resource),
+                        None => ResourceChange::Added(resource),
                     }
                 }
-                None => ResourceChange::Deleted(formatted_struct_tag),
-            });
+                None => ResourceChange::Deleted(format_struct_tag(&struct_tag)?),
+            };
+            changes.push(resource_change);
         }
         let trimmed_address = Address::new(addr.to_u8()).to_string();
         let change = AddressResourceChanges::new(trimmed_address, changes);
         explained_effects.resources.push(change);
     }
+
     Ok(explained_effects)
 }
 
