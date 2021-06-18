@@ -79,17 +79,31 @@ impl StepExecutionResult {
     }
 }
 
+#[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
+pub enum ChangeType {
+    /// Resource was added.
+    Added,
+    /// Resource was modified.
+    Changed,
+}
+
+impl std::fmt::Display for ChangeType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct ResourceChange(pub String, pub Option<String>);
 
 #[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct AddressResourceChanges {
     pub address: String,
-    pub changes: Vec<(String, ResourceChange)>,
+    pub changes: Vec<(ChangeType, ResourceChange)>,
 }
 
 impl AddressResourceChanges {
-    pub fn new<S: ToString>(address: S, changes: Vec<(String, ResourceChange)>) -> Self {
+    pub fn new<S: ToString>(address: S, changes: Vec<(ChangeType, ResourceChange)>) -> Self {
         AddressResourceChanges {
             address: address.to_string(),
             changes,
@@ -273,8 +287,8 @@ pub fn explain_effects(
                     if Value::simple_deserialize(&value, &layout).is_some() {
                         let state_string =
                             match state.get_resource_bytes(*addr, struct_tag.clone()) {
-                                Some(_) => "Changed".to_string(),
-                                None => "Added".to_string(),
+                                Some(_) => ChangeType::Added,
+                                None => ChangeType::Changed,
                             };
 
                         (
@@ -292,7 +306,7 @@ pub fn explain_effects(
                     }
                 }
                 None => (
-                    "Added".to_string(),
+                    ChangeType::Added,
                     ResourceChange(formatted_struct_tag, None),
                 ),
             });

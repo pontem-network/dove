@@ -1,4 +1,4 @@
-use move_executor::explain::{AddressResourceChanges, ResourceChange, PipelineExecutionResult};
+use move_executor::explain::{ChangeType, AddressResourceChanges, ResourceChange, PipelineExecutionResult};
 use lang::compiler::file::MoveFile;
 use resources::{assets_dir, stdlib_path, modules_path};
 use lang::compiler::error::CompilerError;
@@ -115,7 +115,7 @@ script {
         AddressResourceChanges::new(
             "0x1111111111111111",
             vec![(
-                "Added".to_string(),
+                ChangeType::Added,
                 ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
             )],
         )
@@ -161,7 +161,7 @@ fn missing_write_set_for_move_to_sender() {
         AddressResourceChanges::new(
             "0x1",
             vec![(
-                "Added".to_string(),
+                ChangeType::Added,
                 ResourceChange("0x1::M::T".to_string(), Some("[U8(10)]".to_string()))
             )],
         )
@@ -205,7 +205,7 @@ fn test_run_with_non_default_dfinance_dialect() {
         AddressResourceChanges::new(
             "0xDE5F86CE8AD7944F272D693CB4625A955B610150",
             vec![(
-                "Added".to_string(),
+                ChangeType::Added,
                 ResourceChange(
                     "0xDE5F86CE8AD7944F272D693CB4625A955B610150::M::T".to_string(),
                     Some("[U8(10)]".to_string())
@@ -255,7 +255,7 @@ fn test_pass_arguments_to_script() {
         AddressResourceChanges::new(
             "0x1",
             vec![(
-                "Added".to_string(),
+                ChangeType::Added,
                 ResourceChange("0x1::Module::T".to_string(), Some("[true]".to_string()))
             )],
         )
@@ -402,7 +402,7 @@ fn test_execute_script_with_custom_signer() {
     assert_eq!(
         effects.resources()[0].changes,
         vec![(
-            "Added".to_string(),
+            ChangeType::Added,
             ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
         )]
     );
@@ -442,7 +442,7 @@ fn test_multiple_signers() {
     assert_eq!(
         account1_change.changes,
         vec![(
-            "Added".to_string(),
+            ChangeType::Added,
             ResourceChange("0x2::Record::T".to_string(), Some("[U8(10)]".to_string()))
         )]
     );
@@ -452,7 +452,7 @@ fn test_multiple_signers() {
     assert_eq!(
         account2_change.changes,
         vec![(
-            "Added".to_string(),
+            ChangeType::Added,
             ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
         )]
     );
@@ -505,7 +505,7 @@ script {
     assert_eq!(
         account1_change.changes,
         vec![(
-            "Added".to_string(),
+            ChangeType::Added,
             ResourceChange("0x2::Record::T".to_string(), Some("[U8(20)]".to_string()))
         )]
     );
@@ -663,7 +663,7 @@ script {
         AddressResourceChanges::new(
             "0x3",
             vec![(
-                "Changed".to_string(),
+                ChangeType::Changed,
                 ResourceChange("0x2::Record::T".to_string(), Some("[U8(11)]".to_string()))
             )],
         )
