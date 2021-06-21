@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use crate::explain::{
-    StepExecutionResult, AddressResourceChanges, ResourceChange, ExplainedTransactionEffects,
+    StepExecutionResult, AddressResourceChanges, ExplainedTransactionEffects,
     StepResultInfo,
 };
 
@@ -13,14 +13,6 @@ fn indent(num: usize) -> String {
         indent += STEP_INDENT;
     }
     indent
-}
-
-fn formatted_resource_change(change: &ResourceChange) -> String {
-    let ResourceChange(ty, val) = change;
-    match val {
-        Some(val) => format!("{} =\n    {}", ty, val),
-        None => ty.to_string(),
-    }
 }
 
 fn format_error(out: &mut String, error: String) {
