@@ -1,8 +1,7 @@
 use std::fmt::Write;
 
 use crate::explain::{
-    StepExecutionResult, AddressResourceChanges, ExplainedTransactionEffects,
-    StepResultInfo,
+    StepExecutionResult, AddressResourceChanges, ExplainedTransactionEffects, StepResultInfo,
 };
 
 fn indent(num: usize) -> String {
