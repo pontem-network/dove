@@ -124,11 +124,11 @@ pub struct ExplainedTransactionEffects {
 }
 
 impl ExplainedTransactionEffects {
-    pub fn events(&self) -> &Vec<Event> {
+    pub fn events(&self) -> &[Event] {
         &self.events
     }
 
-    pub fn resources(&self) -> &Vec<AddressResourceChanges> {
+    pub fn resources(&self) -> &[AddressResourceChanges] {
         &self.resources
     }
 
