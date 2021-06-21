@@ -114,7 +114,9 @@ script {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x1111111111111111",
-            vec![ResourceChange::Added("".to_string())],
+            vec![ResourceChange::Added(
+                "store key 0x2::Record::T {\n    age: 10u8\n}\n".to_string()
+            )],
         )
     );
 }
@@ -157,7 +159,9 @@ fn missing_write_set_for_move_to_sender() {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x1",
-            vec![ResourceChange::Added("".to_string())],
+            vec![ResourceChange::Added(
+                "store key 0x1::M::T {\n    value: 10u8\n}\n".to_string()
+            )],
         )
     );
 }
@@ -198,7 +202,7 @@ fn test_run_with_non_default_dfinance_dialect() {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0xDE5F86CE8AD7944F272D693CB4625A955B610150",
-            vec![ResourceChange::Added("".to_string())],
+            vec![ResourceChange::Added("store key 0xde5f86ce8ad7944f272d693cb4625a955b610150::M::T {\n    value: 10u8\n}\n".to_string())],
         )
     );
 }
@@ -242,7 +246,9 @@ fn test_pass_arguments_to_script() {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x1",
-            vec![ResourceChange::Added("".to_string())],
+            vec![ResourceChange::Added(
+                "store key 0x1::Module::T {\n    value: true\n}\n".to_string()
+            )],
         )
     );
 }
@@ -386,7 +392,9 @@ fn test_execute_script_with_custom_signer() {
     assert_eq!(effects.resources()[0].address, "0x2");
     assert_eq!(
         effects.resources()[0].changes,
-        vec![ResourceChange::Added("".to_string())]
+        vec![ResourceChange::Added(
+            "store key 0x2::Record::T {\n    age: 20u8\n}\n".to_string()
+        )]
     );
 }
 
@@ -423,14 +431,18 @@ fn test_multiple_signers() {
     assert_eq!(account1_change.address, "0x1");
     assert_eq!(
         account1_change.changes,
-        vec![ResourceChange::Added("".to_string())]
+        vec![ResourceChange::Added(
+            "store key 0x2::Record::T {\n    age: 10u8\n}\n".to_string()
+        )]
     );
 
     let account2_change = &effects.resources()[1];
     assert_eq!(account2_change.address, "0x2");
     assert_eq!(
         account2_change.changes,
-        vec![ResourceChange::Added("".to_string())]
+        vec![ResourceChange::Added(
+            "store key 0x2::Record::T {\n    age: 20u8\n}\n".to_string()
+        )]
     );
 }
 
@@ -480,7 +492,9 @@ script {
     assert_eq!(account1_change.address, "0x2");
     assert_eq!(
         account1_change.changes,
-        vec![ResourceChange::Added("".to_string())]
+        vec![ResourceChange::Added(
+            "store key 0x2::Record::T {\n    age: 20u8\n}\n".to_string()
+        )]
     );
 }
 
@@ -635,7 +649,9 @@ script {
         effects.resources()[0],
         AddressResourceChanges::new(
             "0x3",
-            vec![ResourceChange::Added("".to_string())],
+            vec![ResourceChange::Changed(
+                "store key 0x2::Record::T {\n    age: 11u8\n}\n".to_string()
+            )],
         )
     );
 }
@@ -897,7 +913,7 @@ script {
     .effects();
     assert_eq!(
         effects.resources()[0].changes[0],
-        ResourceChange::Added("".to_string())
+        ResourceChange::Changed("store key 0x2::Record::T {\n    age: 11u8\n}\n".to_string())
     );
 }
 
