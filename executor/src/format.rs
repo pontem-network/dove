@@ -5,14 +5,9 @@ use crate::explain::{
     StepResultInfo,
 };
 
-const STEP_INDENT: &str = "    ";
-
 fn indent(num: usize) -> String {
-    let mut indent = String::new();
-    for _ in 0..num {
-        indent += STEP_INDENT;
-    }
-    indent
+    const STEP_INDENT: &str = "    ";
+    std::iter::repeat(STEP_INDENT).take(num).collect()
 }
 
 fn format_error(out: &mut String, error: String) {
