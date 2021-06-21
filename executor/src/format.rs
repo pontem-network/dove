@@ -17,15 +17,15 @@ fn format_error(out: &mut String, error: String) {
 fn format_effects(out: &mut String, effects: ExplainedTransactionEffects) {
     for changes in effects.resources() {
         let AddressResourceChanges { address, changes } = changes;
-        write!(out, "{}", textwrap::indent(address, &indent(1))).unwrap();
+        write!(out, "{}", textwrap::indent(address, &indent(0))).unwrap();
         for change in changes {
-            write!(out, "{}", textwrap::indent(&change.to_string(), &indent(2))).unwrap();
+            write!(out, "{}", textwrap::indent(&change.to_string(), &indent(1))).unwrap();
         }
     }
     if !effects.events().is_empty() {
-        write!(out, "{}", textwrap::indent("Events:", &indent(2))).unwrap();
+        write!(out, "{}", textwrap::indent("Events:", &indent(1))).unwrap();
         for event_change in effects.events() {
-            write!(out, "{}", textwrap::indent(&event_change, &indent(3))).unwrap();
+            write!(out, "{}", textwrap::indent(&event_change, &indent(2))).unwrap();
         }
     }
 }
