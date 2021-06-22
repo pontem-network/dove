@@ -1,7 +1,7 @@
 use anyhow::{Result, Error};
 use std::path::Path;
 use lang::compiler::parser::parse_file;
-use move_lang::{leak_str, errors, parser::ast::*};
+use move_lang::{errors, parser::ast::*};
 
 use std::collections::{HashSet, HashMap};
 use termcolor::{StandardStream, ColorChoice};
@@ -15,6 +15,7 @@ use move_core_types::identifier::Identifier;
 use vm::CompiledModule;
 use vm::errors::Location;
 use lang::compiler::source_map::ProjectOffsetMap;
+use ir_to_bytecode_syntax::syntax::leak_str;
 
 /// Extracts metadata form source code.
 pub fn source_meta(

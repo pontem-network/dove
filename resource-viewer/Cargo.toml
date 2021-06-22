@@ -14,12 +14,12 @@ schemars = { version = "0.8", features = ["default", "derive", "preserve_order"]
 hex = "0.4.2"
 
 # diem deps:
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-resource-viewer = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", features = ["debug_module"]}
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+resource-viewer = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2", features = ["debug_module"]}
 
 # move-lang deps:
 lang = { path = "../lang" }
