@@ -1,26 +1,12 @@
 use std::fmt::Write;
 
 use crate::explain::{
-    StepExecutionResult, AddressResourceChanges, ResourceChange, ExplainedTransactionEffects,
-    StepResultInfo,
+    StepExecutionResult, AddressResourceChanges, ExplainedTransactionEffects, StepResultInfo,
 };
 
-const STEP_INDENT: &str = "    ";
-
 fn indent(num: usize) -> String {
-    let mut indent = String::new();
-    for _ in 0..num {
-        indent += STEP_INDENT;
-    }
-    indent
-}
-
-fn formatted_resource_change(change: &ResourceChange) -> String {
-    let ResourceChange(ty, val) = change;
-    match val {
-        Some(val) => format!("{} =\n    {}", ty, val),
-        None => ty.to_string(),
-    }
+    const STEP_INDENT: &str = "    ";
+    std::iter::repeat(STEP_INDENT).take(num).collect()
 }
 
 fn format_error(out: &mut String, error: String) {
@@ -30,28 +16,15 @@ fn format_error(out: &mut String, error: String) {
 fn format_effects(out: &mut String, effects: ExplainedTransactionEffects) {
     for changes in effects.resources() {
         let AddressResourceChanges { address, changes } = changes;
-        write!(out, "{}", textwrap::indent(address, &indent(1))).unwrap();
-        for (operation, change) in changes {
-            write!(
-                out,
-                "{}",
-                textwrap::indent(
-                    &format!("{} {}", operation, formatted_resource_change(change)),
-                    &indent(2)
-                )
-            )
-            .unwrap();
+        write!(out, "{}", textwrap::indent(address, &indent(0))).unwrap();
+        for change in changes {
+            write!(out, "{}", textwrap::indent(&change.to_string(), &indent(1))).unwrap();
         }
     }
     if !effects.events().is_empty() {
-        write!(out, "{}", textwrap::indent("Events:", &indent(2))).unwrap();
+        write!(out, "{}", textwrap::indent("Events:", &indent(1))).unwrap();
         for event_change in effects.events() {
-            write!(
-                out,
-                "{}",
-                textwrap::indent(&formatted_resource_change(event_change), &indent(3))
-            )
-            .unwrap();
+            write!(out, "{}", textwrap::indent(&event_change, &indent(2))).unwrap();
         }
     }
 }

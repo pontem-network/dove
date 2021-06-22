@@ -1,17 +1,14 @@
 use std::fmt::Write;
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
+use diem_types::contract_event::ContractEvent;
+use diem_types::event::EventKey;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{StructTag, TypeTag};
 use move_core_types::transaction_argument::TransactionArgument;
 use move_core_types::vm_status::{AbortLocation, StatusCode, VMStatus};
+use move_core_types::effects::Event as MoveCoreEvent;
 use move_lang::shared::Address;
-use move_vm_runtime::data_cache::TransactionDataCache;
-use move_vm_runtime::loader::Loader;
-use move_vm_runtime::logging::NoContextLog;
-use move_vm_types::natives::balance::ZeroBalance;
-use move_vm_types::values::{Container, ValueImpl, Value};
-use num_format::ToFormattedString;
 use vm::access::ScriptAccess;
 use vm::file_format::CompiledScript;
 
@@ -79,17 +76,37 @@ impl StepExecutionResult {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
-pub struct ResourceChange(pub String, pub Option<String>);
+type Resource = String;
+type ResourceType = String;
+
+#[derive(Debug, Clone, serde::Serialize, PartialEq, Eq)]
+pub enum ResourceChange {
+    /// Resource was added.
+    Added(Resource),
+    /// Resource was modified.
+    Changed(Resource),
+    /// Resource was removed.
+    Deleted(ResourceType),
+}
+
+impl std::fmt::Display for ResourceChange {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Added(resource) => write!(f, "Added: {}", resource),
+            Self::Changed(resource) => write!(f, "Changed: {}", resource),
+            Self::Deleted(resource_type) => write!(f, "Deleted: {}", resource_type),
+        }
+    }
+}
 
 #[derive(Debug, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct AddressResourceChanges {
     pub address: String,
-    pub changes: Vec<(String, ResourceChange)>,
+    pub changes: Vec<ResourceChange>,
 }
 
 impl AddressResourceChanges {
-    pub fn new<S: ToString>(address: S, changes: Vec<(String, ResourceChange)>) -> Self {
+    pub fn new<S: ToString>(address: S, changes: Vec<ResourceChange>) -> Self {
         AddressResourceChanges {
             address: address.to_string(),
             changes,
@@ -97,19 +114,21 @@ impl AddressResourceChanges {
     }
 }
 
+pub type Event = String;
+
 #[derive(Debug, Default, Clone, serde::Serialize, Eq, PartialEq)]
 pub struct ExplainedTransactionEffects {
-    events: Vec<ResourceChange>,
+    events: Vec<Event>,
     resources: Vec<AddressResourceChanges>,
     write_set_size: usize,
 }
 
 impl ExplainedTransactionEffects {
-    pub fn events(&self) -> &Vec<ResourceChange> {
+    pub fn events(&self) -> &[Event] {
         &self.events
     }
 
-    pub fn resources(&self) -> &Vec<AddressResourceChanges> {
+    pub fn resources(&self) -> &[AddressResourceChanges] {
         &self.resources
     }
 
@@ -155,147 +174,68 @@ fn format_type_tag(type_tag: &TypeTag) -> Result<String> {
     Ok(f)
 }
 
-fn display_list_of_values<T, I, F>(items: I, format_value: F) -> Result<String>
-where
-    F: Fn(&T) -> Result<String>,
-    I: IntoIterator<Item = T>,
-{
-    let mut out = String::new();
-    write!(out, "[")?;
-    let mut items = items.into_iter();
-    if let Some(x) = items.next() {
-        write!(out, "{}", format_value(&x)?)?;
-        for x in items {
-            write!(out, ", {}", format_value(&x)?)?;
-        }
-    }
-    write!(out, "]")?;
-    Ok(out)
-}
-
-fn format_container(
-    container: Container,
-    num_custom_format: num_format::CustomFormat,
+fn format_struct(
+    state: &FakeRemoteCache,
+    struct_tag: &StructTag,
+    value: &[u8],
 ) -> Result<String> {
-    match container {
-        Container::Locals(r) | Container::Vec(r) | Container::Struct(r) => {
-            display_list_of_values(r.borrow().iter(), format_value)
-        }
-        Container::VecU8(r) => display_list_of_values(r.borrow().iter(), |num| {
-            Ok(num.to_formatted_string(&num_custom_format))
-        }),
-        Container::VecU64(r) => display_list_of_values(r.borrow().iter(), |num| {
-            Ok(num.to_formatted_string(&num_custom_format))
-        }),
-        Container::VecU128(r) => display_list_of_values(r.borrow().iter(), |num| {
-            Ok(num.to_formatted_string(&num_custom_format))
-        }),
-        Container::VecBool(r) => {
-            display_list_of_values(r.borrow().iter(), |b| Ok(format!("{}", b)))
-        }
-        Container::VecAddress(r) => {
-            display_list_of_values(r.borrow().iter(), |b| Ok(short_address(b)))
-        }
-    }
+    let annotator = resource_viewer::MoveValueAnnotator::new_no_stdlib(state);
+    let annotated_struct = annotator.view_resource(struct_tag, value)?;
+    let mut result = String::new();
+    writeln!(result, "{}", annotated_struct)?;
+    Ok(result)
 }
 
-fn format_value(value: &&ValueImpl) -> Result<String> {
-    let format = num_format::CustomFormat::builder().separator("").build()?;
-    let mut out = String::new();
-    match value {
-        ValueImpl::Invalid => write!(out, "Invalid"),
+/// It's probably a mistake or architectural flow that Event != ContractEvent.
+/// It might be fixed in the future. For now, we just need to make a conversion and prey if it is
+/// valid (because of tuple-typing, we can't be sure if these vectors are actually valid).
+fn contract_event(event: &MoveCoreEvent) -> ContractEvent {
+    // to build EventKey, we need not only sender address, but also an id of event stream
+    // it's easier to fake it, as MoveValueAnnotator doesn't use this field
+    let event_key = EventKey::new([0; EventKey::LENGTH]);
 
-        ValueImpl::U8(num) => write!(out, "U8({})", num.to_formatted_string(&format)),
-        ValueImpl::U64(num) => write!(out, "U64({})", num.to_formatted_string(&format)),
-        ValueImpl::U128(num) => write!(out, "U128({})", num.to_formatted_string(&format)),
-        ValueImpl::Bool(b) => write!(out, "{}", b),
-        ValueImpl::Address(addr) => write!(out, "Address({})", short_address(addr)),
+    ContractEvent::new(event_key, event.1, event.2.clone(), event.3.clone())
+}
 
-        ValueImpl::Container(r) => write!(out, "{}", format_container(r.clone(), format)?),
-
-        ValueImpl::ContainerRef(r) => write!(out, "{}", r),
-        ValueImpl::IndexedRef(r) => write!(out, "{}", r),
-    }?;
-    Ok(out)
+fn format_event(state: &FakeRemoteCache, event: &MoveCoreEvent) -> Result<String> {
+    let annotator = resource_viewer::MoveValueAnnotator::new_no_stdlib(state);
+    let annotated_event = annotator.view_contract_event(&contract_event(event))?;
+    let mut result = String::new();
+    writeln!(result, "{}", annotated_event)?;
+    Ok(result)
 }
 
 pub fn explain_effects(
     effects: &TransactionEffects,
     state: &FakeRemoteCache,
 ) -> Result<ExplainedTransactionEffects> {
-    let loader = Loader::new();
-    let log = NoContextLog::new();
-    let mut ds = TransactionDataCache::new(state, &loader, Box::new(ZeroBalance));
-
     let mut explained_effects = ExplainedTransactionEffects::default();
-    if !effects.1.is_empty() {
-        for (_, _, ty, event_data, _) in &effects.1 {
-            let formatted_ty = format_type_tag(ty)?;
 
-            let tp = loader
-                .load_type(ty, &mut ds, &log)
-                .map_err(|err| anyhow!("Failed to load type:{:?}", err))?;
-            let layout = loader
-                .type_to_type_layout(&tp)
-                .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
-            if let Some(val) = Value::simple_deserialize(event_data, &layout) {
-                explained_effects
-                    .events
-                    .push(ResourceChange(formatted_ty, Some(format_value(&&val.0)?)));
-            }
-        }
+    for event in &effects.1 {
+        explained_effects.events.push(format_event(state, event)?);
     }
 
     for (addr, writes) in &effects.0.accounts {
-        let mut changes = vec![];
-        for (struct_tag, write_opt) in &writes.resources {
-            let formatted_struct_tag = format_struct_tag(&struct_tag)?;
-            changes.push(match write_opt {
+        let mut changes = Vec::with_capacity(writes.resources.len());
+
+        for (struct_tag, written_data) in &writes.resources {
+            let resource_change = match written_data {
                 Some(value) => {
-                    let tp = loader
-                        .load_type(&TypeTag::Struct(struct_tag.clone()), &mut ds, &log)
-                        .map_err(|err| anyhow!("Failed to load type:{:?}", err))?;
-                    let layout = loader
-                        .type_to_type_layout(&tp)
-                        .map_err(|err| anyhow!("Failed to load type layout:{:?}", err))?;
-                    if let Some(val) = Value::simple_deserialize(&value, &layout) {
-                        if state
-                            .get_resource_bytes(*addr, struct_tag.clone())
-                            .is_some()
-                        {
-                            (
-                                "Changed".to_string(),
-                                ResourceChange(
-                                    formatted_struct_tag,
-                                    Some(format_value(&&val.0)?),
-                                ),
-                            )
-                        } else {
-                            (
-                                "Added".to_string(),
-                                ResourceChange(
-                                    formatted_struct_tag,
-                                    Some(format_value(&&val.0)?),
-                                ),
-                            )
-                        }
-                    } else {
-                        return Err(anyhow!(
-                            "Failed to deserialize move value:{:?}",
-                            formatted_struct_tag
-                        ));
+                    let resource = format_struct(state, struct_tag, &value)?;
+                    match state.get_resource_bytes(*addr, struct_tag.clone()) {
+                        Some(_) => ResourceChange::Changed(resource),
+                        None => ResourceChange::Added(resource),
                     }
                 }
-                None => (
-                    "Added".to_string(),
-                    ResourceChange(formatted_struct_tag, None),
-                ),
-            });
+                None => ResourceChange::Deleted(format_struct_tag(&struct_tag)?),
+            };
+            changes.push(resource_change);
         }
         let trimmed_address = Address::new(addr.to_u8()).to_string();
         let change = AddressResourceChanges::new(trimmed_address, changes);
         explained_effects.resources.push(change);
     }
+
     Ok(explained_effects)
 }
 
