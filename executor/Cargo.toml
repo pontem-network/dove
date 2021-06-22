@@ -18,11 +18,13 @@ enum-iterator = "0.6.0"
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 git-hash = { path = "../common/git-hash" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
 
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", features = ["debug_module"] }
+mvm = { git = "https://github.com/pontem-network/sp-move-vm.git", rev = "44e5116366968cc996f0a98105db40a3c1212dd2", default-features = false, features = ["debug_module", "std"] }
+vm = { git = "https://github.com/pontem-network/sp-move-vm.git", rev = "44e5116366968cc996f0a98105db40a3c1212dd2", features = ["std"] }
+move-vm-runtime = { git = "https://github.com/pontem-network/sp-move-vm.git", rev = "44e5116366968cc996f0a98105db40a3c1212dd2", features = ["debug_module", "std"] }
+
 bcs = "0.1.2"

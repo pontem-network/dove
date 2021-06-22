@@ -10,7 +10,6 @@ use move_vm_runtime::data_cache::RemoteCache;
 use move_vm_runtime::logging::NoContextLog;
 use move_vm_runtime::move_vm::MoveVM;
 use move_vm_types::gas_schedule::CostStrategy;
-use move_vm_types::natives::balance::{NativeBalance, WalletId};
 use vm::access::ModuleAccess;
 use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
@@ -25,9 +24,11 @@ use crate::oracles::{
     block_metadata, coin_balance_metadata, oracle_coins_module, time_metadata, currency_struct,
 };
 use crate::session::ConstsMap;
+use std::borrow::Cow;
 
 pub type SerializedTransactionEffects = Vec<((AccountAddress, StructTag), Option<Vec<u8>>)>;
 pub type TransactionEffects = (ChangeSet, Vec<Event>);
+pub type WalletId = (AccountAddress, Cow<'static, [u8]>);
 
 #[derive(Debug, Default)]
 struct AccountsBalance {
@@ -40,11 +41,11 @@ impl AccountsBalance {
     }
 }
 
-impl NativeBalance for AccountsBalance {
-    fn get_balance(&self, wallet_id: &WalletId) -> Option<u128> {
-        self.balances.get(wallet_id).cloned()
-    }
-}
+// impl NativeBalance for AccountsBalance {
+//     fn get_balance(&self, wallet_id: &WalletId) -> Option<u128> {
+//         self.balances.get(wallet_id).cloned()
+//     }
+// }
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -205,7 +206,7 @@ pub fn execute_script(
             ));
         }
     }
-    let std_addr = AccountAddress::from_hex_literal("0x1").expect("Standart address");
+    let std_addr = AccountAddress::from_hex_literal("0x1").expect("Standard address");
 
     if let Some(current_time) = current_time {
         ds.resources.insert(

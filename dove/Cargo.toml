@@ -42,9 +42,9 @@ git-hash = { path = "../common/git-hash" }
 move-executor = { path = "../executor" }
 net = { path = "../net" }
 
-vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
 
 # move-prover deps
 move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", optional = true }

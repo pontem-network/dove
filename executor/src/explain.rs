@@ -9,7 +9,6 @@ use move_lang::shared::Address;
 use move_vm_runtime::data_cache::TransactionDataCache;
 use move_vm_runtime::loader::Loader;
 use move_vm_runtime::logging::NoContextLog;
-use move_vm_types::natives::balance::ZeroBalance;
 use move_vm_types::values::{Container, ValueImpl, Value};
 use num_format::ToFormattedString;
 use vm::access::ScriptAccess;
@@ -225,7 +224,7 @@ pub fn explain_effects(
 ) -> Result<ExplainedTransactionEffects> {
     let loader = Loader::new();
     let log = NoContextLog::new();
-    let mut ds = TransactionDataCache::new(state, &loader, Box::new(ZeroBalance));
+    let mut ds = TransactionDataCache::new(state, &loader);
 
     let mut explained_effects = ExplainedTransactionEffects::default();
     if !effects.1.is_empty() {

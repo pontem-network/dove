@@ -4,13 +4,13 @@ use anyhow::Result;
 use move_core_types::account_address::AccountAddress;
 use move_lang::{FileCommentMap, parser, strip_comments_and_verify};
 use move_lang::errors::{Errors, FilesSourceText};
-use move_lang::leak_str;
 use move_lang::parser::syntax::parse_file_string;
 
 use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::file::MoveFile;
 use crate::compiler::mut_string::{MutString, NewValue};
 use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
+use ir_to_bytecode_syntax::syntax::leak_str;
 
 pub type CommentsMap = BTreeMap<&'static str, FileCommentMap>;
 
