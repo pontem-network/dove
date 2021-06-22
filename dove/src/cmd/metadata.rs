@@ -44,7 +44,11 @@ fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
 
 /// Metadata project command.
 #[derive(StructOpt, Debug)]
-pub struct Metadata {}
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+pub struct Metadata {
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
+}
 
 impl Cmd for Metadata {
     fn apply(self, ctx: Context) -> Result<(), Error> {
@@ -57,7 +61,7 @@ impl Cmd for Metadata {
     }
 }
 
-/// Movec manifest.
+/// Move manifest.
 #[derive(Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct DoveMetadata {
     /// Project info.

@@ -6,9 +6,11 @@ use move_executor::executor::{Executor, render_execution_result};
 
 use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
+use crate::stdoutln;
 
 /// Run script.
 #[derive(StructOpt, Debug)]
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Run {
     #[structopt(help = "Script file name.")]
     script: String,
@@ -21,15 +23,18 @@ pub struct Run {
         short = "a"
     )]
     args: Vec<String>,
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
 }
 
 impl Cmd for Run {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let script_dir = ctx.path_for(&ctx.manifest.layout.scripts_dir);
-        let script = script_dir.join(self.script).with_extension("move");
+        let scripts_dir = ctx.path_for(&ctx.manifest.layout.scripts_dir);
+        let script = scripts_dir.join(self.script).with_extension("move");
         if !script.exists() {
             return Err(anyhow!("Cannot open {:?}", script));
         }
+        stdoutln!("Script: {}", script.display());
         let module_dir = ctx.path_for(&ctx.manifest.layout.modules_dir);
 
         let mut index = ctx.build_index()?;
@@ -47,7 +52,6 @@ impl Cmd for Run {
         if signers.is_empty() {
             signers.push(ctx.account_address()?);
         }
-
         let executor = Executor::new(ctx.dialect.as_ref(), signers[0], dep_list);
         let script = MoveFile::load(script)?;
 

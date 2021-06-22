@@ -24,6 +24,7 @@ use crate::stdoutln;
 
 /// Create transaction.
 #[derive(StructOpt, Debug)]
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct CreateTransactionCmd {
     #[structopt(help = "Script call declaration.\
      Example: 'create_balance<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)'")]
@@ -48,6 +49,8 @@ pub struct CreateTransactionCmd {
         short = "a"
     )]
     args: Option<Vec<String>>,
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
 }
 
 impl Cmd for CreateTransactionCmd {
@@ -178,28 +181,25 @@ impl<'a> TransactionBuilder<'a> {
                 continue;
             }
 
-            if lexer.peek() == Tok::LBracket {
-                let mut token = String::new();
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
+            let mut token = String::new();
+            token.push_str(lexer.content());
+            let sw = lexer.peek() == Tok::LBracket;
+            lexer.advance().map_err(map_err)?;
+            if sw {
                 while lexer.peek() != Tok::RBracket {
                     token.push_str(lexer.content());
                     lexer.advance().map_err(map_err)?;
                 }
                 token.push_str(lexer.content());
-                arguments.push(token);
             } else {
-                let mut token = String::new();
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
                 while lexer.peek() != Tok::Comma && lexer.peek() != Tok::RParen {
                     token.push_str(lexer.content());
                     lexer.advance().map_err(map_err)?;
                 }
-                arguments.push(token);
-                if lexer.peek() == Tok::RParen {
-                    break;
-                }
+            }
+            arguments.push(token);
+            if !sw && lexer.peek() == Tok::RParen {
+                break;
             }
             lexer.advance().map_err(map_err)?;
         }

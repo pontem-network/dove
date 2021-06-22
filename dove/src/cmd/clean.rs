@@ -6,7 +6,11 @@ use structopt::StructOpt;
 
 /// Clean target directory command.
 #[derive(StructOpt, Debug)]
-pub struct Clean {}
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+pub struct Clean {
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
+}
 
 impl Cmd for Clean {
     fn apply(self, ctx: Context) -> Result<(), Error> {

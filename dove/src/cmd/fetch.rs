@@ -5,7 +5,11 @@ use structopt::StructOpt;
 
 /// Fetch dependencies.
 #[derive(StructOpt, Debug)]
-pub struct Fetch {}
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+pub struct Fetch {
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
+}
 
 impl Cmd for Fetch {
     fn apply(self, ctx: Context) -> Result<(), Error> {

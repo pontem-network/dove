@@ -19,3 +19,5 @@ pub mod index;
 pub mod manifest;
 /// StdOut stream
 pub mod stdout;
+/// for tests
+pub mod tests_helper;

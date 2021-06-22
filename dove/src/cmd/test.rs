@@ -7,6 +7,7 @@ use move_executor::executor::{Executor, render_test_result};
 
 /// Run tests.
 #[derive(StructOpt, Debug)]
+#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Test {
     #[structopt(
         short = "k",
@@ -14,6 +15,8 @@ pub struct Test {
         help = "Specify test name to run (or substring)"
     )]
     name_pattern: Option<String>,
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
 }
 
 impl Cmd for Test {
@@ -40,6 +43,7 @@ impl Cmd for Test {
         let executor = Executor::new(ctx.dialect.as_ref(), ctx.account_address()?, dep_list);
 
         let mut has_failures = false;
+
         for test in load_move_files(&[tests_dir])? {
             let test_name = Executor::script_name(&test)?;
 

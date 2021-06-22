@@ -1,12 +1,11 @@
-#![allow(dead_code)]
-
 use std::path::{PathBuf, Path};
 use std::fs::{remove_dir_all, read_to_string, create_dir_all};
 use fs_extra::file::write_all;
 use toml::Value;
-use dove::cli::execute;
-use dove::stdout::{set_print_to_string, get_buffer_value_and_erase};
+use crate::cli::execute;
+use crate::stdout::{set_print_to_string, get_buffer_value_and_erase};
 
+/// get tmp_folder, project_folder and remove project folder if exist
 pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
     let tmp_folder = std::env::temp_dir();
     let project_folder = tmp_folder.join(project_name);
@@ -16,6 +15,7 @@ pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
     (tmp_folder, project_folder)
 }
 
+/// create folder for project and return project path
 pub fn project_start_for_init(project_name: &str) -> PathBuf {
     let (_, project_folder) = project_start(project_name);
     // Create project directory
@@ -23,6 +23,7 @@ pub fn project_start_for_init(project_name: &str) -> PathBuf {
     project_folder
 }
 
+/// create default project and return project path
 pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
     let (base_folder, project_folder) = project_start(project_name);
     project_new_default(&base_folder, &project_folder, project_name);
@@ -63,17 +64,19 @@ pub fn project_new_with_args(
     set_dependencies_local_move_stdlib(&project_folder);
 }
 
-// $ dove build
+/// $ dove build
 pub fn project_build(project_folder: &Path) {
     execute_dove_at(&["dove", "build"], &project_folder).unwrap();
 }
 
+/// remove project
 pub fn project_remove(project_folder: &Path) {
     if project_folder.exists() {
         remove_dir_all(project_folder).unwrap();
     }
 }
 
+/// add to dove.toml dependencies
 pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
     let move_stdlib = Path::new(".")
         .canonicalize()
@@ -107,18 +110,25 @@ pub fn set_dependencies_local_move_stdlib(project_path: &Path) {
     .unwrap();
 }
 
+/// run dove
 pub fn execute_dove_at(args: &[&str], project_folder: &Path) -> anyhow::Result<String> {
     set_print_to_string();
     execute(args, project_folder.to_path_buf())
         .map(|_| get_buffer_value_and_erase().unwrap_or_else(|| "".to_string()))
 }
-pub fn execute_dove_bin_at(args: &[&str], project_folder: &Path) -> anyhow::Result<String> {
+
+/// run bin dove
+pub fn execute_dove_bin_at(
+    cargo_bin_path: &str,
+    args: &[&str],
+    project_folder: &Path,
+) -> anyhow::Result<String> {
     assert!(
         project_folder.exists(),
         "Project folder {:?} does not exist",
         project_folder.display()
     );
-    let output = std::process::Command::new(env!("CARGO_BIN_EXE_dove"))
+    let output = std::process::Command::new(cargo_bin_path)
         .current_dir(project_folder)
         .args(args.iter().skip(1)) // TODO: remove first argument `dove` on callee side
         .output()?;
@@ -131,6 +141,7 @@ pub fn execute_dove_bin_at(args: &[&str], project_folder: &Path) -> anyhow::Resu
     Ok(String::from_utf8(output.stdout)?)
 }
 
+/// check dove.toml
 pub fn assert_valid_dove_toml(
     project_folder: &Path,
     project_name: &str,
@@ -172,6 +183,7 @@ pub fn assert_valid_dove_toml(
     }
 }
 
+/// check basic folders
 pub fn assert_basic_project_dirs_exist(project_folder: &Path) {
     assert!(
         project_folder.join("modules").exists(),
