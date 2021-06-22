@@ -11,7 +11,7 @@ use move_language_server::global_state::{
 };
 use lang::compiler::file::*;
 use move_language_server::inner::change::AnalysisChange;
-use move_lang::leak_str;
+use ir_to_bytecode_syntax::syntax::leak_str;
 
 macro_rules! config {
     () => {{

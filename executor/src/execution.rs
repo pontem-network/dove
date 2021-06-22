@@ -10,7 +10,6 @@ use move_vm_runtime::data_cache::RemoteCache;
 use move_vm_runtime::logging::NoContextLog;
 use move_vm_runtime::move_vm::MoveVM;
 use move_vm_types::gas_schedule::CostStrategy;
-use move_vm_types::natives::balance::{NativeBalance, WalletId};
 use vm::access::ModuleAccess;
 use vm::CompiledModule;
 use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
@@ -21,30 +20,10 @@ use crate::explain::{
     StepExecutionResult,
 };
 use crate::meta::ExecutionMeta;
-use crate::oracles::{
-    block_metadata, coin_balance_metadata, oracle_coins_module, time_metadata, currency_struct,
-};
 use crate::session::ConstsMap;
 
 pub type SerializedTransactionEffects = Vec<((AccountAddress, StructTag), Option<Vec<u8>>)>;
 pub type TransactionEffects = (ChangeSet, Vec<Event>);
-
-#[derive(Debug, Default)]
-struct AccountsBalance {
-    balances: HashMap<WalletId, u128>,
-}
-
-impl AccountsBalance {
-    pub fn insert(&mut self, wallet_id: WalletId, val: u128) {
-        self.balances.insert(wallet_id, val);
-    }
-}
-
-impl NativeBalance for AccountsBalance {
-    fn get_balance(&self, wallet_id: &WalletId) -> Option<u128> {
-        self.balances.get(wallet_id).cloned()
-    }
-}
 
 #[derive(Debug, Default, Clone)]
 pub struct FakeRemoteCache {
@@ -156,7 +135,6 @@ pub fn serialize_script(script: &CompiledScript) -> Result<Vec<u8>> {
 
 fn execute_script_with_runtime_session<R: RemoteCache>(
     data_store: &R,
-    balances: Box<dyn NativeBalance>,
     script: Vec<u8>,
     args: Vec<Vec<u8>>,
     ty_args: Vec<TypeTag>,
@@ -164,7 +142,7 @@ fn execute_script_with_runtime_session<R: RemoteCache>(
     cost_strategy: &mut CostStrategy,
 ) -> VMResult<TransactionEffects> {
     let vm = MoveVM::new();
-    let mut runtime_session = vm.new_session_with_balance(data_store, balances);
+    let mut runtime_session = vm.new_session(data_store);
 
     runtime_session.execute_script(
         script,
@@ -188,56 +166,13 @@ pub fn execute_script(
     let mut ds = data_store.clone();
     let ExecutionMeta {
         signers,
-        accounts_balance,
-        native_accounts_balance,
-        oracle_prices,
-        current_time,
         aborts_with,
         status,
-        block,
         dry_run,
     } = meta;
-    if !oracle_prices.is_empty() {
-        // check if module exists, and fail with MISSING_DEPENDENCY if not
-        if ds.get_module(&oracle_coins_module()).is_err() {
-            return Ok(StepExecutionResult::Error(
-                "Cannot use `price:` comments: missing `0x1::Coins` module".to_string(),
-            ));
-        }
-    }
-    let std_addr = AccountAddress::from_hex_literal("0x1").expect("Standart address");
-
-    if let Some(current_time) = current_time {
-        ds.resources.insert(
-            (std_addr, time_metadata()),
-            bcs::to_bytes(&current_time).unwrap(),
-        );
-    }
-    let block_height = block.unwrap_or(100);
-    ds.resources.insert(
-        (std_addr, block_metadata()),
-        bcs::to_bytes(&block_height).unwrap(),
-    );
-    for (price_tag, val) in oracle_prices {
-        ds.resources
-            .insert((std_addr, price_tag), bcs::to_bytes(&val).unwrap());
-    }
-
-    let mut balances = AccountsBalance::default();
-    for (account, coin, val) in accounts_balance {
-        ds.resources.insert(
-            (account, coin_balance_metadata(&coin)),
-            bcs::to_bytes(&val).unwrap(),
-        );
-    }
-    for (account, coin, val) in native_accounts_balance {
-        let wallet_id = WalletId::new(account, currency_struct(&coin));
-        balances.insert(wallet_id, val);
-    }
 
     let res = execute_script_with_runtime_session(
         &ds,
-        Box::new(balances),
         serialize_script(&script)?,
         args,
         vec![],
