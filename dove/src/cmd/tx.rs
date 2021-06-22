@@ -114,6 +114,7 @@ impl<'a> TransactionBuilder<'a> {
         })
     }
 
+    #[allow(clippy::branches_sharing_code)]
     pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Error> {
         let mut mut_string = MutString::new(call);
         replace_ss58_addresses(call, &mut mut_string, &mut Default::default());
