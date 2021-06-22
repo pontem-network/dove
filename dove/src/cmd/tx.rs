@@ -180,28 +180,25 @@ impl<'a> TransactionBuilder<'a> {
                 continue;
             }
 
-            if lexer.peek() == Tok::LBracket {
-                let mut token = String::new();
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
+            let mut token = String::new();
+            token.push_str(lexer.content());
+            let sw = lexer.peek() == Tok::LBracket;
+            lexer.advance().map_err(map_err)?;
+            if sw {
                 while lexer.peek() != Tok::RBracket {
                     token.push_str(lexer.content());
                     lexer.advance().map_err(map_err)?;
                 }
                 token.push_str(lexer.content());
-                arguments.push(token);
             } else {
-                let mut token = String::new();
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
                 while lexer.peek() != Tok::Comma && lexer.peek() != Tok::RParen {
                     token.push_str(lexer.content());
                     lexer.advance().map_err(map_err)?;
                 }
-                arguments.push(token);
-                if lexer.peek() == Tok::RParen {
-                    break;
-                }
+            }
+            arguments.push(token);
+            if !sw && lexer.peek() == Tok::RParen {
+                break;
             }
             lexer.advance().map_err(map_err)?;
         }
