@@ -61,7 +61,7 @@ impl Cmd for Metadata {
     }
 }
 
-/// Movec manifest.
+/// Move manifest.
 #[derive(Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct DoveMetadata {
     /// Project info.

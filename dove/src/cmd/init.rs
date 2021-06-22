@@ -151,7 +151,7 @@ dependencies = [
             )?;
         }
         stdoutln!(
-            "Projest {} initislized in {}",
+            "Project {} initialized in {}",
             good("successfully"),
             ctx.project_dir.display()
         );
