@@ -223,10 +223,8 @@ pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
         (N::U256_DIV, GasCost::new(10, 1)),
         (N::U256_SUB, GasCost::new(10, 1)),
         (N::U256_ADD, GasCost::new(10, 1)),
-        (N::DEPOSIT, GasCost::new(706, 1)),
-        (N::WITHDRAW, GasCost::new(706, 1)),
-        (N::GET_BALANCE, GasCost::new(353, 1)),
     ];
+
     native_table.sort_by_key(|cost| cost.0 as u64);
     let raw_native_table = native_table
         .into_iter()

@@ -10,6 +10,7 @@ use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::file::MoveFile;
 use crate::compiler::mut_string::{MutString, NewValue};
 use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
+use ir_to_bytecode_syntax::syntax::leak_str;
 
 pub type CommentsMap = BTreeMap<&'static str, FileCommentMap>;
 
