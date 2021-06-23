@@ -270,12 +270,20 @@ impl ValidateJson {
         ValidateJson {
             code,
             error: Some(ValidateJsonError {
-                message: message.to_string(),
+                message: Self::cleaning_message(message),
                 line: offset.map(|v| v.0),
                 column: offset.map(|v| v.1),
                 offset: offset.map(|v| v.2),
             }),
         }
+    }
+    /// Removing line number from an error
+    fn cleaning_message(message: &str) -> String {
+        let mut message = message.to_string();
+        if let Some(position) = message.find(" at line") {
+            message = (&message[..position]).to_string();
+        }
+        message
     }
 
     pub fn new_valid() -> ValidateJson {
