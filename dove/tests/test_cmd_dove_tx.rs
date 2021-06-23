@@ -344,3 +344,39 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
     assert!(tx_fmt.contains(" signers_count: 0"));
     project_remove(&project_folder);
 }
+
+/// $ dove tx 'script_1(1,2)'
+#[test]
+fn test_cmd_dove_tx_multiple_scripts() {
+    // Path to dove folder, project and project name
+    let project_name = "project_tx_multiple_scripts";
+    let project_folder = project_start_new_and_build(project_name);
+    // project_folder/scripts/multiple.move
+    write_all(
+        &project_folder.join("scripts").join("multiple.move"),
+        "script { fun script_1() {  } }\n\
+                script { fun script_2(_a:u64) {  } }",
+    )
+    .unwrap();
+    let args = &["dove", "tx", "script_1()"];
+    execute_dove_at(args, &project_folder).unwrap();
+
+    let tx_path = project_folder
+        .join("artifacts")
+        .join("transactions")
+        .join("script_1.mvt");
+    assert!(
+        tx_path.exists(),
+        "Transaction not found: {}\n[Command] {}",
+        tx_path.display(),
+        args.join(" "),
+    );
+    let tx_fmt = format!(
+        "{:?}",
+        bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+    );
+    assert!(tx_fmt.contains(" args: []"));
+    assert!(tx_fmt.contains(" type_args: []"));
+    assert!(tx_fmt.contains(" signers_count: 0"));
+    project_remove(&project_folder);
+}

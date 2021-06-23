@@ -269,13 +269,17 @@ impl<'a> TransactionBuilder<'a> {
 
         let (file, mut meta) = files.remove(0);
         ensure!(!meta.is_empty(), "Script not found.");
-        ensure!(
-            meta.len() < 2,
-            "There are several scripts with the name '{:?}' in file '{}'.",
-            name,
-            file.name()
-        );
-        Ok((file, meta.remove(0)))
+        if meta.len() > 1 {
+            let file = split_movefile_into_scripts(file.to_owned(), Some(name))?.remove(0);
+            let meta_index = meta
+                .iter()
+                .enumerate()
+                .find_map(|(index, meta)| if meta.name == name { Some(index) } else { None })
+                .map_or_else(|| Err(anyhow!("meta not found")), Ok)?;
+            Ok((file, meta.remove(meta_index)))
+        } else {
+            Ok((file, meta.remove(0)))
+        }
     }
     fn lookup_script(&self) -> Result<(MoveFile, Meta), Error> {
         if let Some(file_name) = &self.script_file_name {
@@ -420,6 +424,63 @@ impl<'a> TransactionBuilder<'a> {
     }
 }
 
+fn split_movefile_into_scripts<'a>(
+    base_movefile: MoveFile,
+    need_script_name: Option<&str>,
+) -> Result<Vec<MoveFile<'a, 'a>>, Error> {
+    let mut find_scripts = parse_text_into_scripts(base_movefile.content())?;
+    if let Some(script_name) = need_script_name {
+        find_scripts = find_scripts
+            .iter()
+            .filter(|(name, _)| script_name == name)
+            .cloned()
+            .collect();
+    }
+    if find_scripts.is_empty() {
+        return Err(anyhow!("Script(s) not found"));
+    }
+    let movefiles: Vec<MoveFile> = find_scripts
+        .iter()
+        .map(|(_, body)| MoveFile::with_content(base_movefile.name().to_owned(), body.clone()))
+        .collect();
+
+    Ok(movefiles)
+}
+fn parse_text_into_scripts(content: &str) -> Result<Vec<(String, String)>, Error> {
+    let mut lexer = Lexer::new(&content, "source", Default::default());
+    lexer.advance().unwrap();
+
+    let mut scripts_positions: Vec<(String, usize, usize)> = Vec::new();
+
+    while lexer.peek() != Tok::EOF {
+        while lexer.peek() != Tok::Script {
+            lexer.advance().unwrap();
+        }
+        let start = lexer.start_loc();
+        let mut function_name = String::new();
+
+        loop {
+            lexer.advance().unwrap();
+            match lexer.peek() {
+                Tok::Fun => {
+                    lexer.advance().unwrap();
+                    if lexer.peek() != Tok::IdentifierValue {
+                        return Err(anyhow!("Script is not valid "));
+                    }
+                    function_name = lexer.content().to_string();
+                }
+                Tok::Script => break,
+                Tok::EOF => break,
+                _ => (),
+            };
+        }
+        scripts_positions.push((function_name, start, lexer.previous_end_loc()));
+    }
+    Ok(scripts_positions
+        .iter()
+        .map(|(name, start, end)| (name.clone(), content[*start..*end].to_string()))
+        .collect::<Vec<(String, String)>>())
+}
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
 /// ```
