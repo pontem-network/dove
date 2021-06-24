@@ -1,6 +1,6 @@
 use move_lang::errors::Error;
 use move_lang::parser::lexer::{Lexer, Tok};
-use move_lang::parser::syntax::{make_loc, parse_address, unexpected_token_error, parse_num, parse_byte_string};
+use move_lang::parser::syntax::{make_loc, parse_address, unexpected_token_error, parse_num, parse_byte_string, parse_comma_list};
 use move_lang::expansion::{hex_string, byte_string};
 use crate::parser::types::{Value, Value_};
 
@@ -45,14 +45,13 @@ pub fn parse_value(tokens: &mut Lexer) -> Result<Value, Error> {
             Value_::Bytes(bytes)
         }
         Tok::LBracket => {
-            if tokens.lookahead()? == Tok::ColonColon {
-                Instruction::Call(parse_call(tokens)?)
-            } else {
-            //VecNum(Vec<u128>),
-            //     VecAddr(Vec<Address>),
-            //VecStruct
-            // EmptyVector
-            todo!()
+            Value_::Vec(parse_comma_list(
+                tokens,
+                Tok::LBracket,
+                Tok::RBracket,
+                parse_value,
+                "a vector item expression",
+            )?)
         }
         Tok::LBrace => {
             // Struct(Vec<Value>)
@@ -146,7 +145,45 @@ mod tests {
         assert_eq!(fail("x\"0\""), vec![
             (loc(0, 4), "Odd number of characters in hex string. Expected 2 hexadecimal digits for each byte".to_owned())
         ]);
+    }
 
+    #[test]
+    fn test_parse_vec() {
+        assert_eq!(success("[]"), val(Value_::Vec(vec![])));
+
+        assert_eq!(
+            success("[true, false, true, ]"),
+            val(Value_::Vec(vec![val(Value_::Bool(true)), val(Value_::Bool(false)), val(Value_::Bool(true))]))
+        );
+
+        assert_eq!(
+            success("[0, 42]"),
+            val(Value_::Vec(vec![val(Value_::Num(0)), val(Value_::Num(42))]))
+        );
+
+        assert_eq!(
+            success("[x\"00\", x\"00\"]"),
+            val(Value_::Vec(vec![val(Value_::Bytes(vec![0x0])), val(Value_::Bytes(vec![0x0]))]))
+        );
+
+        assert_eq!(
+            success("[[], []]"),
+            val(Value_::Vec(vec![val(Value_::Vec(vec![])), val(Value_::Vec(vec![]))]))
+        );
+
+        assert_eq!(
+            success("[0x1]"),
+            val(Value_::Vec(vec![val(Value_::Address(Address::DIEM_CORE))]))
+        );
+
+        assert_eq!(fail("["), vec![
+            (loc(1, 1), "Unexpected end-of-file".to_owned()),
+            (loc(1, 1), "Expected one of `identifier`, `address`, `bool`, `number`, `vector`, `struct`, `byte string` or `byte string`".to_owned())
+        ]);
+
+        assert_eq!(fail("[,]"), vec![
+            (loc(1, 1), "Expected a vector item expression".to_owned()),
+        ]);
     }
 
 }
