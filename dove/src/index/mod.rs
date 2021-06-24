@@ -29,8 +29,6 @@ pub type ModulesIndex = HashMap<Rc<ModuleId>, HashMap<SourceType, Module>>;
 pub struct Index<'a> {
     /// Modules index.
     pub modules: ModulesIndex,
-    /// Set of dependencies names.
-    pub dep_names: HashSet<Rc<str>>,
     /// Dove context.
     pub ctx: &'a Context,
 }
@@ -43,51 +41,25 @@ impl<'a> Index<'a> {
             fs::create_dir_all(&deps_path)?;
         }
 
-        if let Some(dependencies) = &self.ctx.manifest.package.dependencies {
-            self.load_deps(&dependencies.deps)?;
-        }
-
         self.modules.iter_mut().for_each(|(_, m)| {
             m.remove(&SourceType::Local);
         });
 
-        let deps_dir = deps_path.read_dir()?;
-        let mut new_deps = HashSet::new();
-        for dir in deps_dir {
-            let dir = dir?;
-            let name = Rc::from(dir.file_name().to_str().ok_or_else(|| {
-                anyhow!("Failed to convert dependence name:{:?}", dir.file_name())
-            })?);
-
-            let path = dir.path();
-            if !self.dep_names.contains(&name) {
-                if name.starts_with(git::PREFIX) {
-                    let git = GitIndex::new(self.ctx, &path);
-                    self.store_meta(git.meta()?, SourceType::Git, name.clone());
-                } else if name.starts_with(chain::PREFIX) {
-                    let chain = ChainIndex::new(self.ctx, &path);
-                    self.store_meta(chain.meta()?, SourceType::Chain, name.clone());
-                    chain.meta()?;
-                }
-                new_deps.insert(name.clone());
-            }
-        }
-
-        self.dep_names = new_deps;
-
         if let Some(dependencies) = &self.ctx.manifest.package.dependencies {
-            dependencies
-                .deps
-                .iter()
-                .filter_map(|dep| {
-                    if let Dependence::Path(path) = dep {
-                        Some(path.path.as_str())
-                    } else {
-                        None
+            self.load_deps(&dependencies.deps)?;
+
+            for dependency in &dependencies.deps {
+                match dependency {
+                    Dependence::Git(git) => {
+                        let path = deps_path.join(git::make_local_name(git));
+                        let git = GitIndex::new(self.ctx, &path);
+                        self.store_meta(git.meta()?, SourceType::Git);
+                    },
+                    Dependence::Path(path) => {
+                        self.index_deps_for(path.as_ref())?;
                     }
-                })
-                .map(|path| self.index_deps_for(&path))
-                .collect::<Result<Vec<_>, Error>>()?;
+                }
+            }
         }
 
         self.store()?;
@@ -170,11 +142,6 @@ impl<'a> Index<'a> {
             if !resolve(self, import, deps)? {
                 let path = chain::resolve(self.ctx, import)?;
                 let index = ChainIndex::new(self.ctx, &path);
-                let name = path
-                    .file_name()
-                    .and_then(|name| name.to_str())
-                    .map(|name| Rc::from(name.to_owned()))
-                    .ok_or_else(|| anyhow!("Failed to get dependencies name :[{:?}]", path))?;
 
                 let files_meta = index.meta()?;
 
@@ -184,7 +151,7 @@ impl<'a> Index<'a> {
                     }
                 }
 
-                self.store_meta(files_meta, SourceType::Chain, name);
+                self.store_meta(files_meta, SourceType::Chain);
 
                 if !resolve(self, import, deps)? {
                     return Err(anyhow!("Failed to resolve dependency:{:?}", import));
@@ -206,13 +173,6 @@ impl<'a> Index<'a> {
     }
 
     fn index_deps_for<A: AsRef<Path>>(&mut self, path: A) -> Result<(), Error> {
-        let dep_name = Rc::<str>::from(
-            path.as_ref()
-                .to_str()
-                .ok_or_else(|| anyhow!("Failed to convert source path:{:?}", path.as_ref()))?
-                .to_owned(),
-        );
-
         for file in move_dir_iter(path) {
             let meta = source_meta(
                 file.path(),
@@ -220,7 +180,7 @@ impl<'a> Index<'a> {
                 self.ctx.dialect.as_ref(),
             )?;
 
-            self.store_meta(vec![meta], SourceType::Local, dep_name.clone());
+            self.store_meta(vec![meta], SourceType::Local);
         }
         Ok(())
     }
@@ -257,7 +217,7 @@ impl<'a> Index<'a> {
         Ok(())
     }
 
-    fn store_meta(&mut self, f_meta: Vec<FileMeta>, src_type: SourceType, dep_name: Rc<str>) {
+    fn store_meta(&mut self, f_meta: Vec<FileMeta>, src_type: SourceType) {
         for file in f_meta {
             for unit in file.meta {
                 let name = Rc::new(unit.module_id);
@@ -270,7 +230,6 @@ impl<'a> Index<'a> {
                     src_type,
                     Module {
                         name,
-                        dep_name: dep_name.clone(),
                         path: file.path.clone(),
                         source_type: src_type,
                         dependencies,

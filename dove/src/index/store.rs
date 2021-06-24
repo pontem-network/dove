@@ -40,8 +40,6 @@ pub enum SourceType {
 pub struct Module {
     /// Module address and name.
     pub name: Rc<ModuleId>,
-    /// Dependency name.
-    pub dep_name: Rc<str>,
     /// Path to the dependencies.
     pub path: Rc<str>,
     /// Dependency type.
@@ -57,8 +55,6 @@ impl<'a> Index<'a> {
         if index_path.exists() {
             let index = toml::from_str::<Modules>(&fs::read_to_string(index_path)?)?;
 
-            let dep_names = index.modules.iter().map(|m| m.dep_name.clone()).collect();
-
             let modules = index.modules.into_iter().map(|m| (m.name.clone(), m)).fold(
                 HashMap::new(),
                 |mut acc, (name, m)| {
@@ -68,15 +64,10 @@ impl<'a> Index<'a> {
                 },
             );
 
-            Ok(Index {
-                modules,
-                dep_names,
-                ctx,
-            })
+            Ok(Index { modules, ctx })
         } else {
             Ok(Index {
                 modules: Default::default(),
-                dep_names: Default::default(),
                 ctx,
             })
         }
