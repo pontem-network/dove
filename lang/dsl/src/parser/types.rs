@@ -18,7 +18,7 @@ pub type Value = Spanned<Value_>;
 
 #[derive(Debug, PartialEq)]
 pub struct Struct {
-    fields: Vec<Value>,
+    pub fields: Vec<(Name, Value)>,
 }
 
 #[derive(Debug, PartialEq)]

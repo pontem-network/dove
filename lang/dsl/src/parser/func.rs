@@ -1,6 +1,8 @@
 use crate::parser::types::Call;
 use move_lang::errors::Error;
-use move_lang::parser::syntax::{parse_module_access, make_loc, parse_optional_type_args, consume_token, parse_comma_list};
+use move_lang::parser::syntax::{
+    parse_module_access, parse_optional_type_args, consume_token, parse_comma_list,
+};
 use move_lang::parser::lexer::{Lexer, Tok};
 use crate::parser::value::parse_value;
 
@@ -10,7 +12,6 @@ pub fn parse_call(tokens: &mut Lexer) -> Result<Call, Error> {
     })?;
 
     let mut tys = None;
-    let start_loc = tokens.start_loc();
     if tokens.peek() == Tok::Less {
         tys = parse_optional_type_args(tokens)?;
     }
