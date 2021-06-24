@@ -53,6 +53,7 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
         let script_args = parse_script_arguments(args)?;
 
         let mut sources = Vec::with_capacity(self.deps.len() + 1);
+
         sources.push(&script);
         for dep in &self.deps {
             sources.push(&dep);
