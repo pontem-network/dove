@@ -14,15 +14,13 @@ pub fn parse_var(tokens: &mut Lexer) -> Result<Var, Error> {
 }
 
 #[cfg(test)]
-mod tests {
-    use move_ir_types::location::{Loc, Span};
+pub mod tests {
     use move_lang::errors::Error;
     use move_lang::parser::lexer::Lexer;
 
     use crate::parser::types::{Var, Value_};
     use crate::parser::var::parse_var;
-    use move_lang::shared::Name;
-    use crate::parser::types::Value;
+    use crate::parser::value::tests::{name, val, loc};
 
     #[test]
     pub fn test_parse_var() {
@@ -85,17 +83,5 @@ mod tests {
         let mut lexer = Lexer::new(val, "dsl", Default::default());
         lexer.advance().unwrap();
         parse_var(&mut lexer).unwrap_err()
-    }
-
-    fn loc(start: u32, end: u32) -> Loc {
-        Loc::new("dsl", Span::new(start, end))
-    }
-
-    fn name(name: &str) -> Name {
-        Name::new(loc(0, 0), name.to_owned())
-    }
-
-    fn val(val: Value_) -> Value {
-        Value::new(loc(0, 0), val)
     }
 }

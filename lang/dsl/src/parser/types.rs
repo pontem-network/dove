@@ -1,4 +1,3 @@
-use move_core_types::language_storage::StructTag;
 use move_lang::parser::ast::{Use, ModuleAccess, Type};
 use move_lang::shared::{Address, Name};
 use move_ir_types::location::{Spanned, Loc};
@@ -30,8 +29,8 @@ pub struct Var {
 #[derive(Debug, PartialEq)]
 pub struct ResourceStore {
     pub address: Address,
-    pub resource_tag: StructTag,
-    pub value: Value,
+    pub tp: Type,
+    pub value: Option<Value>,
 }
 
 #[derive(Debug, PartialEq)]
