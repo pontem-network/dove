@@ -11,10 +11,7 @@ pub enum Value_ {
     Num(u128),
     Struct(Struct),
     Bytes(Vec<u8>),
-    VecNum(Vec<u128>),
-    VecAddr(Vec<Address>),
-    VecStruct(Vec<Struct>),
-    EmptyVector(),
+    Vec(Vec<Value>),
 }
 
 pub type Value = Spanned<Value_>;
