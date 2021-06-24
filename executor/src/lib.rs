@@ -5,3 +5,4 @@ pub mod explain;
 pub mod format;
 pub mod meta;
 pub mod session;
+pub mod metadata;
