@@ -7,8 +7,10 @@ use std::io::Write;
 use serde::{Serialize, Deserialize};
 use crate::index::Index;
 use std::rc::Rc;
+use std::path::Path;
 use std::collections::{HashMap, HashSet};
 use move_core_types::language_storage::ModuleId;
+use super::resolver::{git, chain};
 
 /// Modules holder.
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
@@ -33,6 +35,20 @@ pub enum SourceType {
     Git,
     /// Blockchain dependencies.
     Chain,
+}
+
+impl SourceType {
+    /// Determines SourceType depending on path (namely, prefix of the filename).
+    pub fn try_from_path(path: &Path) -> Option<Self> {
+        let file_name = path.file_name()?.to_str()?;
+        if file_name.starts_with(git::PREFIX) {
+            Some(Self::Git)
+        } else if file_name.starts_with(chain::PREFIX) {
+            Some(Self::Chain)
+        } else {
+            Some(Self::Local)
+        }
+    }
 }
 
 /// Module model.

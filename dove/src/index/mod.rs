@@ -17,7 +17,7 @@ use resolver::git::GitIndex;
 use std::rc::Rc;
 use walkdir::{WalkDir, DirEntry};
 use crate::index::meta::{source_meta, FileMeta};
-use resolver::{git};
+use resolver::git;
 use crate::index::resolver::chain;
 use crate::index::resolver::chain::ChainIndex;
 use move_core_types::language_storage::ModuleId;
@@ -46,17 +46,23 @@ impl<'a> Index<'a> {
         });
 
         if let Some(dependencies) = &self.ctx.manifest.package.dependencies {
-            self.load_deps(&dependencies.deps)?;
-
-            for dependency in &dependencies.deps {
-                match dependency {
-                    Dependence::Git(git) => {
-                        let path = deps_path.join(git::make_local_name(git));
+            let loaded_deps = self.load_deps(&dependencies.deps)?;
+            for path in loaded_deps {
+                let source_type = SourceType::try_from_path(&path).ok_or_else(|| {
+                    anyhow!(
+                        "Unable to determine SourceType from path: {}",
+                        path.display()
+                    )
+                })?;
+                match source_type {
+                    SourceType::Local => self.index_deps_for(&path)?,
+                    SourceType::Git => {
                         let git = GitIndex::new(self.ctx, &path);
-                        self.store_meta(git.meta()?, SourceType::Git);
-                    },
-                    Dependence::Path(path) => {
-                        self.index_deps_for(path.as_ref())?;
+                        self.store_meta(git.meta()?, source_type);
+                    }
+                    SourceType::Chain => {
+                        let chain = ChainIndex::new(self.ctx, &path);
+                        self.store_meta(chain.meta()?, source_type);
                     }
                 }
             }
@@ -185,16 +191,19 @@ impl<'a> Index<'a> {
         Ok(())
     }
 
-    fn load_deps(&self, deps: &[Dependence]) -> Result<(), Error> {
+    fn load_deps(&self, deps: &[Dependence]) -> Result<HashSet<PathBuf>, Error> {
+        let mut result = HashSet::new();
+
         for dep in deps {
             match dep {
                 Dependence::Git(git) => {
                     let path = git::resolve(&self.ctx, &git)?;
+                    result.insert(path.clone());
                     let manifest = path.join(MANIFEST);
                     if manifest.exists() {
                         if let Ok(manifest) = read_manifest(&manifest) {
                             if let Some(dependencies) = manifest.package.dependencies {
-                                self.load_deps(&dependencies.deps)?;
+                                result.extend(self.load_deps(&dependencies.deps)?.into_iter());
                             }
                         }
                     }
@@ -210,11 +219,12 @@ impl<'a> Index<'a> {
                     if !path.exists() {
                         return Err(anyhow!("Unresolved dependencies path:{:?}", path));
                     }
+                    result.insert(path);
                 }
             }
         }
 
-        Ok(())
+        Ok(result)
     }
 
     fn store_meta(&mut self, f_meta: Vec<FileMeta>, src_type: SourceType) {
