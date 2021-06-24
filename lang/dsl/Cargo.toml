@@ -1,0 +1,9 @@
+[package]
+name = "dsl"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
