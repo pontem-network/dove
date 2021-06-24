@@ -174,20 +174,21 @@ impl<'a> TransactionBuilder<'a> {
             ));
         }
 
-        let (signers, args_count, args) = self.prepare_arguments(&meta.parameters)?;
+        let (signers_count, args) = self.prepare_arguments(&meta.parameters)?;
 
-        if self.args.len() != args_count {
+        // TODO: @vladimirovmm this check is probably redundant and will never trigger
+        if self.args.len() != args.len() {
             return Err(anyhow!(
                 "Script '{}' takes {} parameters, {} passed",
                 meta.name,
-                args_count,
+                args.len(),
                 self.args.len()
             ));
         }
 
         Ok((
             meta.name,
-            Transaction::new(signers as u8, unit, args, self.type_parameters.clone())?,
+            Transaction::new(signers_count as u8, unit, args, self.type_parameters.clone())?,
         ))
     }
     /// Find and run the script using the specified parameters
@@ -346,7 +347,7 @@ impl<'a> TransactionBuilder<'a> {
     fn prepare_arguments(
         &self,
         arguments: &[(String, String)],
-    ) -> Result<(usize, usize, Vec<ScriptArg>), Error> {
+    ) -> Result<(usize, Vec<ScriptArg>), Error> {
         fn parse_err<D: Debug>(name: &str, tp: &str, value: &str, err: D) -> Error {
             anyhow!(
                 "Parameter '{}' has {} type. Failed to parse {}. Error:'{:?}'",
@@ -419,7 +420,7 @@ impl<'a> TransactionBuilder<'a> {
                 other => return Err(anyhow!("Unexpected script parameter: {}", other)),
             }
         }
-        Ok((signers_count, values.len(), values))
+        Ok((signers_count, values))
     }
 
     fn build_script(&'a self, script: MoveFile<'a, 'a>) -> Result<Vec<CompiledUnit>, Error> {
