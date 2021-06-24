@@ -362,35 +362,20 @@ impl<'a> TransactionBuilder<'a> {
         let mut signers_count = 0;
         let mut values = Vec::with_capacity(arguments.len());
         for ((arg_name, arg_type), arg_value) in arguments.iter().zip(&self.args) {
+            macro_rules! parse_primitive {
+                ($script_arg:expr) => {
+                    values.push($script_arg(arg_value.parse().map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?))
+                } 
+            }
             match arg_type.as_str() {
                 "signer" => {
                     signers_count += 1;
                 }
-                "bool" => values.push(ScriptArg::Bool(
-                    arg_value
-                        .parse()
-                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-                )),
-                "u8" => values.push(ScriptArg::U8(
-                    arg_value
-                        .parse()
-                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-                )),
-                "u64" => values.push(ScriptArg::U64(
-                    arg_value
-                        .parse()
-                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-                )),
-                "u128" => values.push(ScriptArg::U128(
-                    arg_value
-                        .parse()
-                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-                )),
-                "address" => values.push(ScriptArg::Address(
-                    Address::from_str(arg_value)
-                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
-                        .addr,
-                )),
+                "bool" => parse_primitive!(ScriptArg::Bool),
+                "u8" => parse_primitive!(ScriptArg::U8),
+                "u64" => parse_primitive!(ScriptArg::U64),
+                "u128" => parse_primitive!(ScriptArg::U128),
+                "address" => parse_primitive!(ScriptArg::Address),
                 "vector<u8>" => {
                     let vec = if arg_value.contains('[') {
                         parse_vec(arg_value, "u8")
