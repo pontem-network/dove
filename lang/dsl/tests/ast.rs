@@ -1,10 +1,13 @@
 use move_ir_types::location::{Loc, Span};
-use move_lang::parser::ast::{ModuleAccess, ModuleAccess_, ModuleIdent, ModuleName, Type, Type_, Use};
+use move_lang::parser::ast::{ModuleAccess, ModuleAccess_, ModuleName, Type, Type_, Use};
 use move_lang::parser::syntax::spanned;
-use move_lang::shared::{Address, Name};
+use move_lang::shared::Address;
 
 use dsl::parser::parse;
 use dsl::parser::types::{Ast, Call, Instruction, Struct, Value, Value_, Var};
+
+mod common;
+use common::*;
 
 #[test]
 pub fn parse_empty_dsl() {
@@ -312,10 +315,6 @@ pub fn test_var() {
     );
 }
 
-fn loc(start: u32, end: u32) -> Loc {
-    Loc::new("dsl", Span::new(start, end))
-}
-
 fn use_(start: u32, end: u32, use_: Use) -> (Loc, Instruction) {
     (loc(start, end), Instruction::Use(use_))
 }
@@ -332,28 +331,6 @@ fn var(start: u32, end: u32, n: &str, val: Value) -> (Loc, Instruction) {
             value: val,
         }),
     )
-}
-
-fn addr(addr: &str) -> Address {
-    Address::parse_str(addr).unwrap()
-}
-
-fn name(name: &str) -> Name {
-    Name::new(loc(0, 0), name.to_owned())
-}
-
-fn module(
-    start_1: u32,
-    end_1: u32,
-    start_2: u32,
-    end_2: u32,
-    adr: &str,
-    name: &str,
-) -> ModuleIdent {
-    ModuleIdent {
-        locs: (loc(start_1, end_1), loc(start_2, end_2)),
-        value: (addr(adr), name.to_owned()),
-    }
 }
 
 fn access_name(start: u32, end: u32, n: &str) -> ModuleAccess {
@@ -374,28 +351,6 @@ fn access_mod_name(start: u32, end: u32, m: &str, n: &str) -> ModuleAccess {
     )
 }
 
-fn access_addr_mod_name(
-    start: u32,
-    end: u32,
-    start_1: u32,
-    end_1: u32,
-    start_2: u32,
-    end_2: u32,
-    a: &str,
-    m: &str,
-    n: &str,
-) -> ModuleAccess {
-    spanned(
-        "dsl",
-        start as usize,
-        end as usize,
-        ModuleAccess_::QualifiedModuleAccess(
-            module(start_1, end_1, start_2, end_2, a, m),
-            name(n),
-        ),
-    )
-}
-
 fn tp(name: &str) -> Type {
     spanned(
         "dsl",
@@ -403,10 +358,6 @@ fn tp(name: &str) -> Type {
         0,
         Type_::Apply(Box::new(access_name(0, 0, name)), vec![]),
     )
-}
-
-fn tp_mod_access(access: ModuleAccess, tps: Vec<Type>) -> Type {
-    spanned("dsl", 0, 0, Type_::Apply(Box::new(access), tps))
 }
 
 fn val(val: Value_) -> Value {

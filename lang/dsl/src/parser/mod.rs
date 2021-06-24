@@ -3,11 +3,13 @@ use move_lang::errors::Error;
 use move_lang::parser::lexer::{Lexer, Tok};
 use move_lang::parser::syntax::{consume_token, make_loc, parse_use_decl, unexpected_token_error};
 
-use crate::parser::types::{Ast, Instruction};
 use crate::parser::func::parse_call;
+use crate::parser::types::{Ast, Instruction};
 use crate::parser::var::parse_var;
+use crate::parser::store::{MOVE_TO, DROP, parse_move_to, parse_drop};
 
 pub mod func;
+pub mod store;
 pub mod types;
 pub mod value;
 pub mod var;
@@ -51,14 +53,7 @@ fn parse_instructions(tokens: &mut Lexer) -> Result<Vec<(Loc, Instruction)>, Err
 
         let inst = match tokens.peek() {
             Tok::Use => Instruction::Use(parse_use_decl(tokens)?),
-            Tok::AddressValue => {
-                if tokens.lookahead()? == Tok::ColonColon {
-                    Instruction::Call(parse_call(tokens)?)
-                } else {
-                    // resource declaration.
-                    todo!()
-                }
-            }
+            Tok::AddressValue => Instruction::Call(parse_call(tokens)?),
             Tok::Let => {
                 tokens.advance()?;
                 Instruction::Var(parse_var(tokens)?)
@@ -67,14 +62,18 @@ fn parse_instructions(tokens: &mut Lexer) -> Result<Vec<(Loc, Instruction)>, Err
                 if tokens.lookahead()? == Tok::Equal {
                     Instruction::Var(parse_var(tokens)?)
                 } else {
-                    Instruction::Call(parse_call(tokens)?)
+                    match tokens.content() {
+                        MOVE_TO => Instruction::Store(parse_move_to(tokens)?),
+                        DROP => Instruction::Store(parse_drop(tokens)?),
+                        _ => Instruction::Call(parse_call(tokens)?),
+                    }
                 }
             }
             _ => {
                 return Err(unexpected_token_error(
                     tokens,
                     "one of `use`, `let`, `address`, or `identifier`",
-                ))
+                ));
             }
         };
         instructions.push((
