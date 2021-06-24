@@ -5,10 +5,12 @@ use move_lang::parser::syntax::{consume_token, make_loc, parse_use_decl, unexpec
 
 use crate::parser::types::{Ast, Instruction};
 use crate::parser::func::parse_call;
+use crate::parser::var::parse_var;
 
 pub mod func;
 pub mod types;
 pub mod value;
+pub mod var;
 
 pub fn parse(content: &str, name: &'static str) -> Result<Ast, Error> {
     let mut lexer = Lexer::new(content, name, Default::default());
@@ -58,10 +60,16 @@ fn parse_instructions(tokens: &mut Lexer) -> Result<Vec<(Loc, Instruction)>, Err
                 }
             }
             Tok::Let => {
-                // variable declaration.
-                todo!()
+                tokens.advance()?;
+                Instruction::Var(parse_var(tokens)?)
             }
-            Tok::IdentifierValue => Instruction::Call(parse_call(tokens)?),
+            Tok::IdentifierValue => {
+                if tokens.lookahead()? == Tok::Equal {
+                    Instruction::Var(parse_var(tokens)?)
+                } else {
+                    Instruction::Call(parse_call(tokens)?)
+                }
+            }
             _ => {
                 return Err(unexpected_token_error(
                     tokens,

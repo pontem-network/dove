@@ -4,7 +4,7 @@ use move_lang::parser::syntax::spanned;
 use move_lang::shared::{Address, Name};
 
 use dsl::parser::parse;
-use dsl::parser::types::{Ast, Call, Instruction};
+use dsl::parser::types::{Ast, Call, Instruction, Struct, Value, Value_, Var};
 
 #[test]
 pub fn parse_empty_dsl() {
@@ -81,15 +81,15 @@ pub fn parse_use_dsl() {
                 use_(
                     1,
                     16,
-                    Use::Module(module(5, 15, 10, 15, "0x1", "Block"), None)
+                    Use::Module(module(5, 15, 10, 15, "0x1", "Block"), None),
                 ),
                 use_(
                     25,
                     47,
                     Use::Members(
                         module(29, 39, 34, 39, "0x2", "Block"),
-                        vec![(name("Block"), None)]
-                    )
+                        vec![(name("Block"), None)],
+                    ),
                 ),
                 use_(
                     56,
@@ -100,32 +100,32 @@ pub fn parse_use_dsl() {
                             (name("BAR"), None),
                             (name("FOO"), None),
                             (name("T"), Some(name("D")))
-                        ]
-                    )
+                        ],
+                    ),
                 ),
                 use_(
                     98,
                     121,
                     Use::Members(
                         module(102, 110, 107, 110, "0x4", "Mod"),
-                        vec![(name("T"), Some(name("D")))]
-                    )
+                        vec![(name("T"), Some(name("D")))],
+                    ),
                 ),
                 use_(
                     133,
                     164,
                     Use::Members(
                         module(137, 147, 142, 147, "0x2", "Block"),
-                        vec![(name("Block"), Some(name("Block")))]
-                    )
+                        vec![(name("Block"), Some(name("Block")))],
+                    ),
                 ),
                 use_(
                     173,
                     197,
                     Use::Module(
                         module(177, 187, 182, 187, "0x2", "Block"),
-                        Some(ModuleName(name("Block")))
-                    )
+                        Some(ModuleName(name("Block"))),
+                    ),
                 ),
             ],
         }
@@ -165,6 +165,9 @@ pub fn test_fun_call() {
         test<>();
         test<u8>();
         test<0x1::Block::T<Block::T>, T<T, u8>>();
+
+        test(0, true, foo, [], {value: 100}, 0x1);
+        test(foo,);
     }",
         "dsl",
     )
@@ -172,7 +175,7 @@ pub fn test_fun_call() {
     assert_eq!(
         ast,
         Ast {
-            loc: Loc::new("dsl", Span::new(0, 155)),
+            loc: Loc::new("dsl", Span::new(0, 227)),
             instructions: vec![
                 func(
                     1,
@@ -181,7 +184,7 @@ pub fn test_fun_call() {
                         name: access_name(1, 8, "init"),
                         t_params: None,
                         params: vec![],
-                    }
+                    },
                 ),
                 func(
                     17,
@@ -190,18 +193,18 @@ pub fn test_fun_call() {
                         name: access_mod_name(1, 8, "Block", "init"),
                         t_params: None,
                         params: vec![],
-                    }
+                    },
                 ),
                 func(
                     40,
                     59,
                     Call {
                         name: access_addr_mod_name(
-                            40, 59, 40, 50, 45, 50, "0x1", "Block", "init"
+                            40, 59, 40, 50, 45, 50, "0x1", "Block", "init",
                         ),
                         t_params: None,
                         params: vec![],
-                    }
+                    },
                 ),
                 func(
                     69,
@@ -210,7 +213,7 @@ pub fn test_fun_call() {
                         name: access_name(1, 8, "test"),
                         t_params: Some(vec![]),
                         params: vec![],
-                    }
+                    },
                 ),
                 func(
                     87,
@@ -219,7 +222,7 @@ pub fn test_fun_call() {
                         name: access_name(1, 8, "test"),
                         t_params: Some(vec![tp("u8")]),
                         params: vec![],
-                    }
+                    },
                 ),
                 func(
                     107,
@@ -229,18 +232,81 @@ pub fn test_fun_call() {
                         t_params: Some(vec![
                             tp_mod_access(
                                 access_addr_mod_name(
-                                    107, 149, 112, 122, 117, 122, "0x1", "Block", "T"
+                                    107, 149, 112, 122, 117, 122, "0x1", "Block", "T",
                                 ),
-                                vec![tp_mod_access(access_mod_name(0, 0, "Block", "T"), vec![])]
+                                vec![tp_mod_access(access_mod_name(0, 0, "Block", "T"), vec![])],
                             ),
                             tp_mod_access(
                                 access_name(107, 149, "T"),
-                                vec![tp_mod_access(access_name(0, 0, "T"), vec![]), tp("u8")]
+                                vec![tp_mod_access(access_name(0, 0, "T"), vec![]), tp("u8")],
                             ),
                         ]),
                         params: vec![],
+                    },
+                ),
+                func(
+                    159,
+                    201,
+                    Call {
+                        name: access_name(1, 8, "test"),
+                        t_params: None,
+                        params: vec![
+                            val(Value_::Num(0)),
+                            val(Value_::Bool(true)),
+                            val(Value_::Var("foo".to_owned())),
+                            val(Value_::Vec(vec![])),
+                            val(Value_::Struct(Struct {
+                                fields: vec![(name("value"), val(Value_::Num(100)))]
+                            })),
+                            val(Value_::Address(Address::DIEM_CORE))
+                        ],
                     }
                 ),
+                func(
+                    210,
+                    221,
+                    Call {
+                        name: access_name(1, 8, "test"),
+                        t_params: None,
+                        params: vec![val(Value_::Var("foo".to_owned())),],
+                    }
+                )
+            ],
+        }
+    );
+}
+
+#[test]
+pub fn test_var() {
+    let ast = parse(
+        "{\
+        let a = 1;
+        a = true;
+        a={val:1};
+        _a=[];
+        b=a;
+    }",
+        "dsl",
+    )
+    .unwrap();
+
+    assert_eq!(
+        ast,
+        Ast {
+            loc: loc(0, 82),
+            instructions: vec![
+                (var(1, 11, "a", val(Value_::Num(1)))),
+                (var(20, 29, "a", val(Value_::Bool(true)))),
+                (var(
+                    38,
+                    48,
+                    "a",
+                    val(Value_::Struct(Struct {
+                        fields: vec![(name("val"), val(Value_::Num(1)))]
+                    }))
+                )),
+                (var(57, 63, "_a", val(Value_::Vec(vec![])))),
+                (var(72, 76, "b", val(Value_::Var("a".to_owned())))),
             ],
         }
     );
@@ -256,6 +322,16 @@ fn use_(start: u32, end: u32, use_: Use) -> (Loc, Instruction) {
 
 fn func(start: u32, end: u32, call: Call) -> (Loc, Instruction) {
     (loc(start, end), Instruction::Call(call))
+}
+
+fn var(start: u32, end: u32, n: &str, val: Value) -> (Loc, Instruction) {
+    (
+        loc(start, end),
+        Instruction::Var(Var {
+            name: name(n),
+            value: val,
+        }),
+    )
 }
 
 fn addr(addr: &str) -> Address {
@@ -331,4 +407,8 @@ fn tp(name: &str) -> Type {
 
 fn tp_mod_access(access: ModuleAccess, tps: Vec<Type>) -> Type {
     spanned("dsl", 0, 0, Type_::Apply(Box::new(access), tps))
+}
+
+fn val(val: Value_) -> Value {
+    Value::new(loc(0, 0), val)
 }
