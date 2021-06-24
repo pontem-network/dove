@@ -6,10 +6,9 @@ use move_lang::parser::syntax::{consume_token, make_loc, parse_use_decl, unexpec
 use crate::parser::types::{Ast, Instruction};
 use crate::parser::func::parse_call;
 
-pub mod types;
 pub mod func;
+pub mod types;
 pub mod value;
-
 
 pub fn parse(content: &str, name: &'static str) -> Result<Ast, Error> {
     let mut lexer = Lexer::new(content, name, Default::default());
@@ -26,7 +25,6 @@ pub fn parse(content: &str, name: &'static str) -> Result<Ast, Error> {
     let instructions = parse_instructions(&mut lexer)?;
 
     consume_token(&mut lexer, Tok::RBrace)?;
-
 
     Ok(Ast {
         loc: make_loc(lexer.file_name(), start_loc, lexer.previous_end_loc()),
@@ -50,9 +48,7 @@ fn parse_instructions(tokens: &mut Lexer) -> Result<Vec<(Loc, Instruction)>, Err
         let start_loc = tokens.start_loc();
 
         let inst = match tokens.peek() {
-            Tok::Use => {
-                Instruction::Use(parse_use_decl(tokens)?)
-            }
+            Tok::Use => Instruction::Use(parse_use_decl(tokens)?),
             Tok::AddressValue => {
                 if tokens.lookahead()? == Tok::ColonColon {
                     Instruction::Call(parse_call(tokens)?)
@@ -65,17 +61,19 @@ fn parse_instructions(tokens: &mut Lexer) -> Result<Vec<(Loc, Instruction)>, Err
                 // variable declaration.
                 todo!()
             }
-            Tok::IdentifierValue => {
-                Instruction::Call(parse_call(tokens)?)
+            Tok::IdentifierValue => Instruction::Call(parse_call(tokens)?),
+            _ => {
+                return Err(unexpected_token_error(
+                    tokens,
+                    "one of `use`, `let`, `address`, or `identifier`",
+                ))
             }
-            _ => return Err(unexpected_token_error(tokens, "one of `use`, `let`, `address`, or `identifier`")),
         };
-        instructions.push(
-            (make_loc(tokens.file_name(), start_loc, tokens.previous_end_loc()),
-             inst)
-        );
+        instructions.push((
+            make_loc(tokens.file_name(), start_loc, tokens.previous_end_loc()),
+            inst,
+        ));
     }
 
     Ok(instructions)
 }
-
