@@ -2,8 +2,8 @@ use move_lang::errors::Error;
 use move_lang::expansion::{byte_string, hex_string};
 use move_lang::parser::lexer::{Lexer, Tok};
 use move_lang::parser::syntax::{
-    consume_token, make_loc, parse_address, parse_comma_list, parse_identifier,
-    parse_num, unexpected_token_error,
+    consume_token, make_loc, parse_address, parse_comma_list, parse_identifier, parse_num,
+    unexpected_token_error,
 };
 use move_lang::shared::Name;
 
@@ -189,6 +189,13 @@ mod tests {
             val(Value_::Vec(vec![val(Value_::Address(Address::DIEM_CORE))]))
         );
 
+        assert_eq!(
+            success("[{}]"),
+            val(Value_::Vec(vec![val(Value_::Struct(Struct {
+                fields: vec![]
+            }))]))
+        );
+
         assert_eq!(fail("["), vec![
             (loc(1, 1), "Unexpected end-of-file".to_owned()),
             (loc(1, 1), "Expected one of `identifier`, `address`, `bool`, `number`, `vector`, `struct`, `byte string` or `byte string`".to_owned())
@@ -196,7 +203,7 @@ mod tests {
 
         assert_eq!(
             fail("[,]"),
-            vec![(loc(1, 1), "Expected a vector item expression".to_owned()), ]
+            vec![(loc(1, 1), "Expected a vector item expression".to_owned()),]
         );
     }
 
@@ -215,7 +222,12 @@ mod tests {
                  }"
             ),
             val(Value_::Struct(Struct {
-                fields: vec![(name("foo"), val(Value_::Struct(Struct { fields: vec![(name("bar"), val(Value_::Vec(vec![])))] })))]
+                fields: vec![(
+                    name("foo"),
+                    val(Value_::Struct(Struct {
+                        fields: vec![(name("bar"), val(Value_::Vec(vec![])))]
+                    }))
+                )]
             }))
         );
 

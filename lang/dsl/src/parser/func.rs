@@ -16,7 +16,6 @@ pub fn parse_call(tokens: &mut Lexer) -> Result<Call, Error> {
         tys = parse_optional_type_args(tokens)?;
     }
 
-    dbg!(tokens.peek());
     let args = parse_comma_list(
         tokens,
         Tok::LParen,
