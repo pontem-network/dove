@@ -199,11 +199,16 @@ impl<'a> TransactionBuilder<'a> {
     }
     // =============================================================================================
     fn lookup_script_by_file_name(&self, fname: &str) -> Result<(MoveFile, Meta), Error> {
-        let file_path = self
+        let script_path = self
             .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.scripts_dir)
-            .join(fname)
-            .with_extension("move");
+            .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
+        let file_path = if !fname.ends_with("move") {
+            let mut path = script_path.join(fname);
+            path.set_extension("move");
+            path
+        } else {
+            script_path.join(fname)
+        };
         if !file_path.exists() {
             return Err(anyhow!("File [{}] not found", fname));
         }
@@ -288,7 +293,7 @@ impl<'a> TransactionBuilder<'a> {
                 .collect::<Vec<_>>()
                 .join(", ");
             return Err(anyhow!(
-                "There are several scripts with the name '{}' in files ['{}'].",
+                "There are several scripts with the name '{:?}' in files ['{}'].",
                 name,
                 name_list
             ));
@@ -340,100 +345,81 @@ impl<'a> TransactionBuilder<'a> {
     // =============================================================================================
     fn prepare_arguments(
         &self,
-        args_type: &[(String, String)],
+        arguments: &[(String, String)],
     ) -> Result<(usize, usize, Vec<ScriptArg>), Error> {
-        let total_args = args_type.len();
-
-        fn parse_err<D: Debug>(name: &str, tp: &str, index: usize, value: &str, err: D) -> Error {
+        fn parse_err<D: Debug>(name: &str, tp: &str, value: &str, err: D) -> Error {
             anyhow!(
-                "Parameter '{}' has type {}. Failed to parse {} [{}]. Error:'{:?}'",
+                "Parameter '{}' has {} type. Failed to parse {}. Error:'{:?}'",
                 name,
                 tp,
                 value,
-                index,
                 err
             )
         }
 
-        args_type.iter().try_fold(
-            (0, 0, Vec::new()),
-            |(signers, args_index, mut values), (name, tp)| match tp.as_str() {
-                "signer" => Ok((signers + 1, args_index, values)),
-                "bool" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    values.push(ScriptArg::Bool(
-                        arg.parse()
-                            .map_err(|err| parse_err(name, tp, args_index, arg, err))?,
-                    ));
-                    Ok((signers, args_index + 1, values))
+        assert_eq!(self.args.len(), arguments.len());
+        let mut signers_count = 0;
+        let mut values = Vec::with_capacity(arguments.len());
+        for ((arg_name, arg_type), arg_value) in arguments.iter().zip(&self.args) {
+            match arg_type.as_str() {
+                "signer" => {
+                    signers_count += 1;
                 }
-                "u8" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    values.push(ScriptArg::U8(
-                        arg.parse()
-                            .map_err(|err| parse_err(name, tp, args_index, arg, err))?,
-                    ));
-                    Ok((signers, args_index + 1, values))
-                }
-                "u64" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    values.push(ScriptArg::U64(
-                        arg.parse()
-                            .map_err(|err| parse_err(name, tp, args_index, arg, err))?,
-                    ));
-                    Ok((signers, args_index + 1, values))
-                }
-                "u128" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    values.push(ScriptArg::U128(
-                        arg.parse()
-                            .map_err(|err| parse_err(name, tp, args_index, arg, err))?,
-                    ));
-                    Ok((signers, args_index + 1, values))
-                }
-                "address" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    values.push(ScriptArg::Address(Address::from_str(arg)?.addr));
-                    Ok((signers, args_index + 1, values))
-                }
+                "bool" => values.push(ScriptArg::Bool(
+                    arg_value
+                        .parse()
+                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
+                )),
+                "u8" => values.push(ScriptArg::U8(
+                    arg_value
+                        .parse()
+                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
+                )),
+                "u64" => values.push(ScriptArg::U64(
+                    arg_value
+                        .parse()
+                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
+                )),
+                "u128" => values.push(ScriptArg::U128(
+                    arg_value
+                        .parse()
+                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
+                )),
+                "address" => values.push(ScriptArg::Address(
+                    Address::from_str(arg_value)
+                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
+                        .addr,
+                )),
                 "vector<u8>" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    let buffer = if arg.contains('[') {
-                        parse_vec(arg, "u8")?
+                    let vec = if arg_value.contains('[') {
+                        parse_vec(arg_value, "u8")
+                            .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
                     } else {
-                        hex::decode(arg)?
+                        hex::decode(arg_value)
+                            .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
                     };
-                    values.push(ScriptArg::VectorU8(buffer));
-                    Ok((signers, args_index + 1, values))
+                    values.push(ScriptArg::VectorU8(vec));
                 }
-                "vector<u64>" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    values.push(ScriptArg::VectorU64(parse_vec(arg, "u64")?));
-                    Ok((signers, args_index + 1, values))
-                }
-                "vector<u128>" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    values.push(ScriptArg::VectorU128(parse_vec(arg, "u128")?));
-                    Ok((signers, args_index + 1, values))
-                }
+                "vector<u64>" => values
+                    .push(ScriptArg::VectorU64(parse_vec(arg_value, "u64").map_err(
+                        |err| parse_err(arg_name, arg_type, arg_value, err),
+                    )?)),
+                "vector<u128>" => values
+                    .push(ScriptArg::VectorU128(parse_vec(arg_value, "u64").map_err(
+                        |err| parse_err(arg_name, arg_type, arg_value, err),
+                    )?)),
                 "vector<address>" => {
-                    let arg = self.argument(args_index, total_args)?;
-                    let address = parse_vec::<Address>(arg, "vector<address>")?
+                    let addresses = parse_vec::<Address>(arg_value, "vector<address>")
+                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
                         .iter()
                         .map(|addr| addr.addr)
                         .collect();
-                    values.push(ScriptArg::VectorAddress(address));
-                    Ok((signers, args_index + 1, values))
+                    values.push(ScriptArg::VectorAddress(addresses));
                 }
-                &_ => Err(anyhow!("Unexpected script parameter: {}", tp)),
-            },
-        )
-    }
-
-    fn argument(&self, index: usize, total_expected: usize) -> Result<&String, Error> {
-        self.args
-            .get(index)
-            .ok_or_else(|| anyhow!("{} arguments are expected.", total_expected))
+                other => return Err(anyhow!("Unexpected script parameter: {}", other)),
+            }
+        }
+        Ok((signers_count, values.len(), values))
     }
 
     fn build_script(&'a self, script: MoveFile<'a, 'a>) -> Result<Vec<CompiledUnit>, Error> {
@@ -488,7 +474,7 @@ impl<'a> TransactionBuilder<'a> {
 }
 
 /// Parse call
-/// Return: Ok(Script name, Type parameters, Function arguments) or Error
+/// Return: Ok(Script name, Type parameters, Arguments function) or Error
 /// ```
 /// use move_core_types::language_storage::TypeTag;
 /// use dove::transaction::parse_call;
