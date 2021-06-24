@@ -9,6 +9,7 @@ use move_lang::shared::Name;
 
 use crate::parser::types::{Struct, Value, Value_};
 
+#[allow(clippy::branches_sharing_code)]
 pub fn parse_value(tokens: &mut Lexer) -> Result<Value, Error> {
     let start_loc = tokens.start_loc();
 
@@ -86,7 +87,7 @@ fn parse_field(tokens: &mut Lexer) -> Result<(Name, Value), Error> {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use move_ir_types::location::{Loc, Span};
     use move_lang::errors::Error;
     use move_lang::parser::lexer::Lexer;
@@ -284,19 +285,19 @@ mod tests {
         parse_value(&mut lexer).unwrap_err()
     }
 
-    fn loc(start: u32, end: u32) -> Loc {
+    pub fn loc(start: u32, end: u32) -> Loc {
         Loc::new("dsl", Span::new(start, end))
     }
 
-    fn val(val: Value_) -> Value {
+    pub fn val(val: Value_) -> Value {
         Value::new(loc(0, 0), val)
     }
 
-    fn addr(addr: &str) -> Address {
+    pub fn addr(addr: &str) -> Address {
         Address::parse_str(addr).unwrap()
     }
 
-    fn name(name: &str) -> Name {
+    pub fn name(name: &str) -> Name {
         Name::new(loc(0, 0), name.to_owned())
     }
 }
