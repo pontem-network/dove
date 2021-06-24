@@ -7,6 +7,7 @@ members = [
     "lang",
     "lang/compat",
     "lang/decompiler",
+    "lang/dsl",
     "resource-viewer",
     "resources",
     "common/git-hash",
