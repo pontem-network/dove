@@ -54,9 +54,9 @@ impl<'a> TransactionBuilder<'a> {
     // =============================================================================================
     /// Initialize parameters by cmd call
     /// None => The value of None is ignored. Not assigned to a parameter
-    pub fn set_from_cmd_call(&mut self, call: Option<&String>) -> Result<&mut Self, Error> {
+    pub fn with_cmd_call(&mut self, call: Option<String>) -> Result<&mut Self, Error> {
         if let Some(call) = call {
-            let (script_name, type_parameters, args) = parse_call(call)?;
+            let (script_name, type_parameters, args) = parse_call(&call)?;
             self.script_name = Some(script_name);
             self.type_parameters = type_parameters;
             self.args = args;
@@ -65,10 +65,7 @@ impl<'a> TransactionBuilder<'a> {
     }
     /// Set the "file name" based on the transmitted data from cmd
     /// None => The value of None is ignored. Not assigned to a parameter
-    pub fn set_script_file_name_from_cmd(
-        &mut self,
-        script_file_name: Option<String>,
-    ) -> &mut Self {
+    pub fn with_cmd_script_file_name(&mut self, script_file_name: Option<String>) -> &mut Self {
         if script_file_name.is_some() {
             self.script_file_name = script_file_name;
         }
@@ -76,7 +73,7 @@ impl<'a> TransactionBuilder<'a> {
     }
     /// Set the "script name" based on the transmitted data from cmd
     /// None => The value of None is ignored. Not assigned to a parameter
-    pub fn set_script_name_from_cmd(&mut self, script_name: Option<String>) -> &mut Self {
+    pub fn with_cmd_script_name(&mut self, script_name: Option<String>) -> &mut Self {
         if script_name.is_some() {
             self.script_name = script_name;
         }
@@ -84,7 +81,7 @@ impl<'a> TransactionBuilder<'a> {
     }
     /// Set the "script name" based on the transmitted data from cmd
     /// None => The value of None is ignored. Not assigned to a parameter
-    pub fn set_type_parameters_from_cmd(
+    pub fn with_cmd_type_parameters(
         &mut self,
         type_parameters: Option<Vec<String>>,
     ) -> Result<&mut Self, Error> {
@@ -109,7 +106,7 @@ impl<'a> TransactionBuilder<'a> {
     }
     /// Set the "args" based on the transmitted data from cmd
     /// None => The value of None is ignored. Not assigned to a parameter
-    pub fn set_args_from_cmd(&mut self, args: Option<Vec<String>>) -> &mut Self {
+    pub fn with_cmd_args(&mut self, args: Option<Vec<String>>) -> &mut Self {
         if let Some(args) = args {
             self.args = args
                 .iter()
@@ -124,10 +121,7 @@ impl<'a> TransactionBuilder<'a> {
     }
     /// Set the "signers" based on the transmitted data from cmd
     /// None => The value of None is ignored. Not assigned to a parameter
-    pub fn set_signers_from_cmd(
-        &mut self,
-        signers: Option<Vec<String>>,
-    ) -> Result<&mut Self, Error> {
+    pub fn with_cmd_signers(&mut self, signers: Option<Vec<String>>) -> Result<&mut Self, Error> {
         let mut signers = signers
             .unwrap_or_default()
             .iter()
@@ -165,30 +159,16 @@ impl<'a> TransactionBuilder<'a> {
             })
             .ok_or_else(|| anyhow!("Script '{}' not found", meta.name))??;
 
-        if meta.type_parameters.len() != self.type_parameters.len() {
-            return Err(anyhow!(
-                "Script '{}' takes {} type parameters, {} passed",
-                meta.name,
-                meta.type_parameters.len(),
-                self.type_parameters.len()
-            ));
-        }
-
         let (signers_count, args) = self.prepare_arguments(&meta.parameters)?;
-
-        // TODO: @vladimirovmm this check is probably redundant and will never trigger
-        if self.args.len() != args.len() {
-            return Err(anyhow!(
-                "Script '{}' takes {} parameters, {} passed",
-                meta.name,
-                args.len(),
-                self.args.len()
-            ));
-        }
 
         Ok((
             meta.name,
-            Transaction::new(signers_count as u8, unit, args, self.type_parameters.clone())?,
+            Transaction::new(
+                signers_count as u8,
+                unit,
+                args,
+                self.type_parameters.clone(),
+            )?,
         ))
     }
     /// Find and run the script using the specified parameters
@@ -200,27 +180,18 @@ impl<'a> TransactionBuilder<'a> {
     }
     // =============================================================================================
     fn lookup_script_by_file_name(&self, fname: &str) -> Result<(MoveFile, Meta), Error> {
-        let script_path = self
+        let file_path = self
             .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
-        let file_path = if !fname.ends_with("move") {
-            let mut path = script_path.join(fname);
-            path.set_extension("move");
-            path
-        } else {
-            script_path.join(fname)
-        };
-        if !file_path.exists() {
-            return Err(anyhow!("File [{}] not found", fname));
-        }
+            .path_for(&self.dove_ctx.manifest.layout.scripts_dir)
+            .join(fname)
+            .with_extension("move");
+        ensure!(file_path.exists(), "File [{}] not found", fname);
 
         let sender = self.dove_ctx.account_address()?;
         let script = MoveFile::load(&file_path)?;
         let mut scripts =
             ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&script])?;
-        if scripts.is_empty() {
-            return Err(anyhow!("Script not found in file '{}'", fname));
-        }
+        ensure!(!scripts.is_empty(), "Script not found in file '{}'", fname);
 
         let meta = if scripts.len() > 1 {
             let mut scripts = scripts
@@ -234,11 +205,10 @@ impl<'a> TransactionBuilder<'a> {
                 })
                 .collect::<Vec<_>>();
             if scripts.len() > 1 {
-                return Err(anyhow!(
-                    "There are several scripts with the name '{:?}' in file '{}'",
-                    self.script_name,
-                    fname
-                ));
+                anyhow::bail!(
+                    "Failed to determine script. There are several scripts in file [{}]. Use '--name' to determine the script.",
+                    file_path.display()
+                );
             } else {
                 scripts.remove(0)
             }
@@ -282,10 +252,7 @@ impl<'a> TransactionBuilder<'a> {
             })
             .filter(|(_, meta)| meta.iter().any(|meta| *name == meta.name))
             .collect::<Vec<_>>();
-
-        if files.is_empty() {
-            return Err(anyhow!("Script not found."));
-        }
+        ensure!(!files.is_empty(), "Script not found.");
 
         if files.len() > 1 {
             let name_list = files
@@ -293,25 +260,21 @@ impl<'a> TransactionBuilder<'a> {
                 .map(|(mf, _)| mf.name())
                 .collect::<Vec<_>>()
                 .join(", ");
-            return Err(anyhow!(
-                "There are several scripts with the name '{:?}' in files ['{}'].",
+            anyhow::bail!(
+                "There are several scripts with the name '{}' in files ['{}'].",
                 name,
                 name_list
-            ));
+            );
         }
 
         let (file, mut meta) = files.remove(0);
-        if meta.is_empty() {
-            return Err(anyhow!("Script not found."));
-        }
-
-        if meta.len() > 1 {
-            return Err(anyhow!(
-                "There are several scripts with the name '{:?}' in file '{}'.",
-                name,
-                file.name()
-            ));
-        }
+        ensure!(!meta.is_empty(), "Script not found.");
+        ensure!(
+            meta.len() < 2,
+            "There are several scripts with the name '{:?}' in file '{}'.",
+            name,
+            file.name()
+        );
         Ok((file, meta.remove(0)))
     }
     fn lookup_script(&self) -> Result<(MoveFile, Meta), Error> {
@@ -332,15 +295,12 @@ impl<'a> TransactionBuilder<'a> {
             let sender = self.dove_ctx.account_address()?;
             let mut meta =
                 ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&mf])?;
-            if meta.is_empty() {
-                return Err(anyhow!("Script not found."));
-            }
-            if meta.len() > 1 {
-                return Err(anyhow!("Failed to determine script. There are several scripts. Use '--name' to determine the script."));
-            }
+            ensure!(!meta.is_empty(), "Script not found.");
+            ensure!( meta.len() < 2, "Failed to determine script. There are several scripts. Use '--name' to determine the script.");
+
             Ok((mf, meta.remove(0)))
         } else {
-            Err(anyhow!("Failed to determine script. There are several scripts. Use '--name' or '--file' to determine the script."))
+            anyhow::bail!("Failed to determine script. There are several scripts. Use '--name' or '--file' to determine the script.")
         }
     }
     // =============================================================================================
@@ -350,7 +310,7 @@ impl<'a> TransactionBuilder<'a> {
     ) -> Result<(usize, Vec<ScriptArg>), Error> {
         fn parse_err<D: Debug>(name: &str, tp: &str, value: &str, err: D) -> Error {
             anyhow!(
-                "Parameter '{}' has {} type. Failed to parse {}. Error:'{:?}'",
+                "Parameter '{}' has type {}. Failed to parse {}. Error:'{:?}'",
                 name,
                 tp,
                 value,
@@ -364,8 +324,12 @@ impl<'a> TransactionBuilder<'a> {
         for ((arg_name, arg_type), arg_value) in arguments.iter().zip(&self.args) {
             macro_rules! parse_primitive {
                 ($script_arg:expr) => {
-                    values.push($script_arg(arg_value.parse().map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?))
-                } 
+                    values.push($script_arg(
+                        arg_value
+                            .parse()
+                            .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
+                    ))
+                };
             }
             match arg_type.as_str() {
                 "signer" => {
@@ -402,7 +366,7 @@ impl<'a> TransactionBuilder<'a> {
                         .collect();
                     values.push(ScriptArg::VectorAddress(addresses));
                 }
-                other => return Err(anyhow!("Unexpected script parameter: {}", other)),
+                other => anyhow::bail!("Unexpected script parameter: {}", other),
             }
         }
         Ok((signers_count, values))
@@ -412,21 +376,18 @@ impl<'a> TransactionBuilder<'a> {
         let dep_list = self.get_dep_list(script.name())?.clone();
 
         let sender = self.dove_ctx.account_address()?;
-        let Artifacts { files, prog } = MoveBuilder::new(
+        let Artifacts { files, prog, .. } = MoveBuilder::new(
             self.dove_ctx.dialect.as_ref(),
             Some(sender),
             StaticResolver::new(dep_list),
         )
-        .build(&[&script]);
+        .build(&[&script], false);
 
         match prog {
             Err(errors) => {
                 let mut writer = StandardStream::stderr(ColorChoice::Auto);
                 output_errors(&mut writer, files, errors);
-                Err(anyhow!(
-                    "could not compile:{}",
-                    self.dove_ctx.project_name()
-                ))
+                anyhow::bail!("could not compile:{}", self.dove_ctx.project_name())
             }
             Ok(compiled_units) => {
                 let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
@@ -434,7 +395,7 @@ impl<'a> TransactionBuilder<'a> {
                 if !ice_errors.is_empty() {
                     let mut writer = StandardStream::stderr(ColorChoice::Auto);
                     output_errors(&mut writer, files, ice_errors);
-                    Err(anyhow!("could not verify:{}", self.dove_ctx.project_name()))
+                    anyhow::bail!("could not verify:{}", self.dove_ctx.project_name())
                 } else {
                     Ok(compiled_units)
                 }
@@ -442,7 +403,7 @@ impl<'a> TransactionBuilder<'a> {
         }
     }
 
-    fn get_dep_list<'b>(&self, srcipt_path: &'a str) -> Result<Vec<MoveFile<'b, 'b>>, Error> {
+    fn get_dep_list<'b>(&self, srcipt_path: &str) -> Result<Vec<MoveFile<'b, 'b>>, Error> {
         let mut index = self.dove_ctx.build_index()?;
 
         let module_dir = self
@@ -460,7 +421,7 @@ impl<'a> TransactionBuilder<'a> {
 }
 
 /// Parse call
-/// Return: Ok(Script name, Type parameters, Arguments function) or Error
+/// Return: Ok(Script name, Type parameters, Function arguments) or Error
 /// ```
 /// use move_core_types::language_storage::TypeTag;
 /// use dove::transaction::parse_call;
@@ -487,9 +448,9 @@ pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Err
     let mut lexer = Lexer::new(&call, "call", Default::default());
     lexer.advance().map_err(map_err)?;
     if lexer.peek() != Tok::IdentifierValue {
-        return Err(anyhow!("Invalid call script format.\
+        anyhow::bail!("Invalid call script format.\
              Expected function identifier. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'"));
+             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
     }
 
     let script_name = lexer.content().to_owned();
@@ -502,9 +463,9 @@ pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Err
         lexer.advance().map_err(map_err)?;
         while lexer.peek() != Tok::Greater {
             if lexer.peek() == Tok::EOF {
-                return Err(anyhow!("Invalid call script format.\
-             Invalid type parameters format.. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'"));
+                anyhow::bail!("Invalid call script format.\
+                     Invalid type parameters format.. Use pattern \
+                     'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
             }
 
             if lexer.peek() == Tok::Comma {
@@ -521,9 +482,9 @@ pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Err
     };
 
     if lexer.peek() != Tok::LParen {
-        return Err(anyhow!("Invalid call script format.\
+        anyhow::bail!("Invalid call script format.\
              Invalid script arguments format.. Left paren '(' is expected. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'"));
+             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
     }
 
     let mut arguments = vec![];
@@ -531,9 +492,9 @@ pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Err
     lexer.advance().map_err(map_err)?;
     while lexer.peek() != Tok::RParen {
         if lexer.peek() == Tok::EOF {
-            return Err(anyhow!("Invalid call script format.\
-             Invalid arguments format.. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'"));
+            anyhow::bail!("Invalid call script format.\
+                 Invalid arguments format.. Use pattern \
+                 'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
         }
 
         if lexer.peek() == Tok::Comma {
@@ -567,15 +528,18 @@ pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Err
     Ok((script_name, type_parameters, arguments))
 }
 
-/// parse type parаms
-/// <u8,u64> => vec![TypeTag::U8,TypeTag::U64]
+/// parse type params
+///
+/// u8 => TypeTag::U8
+/// u64 => TypeTag::U64
+/// ...
 pub fn parse_type_params(lexer: &mut Lexer) -> Result<TypeTag, Error> {
     let ty = parse_type(lexer).map_err(|err| Error::msg(format!("{:?}", err)))?;
     unwrap_spanned_ty(ty)
 }
-/// search for a script in projcect/scripts/*.move by name
+/// search for a script in project/scripts/*.move by name
 pub fn lookup_script_by_name<'a>(
-    name: &'a str,
+    name: &str,
     script_path: PathBuf,
     sender: AccountAddress,
     dialect: &'a dyn Dialect,
@@ -608,7 +572,7 @@ pub fn lookup_script_by_name<'a>(
         .collect::<Vec<_>>();
 
     if files.is_empty() {
-        return Err(anyhow!("Script not found."));
+        anyhow::bail!("Script not found.");
     }
 
     if files.len() > 1 {
@@ -617,30 +581,29 @@ pub fn lookup_script_by_name<'a>(
             .map(|(mf, _)| mf.name())
             .collect::<Vec<_>>()
             .join(", ");
-        return Err(anyhow!(
+        anyhow::bail!(
             "There are several scripts with the name '{:?}' in files ['{}'].",
             name,
             name_list
-        ));
+        );
     }
 
     let (file, mut meta) = files.remove(0);
     if meta.is_empty() {
-        return Err(anyhow!("Script not found."));
+        anyhow::bail!("Script not found.");
     }
 
     if meta.len() > 1 {
-        return Err(anyhow!(
+        anyhow::bail!(
             "There are several scripts with the name '{:?}' in file '{}'.",
             name,
             file.name()
-        ));
+        );
     }
     Ok((file, meta.remove(0)))
 }
 
 /// Script argument type.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub enum ScriptArg {
     /// u8
     U8(u8),
@@ -732,7 +695,7 @@ where
     lexer.advance().map_err(map_err)?;
 
     if lexer.peek() != Tok::LBracket {
-        return Err(anyhow!("Vector in format  [n1, n2, ..., nn] is expected."));
+        anyhow::bail!("Vector in format  [n1, n2, ..., nn] is expected.");
     }
     lexer.advance().map_err(map_err)?;
 
@@ -744,7 +707,7 @@ where
                 continue;
             }
             Tok::EOF => {
-                return Err(anyhow!("unexpected end of vector."));
+                anyhow::bail!("unexpected end of vector.");
             }
             _ => {
                 elements.push(E::from_str(lexer.content()).map_err(|_| {

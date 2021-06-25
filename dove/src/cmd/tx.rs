@@ -58,10 +58,10 @@ impl<'a> TransactionBuilder<'a> {
         let mut trbuild = Self::new(ctx);
         trbuild.script_file_name = cmd.file_name;
         trbuild
-            .set_from_cmd_call(cmd.call.as_ref())?
-            .set_script_name_from_cmd(cmd.script_name)
-            .set_type_parameters_from_cmd(cmd.type_parameters)?
-            .set_args_from_cmd(cmd.args);
+            .with_cmd_call(cmd.call.clone())?
+            .with_cmd_script_name(cmd.script_name)
+            .with_cmd_type_parameters(cmd.type_parameters)?
+            .with_cmd_args(cmd.args);
 
         Ok(trbuild)
     }
