@@ -199,16 +199,11 @@ impl<'a> TransactionBuilder<'a> {
     }
     // =============================================================================================
     fn lookup_script_by_file_name(&self, fname: &str) -> Result<(MoveFile, Meta), Error> {
-        let script_path = self
+        let file_path = self
             .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
-        let file_path = if !fname.ends_with("move") {
-            let mut path = script_path.join(fname);
-            path.set_extension("move");
-            path
-        } else {
-            script_path.join(fname)
-        };
+            .path_for(&self.dove_ctx.manifest.layout.scripts_dir)
+            .join(fname)
+            .with_extension("move");
         if !file_path.exists() {
             return Err(anyhow!("File [{}] not found", fname));
         }
@@ -293,7 +288,7 @@ impl<'a> TransactionBuilder<'a> {
                 .collect::<Vec<_>>()
                 .join(", ");
             return Err(anyhow!(
-                "There are several scripts with the name '{:?}' in files ['{}'].",
+                "There are several scripts with the name '{}' in files ['{}'].",
                 name,
                 name_list
             ));
@@ -351,7 +346,7 @@ impl<'a> TransactionBuilder<'a> {
 
         fn parse_err<D: Debug>(name: &str, tp: &str, index: usize, value: &str, err: D) -> Error {
             anyhow!(
-                "Parameter '{}' has {} type. Failed to parse {} [{}]. Error:'{:?}'",
+                "Parameter '{}' has type {}. Failed to parse {} [{}]. Error:'{:?}'",
                 name,
                 tp,
                 value,
@@ -493,7 +488,7 @@ impl<'a> TransactionBuilder<'a> {
 }
 
 /// Parse call
-/// Return: Ok(Script name, Type parameters, Arguments function) or Error
+/// Return: Ok(Script name, Type parameters, Function arguments) or Error
 /// ```
 /// use move_core_types::language_storage::TypeTag;
 /// use dove::transaction::parse_call;
