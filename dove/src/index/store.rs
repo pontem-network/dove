@@ -7,8 +7,10 @@ use std::io::Write;
 use serde::{Serialize, Deserialize};
 use crate::index::Index;
 use std::rc::Rc;
+use std::path::Path;
 use std::collections::{HashMap, HashSet};
 use move_core_types::language_storage::ModuleId;
+use super::resolver::{git, chain};
 
 /// Modules holder.
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
@@ -35,13 +37,25 @@ pub enum SourceType {
     Chain,
 }
 
+impl SourceType {
+    /// Determines SourceType depending on path (namely, prefix of the filename).
+    pub fn try_from_path(path: &Path) -> Option<Self> {
+        let file_name = path.file_name()?.to_str()?;
+        if file_name.starts_with(git::PREFIX) {
+            Some(Self::Git)
+        } else if file_name.starts_with(chain::PREFIX) {
+            Some(Self::Chain)
+        } else {
+            Some(Self::Local)
+        }
+    }
+}
+
 /// Module model.
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct Module {
     /// Module address and name.
     pub name: Rc<ModuleId>,
-    /// Dependency name.
-    pub dep_name: Rc<str>,
     /// Path to the dependencies.
     pub path: Rc<str>,
     /// Dependency type.
@@ -57,8 +71,6 @@ impl<'a> Index<'a> {
         if index_path.exists() {
             let index = toml::from_str::<Modules>(&fs::read_to_string(index_path)?)?;
 
-            let dep_names = index.modules.iter().map(|m| m.dep_name.clone()).collect();
-
             let modules = index.modules.into_iter().map(|m| (m.name.clone(), m)).fold(
                 HashMap::new(),
                 |mut acc, (name, m)| {
@@ -68,15 +80,10 @@ impl<'a> Index<'a> {
                 },
             );
 
-            Ok(Index {
-                modules,
-                dep_names,
-                ctx,
-            })
+            Ok(Index { modules, ctx })
         } else {
             Ok(Index {
                 modules: Default::default(),
-                dep_names: Default::default(),
                 ctx,
             })
         }
