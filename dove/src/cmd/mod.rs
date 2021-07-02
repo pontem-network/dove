@@ -12,6 +12,8 @@ use std::path::PathBuf;
 pub mod build;
 /// Project dependencies loader.
 pub mod clean;
+/// Documentation generator.
+pub mod docgen;
 /// Dependencies fetcher.
 pub mod fetch;
 /// Project initializer.

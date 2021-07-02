@@ -369,12 +369,12 @@ impl<'a> TransactionBuilder<'a> {
         dep_list.extend(load_move_files(&[module_dir])?);
 
         let sender = self.dove_ctx.account_address()?;
-        let Artifacts { files, prog } = MoveBuilder::new(
+        let Artifacts { files, prog, .. } = MoveBuilder::new(
             self.dove_ctx.dialect.as_ref(),
             Some(sender),
             StaticResolver::new(dep_list),
         )
-        .build(&[&script]);
+        .build(&[&script], false);
 
         match prog {
             Err(errors) => {
