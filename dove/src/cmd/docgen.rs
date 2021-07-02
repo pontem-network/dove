@@ -6,7 +6,6 @@ use crate::context::Context;
 use lang::compiler::file::load_move_files;
 use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 use move_model::model::GlobalEnv;
-use anyhow::anyhow;
 use crate::docs::generate_docs;
 use std::fs;
 
@@ -35,21 +34,24 @@ impl Cmd for DocGen {
 
         // Build move files...
         let sender = ctx.account_address()?;
-        let Artifacts { files:_, env, prog:_ } = MoveBuilder::new(
+        let Artifacts {
+            files: _,
+            env,
+            prog: _,
+        } = MoveBuilder::new(
             ctx.dialect.as_ref(),
             Some(sender),
             StaticResolver::new(dep_list),
         )
-            .build(&source_ref, true);
+        .build(&source_ref, true);
 
         if let Some(env) = env {
             Self::gen(&ctx, env)
         } else {
-            Err(anyhow!(""))
+            unreachable!()
         }
     }
 }
-
 
 impl DocGen {
     /// Generate documentation
