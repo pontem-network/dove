@@ -7,6 +7,7 @@ use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 use crate::flow::DependencyResolver;
+use move_model::model::GlobalEnv;
 
 pub struct MoveChecker<'a, R: DependencyResolver> {
     dialect: &'a dyn Dialect,
@@ -28,7 +29,7 @@ impl<'a, R: DependencyResolver> MoveChecker<'a, R> {
     }
 
     pub fn check(self, targets: &[&MoveFile]) -> Result<(), Errors> {
-        compile(self.dialect, targets, self.sender, self)
+        compile(self.dialect, targets, self.sender, self, false)
     }
 }
 
@@ -88,6 +89,7 @@ impl<'a, R: DependencyResolver> CompileFlow<Result<(), Errors>> for MoveChecker<
     fn after_translate(
         &mut self,
         _: ParsingMeta,
+        _: Option<GlobalEnv>,
         _: Result<Vec<CompiledUnit>, Errors>,
     ) -> Result<(), Errors> {
         Ok(())

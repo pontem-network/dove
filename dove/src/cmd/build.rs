@@ -19,6 +19,7 @@ use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 use crate::cmd::{Cmd, load_dependencies};
 use crate::context::Context;
 use crate::stdoutln;
+use crate::cmd::docgen::DocGen;
 
 /// Build dependencies.
 #[derive(StructOpt, Debug)]
@@ -53,6 +54,8 @@ pub struct Build {
         long = "unordered"
     )]
     unordered: bool,
+    #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
+    doc: bool,
     #[structopt(long, hidden = true)]
     color: Option<String>,
 }
@@ -97,25 +100,30 @@ impl Cmd for Build {
 
         // Build move files...
         let sender = ctx.account_address()?;
-        let Artifacts { files, prog } = MoveBuilder::new(
+        let Artifacts { files, env, prog } = MoveBuilder::new(
             ctx.dialect.as_ref(),
             Some(sender),
             StaticResolver::new(dep_list),
         )
-        .build(&source_ref);
+        .build(&source_ref, self.doc);
 
         match prog {
             Err(errors) => {
                 let mut writer = StandardStream::stderr(ColorChoice::Auto);
                 output_errors(&mut writer, files, errors);
-                Err(anyhow!("could not compile:{}", ctx.project_name()))
+                return Err(anyhow!("could not compile:{}", ctx.project_name()));
             }
             Ok(compiled_units) => {
                 // Verify and store compilation results...
                 self.verify_and_store(&ctx, files, compiled_units, &exclude_modules)?;
-                Ok(())
             }
         }
+
+        if let Some(env) = env {
+            DocGen::gen(&ctx, env)?;
+        }
+
+        Ok(())
     }
 }
 

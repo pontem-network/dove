@@ -13,6 +13,8 @@ pub mod cli;
 pub mod cmd;
 /// Dove execution context.
 pub mod context;
+/// Docgen.
+pub mod docs;
 /// Dove modules index.
 pub mod index;
 /// Dove configuration.

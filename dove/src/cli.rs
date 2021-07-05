@@ -17,6 +17,7 @@ use crate::cmd::test::Test;
 use crate::cmd::Cmd;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use crate::cmd::docgen::DocGen;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Dove", version = git_hash::crate_version_with_git_hash_short!())]
@@ -72,6 +73,11 @@ enum Opt {
         #[structopt(flatten)]
         cmd: crate::cmd::prover::Prove,
     },
+    #[structopt(about = "Generate documentation")]
+    DocGen {
+        #[structopt(flatten)]
+        cmd: DocGen,
+    },
 }
 
 /// Public interface for the CLI (useful for testing).
@@ -94,5 +100,6 @@ where
         Opt::Tx { cmd } => cmd.execute(cwd),
         #[cfg(feature = "prover")]
         Opt::Prove { cmd } => cmd.execute(cwd),
+        Opt::DocGen { cmd } => cmd.execute(cwd),
     }
 }

@@ -12,6 +12,7 @@ use toml::Value;
 use move_core_types::language_storage::CORE_CODE_ADDRESS;
 use move_lang::shared::Address;
 use crate::context::Context;
+use crate::docs::options::DocgenOptions;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -24,6 +25,9 @@ pub struct DoveToml {
     /// Project layout.
     #[serde(default)]
     pub layout: Layout,
+    /// Documentation generator operations.
+    #[serde(default)]
+    pub doc: DocgenOptions,
 }
 
 /// Project info.
@@ -92,6 +96,10 @@ fn move_prover_output() -> String {
     "artifacts/move_prover".to_owned()
 }
 
+fn docs_output() -> String {
+    "doc".to_owned()
+}
+
 fn deps() -> String {
     "artifacts/.external".to_owned()
 }
@@ -142,7 +150,9 @@ pub struct Layout {
     /// Directory with move-prover intermediate artifacts.
     #[serde(default = "move_prover_output")]
     pub move_prover_output: String,
-
+    /// Directory with move documentation.
+    #[serde(default = "docs_output")]
+    pub docs_output: String,
     /// Directory with external dependencies.
     #[serde(default = "deps")]
     pub deps: String,
@@ -168,6 +178,7 @@ impl Layout {
             scripts_output: ctx.str_path_for(&self.scripts_output)?,
             transactions_output: ctx.str_path_for(&self.transactions_output)?,
             move_prover_output: ctx.str_path_for(&self.move_prover_output)?,
+            docs_output: ctx.str_path_for(&self.docs_output)?,
             deps: ctx.str_path_for(&self.deps)?,
             artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
@@ -186,6 +197,7 @@ impl Default for Layout {
             scripts_output: scripts_output(),
             transactions_output: transactions_output(),
             move_prover_output: move_prover_output(),
+            docs_output: docs_output(),
             deps: deps(),
             artifacts: artifacts(),
             index: index(),
