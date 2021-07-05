@@ -1,13 +1,15 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use anyhow::{Error, Result};
 use serde::Serialize;
 use structopt::StructOpt;
 
+use lang::compiler::dialects::*;
 use crate::cmd::Cmd;
-use crate::context::{Context, str_path};
+use crate::context::{Context, str_path, load_manifest, get_context};
 use crate::index::resolver::git;
-use crate::manifest::{Dependence, Git, Layout, MANIFEST, read_manifest};
+use crate::manifest::{Dependence, Git, Layout, MANIFEST, read_manifest, DoveToml};
 use crate::stdoutln;
 
 fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
@@ -48,16 +50,101 @@ fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
 pub struct Metadata {
     #[structopt(long, hidden = true)]
     color: Option<String>,
+    /// Validate dove manifest
+    #[structopt(long)]
+    validate: bool,
 }
 
 impl Cmd for Metadata {
     fn apply(self, ctx: Context) -> Result<(), Error> {
+        if self.validate {
+            self.validate_manifest(ctx).or_else(|err| {
+                err.print();
+                Ok(())
+            })
+        } else {
+            self.output_manifest(ctx)
+        }
+    }
+
+    /// Returns project context.
+    fn context(&self, project_dir: PathBuf) -> Result<Context> {
+        if self.validate {
+            get_context(project_dir, DoveToml::default())
+        } else {
+            let manifest = load_manifest(&project_dir)?;
+            get_context(project_dir, manifest)
+        }
+    }
+}
+
+impl Metadata {
+    /// output project metadata in json format
+    fn output_manifest(&self, ctx: Context) -> Result<(), Error> {
         let metadata = into_metadata(ctx)?;
         stdoutln!(
             "{}",
             serde_json::to_string_pretty::<DoveMetadata>(&metadata)?
         );
         Ok(())
+    }
+
+    /// Validate manifest. Result output in json format
+    fn validate_manifest(&self, mut ctx: Context) -> Result<(), ValidateJson> {
+        let project_dir = ctx.project_dir;
+        let manifest_path = project_dir.join(MANIFEST);
+        if !manifest_path.exists() {
+            return Err(ValidateJson::new_error(1, "Dove.toml not found", None));
+        }
+        let (dove_str, manifest) = self.get_manifest(&manifest_path)?;
+        let dialect_name = self.get_dialect_name(&manifest, &dove_str)?;
+        ctx = Context {
+            project_dir,
+            manifest,
+            dialect: dialect_name.get_dialect(),
+        };
+
+        ctx.manifest.package.dependencies.map_or(Ok(()), |dp| {
+            dp.deps
+                .iter()
+                .find_map(|dep| find_error_for_dep(dep, &dove_str))
+                .map_or(Ok(()), Err)
+        })?;
+
+        ValidateJson::new_valid().print();
+        Ok(())
+    }
+
+    fn get_manifest(&self, manifest_path: &Path) -> Result<(String, DoveToml), ValidateJson> {
+        let dove_str = std::fs::read_to_string(manifest_path)
+            .map_err(|err| ValidateJson::new_error(2, &err.to_string(), None))?;
+        let dove_toml = toml::from_str::<DoveToml>(&dove_str).map_err(|err| {
+            let offset = err
+                .line_col()
+                .map(|(line, col)| get_offset_by_line_and_col(&dove_str, line, col));
+            ValidateJson::new_error(3, &err.to_string(), offset)
+        })?;
+        Ok((dove_str, dove_toml))
+    }
+
+    fn get_dialect_name(
+        &self,
+        dove_toml: &DoveToml,
+        dove_toml_str: &str,
+    ) -> Result<DialectName, ValidateJson> {
+        match dove_toml.package.dialect.as_ref() {
+            Some(dialect_string) => DialectName::from_str(dialect_string).map_err(|err| {
+                let offset = dove_toml_str
+                    .to_lowercase()
+                    .find("dialect")
+                    .map(|mut offset| {
+                        offset = dove_toml_str[offset..].find('\"').unwrap_or(0) + offset;
+                        get_line_and_col_by_offset(dove_toml_str, offset)
+                    });
+                ValidateJson::new_error(5, &err.to_string(), offset)
+            }),
+            None => Err(ValidateJson::new_error(4, "dialect not set", None)),
+        }
     }
 }
 
@@ -165,6 +252,107 @@ impl GitMetadata {
             path: git.path,
             local_paths,
         })
+    }
+}
+
+/// Answer for --validate
+#[derive(Debug, Serialize)]
+struct ValidateJson {
+    code: u8,
+    error: Option<ValidateJsonError>,
+}
+impl ValidateJson {
+    pub fn new_error(
+        code: u8,
+        message: &str,
+        offset: Option<(usize, usize, usize)>,
+    ) -> ValidateJson {
+        ValidateJson {
+            code,
+            error: Some(ValidateJsonError {
+                message: Self::cleaning_message(message),
+                line: offset.map(|v| v.0),
+                column: offset.map(|v| v.1),
+                offset: offset.map(|v| v.2),
+            }),
+        }
+    }
+    /// Removing line number from an error
+    fn cleaning_message(message: &str) -> String {
+        let mut message = message.to_string();
+        if let Some(position) = message.find(" at line") {
+            message = (&message[..position]).to_string();
+        }
+        message
+    }
+
+    pub fn new_valid() -> ValidateJson {
+        ValidateJson {
+            code: 0,
+            error: None,
+        }
+    }
+
+    pub fn to_string(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).map_err(|err| anyhow!(err.to_string()))
+    }
+
+    pub fn print(&self) {
+        stdoutln!("{}", self.to_string().unwrap());
+    }
+}
+#[derive(Debug, Serialize)]
+struct ValidateJsonError {
+    message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    line: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    column: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    offset: Option<usize>,
+}
+
+/// Convert line, column => (line, column, offset)
+fn get_offset_by_line_and_col(text: &str, line: usize, col: usize) -> (usize, usize, usize) {
+    if line == 0 {
+        return (0, 0, 0);
+    }
+    (
+        line,
+        col,
+        text.chars()
+            .enumerate()
+            .filter_map(|(p, ch)| if ch == '\n' { Some(p) } else { None })
+            .nth(line - 1)
+            .unwrap_or_default()
+            + 1
+            + col,
+    )
+}
+/// Convert offset => (line, column, offset)
+fn get_line_and_col_by_offset(text: &str, offset: usize) -> (usize, usize, usize) {
+    (
+        text[..offset].lines().count() - 1,
+        text[..offset].chars().count() - text[..offset].rfind('\n').unwrap_or(0) - 1,
+        offset,
+    )
+}
+
+fn find_error_for_dep(dep: &Dependence, dove_str: &str) -> Option<ValidateJson> {
+    let check_path = |path: &str| -> Option<ValidateJson> {
+        if Path::new(path).exists() {
+            return None;
+        }
+        let message = format!("Path {:?} not found", path);
+        let offset = dove_str
+            .find(path)
+            .map(|offset| get_line_and_col_by_offset(dove_str, offset));
+        Some(ValidateJson::new_error(6, &message, offset))
+    };
+
+    match dep {
+        Dependence::Git(git_data) => git_data.path.as_ref().and_then(|t| check_path(t)),
+        Dependence::Path(dep_path) => check_path(&dep_path.path),
     }
 }
 
