@@ -35,6 +35,7 @@ git2 = "0.13"
 bcs = "0.1.2"
 dunce = "1.0.1"
 atty = "0.2"
+indexmap = { version = "=1.6.2", default-features = false, features = ["std"] }
 
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
