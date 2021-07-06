@@ -27,10 +27,9 @@ pub type ModulesIndex = HashMap<Rc<ModuleId>, HashMap<SourceType, Module>>;
 
 /// Modules index.
 pub struct Index<'a> {
+    pub manifest_hash: String,
     /// Modules index.
     pub modules: ModulesIndex,
-    /// Dove context.
-    pub ctx: &'a Context,
 }
 
 impl<'a> Index<'a> {

@@ -50,6 +50,7 @@ impl Context {
 
     /// Build project index.
     pub fn build_index(&self) -> Result<Index, Error> {
+
         let mut index = Index::load(self)?;
         index.build()?;
         Ok(index)

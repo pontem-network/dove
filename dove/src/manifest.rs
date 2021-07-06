@@ -13,6 +13,7 @@ use move_core_types::language_storage::CORE_CODE_ADDRESS;
 use move_lang::shared::Address;
 use crate::context::Context;
 use crate::docs::options::DocgenOptions;
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -31,7 +32,7 @@ pub struct DoveToml {
 }
 
 /// Project info.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHash)]
 pub struct Package {
     /// Project name.
     pub name: Option<String>,
@@ -299,6 +300,13 @@ pub struct DepPath {
     pub path: String,
 }
 
+/// Chain dependency.
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct Chain {
+    /// Module full name.
+    pub module: String,
+}
+
 impl AsRef<str> for DepPath {
     fn as_ref(&self) -> &str {
         &self.path
@@ -319,6 +327,8 @@ pub enum Dependence {
     Git(Git),
     /// Local dependency.
     Path(DepPath),
+    /// Chain dependency.
+    Chain(Chain),
 }
 
 impl<'de> Deserialize<'de> for Dependencies {
@@ -344,6 +354,10 @@ impl<'de> Deserialize<'de> for Dependencies {
                         if tbl.contains_key("git") {
                             deps.push(Dependence::Git(
                                 Git::deserialize(ele).map_err(DeError::custom)?,
+                            ));
+                        } else if tbl.contains_key("name") {
+                            deps.push(Dependence::Chain(
+                                Chain::deserialize(ele).map_err(DeError::custom)?,
                             ));
                         } else {
                             deps.push(Dependence::Path(
@@ -373,6 +387,7 @@ impl Serialize for Dependencies {
                 .map(|dep| match dep {
                     Dependence::Path(path) => Value::try_from(path),
                     Dependence::Git(git) => Value::try_from(git),
+                    Dependence::Chain(chain) => Value::try_from(chain),
                 })
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(SerError::custom)?,

@@ -69,6 +69,8 @@ impl<'a> Index<'a> {
     pub fn load(ctx: &'a Context) -> Result<Index<'a>, Error> {
         let index_path = ctx.path_for(&ctx.manifest.layout.index);
         if index_path.exists() {
+            // fs::read()
+            // bcs::from_bytes(fs::)
             let index = toml::from_str::<Modules>(&fs::read_to_string(index_path)?)?;
 
             let modules = index.modules.into_iter().map(|m| (m.name.clone(), m)).fold(

@@ -70,6 +70,8 @@ impl Cmd for Build {
         // Build project index...
         let mut index = ctx.build_index()?;
 
+
+
         // Load dependencies by set of path...
         let dep_set = index.make_dependency_set(&dirs)?;
         let mut dep_list = load_dependencies(dep_set)?;

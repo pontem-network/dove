@@ -4,9 +4,9 @@ pub use anyhow::Result;
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use itertools::Itertools;
 use move_core_types::account_address::AccountAddress;
-use move_lang::{cfgir, FullyCompiledProgram, move_continue_up_to, Pass, PassResult};
+use move_lang::{cfgir, FullyCompiledProgram, move_compile, move_continue_up_to, Pass, PassResult};
 use move_lang::compiled_unit::CompiledUnit;
-use move_lang::errors::Errors;
+use move_lang::errors::{Errors, FilesSourceText};
 use move_lang::shared::Address;
 use move_model::model::GlobalEnv;
 use move_model::run_spec_checker;
@@ -16,7 +16,9 @@ use parser::parse_program;
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{Comments, parse_target, ParserArtifact, ParsingMeta};
+use crate::compiler::preprocessor::BuilderPreprocessor;
 
+pub mod preprocessor;
 pub mod address;
 pub mod dialects;
 pub mod error;
@@ -25,6 +27,27 @@ pub mod location;
 pub mod mut_string;
 pub mod parser;
 pub mod source_map;
+
+pub fn build(targets: Vec<String>, deps: Vec<String>, dialect: &dyn Dialect, sender: Option<AccountAddress>, interface_files_dir: Option<String>) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
+    let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
+
+    let (files, units_res) = move_compile(
+        &targets,
+        &deps,
+        sender.map(map_address),
+        interface_files_dir,
+        true,
+        &mut preprocessor,
+    )?;
+
+    let units_res = units_res.map_err(|errors| preprocessor.into_offset_map().transform(errors));
+    Ok((files, units_res))
+}
+
+fn map_address(addr: AccountAddress) -> Address {
+    Address::new(addr.to_u8())
+}
+
 
 pub type SourceDeps = Vec<MoveFile<'static, 'static>>;
 
