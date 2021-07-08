@@ -226,6 +226,7 @@ pub mod tests {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn access_addr_mod_name(
         start: u32,
         end: u32,

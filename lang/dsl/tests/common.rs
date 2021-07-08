@@ -15,6 +15,7 @@ pub fn name(name: &str) -> Name {
     Name::new(loc(0, 0), name.to_owned())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn access_addr_mod_name(
     start: u32,
     end: u32,

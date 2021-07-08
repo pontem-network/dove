@@ -5,6 +5,4 @@ pub struct TestMetadata {
     script_name: String,
     signers: Vec<AccountAddress>,
     failure: Option<u32>,
-
 }
-
