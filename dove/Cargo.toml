@@ -49,6 +49,7 @@ move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "rele
 docgen = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 
 # move-prover deps
 move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", optional = true }

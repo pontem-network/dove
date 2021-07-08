@@ -49,5 +49,23 @@ impl<'a> TransactionBuilder<'a> {
             .with_cmd_signers(cmd.signers.clone())?;
 
         Ok(trbuild)
+        // let dep_set = index.make_dependency_set(&[&script, &module_dir])?;
+        // let mut dep_list = load_dependencies(dep_set)?;
+        // dep_list.extend(load_move_files(&[module_dir])?);
+        //
+        // let mut signers = self
+        //     .signers
+        //     .iter()
+        //     .map(|signer| ctx.dialect.parse_address(signer))
+        //     .collect::<Result<Vec<_>, Error>>()?;
+        //
+        // if signers.is_empty() {
+        //     signers.push(ctx.account_address()?);
+        // }
+        // let executor = Executor::new(ctx.dialect.as_ref(), signers[0], dep_list);
+        // let script = MoveFile::load(script)?;
+
+        //render_execution_result(executor.execute_script(script, Some(signers), self.args))
+        todo!()
     }
 }

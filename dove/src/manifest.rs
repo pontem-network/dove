@@ -9,11 +9,12 @@ use serde::{
     ser::Error as SerError,
 };
 use toml::Value;
-use move_core_types::language_storage::CORE_CODE_ADDRESS;
+use move_core_types::language_storage::{CORE_CODE_ADDRESS, ModuleId};
 use move_lang::shared::Address;
 use crate::context::Context;
 use crate::docs::options::DocgenOptions;
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use move_core_types::identifier::Identifier;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -32,7 +33,7 @@ pub struct DoveToml {
 }
 
 /// Project info.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHash)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
 pub struct Package {
     /// Project name.
     pub name: Option<String>,
@@ -105,6 +106,10 @@ fn deps() -> String {
     "artifacts/.external".to_owned()
 }
 
+fn chain_deps() -> String {
+    "artifacts/.external/chain".to_owned()
+}
+
 fn artifacts() -> String {
     "artifacts".to_owned()
 }
@@ -157,7 +162,9 @@ pub struct Layout {
     /// Directory with external dependencies.
     #[serde(default = "deps")]
     pub deps: String,
-
+    /// Directory with external chain dependencies.
+    #[serde(default = "chain_deps")]
+    pub chain_deps: String,
     /// Artifacts directory.
     #[serde(default = "artifacts")]
     pub artifacts: String,
@@ -181,6 +188,7 @@ impl Layout {
             move_prover_output: ctx.str_path_for(&self.move_prover_output)?,
             docs_output: ctx.str_path_for(&self.docs_output)?,
             deps: ctx.str_path_for(&self.deps)?,
+            chain_deps: ctx.str_path_for(&self.chain_deps)?,
             artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
         })
@@ -200,6 +208,7 @@ impl Default for Layout {
             move_prover_output: move_prover_output(),
             docs_output: docs_output(),
             deps: deps(),
+            chain_deps: chain_deps(),
             artifacts: artifacts(),
             index: index(),
         }
@@ -207,7 +216,7 @@ impl Default for Layout {
 }
 
 /// Git dependencies.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
 pub struct Git {
     /// Git url.
     pub git: String,
@@ -294,17 +303,29 @@ impl<'a> TryFrom<&'a Git> for CheckoutParams<'a> {
 }
 
 /// Local dependencies path.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
 pub struct DepPath {
     /// Path to the directory with local dependencies.
     pub path: String,
 }
 
 /// Chain dependency.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
 pub struct Chain {
     /// Module full name.
-    pub module: String,
+    pub address: String,
+    /// Module full name.
+    pub name: String,
+}
+
+impl Chain {
+    /// Return module id.
+    pub fn module_id(&self, ctx: &Context) -> Result<ModuleId, Error> {
+        Ok(ModuleId::new(
+            ctx.dialect.parse_address(&self.address)?,
+            Identifier::new(self.name.to_owned())?
+        ))
+    }
 }
 
 impl AsRef<str> for DepPath {
@@ -314,14 +335,14 @@ impl AsRef<str> for DepPath {
 }
 
 /// Project dependencies.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, CryptoHasher, BCSCryptoHash)]
 pub struct Dependencies {
     /// Vector of project dependencies.
     pub deps: Vec<Dependence>,
 }
 
 /// External dependencies enum.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
 pub enum Dependence {
     /// Git dependency.
     Git(Git),

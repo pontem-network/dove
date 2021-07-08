@@ -1358,6 +1358,7 @@ dependencies = [
  "bech32",
  "boogie-backend-v2",
  "decompiler",
+ "diem-crypto",
  "diem-crypto-derive",
  "docgen",
  "dunce",

@@ -53,6 +53,10 @@ impl Dialect for DiemDialect {
     fn replace_addresses(&self, _: &str, _: &mut MutString, _: &mut FileOffsetMap) {
         // No-op
     }
+
+    fn copy(&self) -> Box<dyn Dialect> {
+        Box::new(DiemDialect)
+    }
 }
 
 use once_cell::sync::Lazy;

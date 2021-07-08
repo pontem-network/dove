@@ -28,7 +28,7 @@ pub mod mut_string;
 pub mod parser;
 pub mod source_map;
 
-pub fn build(targets: Vec<String>, deps: Vec<String>, dialect: &dyn Dialect, sender: Option<AccountAddress>, interface_files_dir: Option<String>) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
+pub fn build(targets: &[String], deps: &[String], dialect: &dyn Dialect, sender: Option<AccountAddress>, interface_files_dir: Option<String>) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
 
     let (files, units_res) = move_compile(

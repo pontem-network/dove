@@ -1,7 +1,7 @@
 use move_lang::parser::ast::Definition;
 use crate::compiler::file::MoveFile;
-use move_lang::errors::{Error, FilesSourceText, Errors};
-use move_lang::{FullyCompiledProgram, parser, move_compile};
+use move_lang::errors::Error;
+use move_lang::{FullyCompiledProgram, parser};
 
 pub use crate::compiler::CompileFlow;
 

@@ -66,6 +66,10 @@ impl Dialect for DFinanceDialect {
     ) {
         replace_bech32_addresses(source_text, mut_str, source_map)
     }
+
+    fn copy(&self) -> Box<dyn Dialect> {
+        Box::new(DFinanceDialect)
+    }
 }
 
 use once_cell::sync::Lazy;
