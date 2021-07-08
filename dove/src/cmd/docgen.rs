@@ -6,6 +6,8 @@ use crate::context::Context;
 use move_model::model::GlobalEnv;
 use crate::docs::generate_docs;
 use std::fs;
+use lang::compiler::build_global_env;
+use lang::compiler::file::find_move_files;
 
 /// Generate documentation.
 #[derive(StructOpt, Debug)]
@@ -19,36 +21,18 @@ impl Cmd for DocGen {
             &ctx.manifest.layout.modules_dir,
         ]);
 
-        // // Build project index...
-        // let mut index = ctx.build_index()?;
-        //
-        // // Load dependencies by set of path...
-        // let dep_set = index.make_dependency_set(&dirs)?;
-        // let dep_list = load_dependencies(dep_set)?;
-        //
-        // let source_list = load_move_files(&dirs)?;
-        //
-        // let source_ref = source_list.iter().collect::<Vec<_>>();
-        //
-        // // Build move files...
-        // let sender = ctx.account_address()?;
-        // let Artifacts {
-        //     files: _,
-        //     env,
-        //     prog: _,
-        // } = MoveBuilder::new(
-        //     ctx.dialect.as_ref(),
-        //     Some(sender),
-        //     StaticResolver::new(dep_list),
-        // )
-        // .build(&source_ref, true);
-        //
-        // if let Some(env) = env {
-        //     Self::gen(&ctx, env)
-        // } else {
-        //     unreachable!()
-        // }
-        todo!()
+         let index = ctx.build_index()?;
+        let dep_list = index.into_deps_roots();
+
+        let sender = ctx.account_address()?;
+
+        let source_list = find_move_files(&dirs)
+            .map(|path| path.to_string_lossy().to_string())
+            .collect::<Vec<_>>();
+
+        let env = build_global_env(source_list, dep_list, ctx.dialect.as_ref(), sender)?;
+
+        Self::gen(&ctx, env)
     }
 }
 

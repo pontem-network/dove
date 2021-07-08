@@ -2,14 +2,15 @@ use std::collections::HashSet;
 
 pub use anyhow::Result;
 use codespan_reporting::diagnostic::{Diagnostic, Label};
+use codespan_reporting::term::termcolor::Buffer;
 use itertools::Itertools;
 use move_core_types::account_address::AccountAddress;
 use move_lang::{cfgir, FullyCompiledProgram, move_compile, move_continue_up_to, Pass, PassResult};
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::{Errors, FilesSourceText};
 use move_lang::shared::Address;
+use move_model::{run_model_builder, run_spec_checker};
 use move_model::model::GlobalEnv;
-use move_model::run_spec_checker;
 
 use parser::parse_program;
 
@@ -27,6 +28,27 @@ pub mod location;
 pub mod mut_string;
 pub mod parser;
 pub mod source_map;
+
+pub fn build_global_env(targets: Vec<String>, deps: Vec<String>, dialect: &dyn Dialect, sender: AccountAddress) -> anyhow::Result<GlobalEnv> {
+    let mut preprocessor = BuilderPreprocessor::new(dialect, Some(sender));
+
+    let sender = Address::new(sender.to_u8());
+    let env: GlobalEnv = run_model_builder(targets, deps, Some(&sender.to_string()), &mut preprocessor)?;
+
+    let mut error_writer = Buffer::no_color();
+    if env.has_errors() {
+        env.report_errors(&mut error_writer);
+        println!("{}", String::from_utf8_lossy(&error_writer.into_inner()));
+        return Err(anyhow!("exiting with checking errors"));
+    }
+
+    if env.has_warnings() {
+        env.report_warnings(&mut error_writer);
+        println!("{}", String::from_utf8_lossy(&error_writer.into_inner()));
+    }
+
+    Ok(env)
+}
 
 pub fn build(targets: &[String], deps: &[String], dialect: &dyn Dialect, sender: Option<AccountAddress>, interface_files_dir: Option<String>) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);

@@ -2,7 +2,6 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
-use move_executor::executor::{Executor, render_test_result};
 
 /// Run tests.
 #[derive(StructOpt, Debug)]
