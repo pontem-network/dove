@@ -1,11 +1,9 @@
 use std::str::FromStr;
-use std::path::PathBuf;
 use std::fmt::Debug;
 use serde::{Serialize, Deserialize};
 use anyhow::Error;
 use termcolor::{StandardStream, ColorChoice};
 use move_lang::parser::lexer::{Lexer, Tok};
-use move_lang::parser::syntax::parse_type;
 use move_lang::compiled_unit;
 use move_lang::errors::output_errors;
 use move_lang::compiled_unit::CompiledUnit;
@@ -14,15 +12,21 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::value::MoveValue;
 use move_executor::explain::PipelineExecutionResult;
 use move_executor::executor::Executor;
-use lang::lexer::unwrap_spanned_ty;
 use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
 use lang::compiler::address::ss58::{replace_ss58_addresses, ss58_to_diem};
 use lang::compiler::mut_string::MutString;
-use lang::compiler::dialects::Dialect;
 use lang::flow::meta_extractor::{Meta, ScriptMetadata};
 use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 use crate::context::Context;
 use crate::cmd::load_dependencies;
+
+/// converting Vec<Type> => Vec<TypeTag>
+pub mod typetag;
+use crate::transaction::typetag::ConvertVecTypeToVecTypeTag;
+
+/// converting Vec<Value> => Vec<String>
+pub mod typevalue;
+use crate::transaction::typevalue::VecValueToVecString;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -86,21 +90,7 @@ impl<'a> TransactionBuilder<'a> {
         type_parameters: Option<Vec<String>>,
     ) -> Result<&mut Self, Error> {
         if let Some(type_parameters) = type_parameters {
-            self.type_parameters = type_parameters
-                .iter()
-                .map(|tp| {
-                    let mut mut_string = MutString::new(tp);
-                    replace_ss58_addresses(tp, &mut mut_string, &mut Default::default());
-                    mut_string.freeze()
-                })
-                .map(|tp| {
-                    let mut lexer = Lexer::new(&tp, "tp", Default::default());
-                    lexer
-                        .advance()
-                        .map_err(|err| Error::msg(format!("{:?}", err)))?;
-                    parse_type_params(&mut lexer)
-                })
-                .collect::<Result<_, _>>()?;
+            self.type_parameters = type_parameters.to_typetag()?;
         }
         Ok(self)
     }
@@ -218,6 +208,7 @@ impl<'a> TransactionBuilder<'a> {
 
         Ok((script, meta))
     }
+    /// search for a script in project/scripts/*.move by name
     fn lookup_script_by_name(&self, name: &str) -> Result<(MoveFile, Meta), Error> {
         let script_path = self
             .dove_ctx
@@ -501,167 +492,22 @@ fn parse_text_into_scripts(content: &str) -> Result<Vec<(String, String)>, Error
 ///    );
 /// ```
 pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Error> {
+    use dsl::parser::func::parse_call;
+
     let mut mut_string = MutString::new(call);
     replace_ss58_addresses(call, &mut mut_string, &mut Default::default());
     let call = mut_string.freeze();
 
     let map_err = |err| Error::msg(format!("{:?}", err));
-    let mut lexer = Lexer::new(&call, "call", Default::default());
+    let call_for_lexer = format!("{};", call);
+    let mut lexer = Lexer::new(call_for_lexer.as_str(), "call", Default::default());
     lexer.advance().map_err(map_err)?;
-    if lexer.peek() != Tok::IdentifierValue {
-        anyhow::bail!("Invalid call script format.\
-             Expected function identifier. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
-    }
+    let parse_result = parse_call(&mut lexer).map_err(map_err)?;
 
-    let script_name = lexer.content().to_owned();
+    let type_parameters = parse_result.t_params.unwrap_or_default().to_typetag()?;
+    let args = parse_result.params.to_string()?;
 
-    lexer.advance().map_err(map_err)?;
-
-    let type_parameters = if lexer.peek() == Tok::Less {
-        let mut type_parameter = vec![];
-
-        lexer.advance().map_err(map_err)?;
-        while lexer.peek() != Tok::Greater {
-            if lexer.peek() == Tok::EOF {
-                anyhow::bail!("Invalid call script format.\
-                     Invalid type parameters format.. Use pattern \
-                     'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
-            }
-
-            if lexer.peek() == Tok::Comma {
-                lexer.advance().map_err(map_err)?;
-                continue;
-            }
-
-            type_parameter.push(parse_type_params(&mut lexer)?);
-        }
-        lexer.advance().map_err(map_err)?;
-        type_parameter
-    } else {
-        vec![]
-    };
-
-    if lexer.peek() != Tok::LParen {
-        anyhow::bail!("Invalid call script format.\
-             Invalid script arguments format.. Left paren '(' is expected. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
-    }
-
-    let mut arguments = vec![];
-
-    lexer.advance().map_err(map_err)?;
-    while lexer.peek() != Tok::RParen {
-        if lexer.peek() == Tok::EOF {
-            anyhow::bail!("Invalid call script format.\
-                 Invalid arguments format.. Use pattern \
-                 'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
-        }
-
-        if lexer.peek() == Tok::Comma {
-            lexer.advance().map_err(map_err)?;
-            continue;
-        }
-
-        let mut token = String::new();
-        token.push_str(lexer.content());
-        let sw = lexer.peek() == Tok::LBracket;
-        lexer.advance().map_err(map_err)?;
-        if sw {
-            while lexer.peek() != Tok::RBracket {
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
-            }
-            token.push_str(lexer.content());
-        } else {
-            while lexer.peek() != Tok::Comma && lexer.peek() != Tok::RParen {
-                token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
-            }
-        }
-        arguments.push(token);
-        if !sw && lexer.peek() == Tok::RParen {
-            break;
-        }
-        lexer.advance().map_err(map_err)?;
-    }
-
-    Ok((script_name, type_parameters, arguments))
-}
-
-/// parse type params
-///
-/// u8 => TypeTag::U8
-/// u64 => TypeTag::U64
-/// ...
-pub fn parse_type_params(lexer: &mut Lexer) -> Result<TypeTag, Error> {
-    let ty = parse_type(lexer).map_err(|err| Error::msg(format!("{:?}", err)))?;
-    unwrap_spanned_ty(ty)
-}
-/// search for a script in project/scripts/*.move by name
-pub fn lookup_script_by_name<'a>(
-    name: &str,
-    script_path: PathBuf,
-    sender: AccountAddress,
-    dialect: &'a dyn Dialect,
-) -> Result<(MoveFile<'a, 'a>, Meta), Error> {
-    let mut files = find_move_files(&script_path)?
-        .iter()
-        .map(MoveFile::load)
-        .filter_map(|mf| match mf {
-            Ok(mf) => {
-                if mf.content().contains(name) {
-                    Some(mf)
-                } else {
-                    None
-                }
-            }
-            Err(err) => {
-                warn!("{:?}", err);
-                None
-            }
-        })
-        .map(|mf| ScriptMetadata::extract(dialect, Some(sender), &[&mf]).map(|meta| (mf, meta)))
-        .filter_map(|script| match script {
-            Ok((mf, meta)) => Some((mf, meta)),
-            Err(err) => {
-                warn!("{:?}", err);
-                None
-            }
-        })
-        .filter(|(_, meta)| meta.iter().any(|meta| *name == meta.name))
-        .collect::<Vec<_>>();
-
-    if files.is_empty() {
-        anyhow::bail!("Script not found.");
-    }
-
-    if files.len() > 1 {
-        let name_list = files
-            .iter()
-            .map(|(mf, _)| mf.name())
-            .collect::<Vec<_>>()
-            .join(", ");
-        anyhow::bail!(
-            "There are several scripts with the name '{:?}' in files ['{}'].",
-            name,
-            name_list
-        );
-    }
-
-    let (file, mut meta) = files.remove(0);
-    if meta.is_empty() {
-        anyhow::bail!("Script not found.");
-    }
-
-    if meta.len() > 1 {
-        anyhow::bail!(
-            "There are several scripts with the name '{:?}' in file '{}'.",
-            name,
-            file.name()
-        );
-    }
-    Ok((file, meta.remove(0)))
+    Ok((parse_result.name.to_string(), type_parameters, args))
 }
 
 /// Script argument type.
@@ -810,7 +656,7 @@ mod test {
 
     #[test]
     fn test_parse_call() {
-        let (name, tp, args) = parse_call("create_account<u8, 0x01::Dfinance::USD<u8>>(10, 68656c6c6f, [10, 23], true, 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE)").unwrap();
+        let (name, tp, args) = parse_call("create_account<u8, 0x01::Dfinance::USD<u8>>(10, [10, 23], true, 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE)").unwrap();
         assert_eq!(name, "create_account");
         assert_eq!(
             tp,
@@ -828,7 +674,6 @@ mod test {
             args,
             vec![
                 "10".to_owned(),
-                "68656c6c6f".to_owned(),
                 "[10,23]".to_owned(),
                 "true".to_owned(),
                 "0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F".to_owned()
@@ -850,7 +695,7 @@ mod test {
         );
         assert_eq!(
             args,
-            vec!["[true,false]".to_owned(), "[0x01,0x02]".to_owned()]
+            vec!["[true,false]".to_owned(), "[0x1,0x2]".to_owned()]
         );
 
         let (name, tp, args) = parse_call("create_account()").unwrap();
