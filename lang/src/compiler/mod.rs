@@ -28,6 +28,7 @@ pub mod mut_string;
 pub mod parser;
 pub mod preprocessor;
 pub mod source_map;
+pub mod metadata;
 
 pub fn build_global_env(
     targets: Vec<String>,
@@ -77,6 +78,7 @@ pub fn build(
     let units_res = units_res.map_err(|errors| preprocessor.into_offset_map().transform(errors));
     Ok((files, units_res))
 }
+
 
 fn map_address(addr: AccountAddress) -> Address {
     Address::new(addr.to_u8())
