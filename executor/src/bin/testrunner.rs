@@ -1,10 +1,10 @@
 use anyhow::{Result, Context};
 use clap::{App, Arg};
 use std::path::PathBuf;
-use lang::compiler::file;
 use move_executor::executor::{Executor, render_test_result};
 use lang::compiler::dialects::DialectName;
 use std::str::FromStr;
+use lang::compiler::file::find_move_files;
 
 fn cli() -> App<'static, 'static> {
     App::new("Test runner")
@@ -42,11 +42,15 @@ pub fn main() -> Result<()> {
         .unwrap_or_default()
         .map(|path| path.into())
         .collect::<Vec<PathBuf>>();
-    let deps = file::load_move_files(&modules_fpaths)?;
+
+    let deps = find_move_files(&modules_fpaths)
+        .map(|path| path.to_string_lossy().to_string())
+        .collect::<Vec<_>>();
+
     if verbose_output {
         println!(
             "Found deps: {:#?}",
-            deps.iter().map(|n| n.name()).collect::<Vec<_>>()
+            deps.iter().collect::<Vec<_>>()
         );
     }
 
@@ -56,11 +60,13 @@ pub fn main() -> Result<()> {
         Some(dir) => vec![PathBuf::from(dir)],
         None => vec![],
     };
-    let test_files = file::load_move_files(&test_directories)?;
+    let test_files = find_move_files(&test_directories)
+        .map(|path| path.to_string_lossy().to_string())
+        .collect::<Vec<_>>();
     if verbose_output {
         println!(
             "Found tests: {:#?}",
-            test_files.iter().map(|n| n.name()).collect::<Vec<_>>()
+            test_files.iter().collect::<Vec<_>>()
         );
     }
 

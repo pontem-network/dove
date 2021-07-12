@@ -10,24 +10,22 @@ use move_lang::errors::report_errors;
 
 use lang::compiler::dialects::Dialect;
 use lang::compiler::error::CompilerError;
-use lang::compiler::file::MoveFile;
 
 use crate::explain::{PipelineExecutionResult, StepExecutionResult};
 use crate::format::format_step_result;
-use crate::session::SessionBuilder;
 
-pub struct Executor<'d, 'n, 'c> {
+pub struct Executor<'d> {
     dialect: &'d dyn Dialect,
     sender: AccountAddress,
-    deps: Vec<MoveFile<'n, 'c>>,
+    deps: Vec<String>,
 }
 
-impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
+impl<'d> Executor<'d> {
     pub fn new(
         dialect: &'d dyn Dialect,
         sender: AccountAddress,
-        deps: Vec<MoveFile<'n, 'c>>,
-    ) -> Executor<'d, 'n, 'c> {
+        deps: Vec<String>,
+    ) -> Executor<'d> {
         Executor {
             dialect,
             sender,
@@ -35,31 +33,33 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
         }
     }
 
-    pub fn script_name(mvf: &MoveFile) -> Result<String, Error> {
-        PathBuf::from(mvf.name())
+    pub fn script_name(mvf: &String) -> Result<String, Error> {
+        PathBuf::from(mvf)
             .file_name()
             .and_then(|name| name.to_str())
             .and_then(|name| name.strip_suffix(".move"))
             .map(ToOwned::to_owned)
-            .ok_or_else(|| anyhow!("Failed to extract script name:{}", mvf.name()))
+            .ok_or_else(|| anyhow!("Failed to extract script name:{}", mvf))
     }
 
     pub fn execute_script(
         &self,
-        script: MoveFile,
+        script: String,
         signers: Option<Vec<AccountAddress>>,
         args: Vec<String>,
     ) -> Result<PipelineExecutionResult, Error> {
         let script_args = parse_script_arguments(args)?;
 
         let mut sources = Vec::with_capacity(self.deps.len() + 1);
-        sources.push(&script);
+        sources.push(script);
+
         for dep in &self.deps {
-            sources.push(&dep);
+            sources.push(dep.clone());
         }
 
-        let session = SessionBuilder::new(self.dialect, self.sender).build(&sources, false)?;
-        session.execute(signers, script_args, self.dialect.cost_table())
+        todo!()
+        // let session = SessionBuilder::new(self.dialect, self.sender).build(sources, false)?;
+        // session.execute(signers, script_args, self.dialect.cost_table())
     }
 }
 

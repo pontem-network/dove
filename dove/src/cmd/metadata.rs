@@ -118,7 +118,7 @@ impl Metadata {
         ctx.manifest.package.dependencies.map_or(Ok(()), |dp| {
             dp.deps
                 .iter()
-                .find_map(|dep| find_error_for_dep(dep, &dove_str))
+                .find_map(|dep| find_error_for_dep( dep, &dove_str))
                 .map_or(Ok(()), Err)
         })?;
 
@@ -364,8 +364,11 @@ fn find_error_for_dep(dep: &Dependence, dove_str: &str) -> Option<ValidateJson> 
     };
 
     match dep {
-        Dependence::Git(git_data) => git_data.path.as_ref().and_then(|t| check_path(t)),
         Dependence::Path(dep_path) => check_path(&dep_path.path),
+        _ => {
+            //no-op
+            None
+        }
     }
 }
 

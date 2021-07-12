@@ -1357,7 +1357,7 @@ dependencies = [
 
 [[package]]
 name = "dove"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "anyhow",
  "atty",
@@ -3200,6 +3200,7 @@ dependencies = [
  "resources",
  "serde",
  "serde_json",
+ "tempfile",
  "textwrap 0.12.1",
  "vm",
 ]

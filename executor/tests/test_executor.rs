@@ -1,11 +1,12 @@
-use move_executor::explain::{AddressResourceChanges, ResourceChange, PipelineExecutionResult};
-use lang::compiler::file::MoveFile;
-use resources::{assets_dir, stdlib_path, modules_path};
+use std::str::FromStr;
+use anyhow::{Context, Error};
+use tempfile::NamedTempFile;
+use lang::compiler::dialects::DialectName;
 use lang::compiler::error::CompilerError;
 use move_executor::executor::Executor;
-use anyhow::{Error, Context};
-use lang::compiler::dialects::DialectName;
-use std::str::FromStr;
+use move_executor::explain::{AddressResourceChanges, PipelineExecutionResult, ResourceChange};
+use resources::{assets_dir, modules_path, stdlib_path};
+use std::fs;
 
 fn script_path() -> String {
     assets_dir()
@@ -19,28 +20,30 @@ fn module_path(name: &str) -> String {
     assets_dir().join(name).to_str().unwrap().to_owned()
 }
 
-pub fn stdlib_mod(name: &str) -> MoveFile {
-    MoveFile::load(stdlib_path().join(name)).unwrap()
+pub fn stdlib_mod(name: &str) -> String {
+    stdlib_path().join(name).to_string_lossy().to_string()
 }
 
-pub fn modules_mod(name: &str) -> MoveFile {
-    MoveFile::load(modules_path().join(name)).unwrap()
+pub fn modules_mod(name: &str) -> String {
+    modules_path().join(name).to_string_lossy().to_string()
 }
 
 fn execute_script(
-    script: MoveFile,
-    deps: Vec<MoveFile>,
+    script: &str,
+    deps: Vec<String>,
     dialect: &str,
     address: &str,
     args: Vec<String>,
 ) -> Result<PipelineExecutionResult, Error> {
+    let script = tmp_file(script);
+
     let dialect = DialectName::from_str(dialect)?.get_dialect();
     let sender = dialect
         .parse_address(address)
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), address))?;
 
     let executor = Executor::new(dialect.as_ref(), sender, deps);
-    executor.execute_script(script, None, args)
+    executor.execute_script(path(&script), None, args)
 }
 
 #[test]
@@ -52,16 +55,16 @@ script {
     }
 }";
     let errors = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "diem",
         "0x1111111111111111",
         vec![],
     )
-    .unwrap_err()
-    .downcast::<CompilerError>()
-    .unwrap()
-    .errors;
+        .unwrap_err()
+        .downcast::<CompilerError>()
+        .unwrap()
+        .errors;
     assert_eq!(errors.len(), 1);
     assert_eq!(errors[0][0].1, "Unbound module \'0x0::Transaction\'");
 }
@@ -77,13 +80,13 @@ fn test_execute_custom_script_with_stdlib_module() {
         }
     }";
     execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move")],
         "diem",
         "0x1111111111111111",
         vec![],
     )
-    .unwrap();
+        .unwrap();
 }
 
 #[test]
@@ -99,16 +102,16 @@ script {
 }";
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "diem",
         "0x1111111111111111",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0],
@@ -123,7 +126,7 @@ script {
 
 #[test]
 fn missing_write_set_for_move_to_sender() {
-    let module_text = r"
+    let module = tmp_file(r"
     address 0x1 {
         module M {
            struct T has store, key { value: u8 }
@@ -133,7 +136,7 @@ fn missing_write_set_for_move_to_sender() {
             }
         }
     }
-        ";
+        ");
     let script_text = r"
     script {
         fun main(s: signer) {
@@ -141,19 +144,20 @@ fn missing_write_set_for_move_to_sender() {
         }
     }
         ";
-    let deps = vec![MoveFile::with_content(module_path("m.move"), module_text)];
+
+    let deps = vec![path(&module)];
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), script_text),
+        script_text,
         deps,
         "diem",
         "0x1",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0],
@@ -168,7 +172,7 @@ fn missing_write_set_for_move_to_sender() {
 
 #[test]
 fn test_run_with_non_default_dfinance_dialect() {
-    let module_text = r"
+    let module = tmp_file(r"
     address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
         module M {
             struct T has store, key { value: u8 }
@@ -177,7 +181,7 @@ fn test_run_with_non_default_dfinance_dialect() {
             }
         }
     }
-    ";
+    ");
     let script_text = r"
     script {
         fun main(s: signer) {
@@ -187,16 +191,16 @@ fn test_run_with_non_default_dfinance_dialect() {
     ";
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), script_text),
-        vec![MoveFile::with_content(module_path("m.move"), module_text)],
+        script_text,
+        vec![module_path("m.move"), path(&module)],
         "dfinance",
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
 
     assert_eq!(
         effects.resources()[0],
@@ -209,7 +213,7 @@ fn test_run_with_non_default_dfinance_dialect() {
 
 #[test]
 fn test_pass_arguments_to_script() {
-    let module_text = r"
+    let module = tmp_file(r"
     address 0x1 {
         module Module {
             struct T has store, key { value: bool }
@@ -218,7 +222,7 @@ fn test_pass_arguments_to_script() {
             }
         }
     }
-    ";
+    ");
     let script_text = r"
     script {
         use 0x1::Module;
@@ -230,16 +234,16 @@ fn test_pass_arguments_to_script() {
     ";
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), script_text),
-        vec![MoveFile::with_content(module_path("m.move"), module_text)],
+        script_text,
+        vec![path(&module)],
         "diem",
         "0x1",
         vec![String::from("true")],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
 
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
@@ -255,14 +259,14 @@ fn test_pass_arguments_to_script() {
 
 #[test]
 fn test_sender_string_in_script() {
-    let module_text = r"
+    let module = tmp_file(r"
     address {{sender}} {
         module Debug {
             public fun debug(): u8 {
                 1
             }
         }
-    }";
+    }");
     let source_text = r"
     script {
         use {{sender}}::Debug;
@@ -272,19 +276,19 @@ fn test_sender_string_in_script() {
     }
         ";
     let effects = execute_script(
-        MoveFile::with_content(script_path(), source_text),
-        vec![MoveFile::with_content(
+        source_text,
+        vec![
             module_path("debug.move"),
-            module_text,
-        )],
+            path(&module),
+        ],
         "diem",
         "0x1",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.resources().len(), 0);
 }
 
@@ -298,16 +302,16 @@ fn test_bech32_address_and_sender_in_compiler_error() {
     }
         ";
     let errors = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
         vec![],
     )
-    .unwrap_err()
-    .downcast::<CompilerError>()
-    .unwrap()
-    .errors;
+        .unwrap_err()
+        .downcast::<CompilerError>()
+        .unwrap()
+        .errors;
 
     assert_eq!(errors.len(), 1);
     assert_eq!(
@@ -328,13 +332,13 @@ fn test_show_executor_gas_spent() {
     }";
 
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move")],
         "diem",
         "0x1111111111111111",
         vec![],
     )
-    .unwrap();
+        .unwrap();
     assert_eq!(res.overall_gas_spent(), 7);
 }
 
@@ -346,22 +350,22 @@ fn test_dfinance_executor_allows_0x0() {
     }";
 
     execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "0x0",
         vec![],
     )
-    .unwrap();
+        .unwrap();
 
     execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "0x1",
         vec![],
     )
-    .unwrap();
+        .unwrap();
 }
 
 #[test]
@@ -378,16 +382,16 @@ fn test_execute_script_with_custom_signer() {
     }
     ";
     let effects = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(effects.resources()[0].address, "0x2");
     assert_eq!(
@@ -416,16 +420,16 @@ fn test_multiple_signers() {
     ";
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
 
     let account1_change = &effects.resources()[0];
     assert_eq!(account1_change.address, "0x1");
@@ -476,16 +480,16 @@ script {
 }
     ";
     let effects = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.resources().len(), 1);
 
     let account1_change = &effects.resources()[0];
@@ -508,15 +512,15 @@ script {
 }
     ";
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 401 in transaction script"
@@ -527,15 +531,15 @@ script {
 fn test_script_starts_from_line_0() {
     let text = r"script { fun main() { assert(false, 401); } }";
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 401 in transaction script"
@@ -547,15 +551,15 @@ fn test_doc_comment_starts_at_line_0() {
     let text = r"/// signers: 0x1
 script { fun main(_: signer) { assert(false, 401); } }";
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 401 in transaction script"
@@ -571,15 +575,15 @@ script {
 }
     ";
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(
         res.error(),
         "Cannot use `price:` comments: missing `0x1::Coins` module".to_string()
@@ -601,15 +605,15 @@ script {
 }
     ";
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("coins.move")],
         "dfinance",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(res.effects().write_set_size(), 0);
 }
 
@@ -634,16 +638,16 @@ script {
     ";
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0],
@@ -673,15 +677,15 @@ script {
     ";
 
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "diem",
         "0x1",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 1 in transaction script"
@@ -705,15 +709,15 @@ script {
     ";
 
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "diem",
         "0x1",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 2 in transaction script"
@@ -747,13 +751,13 @@ script {
     ";
 
     let results = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("coins.move")],
         "diem",
         "0x1",
         vec![],
     )
-    .unwrap();
+        .unwrap();
     assert_eq!(results.overall_gas_spent(), 10);
 }
 
@@ -771,15 +775,15 @@ script {
     ";
 
     let res = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("time.move")],
         "diem",
         "0x1",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap();
+        .unwrap()
+        .last()
+        .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 100 in transaction script"
@@ -799,16 +803,16 @@ script {
     ";
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.write_set_size(), 1);
 }
 
@@ -824,16 +828,16 @@ script {
     ";
 
     let error_string = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .expected_error();
+        .unwrap()
+        .last()
+        .unwrap()
+        .expected_error();
     assert_eq!(
         error_string,
         "Expected error: Execution aborted with code 101 in transaction script"
@@ -855,16 +859,16 @@ fn test_extract_error_name_if_prefixed_with_err() {
     ";
 
     let error_string = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .error();
+        .unwrap()
+        .last()
+        .unwrap()
+        .error();
     assert_eq!(
         error_string,
         "Execution aborted with code 101: ERR_RECORD_DOES_NOT_EXIST in module 0x2::Record."
@@ -901,16 +905,16 @@ script {
     ";
 
     let effects = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("signer.move"), modules_mod("record.move")],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(
         effects.resources()[0].changes[0],
         ResourceChange::Changed("store key 0x2::Record::T {\n    age: 11u8\n}\n".to_string())
@@ -942,7 +946,7 @@ script {
     "#;
 
     execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![
             stdlib_mod("coins.move"),
             stdlib_mod("event.move"),
@@ -954,10 +958,10 @@ script {
         "0x2",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
 }
 
 #[test]
@@ -985,7 +989,7 @@ script {
     "#;
 
     execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![
             stdlib_mod("pont.move"),
             stdlib_mod("event.move"),
@@ -996,10 +1000,10 @@ script {
         "0x2",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
 }
 
 #[test]
@@ -1014,16 +1018,16 @@ script {
     ";
 
     let error_string = execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .expected_error();
+        .unwrap()
+        .last()
+        .unwrap()
+        .expected_error();
     assert_eq!(
         error_string,
         "Expected error: Execution failed with an arithmetic error (i.e., integer overflow/underflow, div/mod by zero, or invalid shift) in script at code offset 2"
@@ -1043,16 +1047,16 @@ script {
 }    ";
 
     execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("block.move")],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
 }
 
 #[test]
@@ -1067,14 +1071,25 @@ script {
 }    ";
 
     execute_script(
-        MoveFile::with_content(script_path(), text),
+        text,
         vec![stdlib_mod("block.move")],
         "diem",
         "0x3",
         vec![],
     )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
+}
+
+
+pub fn tmp_file(content: &str) -> NamedTempFile {
+    let file = NamedTempFile::new().unwrap();
+    fs::write(file.path(), content).unwrap();
+    file
+}
+
+pub fn path(file: &NamedTempFile) -> String {
+    file.path().to_string_lossy().to_string()
 }

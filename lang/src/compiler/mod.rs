@@ -79,7 +79,6 @@ pub fn build(
     Ok((files, units_res))
 }
 
-
 fn map_address(addr: AccountAddress) -> Address {
     Address::new(addr.to_u8())
 }

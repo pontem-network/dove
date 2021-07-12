@@ -29,3 +29,6 @@ move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch =
 resource-viewer = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
 bcs = "0.1.2"
+
+[dev-dependencies]
+tempfile = "3"

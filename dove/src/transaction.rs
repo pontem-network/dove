@@ -19,10 +19,10 @@ use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
 use lang::compiler::address::ss58::{replace_ss58_addresses, ss58_to_diem};
 use lang::compiler::mut_string::MutString;
 use lang::compiler::dialects::Dialect;
-use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 use crate::context::Context;
 use crate::cmd::load_dependencies;
-use lang::compiler::metadata::Meta;
+use lang::compiler::metadata::{Meta, script_metadata};
+use lang::compiler::build;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -171,26 +171,27 @@ impl<'a> TransactionBuilder<'a> {
             )?,
         ))
     }
+
     /// Find and run the script using the specified parameters
     pub fn run(&self) -> Result<PipelineExecutionResult, Error> {
         let (script, _meta) = self.lookup_script()?;
-        let dep_list = self.get_dep_list(script.name().as_ref())?;
+        let dep_list = self.get_dep_list()?;
         let executor = Executor::new(self.dove_ctx.dialect.as_ref(), self.signers[0], dep_list);
         executor.execute_script(script, Some(self.signers.clone()), self.args.clone())
     }
+
     // =============================================================================================
-    fn lookup_script_by_file_name(&self, fname: &str) -> Result<(MoveFile, Meta), Error> {
+    fn lookup_script_by_file_name(&self, fname: &str) -> Result<(String, Meta), Error> {
         let file_path = self
             .dove_ctx
             .path_for(&self.dove_ctx.manifest.layout.scripts_dir)
             .join(fname)
             .with_extension("move");
         ensure!(file_path.exists(), "File [{}] not found", fname);
-
+        let file_path = file_path.to_string_lossy().to_string();
         let sender = self.dove_ctx.account_address()?;
-        let script = MoveFile::load(&file_path)?;
-        let mut scripts =
-            ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&script])?;
+        let mut scripts = script_metadata(&[file_path.clone()], self.dove_ctx.dialect.as_ref(), Some(sender))?;
+
         ensure!(!scripts.is_empty(), "Script not found in file '{}'", fname);
 
         let meta = if scripts.len() > 1 {
@@ -207,7 +208,7 @@ impl<'a> TransactionBuilder<'a> {
             if scripts.len() > 1 {
                 anyhow::bail!(
                     "Failed to determine script. There are several scripts in file [{}]. Use '--name' to determine the script.",
-                    file_path.display()
+                    file_path
                 );
             } else {
                 scripts.remove(0)
@@ -216,32 +217,23 @@ impl<'a> TransactionBuilder<'a> {
             scripts.remove(0)
         };
 
-        Ok((script, meta))
+        Ok((file_path, meta))
     }
-    fn lookup_script_by_name(&self, name: &str) -> Result<(MoveFile, Meta), Error> {
+
+    fn lookup_script_by_name(&self, name: &str) -> Result<(String, Meta), Error> {
         let script_path = self
             .dove_ctx
             .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
+
         let sender = self.dove_ctx.account_address()?;
-        let mut files = find_move_files(&script_path)?
-            .iter()
-            .map(MoveFile::load)
-            .filter_map(|mf| match mf {
-                Ok(mf) => {
-                    if mf.content().contains(name) {
-                        Some(mf)
-                    } else {
-                        None
-                    }
-                }
-                Err(err) => {
-                    warn!("{:?}", err);
-                    None
-                }
-            })
+        let mut files = find_move_files(&[script_path])
             .map(|mf| {
-                ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&mf])
-                    .map(|meta| (mf, meta))
+                let path = mf.to_string_lossy().to_string();
+                script_metadata(
+                    &[path.clone()],
+                    self.dove_ctx.dialect.as_ref(),
+                    Some(sender)
+                ).map(|meta| (path, meta))
             })
             .filter_map(|script| match script {
                 Ok((mf, meta)) => Some((mf, meta)),
@@ -257,7 +249,7 @@ impl<'a> TransactionBuilder<'a> {
         if files.len() > 1 {
             let name_list = files
                 .iter()
-                .map(|(mf, _)| mf.name())
+                .map(|(mf, _)| mf.clone())
                 .collect::<Vec<_>>()
                 .join(", ");
             anyhow::bail!(
@@ -281,7 +273,7 @@ impl<'a> TransactionBuilder<'a> {
             Ok((file, meta.remove(0)))
         }
     }
-    fn lookup_script(&self) -> Result<(MoveFile, Meta), Error> {
+    fn lookup_script(&self) -> Result<(String, Meta), Error> {
         if let Some(file_name) = &self.script_file_name {
             return self.lookup_script_by_file_name(file_name);
         }
@@ -293,16 +285,19 @@ impl<'a> TransactionBuilder<'a> {
         let script_path = self
             .dove_ctx
             .path_for(&self.dove_ctx.manifest.layout.scripts_dir);
-        let files = find_move_files(&script_path)?;
+        let mut files = find_move_files(&[&script_path])
+            .map(|p| p.to_string_lossy().to_string())
+            .collect::<Vec<_>>();
+
         if files.len() == 1 {
-            let mf = MoveFile::load(&files[0])?;
             let sender = self.dove_ctx.account_address()?;
-            let mut meta =
-                ScriptMetadata::extract(self.dove_ctx.dialect.as_ref(), Some(sender), &[&mf])?;
+
+            let mut meta = script_metadata(&[files[0].clone()], self.dove_ctx.dialect.as_ref(), Some(sender))?;
+
             ensure!(!meta.is_empty(), "Script not found.");
             ensure!( meta.len() < 2, "Failed to determine script. There are several scripts. Use '--name' to determine the script.");
 
-            Ok((mf, meta.remove(0)))
+            Ok((files.remove(0), meta.remove(0)))
         } else {
             anyhow::bail!("Failed to determine script. There are several scripts. Use '--name' or '--file' to determine the script.")
         }
@@ -376,16 +371,12 @@ impl<'a> TransactionBuilder<'a> {
         Ok((signers_count, values))
     }
 
-    fn build_script(&'a self, script: MoveFile<'a, 'a>) -> Result<Vec<CompiledUnit>, Error> {
-        let dep_list = self.get_dep_list(script.name())?.clone();
+    fn build_script(&'a self, script: String) -> Result<Vec<CompiledUnit>, Error> {
+        let dep_list = self.get_dep_list()?.clone();
 
         let sender = self.dove_ctx.account_address()?;
-        let Artifacts { files, prog, .. } = MoveBuilder::new(
-            self.dove_ctx.dialect.as_ref(),
-            Some(sender),
-            StaticResolver::new(dep_list),
-        )
-        .build(&[&script], false);
+
+        let (files, prog) = build(&[script], &dep_list, self.dove_ctx.dialect.as_ref(), Some(sender), None)?;
 
         match prog {
             Err(errors) => {
@@ -407,20 +398,9 @@ impl<'a> TransactionBuilder<'a> {
         }
     }
 
-    fn get_dep_list<'b>(&self, srcipt_path: &str) -> Result<Vec<MoveFile<'b, 'b>>, Error> {
+    fn get_dep_list(&self) -> Result<Vec<String>, Error> {
         let mut index = self.dove_ctx.build_index()?;
-
-        let module_dir = self
-            .dove_ctx
-            .path_for(&self.dove_ctx.manifest.layout.modules_dir)
-            .to_str()
-            .map(|path| path.to_owned())
-            .ok_or_else(|| anyhow!("Failed to convert module dir path"))?;
-
-        let dep_set = index.make_dependency_set(&[module_dir.as_str(), srcipt_path])?;
-        let mut dep_list = load_dependencies(dep_set)?;
-        dep_list.extend(load_move_files(&[module_dir])?);
-        Ok(dep_list.clone())
+        Ok(index.into_deps_roots())
     }
 }
 
@@ -604,24 +584,12 @@ pub fn lookup_script_by_name<'a>(
     script_path: PathBuf,
     sender: AccountAddress,
     dialect: &'a dyn Dialect,
-) -> Result<(MoveFile<'a, 'a>, Meta), Error> {
-    let mut files = find_move_files(&script_path)?
-        .iter()
-        .map(MoveFile::load)
-        .filter_map(|mf| match mf {
-            Ok(mf) => {
-                if mf.content().contains(name) {
-                    Some(mf)
-                } else {
-                    None
-                }
-            }
-            Err(err) => {
-                warn!("{:?}", err);
-                None
-            }
+) -> Result<(String, Meta), Error> {
+    let mut files = find_move_files(&[script_path])
+        .map(|mf| mf.to_string_lossy().to_string())
+        .map(|mf| {
+            script_metadata(&[mf.clone()], dialect, Some(sender)).map(|meta| (mf, meta))
         })
-        .map(|mf| ScriptMetadata::extract(dialect, Some(sender), &[&mf]).map(|meta| (mf, meta)))
         .filter_map(|script| match script {
             Ok((mf, meta)) => Some((mf, meta)),
             Err(err) => {
@@ -639,7 +607,7 @@ pub fn lookup_script_by_name<'a>(
     if files.len() > 1 {
         let name_list = files
             .iter()
-            .map(|(mf, _)| mf.name())
+            .map(|(mf, _)| mf.to_string())
             .collect::<Vec<_>>()
             .join(", ");
         anyhow::bail!(
@@ -658,7 +626,7 @@ pub fn lookup_script_by_name<'a>(
         anyhow::bail!(
             "There are several scripts with the name '{:?}' in file '{}'.",
             name,
-            file.name()
+            file
         );
     }
     Ok((file, meta.remove(0)))
