@@ -31,7 +31,7 @@ impl Cmd for Test {
 
         dirs.push(tests_dir.clone());
 
-        let mut index = ctx.build_index()?;
+        let index = ctx.build_index()?;
 
         // let dep_set = index.make_dependency_set(&dirs)?;
         // let mut dep_list = load_dependencies(dep_set)?;

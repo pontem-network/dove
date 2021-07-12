@@ -4,8 +4,7 @@ use anyhow::{Context, Result};
 
 use clap::{App, Arg};
 
-use lang::compiler::file::{MoveFile, find_move_files};
-use lang::compiler::file;
+use lang::compiler::file::find_move_files;
 use lang::compiler::dialects::DialectName;
 use move_executor::executor::{Executor, render_execution_result};
 use std::str::FromStr;

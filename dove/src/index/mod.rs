@@ -8,6 +8,7 @@ use std::str::FromStr;
 use anyhow::Error;
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use serde::{Deserialize, Serialize};
+
 use resolver::git;
 
 use crate::context::Context;
@@ -172,6 +173,12 @@ impl Index {
     /// Store index to the disk.
     pub fn store(&self, path: &Path) -> Result<(), Error> {
         let value = toml::to_vec(self)?;
+
+        if let Some(dir) = path.parent() {
+            if !dir.exists() {
+                fs::create_dir_all(dir)?;
+            }
+        }
 
         let mut f = OpenOptions::new()
             .create(true)

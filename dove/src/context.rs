@@ -52,7 +52,6 @@ impl Context {
     /// Build project index.
     pub fn build_index(&self) -> Result<Index, Error> {
         let index_path = self.path_for(&self.manifest.layout.index);
-
         let index = Index::load(&index_path)?.unwrap_or_default();
 
         let package_hash = self.package_hash();

@@ -24,11 +24,11 @@ pub mod dialects;
 pub mod error;
 pub mod file;
 pub mod location;
+pub mod metadata;
 pub mod mut_string;
 pub mod parser;
 pub mod preprocessor;
 pub mod source_map;
-pub mod metadata;
 
 pub fn build_global_env(
     targets: Vec<String>,

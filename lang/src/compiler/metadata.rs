@@ -17,7 +17,11 @@ pub struct Meta {
     pub parameters: Vec<(String, String)>,
 }
 
-pub fn script_metadata(targets: &[String], dialect: &dyn Dialect, sender: Option<AccountAddress>) -> Result<Vec<Meta>, Error> {
+pub fn script_metadata(
+    targets: &[String],
+    dialect: &dyn Dialect,
+    sender: Option<AccountAddress>,
+) -> Result<Vec<Meta>, Error> {
     let targets = find_move_filenames(targets, true)?
         .iter()
         .map(|s| leak_str(s))
@@ -37,14 +41,16 @@ pub fn script_metadata(targets: &[String], dialect: &dyn Dialect, sender: Option
     let errors = preprocessor.into_offset_map().transform(errors);
 
     if errors.is_empty() {
-        Ok(source_definitions.into_iter()
+        Ok(source_definitions
+            .into_iter()
             .filter_map(|def| {
                 if let Definition::Script(script) = def {
                     Some(make_script_meta(script))
                 } else {
                     None
                 }
-            }).collect::<Vec<_>>())
+            })
+            .collect::<Vec<_>>())
     } else {
         let mut writer = StandardStream::stderr(ColorChoice::Auto);
         output_errors(&mut writer, files, errors);

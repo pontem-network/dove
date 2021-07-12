@@ -48,10 +48,7 @@ pub fn main() -> Result<()> {
         .collect::<Vec<_>>();
 
     if verbose_output {
-        println!(
-            "Found deps: {:#?}",
-            deps.iter().collect::<Vec<_>>()
-        );
+        println!("Found deps: {:#?}", deps.iter().collect::<Vec<_>>());
     }
 
     let sender = cli_arguments.value_of("sender").unwrap();
@@ -64,10 +61,7 @@ pub fn main() -> Result<()> {
         .map(|path| path.to_string_lossy().to_string())
         .collect::<Vec<_>>();
     if verbose_output {
-        println!(
-            "Found tests: {:#?}",
-            test_files.iter().collect::<Vec<_>>()
-        );
+        println!("Found tests: {:#?}", test_files.iter().collect::<Vec<_>>());
     }
 
     let dialect = DialectName::from_str("dfinance")?.get_dialect();

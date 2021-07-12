@@ -1,28 +1,30 @@
-use std::str::FromStr;
-use std::path::PathBuf;
 use std::fmt::Debug;
-use serde::{Serialize, Deserialize};
+use std::path::PathBuf;
+use std::str::FromStr;
+
 use anyhow::Error;
-use termcolor::{StandardStream, ColorChoice};
+use move_core_types::account_address::AccountAddress;
+use move_core_types::language_storage::TypeTag;
+use move_core_types::value::MoveValue;
+use move_lang::compiled_unit;
+use move_lang::compiled_unit::CompiledUnit;
+use move_lang::errors::output_errors;
 use move_lang::parser::lexer::{Lexer, Tok};
 use move_lang::parser::syntax::parse_type;
-use move_lang::compiled_unit;
-use move_lang::errors::output_errors;
-use move_lang::compiled_unit::CompiledUnit;
-use move_core_types::language_storage::TypeTag;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::value::MoveValue;
-use move_executor::explain::PipelineExecutionResult;
-use move_executor::executor::Executor;
-use lang::lexer::unwrap_spanned_ty;
-use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
+use serde::{Deserialize, Serialize};
+use termcolor::{ColorChoice, StandardStream};
+
 use lang::compiler::address::ss58::{replace_ss58_addresses, ss58_to_diem};
-use lang::compiler::mut_string::MutString;
-use lang::compiler::dialects::Dialect;
-use crate::context::Context;
-use crate::cmd::load_dependencies;
-use lang::compiler::metadata::{Meta, script_metadata};
 use lang::compiler::build;
+use lang::compiler::dialects::Dialect;
+use lang::compiler::file::find_move_files;
+use lang::compiler::metadata::{Meta, script_metadata};
+use lang::compiler::mut_string::MutString;
+use lang::lexer::unwrap_spanned_ty;
+use move_executor::executor::Executor;
+use move_executor::explain::PipelineExecutionResult;
+
+use crate::context::Context;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -190,7 +192,11 @@ impl<'a> TransactionBuilder<'a> {
         ensure!(file_path.exists(), "File [{}] not found", fname);
         let file_path = file_path.to_string_lossy().to_string();
         let sender = self.dove_ctx.account_address()?;
-        let mut scripts = script_metadata(&[file_path.clone()], self.dove_ctx.dialect.as_ref(), Some(sender))?;
+        let mut scripts = script_metadata(
+            &[file_path.clone()],
+            self.dove_ctx.dialect.as_ref(),
+            Some(sender),
+        )?;
 
         ensure!(!scripts.is_empty(), "Script not found in file '{}'", fname);
 
@@ -232,8 +238,9 @@ impl<'a> TransactionBuilder<'a> {
                 script_metadata(
                     &[path.clone()],
                     self.dove_ctx.dialect.as_ref(),
-                    Some(sender)
-                ).map(|meta| (path, meta))
+                    Some(sender),
+                )
+                .map(|meta| (path, meta))
             })
             .filter_map(|script| match script {
                 Ok((mf, meta)) => Some((mf, meta)),
@@ -292,7 +299,11 @@ impl<'a> TransactionBuilder<'a> {
         if files.len() == 1 {
             let sender = self.dove_ctx.account_address()?;
 
-            let mut meta = script_metadata(&[files[0].clone()], self.dove_ctx.dialect.as_ref(), Some(sender))?;
+            let mut meta = script_metadata(
+                &[files[0].clone()],
+                self.dove_ctx.dialect.as_ref(),
+                Some(sender),
+            )?;
 
             ensure!(!meta.is_empty(), "Script not found.");
             ensure!( meta.len() < 2, "Failed to determine script. There are several scripts. Use '--name' to determine the script.");
@@ -376,7 +387,13 @@ impl<'a> TransactionBuilder<'a> {
 
         let sender = self.dove_ctx.account_address()?;
 
-        let (files, prog) = build(&[script], &dep_list, self.dove_ctx.dialect.as_ref(), Some(sender), None)?;
+        let (files, prog) = build(
+            &[script],
+            &dep_list,
+            self.dove_ctx.dialect.as_ref(),
+            Some(sender),
+            None,
+        )?;
 
         match prog {
             Err(errors) => {
@@ -399,8 +416,17 @@ impl<'a> TransactionBuilder<'a> {
     }
 
     fn get_dep_list(&self) -> Result<Vec<String>, Error> {
-        let mut index = self.dove_ctx.build_index()?;
-        Ok(index.into_deps_roots())
+        let index = self.dove_ctx.build_index()?;
+
+        let module_dir = self
+            .dove_ctx
+            .path_for(&self.dove_ctx.manifest.layout.modules_dir)
+            .to_string_lossy()
+            .to_string();
+
+        let mut roots = index.into_deps_roots();
+        roots.push(module_dir);
+        Ok(roots)
     }
 }
 
@@ -587,9 +613,7 @@ pub fn lookup_script_by_name<'a>(
 ) -> Result<(String, Meta), Error> {
     let mut files = find_move_files(&[script_path])
         .map(|mf| mf.to_string_lossy().to_string())
-        .map(|mf| {
-            script_metadata(&[mf.clone()], dialect, Some(sender)).map(|meta| (mf, meta))
-        })
+        .map(|mf| script_metadata(&[mf.clone()], dialect, Some(sender)).map(|meta| (mf, meta)))
         .filter_map(|script| match script {
             Ok((mf, meta)) => Some((mf, meta)),
             Err(err) => {
@@ -771,9 +795,10 @@ impl FromStr for Address {
 
 #[cfg(test)]
 mod test {
-    use move_core_types::language_storage::{TypeTag, StructTag};
-    use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_core_types::identifier::Identifier;
+    use move_core_types::language_storage::{StructTag, TypeTag};
+    use move_core_types::language_storage::CORE_CODE_ADDRESS;
+
     use crate::transaction::parse_call;
 
     #[test]

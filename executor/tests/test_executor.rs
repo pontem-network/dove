@@ -8,14 +8,6 @@ use move_executor::explain::{AddressResourceChanges, PipelineExecutionResult, Re
 use resources::{assets_dir, modules_path, stdlib_path};
 use std::fs;
 
-fn script_path() -> String {
-    assets_dir()
-        .join("script.move")
-        .to_str()
-        .unwrap()
-        .to_owned()
-}
-
 fn module_path(name: &str) -> String {
     assets_dir().join(name).to_str().unwrap().to_owned()
 }
@@ -54,13 +46,7 @@ script {
         let _ = 0x0::Transaction::sender();
     }
 }";
-    let errors = execute_script(
-        text,
-        vec![],
-        "diem",
-        "0x1111111111111111",
-        vec![],
-    )
+    let errors = execute_script(text, vec![], "diem", "0x1111111111111111", vec![])
         .unwrap_err()
         .downcast::<CompilerError>()
         .unwrap()
@@ -86,7 +72,7 @@ fn test_execute_custom_script_with_stdlib_module() {
         "0x1111111111111111",
         vec![],
     )
-        .unwrap();
+    .unwrap();
 }
 
 #[test]
@@ -108,10 +94,10 @@ script {
         "0x1111111111111111",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0],
@@ -126,7 +112,8 @@ script {
 
 #[test]
 fn missing_write_set_for_move_to_sender() {
-    let module = tmp_file(r"
+    let module = tmp_file(
+        r"
     address 0x1 {
         module M {
            struct T has store, key { value: u8 }
@@ -136,7 +123,8 @@ fn missing_write_set_for_move_to_sender() {
             }
         }
     }
-        ");
+        ",
+    );
     let script_text = r"
     script {
         fun main(s: signer) {
@@ -147,13 +135,7 @@ fn missing_write_set_for_move_to_sender() {
 
     let deps = vec![path(&module)];
 
-    let effects = execute_script(
-        script_text,
-        deps,
-        "diem",
-        "0x1",
-        vec![],
-    )
+    let effects = execute_script(script_text, deps, "diem", "0x1", vec![])
         .unwrap()
         .last()
         .unwrap()
@@ -172,7 +154,8 @@ fn missing_write_set_for_move_to_sender() {
 
 #[test]
 fn test_run_with_non_default_dfinance_dialect() {
-    let module = tmp_file(r"
+    let module = tmp_file(
+        r"
     address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
         module M {
             struct T has store, key { value: u8 }
@@ -181,7 +164,8 @@ fn test_run_with_non_default_dfinance_dialect() {
             }
         }
     }
-    ");
+    ",
+    );
     let script_text = r"
     script {
         fun main(s: signer) {
@@ -197,10 +181,10 @@ fn test_run_with_non_default_dfinance_dialect() {
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
 
     assert_eq!(
         effects.resources()[0],
@@ -213,7 +197,8 @@ fn test_run_with_non_default_dfinance_dialect() {
 
 #[test]
 fn test_pass_arguments_to_script() {
-    let module = tmp_file(r"
+    let module = tmp_file(
+        r"
     address 0x1 {
         module Module {
             struct T has store, key { value: bool }
@@ -222,7 +207,8 @@ fn test_pass_arguments_to_script() {
             }
         }
     }
-    ");
+    ",
+    );
     let script_text = r"
     script {
         use 0x1::Module;
@@ -240,10 +226,10 @@ fn test_pass_arguments_to_script() {
         "0x1",
         vec![String::from("true")],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
 
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
@@ -259,14 +245,16 @@ fn test_pass_arguments_to_script() {
 
 #[test]
 fn test_sender_string_in_script() {
-    let module = tmp_file(r"
+    let module = tmp_file(
+        r"
     address {{sender}} {
         module Debug {
             public fun debug(): u8 {
                 1
             }
         }
-    }");
+    }",
+    );
     let source_text = r"
     script {
         use {{sender}}::Debug;
@@ -277,18 +265,15 @@ fn test_sender_string_in_script() {
         ";
     let effects = execute_script(
         source_text,
-        vec![
-            module_path("debug.move"),
-            path(&module),
-        ],
+        vec![module_path("debug.move"), path(&module)],
         "diem",
         "0x1",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
     assert_eq!(effects.resources().len(), 0);
 }
 
@@ -308,10 +293,10 @@ fn test_bech32_address_and_sender_in_compiler_error() {
         "wallet1pxqfjvnu0utauj8fctw2s7j4mfyvrsjd59c2u8",
         vec![],
     )
-        .unwrap_err()
-        .downcast::<CompilerError>()
-        .unwrap()
-        .errors;
+    .unwrap_err()
+    .downcast::<CompilerError>()
+    .unwrap()
+    .errors;
 
     assert_eq!(errors.len(), 1);
     assert_eq!(
@@ -338,7 +323,7 @@ fn test_show_executor_gas_spent() {
         "0x1111111111111111",
         vec![],
     )
-        .unwrap();
+    .unwrap();
     assert_eq!(res.overall_gas_spent(), 7);
 }
 
@@ -349,23 +334,9 @@ fn test_dfinance_executor_allows_0x0() {
         fun main() {}
     }";
 
-    execute_script(
-        text,
-        vec![],
-        "dfinance",
-        "0x0",
-        vec![],
-    )
-        .unwrap();
+    execute_script(text, vec![], "dfinance", "0x0", vec![]).unwrap();
 
-    execute_script(
-        text,
-        vec![],
-        "dfinance",
-        "0x1",
-        vec![],
-    )
-        .unwrap();
+    execute_script(text, vec![], "dfinance", "0x1", vec![]).unwrap();
 }
 
 #[test]
@@ -388,10 +359,10 @@ fn test_execute_script_with_custom_signer() {
         "0x3",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(effects.resources()[0].address, "0x2");
     assert_eq!(
@@ -426,10 +397,10 @@ fn test_multiple_signers() {
         "0x3",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
 
     let account1_change = &effects.resources()[0];
     assert_eq!(account1_change.address, "0x1");
@@ -479,13 +450,7 @@ script {
     }
 }
     ";
-    let effects = execute_script(
-        text,
-        vec![],
-        "dfinance",
-        "0x3",
-        vec![],
-    )
+    let effects = execute_script(text, vec![], "dfinance", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap()
@@ -511,13 +476,7 @@ script {
     }
 }
     ";
-    let res = execute_script(
-        text,
-        vec![],
-        "dfinance",
-        "0x3",
-        vec![],
-    )
+    let res = execute_script(text, vec![], "dfinance", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap();
@@ -530,13 +489,7 @@ script {
 #[test]
 fn test_script_starts_from_line_0() {
     let text = r"script { fun main() { assert(false, 401); } }";
-    let res = execute_script(
-        text,
-        vec![],
-        "dfinance",
-        "0x3",
-        vec![],
-    )
+    let res = execute_script(text, vec![], "dfinance", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap();
@@ -550,13 +503,7 @@ fn test_script_starts_from_line_0() {
 fn test_doc_comment_starts_at_line_0() {
     let text = r"/// signers: 0x1
 script { fun main(_: signer) { assert(false, 401); } }";
-    let res = execute_script(
-        text,
-        vec![],
-        "dfinance",
-        "0x3",
-        vec![],
-    )
+    let res = execute_script(text, vec![], "dfinance", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap();
@@ -574,13 +521,7 @@ script {
     fun main() {}
 }
     ";
-    let res = execute_script(
-        text,
-        vec![],
-        "dfinance",
-        "0x3",
-        vec![],
-    )
+    let res = execute_script(text, vec![], "dfinance", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap();
@@ -611,9 +552,9 @@ script {
         "0x3",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap();
+    .unwrap()
+    .last()
+    .unwrap();
     assert_eq!(res.effects().write_set_size(), 0);
 }
 
@@ -644,10 +585,10 @@ script {
         "0x3",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
     assert_eq!(effects.resources().len(), 1);
     assert_eq!(
         effects.resources()[0],
@@ -683,9 +624,9 @@ script {
         "0x1",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap();
+    .unwrap()
+    .last()
+    .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 1 in transaction script"
@@ -715,9 +656,9 @@ script {
         "0x1",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap();
+    .unwrap()
+    .last()
+    .unwrap();
     assert_eq!(
         res.error(),
         "Execution aborted with code 2 in transaction script"
@@ -750,14 +691,8 @@ script {
 }
     ";
 
-    let results = execute_script(
-        text,
-        vec![stdlib_mod("coins.move")],
-        "diem",
-        "0x1",
-        vec![],
-    )
-        .unwrap();
+    let results =
+        execute_script(text, vec![stdlib_mod("coins.move")], "diem", "0x1", vec![]).unwrap();
     assert_eq!(results.overall_gas_spent(), 10);
 }
 
@@ -774,13 +709,7 @@ script {
 }
     ";
 
-    let res = execute_script(
-        text,
-        vec![stdlib_mod("time.move")],
-        "diem",
-        "0x1",
-        vec![],
-    )
+    let res = execute_script(text, vec![stdlib_mod("time.move")], "diem", "0x1", vec![])
         .unwrap()
         .last()
         .unwrap();
@@ -809,10 +738,10 @@ script {
         "0x3",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
     assert_eq!(effects.write_set_size(), 1);
 }
 
@@ -827,13 +756,7 @@ script {
 }
     ";
 
-    let error_string = execute_script(
-        text,
-        vec![],
-        "diem",
-        "0x3",
-        vec![],
-    )
+    let error_string = execute_script(text, vec![], "diem", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap()
@@ -865,10 +788,10 @@ fn test_extract_error_name_if_prefixed_with_err() {
         "0x3",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .error();
+    .unwrap()
+    .last()
+    .unwrap()
+    .error();
     assert_eq!(
         error_string,
         "Execution aborted with code 101: ERR_RECORD_DOES_NOT_EXIST in module 0x2::Record."
@@ -911,10 +834,10 @@ script {
         "0x3",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
     assert_eq!(
         effects.resources()[0].changes[0],
         ResourceChange::Changed("store key 0x2::Record::T {\n    age: 11u8\n}\n".to_string())
@@ -958,10 +881,10 @@ script {
         "0x2",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
 }
 
 #[test]
@@ -1000,10 +923,10 @@ script {
         "0x2",
         vec![],
     )
-        .unwrap()
-        .last()
-        .unwrap()
-        .effects();
+    .unwrap()
+    .last()
+    .unwrap()
+    .effects();
 }
 
 #[test]
@@ -1017,13 +940,7 @@ script {
 }
     ";
 
-    let error_string = execute_script(
-        text,
-        vec![],
-        "diem",
-        "0x3",
-        vec![],
-    )
+    let error_string = execute_script(text, vec![], "diem", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap()
@@ -1046,13 +963,7 @@ script {
     }
 }    ";
 
-    execute_script(
-        text,
-        vec![stdlib_mod("block.move")],
-        "diem",
-        "0x3",
-        vec![],
-    )
+    execute_script(text, vec![stdlib_mod("block.move")], "diem", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap()
@@ -1070,19 +981,12 @@ script {
     }
 }    ";
 
-    execute_script(
-        text,
-        vec![stdlib_mod("block.move")],
-        "diem",
-        "0x3",
-        vec![],
-    )
+    execute_script(text, vec![stdlib_mod("block.move")], "diem", "0x3", vec![])
         .unwrap()
         .last()
         .unwrap()
         .effects();
 }
-
 
 pub fn tmp_file(content: &str) -> NamedTempFile {
     let file = NamedTempFile::new().unwrap();

@@ -118,7 +118,7 @@ impl Metadata {
         ctx.manifest.package.dependencies.map_or(Ok(()), |dp| {
             dp.deps
                 .iter()
-                .find_map(|dep| find_error_for_dep( dep, &dove_str))
+                .find_map(|dep| find_error_for_dep(dep, &dove_str))
                 .map_or(Ok(()), Err)
         })?;
 
