@@ -323,7 +323,7 @@ impl Chain {
     pub fn module_id(&self, ctx: &Context) -> Result<ModuleId, Error> {
         Ok(ModuleId::new(
             ctx.dialect.parse_address(&self.address)?,
-            Identifier::new(self.name.to_owned())?
+            Identifier::new(self.name.to_owned())?,
         ))
     }
 }

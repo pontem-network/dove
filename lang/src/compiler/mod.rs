@@ -19,7 +19,6 @@ use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{Comments, parse_target, ParserArtifact, ParsingMeta};
 use crate::compiler::preprocessor::BuilderPreprocessor;
 
-pub mod preprocessor;
 pub mod address;
 pub mod dialects;
 pub mod error;
@@ -27,13 +26,20 @@ pub mod file;
 pub mod location;
 pub mod mut_string;
 pub mod parser;
+pub mod preprocessor;
 pub mod source_map;
 
-pub fn build_global_env(targets: Vec<String>, deps: Vec<String>, dialect: &dyn Dialect, sender: AccountAddress) -> anyhow::Result<GlobalEnv> {
+pub fn build_global_env(
+    targets: Vec<String>,
+    deps: Vec<String>,
+    dialect: &dyn Dialect,
+    sender: AccountAddress,
+) -> anyhow::Result<GlobalEnv> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, Some(sender));
 
     let sender = Address::new(sender.to_u8());
-    let env: GlobalEnv = run_model_builder(targets, deps, Some(&sender.to_string()), &mut preprocessor)?;
+    let env: GlobalEnv =
+        run_model_builder(targets, deps, Some(&sender.to_string()), &mut preprocessor)?;
 
     let mut error_writer = Buffer::no_color();
     if env.has_errors() {
@@ -50,7 +56,13 @@ pub fn build_global_env(targets: Vec<String>, deps: Vec<String>, dialect: &dyn D
     Ok(env)
 }
 
-pub fn build(targets: &[String], deps: &[String], dialect: &dyn Dialect, sender: Option<AccountAddress>, interface_files_dir: Option<String>) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
+pub fn build(
+    targets: &[String],
+    deps: &[String],
+    dialect: &dyn Dialect,
+    sender: Option<AccountAddress>,
+    interface_files_dir: Option<String>,
+) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
 
     let (files, units_res) = move_compile(
@@ -69,7 +81,6 @@ pub fn build(targets: &[String], deps: &[String], dialect: &dyn Dialect, sender:
 fn map_address(addr: AccountAddress) -> Address {
     Address::new(addr.to_u8())
 }
-
 
 pub type SourceDeps = Vec<MoveFile<'static, 'static>>;
 

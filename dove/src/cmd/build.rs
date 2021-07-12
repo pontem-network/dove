@@ -27,40 +27,36 @@ use crate::stdoutln;
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Build {
     #[structopt(
-    help = "Add transitive dependencies to the target.",
-    short = "t",
-    long = "tree"
+        help = "Add transitive dependencies to the target.",
+        short = "t",
+        long = "tree"
     )]
     tree: bool,
     #[structopt(
-    help = "Package modules in a binary file.",
-    short = "p",
-    long = "package"
+        help = "Package modules in a binary file.",
+        short = "p",
+        long = "package"
     )]
     package: bool,
-    #[structopt(
-    help = "Emit source map.",
-    short = "s",
-    long = "emit_source_maps"
-    )]
+    #[structopt(help = "Emit source map.", short = "s", long = "emit_source_maps")]
     emit_source_maps: bool,
     #[structopt(help = "File name of module package.", short = "o", long = "output")]
     output: Option<String>,
     #[structopt(
-    help = "Names of files or directory excluded from the build process.",
-    short = "e",
-    long = "exclude"
+        help = "Names of files or directory excluded from the build process.",
+        short = "e",
+        long = "exclude"
     )]
     exclude: Vec<String>,
     #[structopt(
-    help = "Names of modules to exclude from the package process..",
-    long = "modules_exclude"
+        help = "Names of modules to exclude from the package process..",
+        long = "modules_exclude"
     )]
     modules_exclude: Vec<String>,
     #[structopt(
-    help = "Do not specify the order of modules.",
-    short = "u",
-    long = "unordered"
+        help = "Do not specify the order of modules.",
+        short = "u",
+        long = "unordered"
     )]
     unordered: bool,
     #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
@@ -88,14 +84,11 @@ impl Cmd for Build {
         let mut source_list = find_move_files(&dirs)
             .filter_map(|path| path.canonicalize().ok())
             .filter(|path| {
-                !(
-                    exclude_dirs.iter().any(|dir| path.starts_with(dir)) ||
-                        exclude_files.iter().any(|file| path.ends_with(file))
-                )
+                !(exclude_dirs.iter().any(|dir| path.starts_with(dir))
+                    || exclude_files.iter().any(|file| path.ends_with(file)))
             })
             .map(|path| path.to_string_lossy().to_string())
             .collect::<Vec<_>>();
-
 
         if self.tree {
             source_list.extend(dep_list);
@@ -103,15 +96,33 @@ impl Cmd for Build {
         }
 
         let sender = ctx.account_address()?;
-        let (files, res) = build(&source_list, &dep_list, ctx.dialect.as_ref(), Some(sender), Some("test".to_owned()))?;
+
+        let interface_files_dir = ctx.interface_files_dir();
+        if !interface_files_dir.exists() {
+            fs::create_dir_all(&interface_files_dir)?;
+        }
+
+        let (files, res) = build(
+            &source_list,
+            &dep_list,
+            ctx.dialect.as_ref(),
+            Some(sender),
+            Some(interface_files_dir.to_string_lossy().to_string()),
+        )?;
         let units = unwrap_or_report_errors!(files, res);
 
-        self.verify_and_store(&ctx, files, units, &self.modules_exclude, self.emit_source_maps)?;
+        self.verify_and_store(
+            &ctx,
+            files,
+            units,
+            &self.modules_exclude,
+            self.emit_source_maps,
+        )?;
 
-       if self.doc {
-           let doc = DocGen{};
-           doc.apply(ctx)?;
-       }
+        if self.doc {
+            let doc = DocGen {};
+            doc.apply(ctx)?;
+        }
 
         Ok(())
     }
@@ -145,7 +156,12 @@ impl Build {
         }
     }
 
-    fn store_modules(&self, ctx: &Context, units: Vec<CompiledUnit>, emit_source_maps: bool) -> Result<(), Error> {
+    fn store_modules(
+        &self,
+        ctx: &Context,
+        units: Vec<CompiledUnit>,
+        emit_source_maps: bool,
+    ) -> Result<(), Error> {
         if !units.is_empty() {
             if self.package {
                 let packages_dir = ctx.path_for(&ctx.manifest.layout.bundles_output);
@@ -191,7 +207,12 @@ impl Build {
         Ok(())
     }
 
-    fn store_scripts(&self, ctx: &Context, units: Vec<CompiledUnit>, emit_source_maps: bool) -> Result<(), Error> {
+    fn store_scripts(
+        &self,
+        ctx: &Context,
+        units: Vec<CompiledUnit>,
+        emit_source_maps: bool,
+    ) -> Result<(), Error> {
         if !units.is_empty() {
             let scripts_dir = ctx.path_for(&ctx.manifest.layout.scripts_output);
             if scripts_dir.exists() {

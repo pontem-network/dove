@@ -30,11 +30,7 @@ pub fn resolve(ctx: &Context, module_id: &ModuleId) -> Result<(), Error> {
     Ok(())
 }
 
-fn load(
-    path: &Path,
-    loader: &RestBytecodeLoader,
-    module_id: &ModuleId,
-) -> Result<(), Error> {
+fn load(path: &Path, loader: &RestBytecodeLoader, module_id: &ModuleId) -> Result<(), Error> {
     let bytecode = loader.load(module_id.to_owned())?;
     let config = Config {
         light_version: true,
@@ -44,10 +40,7 @@ fn load(
     let source_unit = disasm.make_source_unit();
     let signature = source_unit.code_string()?;
 
-    let mut f = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .open(path)?;
+    let mut f = OpenOptions::new().create(true).write(true).open(path)?;
     f.write_all(signature.as_bytes())?;
 
     Ok(())

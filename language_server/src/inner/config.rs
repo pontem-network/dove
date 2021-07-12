@@ -45,7 +45,11 @@ impl Config {
         let stdlib_modules = self
             .stdlib_folder
             .as_ref()
-            .map(|path| find_move_files(&[path]).map(|p| p.to_string_lossy().into_owned()).collect())
+            .map(|path| {
+                find_move_files(&[path])
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .collect()
+            })
             .unwrap_or_else(Vec::new);
         log::info!(
             "available stdlib modules (from {:?}) = {:#?}",
@@ -54,7 +58,9 @@ impl Config {
         );
 
         for folder in &self.modules_folders {
-            let files = find_move_files(&[folder]).map(|p| p.to_string_lossy().into_owned()).collect::<Vec<_>>();
+            let files = find_move_files(&[folder])
+                .map(|p| p.to_string_lossy().into_owned())
+                .collect::<Vec<_>>();
             log::info!("third party modules (from {:?}) = {:#?}", folder, files);
         }
     }

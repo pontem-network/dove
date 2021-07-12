@@ -8,7 +8,6 @@ use std::str::FromStr;
 use anyhow::Error;
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use serde::{Deserialize, Serialize};
-
 use resolver::git;
 
 use crate::context::Context;
@@ -18,9 +17,10 @@ use crate::manifest::{Dependence, Git, MANIFEST, read_manifest};
 /// Dependency resolver.
 pub mod resolver;
 
-
 /// Modules index.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Default, CryptoHasher, BCSCryptoHash)]
+#[derive(
+    Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Default, CryptoHasher, BCSCryptoHash,
+)]
 pub struct Index {
     /// Package hash.
     pub package_hash: String,
@@ -55,7 +55,12 @@ impl Index {
             let mut deps_roots = HashSet::new();
 
             Self::load_deps(&mut deps_roots, &dependencies.deps, &ctx, &ctx, true)?;
-            vec![]
+
+            let deps = deps_roots
+                .into_iter()
+                .map(|p| p.to_string_lossy().to_string())
+                .collect::<Vec<_>>();
+            deps
         } else {
             vec![]
         };
@@ -66,7 +71,13 @@ impl Index {
         })
     }
 
-    fn load_deps(roots: &mut HashSet<PathBuf>, deps: &[Dependence], root_ctx: &Context, ctx: &Context, is_root: bool) -> Result<(), Error> {
+    fn load_deps(
+        roots: &mut HashSet<PathBuf>,
+        deps: &[Dependence],
+        root_ctx: &Context,
+        ctx: &Context,
+        is_root: bool,
+    ) -> Result<(), Error> {
         for dep in deps {
             match dep {
                 Dependence::Git(git) => {
@@ -102,7 +113,12 @@ impl Index {
         Ok(())
     }
 
-    fn load_git_deps(roots: &mut HashSet<PathBuf>, git: &Git, root_ctx: &Context, ctx: &Context) -> Result<HashSet<PathBuf>, Error> {
+    fn load_git_deps(
+        roots: &mut HashSet<PathBuf>,
+        git: &Git,
+        root_ctx: &Context,
+        ctx: &Context,
+    ) -> Result<HashSet<PathBuf>, Error> {
         let mut result = HashSet::new();
         let path = git::resolve(&root_ctx, &git)?;
 
@@ -119,7 +135,11 @@ impl Index {
                         .map_err(|err| anyhow!("Failed to load {}: Err:{}", git.git, err))?;
                 }
                 Err(err) => {
-                    return Err(anyhow!("Dependency {} has invalid Dove.toml. Err:{}", git.git, err));
+                    return Err(anyhow!(
+                        "Dependency {} has invalid Dove.toml. Err:{}",
+                        git.git,
+                        err
+                    ));
                 }
             }
         } else {
@@ -128,7 +148,11 @@ impl Index {
         Ok(result)
     }
 
-    fn load_dove_as_deps(roots: &mut HashSet<PathBuf>, root_ctx: &Context, ctx: &Context) -> Result<(), Error> {
+    fn load_dove_as_deps(
+        roots: &mut HashSet<PathBuf>,
+        root_ctx: &Context,
+        ctx: &Context,
+    ) -> Result<(), Error> {
         if let Some(dependencies) = &ctx.manifest.package.dependencies {
             Self::load_deps(roots, &dependencies.deps, root_ctx, &ctx, false)?;
         }

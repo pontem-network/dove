@@ -7,7 +7,6 @@ pub use crate::compiler::CompileFlow;
 
 pub mod builder;
 pub mod checker;
-pub mod meta_extractor;
 
 pub trait DependencyResolver {
     fn resolve_source_deps(

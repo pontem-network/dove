@@ -50,11 +50,9 @@ impl<'a, P: AsRef<Path>> Iterator for Files<'a, P> {
     }
 }
 
-pub fn find_move_files<P>(
-    paths: &[P],
-) -> Files<P>
-    where
-        P: AsRef<Path>,
+pub fn find_move_files<P>(paths: &[P]) -> Files<P>
+where
+    P: AsRef<Path>,
 {
     Files {
         paths,
@@ -65,20 +63,16 @@ pub fn find_move_files<P>(
 fn is_move_file(entry: &DirEntry) -> bool {
     entry.file_type().is_file()
         && !entry
-        .file_name()
-        .to_str()
-        .map(|name| name.starts_with('.'))
-        .unwrap_or(true)
+            .file_name()
+            .to_str()
+            .map(|name| name.starts_with('.'))
+            .unwrap_or(true)
         && entry
-        .path()
-        .extension()
-        .map(|ext| ext.eq("move"))
-        .unwrap_or(false)
+            .path()
+            .extension()
+            .map(|ext| ext.eq("move"))
+            .unwrap_or(false)
 }
-
-
-
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MoveFile<'n, 'c> {
@@ -168,7 +162,6 @@ where
 pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile<'static, 'static>>> {
     load_move_files_with_filter(paths, &|_| true)
 }
-
 
 pub fn find_move_files_with_filter<P, F>(path: P, filter: &F) -> Result<Vec<String>>
 where

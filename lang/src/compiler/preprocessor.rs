@@ -11,7 +11,10 @@ pub struct BuilderPreprocessor<'a> {
 }
 
 impl<'a> BuilderPreprocessor<'a> {
-    pub fn new(dialect: &'a dyn Dialect, sender: Option<AccountAddress>) -> BuilderPreprocessor<'a> {
+    pub fn new(
+        dialect: &'a dyn Dialect,
+        sender: Option<AccountAddress>,
+    ) -> BuilderPreprocessor<'a> {
         BuilderPreprocessor {
             offsets_map: Default::default(),
             dialect,
@@ -24,7 +27,6 @@ impl<'a> BuilderPreprocessor<'a> {
     }
 }
 
-
 impl<'a> SourceProcessor for BuilderPreprocessor<'a> {
     fn process(&mut self, name: &'static str, source: String) -> String {
         let mut mut_source = MutString::new(&source);
@@ -35,7 +37,6 @@ impl<'a> SourceProcessor for BuilderPreprocessor<'a> {
         mut_source.freeze()
     }
 }
-
 
 pub fn normalize_source_text<'a, 'b>(
     dialect: &dyn Dialect,

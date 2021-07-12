@@ -1097,6 +1097,7 @@ dependencies = [
  "move-core-types",
  "move-lang",
  "rand 0.7.3",
+ "tempfile",
  "vm",
  "wasm-bindgen",
 ]

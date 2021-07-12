@@ -142,23 +142,30 @@ mod tests {
     use vm::file_format::{Bytecode, CodeUnit, FunctionDefinition};
 
     use lang::compiler::dialects::DialectName;
-    use lang::compiler::file::MoveFile;
-    use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 
     use crate::{Config, decompile_str};
+    use lang::compiler::build;
+    use tempfile::tempdir;
+    use std::fs::File;
+    use std::io::Write;
 
     fn compile(source: &str) -> Vec<u8> {
         let dialect = DialectName::DFinance.get_dialect();
 
         let sender = dialect.parse_address("0x1").unwrap();
         let deps = &[
-            MoveFile::with_content("assets/base.move", include_str!("assets/base.move")),
-            MoveFile::with_content("assets/tx.move", include_str!("assets/tx.move")),
+            "src/assets/base.move".to_string(),
+            "src/assets/tx.move".to_string(),
         ];
-        let resolver = StaticResolver::new(deps.to_vec());
-        let target = &[&MoveFile::with_content("target.move", source)];
-        let builder = MoveBuilder::new(dialect.as_ref(), Some(sender), resolver);
-        let Artifacts { files, prog, .. } = builder.build(target, false);
+
+        let (files, prog) = build(
+            &[source.to_owned()],
+            deps,
+            dialect.as_ref(),
+            Some(sender),
+            None,
+        )
+        .unwrap();
 
         match prog {
             Ok(mut prog) => prog.remove(0).serialize(),
@@ -181,7 +188,13 @@ mod tests {
 
         let original_bytecode = CompiledModule::deserialize(&original_bytecode).unwrap();
 
-        let restored_bytecode = compile(&restored_source);
+        let dir = tempdir().unwrap();
+        let tmp_file = dir.path().join("source.move");
+        let mut file = File::create(&tmp_file).unwrap();
+        writeln!(file, "{}", restored_source).unwrap();
+        file.flush().unwrap();
+
+        let restored_bytecode = compile(tmp_file.to_string_lossy().as_ref());
         compare_bytecode(
             original_bytecode,
             CompiledModule::deserialize(&restored_bytecode).unwrap(),
@@ -223,84 +236,84 @@ mod tests {
 
     #[test]
     pub fn test_script() {
-        perform_test(include_str!("assets/script.move"));
+        perform_test("src/assets/script.move");
     }
 
     #[test]
     pub fn test_empty_module() {
-        perform_test(include_str!("assets/empty.move"));
+        perform_test("src/assets/empty.move");
     }
 
     #[test]
     pub fn test_simple_struct() {
-        perform_test(include_str!("assets/struct.move"));
+        perform_test("src/assets/struct.move");
     }
 
     #[test]
     pub fn test_function_signature() {
-        perform_test(include_str!("assets/function_sign.move"));
+        perform_test("src/assets/function_sign.move");
     }
 
     #[test]
     pub fn test_abort() {
-        perform_test(include_str!("assets/code/abort.move"));
+        perform_test("src/assets/code/abort.move");
     }
 
     #[test]
     pub fn test_call() {
-        perform_test(include_str!("assets/code/call.move"));
+        perform_test("src/assets/code/call.move");
     }
 
     #[test]
     pub fn test_arithmetic() {
-        perform_test(include_str!("assets/code/arithmetic.move"));
+        perform_test("src/assets/code/arithmetic.move");
     }
 
     #[test]
     pub fn test_values() {
-        perform_test(include_str!("assets/code/values.move"));
+        perform_test("src/assets/code/values.move");
     }
 
     #[test]
     pub fn test_fake_native() {
-        perform_test(include_str!("assets/code/fake_native.move"));
+        perform_test("src/assets/code/fake_native.move");
     }
 
     #[test]
     pub fn test_let() {
-        perform_test(include_str!("assets/code/let.move"));
+        perform_test("src/assets/code/let.move");
     }
 
     #[test]
     pub fn test_pack() {
-        perform_test(include_str!("assets/code/pack.move"));
+        perform_test("src/assets/code/pack.move");
     }
 
     #[test]
     pub fn test_unpack() {
-        perform_test(include_str!("assets/code/unpack.move"));
+        perform_test("src/assets/code/unpack.move");
     }
 
     #[test]
     pub fn test_loc() {
-        perform_test(include_str!("assets/code/loc.move"));
+        perform_test("src/assets/code/loc.move");
     }
 
     #[ignore]
     #[test]
     pub fn test_loop() {
-        perform_test(include_str!("assets/code/loop.move"));
+        perform_test("src/assets/code/loop.move");
     }
 
     #[ignore]
     #[test]
     pub fn test_while() {
-        perform_test(include_str!("assets/code/while.move"));
+        perform_test("src/assets/code/while.move");
     }
 
     #[ignore]
     #[test]
     pub fn test_if() {
-        perform_test(include_str!("assets/code/if.move"));
+        perform_test("src/assets/code/if.move");
     }
 }

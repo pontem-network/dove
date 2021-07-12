@@ -63,7 +63,6 @@ impl Context {
             index.store(&index_path)?;
             Ok(index)
         }
-
     }
 
     /// Returns project name or default name `project` if the name is not defined.
@@ -86,6 +85,12 @@ impl Context {
     /// Calculates package hash.
     pub fn package_hash(&self) -> String {
         self.manifest.package.hash().to_string()
+    }
+
+    /// Returns interface files dir.
+    pub fn interface_files_dir(&self) -> PathBuf {
+        self.path_for(&self.manifest.layout.artifacts)
+            .join("interface_files_dir")
     }
 }
 
