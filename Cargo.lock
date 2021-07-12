@@ -15,7 +15,7 @@ dependencies = [
 [[package]]
 name = "abigen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bcs",
@@ -115,9 +115,14 @@ checksum = "e8fd72866655d1904d6b0997d0b07ba561047d070fbe29de039031c641b61217"
 
 [[package]]
 name = "ahash"
-version = "0.4.7"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
+checksum = "43bb833f0bf979d8475d38fbf09ed3b8a55e1885fe93ad3f93239fc6a4f17b98"
+dependencies = [
+ "getrandom 0.2.3",
+ "once_cell",
+ "version_check",
+]
 
 [[package]]
 name = "aho-corasick"
@@ -159,9 +164,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.41"
+version = "1.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15af2628f6890fe2609a3b91bef4c83450512802e59489f9c1cb1fa5df064a61"
+checksum = "595d3cfa7a60d4555cb5067b99f07142a08ea778de5cf993f7b75c7d8fabc486"
 
 [[package]]
 name = "approx"
@@ -539,7 +544,7 @@ dependencies = [
 [[package]]
 name = "boogie-backend"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -561,14 +566,14 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "vm",
 ]
 
 [[package]]
 name = "boogie-backend-v2"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -589,14 +594,14 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "vm",
 ]
 
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "diem-workspace-hack",
  "mirai-annotations",
@@ -645,7 +650,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "borrow-graph",
  "bytecode-verifier",
@@ -667,7 +672,7 @@ dependencies = [
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bcs",
@@ -683,7 +688,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -1104,20 +1109,21 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.14"
+version = "0.99.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cc7b9cef1e351660e5443924e4f43ab25fbbed3e9a5f052df3677deb4d6b320"
+checksum = "40eebddd2156ce1bb37b20bbe5151340a31828b1f2d22ba4141f3531710e38df"
 dependencies = [
  "convert_case",
  "proc-macro2 1.0.27",
  "quote 1.0.9",
+ "rustc_version",
  "syn 1.0.73",
 ]
 
 [[package]]
 name = "diem-crypto"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1146,7 +1152,7 @@ dependencies = [
 [[package]]
 name = "diem-crypto-derive"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "proc-macro2 1.0.27",
  "quote 1.0.9",
@@ -1156,7 +1162,7 @@ dependencies = [
 [[package]]
 name = "diem-framework-releases"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1171,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "diem-infallible"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "diem-workspace-hack",
 ]
@@ -1179,7 +1185,7 @@ dependencies = [
 [[package]]
 name = "diem-log-derive"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "diem-workspace-hack",
  "proc-macro2 1.0.27",
@@ -1190,7 +1196,7 @@ dependencies = [
 [[package]]
 name = "diem-logger"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "backtrace",
  "chrono",
@@ -1208,7 +1214,7 @@ dependencies = [
 [[package]]
 name = "diem-state-view"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "diem-crypto",
@@ -1219,7 +1225,7 @@ dependencies = [
 [[package]]
 name = "diem-temppath"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "diem-workspace-hack",
  "hex",
@@ -1229,7 +1235,7 @@ dependencies = [
 [[package]]
 name = "diem-types"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1255,7 +1261,7 @@ dependencies = [
 [[package]]
 name = "diem-workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "byteorder",
  "bytes 1.0.1",
@@ -1273,7 +1279,7 @@ dependencies = [
  "futures-io",
  "futures-sink",
  "futures-util",
- "hyper 0.14.9",
+ "hyper 0.14.10",
  "indexmap",
  "itertools 0.10.1",
  "itoa",
@@ -1298,7 +1304,7 @@ dependencies = [
  "subtle 2.4.0",
  "syn 0.15.44",
  "syn 1.0.73",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "tokio-util 0.6.7",
  "toml",
  "tracing",
@@ -1333,7 +1339,7 @@ dependencies = [
 [[package]]
 name = "docgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bytecode",
@@ -1547,7 +1553,7 @@ dependencies = [
 [[package]]
 name = "errmapgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1606,7 +1612,7 @@ checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 [[package]]
 name = "fallible"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "diem-workspace-hack",
  "thiserror",
@@ -2080,7 +2086,7 @@ dependencies = [
  "http",
  "indexmap",
  "slab",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "tokio-util 0.6.7",
  "tracing",
 ]
@@ -2139,8 +2145,14 @@ name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
+
+[[package]]
+name = "hashbrown"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
 dependencies = [
- "ahash 0.4.7",
+ "ahash 0.7.4",
 ]
 
 [[package]]
@@ -2335,9 +2347,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "0.14.9"
+version = "0.14.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07d6baa1b441335f3ce5098ac421fb6547c46dda735ca1bc6d0153c838f9dd83"
+checksum = "7728a72c4c7d72665fde02204bcbd93b247721025b222ef78606f14513e0fd03"
 dependencies = [
  "bytes 1.0.1",
  "futures-channel",
@@ -2351,7 +2363,7 @@ dependencies = [
  "itoa",
  "pin-project-lite 0.2.7",
  "socket2 0.4.0",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "tower-service",
  "tracing",
  "want",
@@ -2377,9 +2389,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6183ddfa99b85da61a140bea0efc93fdf56ceaa041b37d553518030827f9905"
 dependencies = [
  "bytes 1.0.1",
- "hyper 0.14.9",
+ "hyper 0.14.10",
  "native-tls",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "tokio-native-tls",
 ]
 
@@ -2480,9 +2492,9 @@ dependencies = [
 
 [[package]]
 name = "instant"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61124eeebbd69b8190558df225adf7e4caafce0d743919e5d6b19652314ec5ec"
+checksum = "bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -2514,7 +2526,7 @@ checksum = "68f2d64f2edebec4ce84ad108148e67e1064789bee435edc5b60ad398714a3a9"
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -2533,7 +2545,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -2742,9 +2754,9 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "libc"
-version = "0.2.97"
+version = "0.2.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12b8adadd720df158f4d70dfe7ccc6adb0472d7c55ca83445f6a5ab3e36f8fb6"
+checksum = "320cfe77175da3a483efed4bc0adc1968ca050b098ce4f2f1c13a56626128790"
 
 [[package]]
 name = "libgit2-sys"
@@ -3136,9 +3148,9 @@ dependencies = [
 
 [[package]]
 name = "mirai-annotations"
-version = "1.10.1"
+version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b48e78b8626927bd980dff38d8147006323f5d7634d7bc9e31c3a59e07da1b28"
+checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 
 [[package]]
 name = "move-compat"
@@ -3152,7 +3164,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3195,7 +3207,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -3209,7 +3221,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3263,7 +3275,7 @@ dependencies = [
 [[package]]
 name = "move-model"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -3286,7 +3298,7 @@ dependencies = [
 [[package]]
 name = "move-prover"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "abigen",
  "anyhow",
@@ -3318,7 +3330,7 @@ dependencies = [
  "serde",
  "serde_json",
  "simplelog",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "toml",
  "vm",
 ]
@@ -3351,7 +3363,7 @@ dependencies = [
 [[package]]
 name = "move-vm-natives"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "byteorder",
  "diem-crypto",
@@ -3369,7 +3381,7 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "bytecode-verifier",
  "diem-crypto",
@@ -3388,7 +3400,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "bcs",
  "diem-crypto",
@@ -3660,7 +3672,7 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "diem-workspace-hack",
  "proc-macro2 1.0.27",
@@ -4693,7 +4705,7 @@ dependencies = [
  "futures-util",
  "http",
  "http-body 0.4.2",
- "hyper 0.14.9",
+ "hyper 0.14.10",
  "hyper-tls 0.5.0",
  "ipnet",
  "js-sys",
@@ -4706,7 +4718,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "tokio-native-tls",
  "url 2.2.2",
  "wasm-bindgen",
@@ -4718,7 +4730,7 @@ dependencies = [
 [[package]]
 name = "resource-viewer"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "bcs",
@@ -4784,6 +4796,15 @@ name = "rustc-hex"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e75f6a532d0fd9f7f13144f392b6ad56a32696bfcd9c78f797f16bbb6f072d6"
+
+[[package]]
+name = "rustc_version"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0dfe2087c51c460008730de8b57e6a320782fbfb312e1f4d520e6c6fae155ee"
+dependencies = [
+ "semver",
+]
 
 [[package]]
 name = "rustls"
@@ -4972,6 +4993,24 @@ checksum = "7e4effb91b4b8b6fb7732e670b6cee160278ff8e6bf485c7805d9e319d76e284"
 dependencies = [
  "core-foundation-sys",
  "libc",
+]
+
+[[package]]
+name = "semver"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f301af10236f6df4160f7c3f04eec6dbc70ace82d23326abad5edee88801c6b6"
+dependencies = [
+ "semver-parser",
+]
+
+[[package]]
+name = "semver-parser"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b0bef5b7f9e0df16536d3961cfb6e84331c065b4066afb39768d0e319411f7"
+dependencies = [
+ "pest",
 ]
 
 [[package]]
@@ -5704,9 +5743,9 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "structopt"
-version = "0.3.21"
+version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5277acd7ee46e63e5168a80734c9f6ee81b1367a7d8772a2d765df2a3705d28c"
+checksum = "69b041cdcb67226aca307e6e7be44c8806423d83e018bd662360a93dabce4d71"
 dependencies = [
  "clap 2.33.3",
  "lazy_static",
@@ -5715,9 +5754,9 @@ dependencies = [
 
 [[package]]
 name = "structopt-derive"
-version = "0.4.14"
+version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ba9cdfda491b814720b6b06e0cac513d922fc407582032e8706e9f137976f90"
+checksum = "7813934aecf5f51a54775e00068c237de98489463968231a51746bbbc03f9c10"
 dependencies = [
  "heck",
  "proc-macro-error",
@@ -5837,9 +5876,9 @@ dependencies = [
 
 [[package]]
 name = "synstructure"
-version = "0.12.4"
+version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b834f2d66f734cb897113e34aaff2f1ab4719ca946f9a7358dba8f8064148701"
+checksum = "474aaa926faa1603c40b7885a9eaea29b444d1cb2850cb7c0e37bb1a4182f4fa"
 dependencies = [
  "proc-macro2 1.0.27",
  "quote 1.0.9",
@@ -5890,18 +5929,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.25"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa6f76457f59514c7eeb4e59d891395fab0b2fd1d40723ae737d64153392e9c6"
+checksum = "93119e4feac1cbe6c798c34d3a53ea0026b0b1de6a120deef895137c0529bfe2"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.25"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a36768c0fbf1bb15eca10defa29526bda730a2376c2ab4393ccfa16fb1a318d"
+checksum = "060d69a0afe7796bf42e9e2ff91f5ee691fb15c53d38b4b62a9a53eb23164745"
 dependencies = [
  "proc-macro2 1.0.27",
  "quote 1.0.9",
@@ -5997,9 +6036,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.7.1"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fb2ed024293bb19f7a5dc54fe83bf86532a44c12a2bb8ba40d64a4509395ca2"
+checksum = "98c8b05dc14c75ea83d63dd391100353789f5f24b8b3866542a5e85c8be8e985"
 dependencies = [
  "autocfg 1.0.1",
  "bytes 1.0.1",
@@ -6017,9 +6056,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c49e3df43841dafb86046472506755d8501c5615673955f6aa17181125d13c37"
+checksum = "54473be61f4ebe4efd09cec9bd5d16fa51d70ea0192213d754d2d500457db110"
 dependencies = [
  "proc-macro2 1.0.27",
  "quote 1.0.9",
@@ -6033,7 +6072,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7d995660bd2b7f8c1568414c1126076c13fbb725c40112dc0120b78eb9b717b"
 dependencies = [
  "native-tls",
- "tokio 1.7.1",
+ "tokio 1.8.1",
 ]
 
 [[package]]
@@ -6043,19 +6082,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc6844de72e57df1980054b38be3a9f4702aba4858be64dd700181a8a6d0e1b6"
 dependencies = [
  "rustls",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "webpki",
 ]
 
 [[package]]
 name = "tokio-stream"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8864d706fdb3cc0843a49647ac892720dac98a6eeb818b77190592cf4994066"
+checksum = "7b2f3f698253f03119ac0102beaa64f67a67e08074d03a22d18784104543727f"
 dependencies = [
  "futures-core",
  "pin-project-lite 0.2.7",
- "tokio 1.7.1",
+ "tokio 1.8.1",
 ]
 
 [[package]]
@@ -6077,7 +6116,7 @@ dependencies = [
  "futures-util",
  "log",
  "pin-project 1.0.7",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "tungstenite",
 ]
 
@@ -6107,7 +6146,7 @@ dependencies = [
  "futures-sink",
  "log",
  "pin-project-lite 0.2.7",
- "tokio 1.7.1",
+ "tokio 1.8.1",
 ]
 
 [[package]]
@@ -6213,12 +6252,12 @@ dependencies = [
 
 [[package]]
 name = "trie-db"
-version = "0.22.5"
+version = "0.22.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd81fe0c8bc2b528a51c9d2c31dae4483367a26a723a3c9a4a8120311d7774e3"
+checksum = "9eac131e334e81b6b3be07399482042838adcd7957aa0010231d0813e39e02fa"
 dependencies = [
  "hash-db",
- "hashbrown 0.9.1",
+ "hashbrown 0.11.2",
  "log",
  "rustc-hex",
  "smallvec",
@@ -6337,9 +6376,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-segmentation"
-version = "1.7.1"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb0d2e7be6ae3a5fa87eed5fb451aff96f2573d2694942e40543ae0bbe19c796"
+checksum = "8895849a949e7845e06bd6dc1aa51731a103c42707010a5b591c0038fb73385b"
 
 [[package]]
 name = "unicode-width"
@@ -6448,7 +6487,7 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 [[package]]
 name = "vm"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#7f5ebbf6083cc82ca0f75b1ff5b8fefd53f724b8"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-1.2.0-v1#603744194afb5388a032951192938533350ea863"
 dependencies = [
  "anyhow",
  "diem-crypto",
@@ -6512,7 +6551,7 @@ dependencies = [
  "futures 0.3.15",
  "headers",
  "http",
- "hyper 0.14.9",
+ "hyper 0.14.10",
  "log",
  "mime",
  "mime_guess",
@@ -6523,7 +6562,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
- "tokio 1.7.1",
+ "tokio 1.8.1",
  "tokio-rustls",
  "tokio-stream",
  "tokio-tungstenite",

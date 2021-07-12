@@ -19,10 +19,10 @@ use lang::compiler::file::{MoveFile, find_move_files, load_move_files};
 use lang::compiler::address::ss58::{replace_ss58_addresses, ss58_to_diem};
 use lang::compiler::mut_string::MutString;
 use lang::compiler::dialects::Dialect;
-use lang::flow::meta_extractor::{Meta, ScriptMetadata};
 use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 use crate::context::Context;
 use crate::cmd::load_dependencies;
+use lang::compiler::metadata::Meta;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
