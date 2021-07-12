@@ -1,6 +1,7 @@
 use move_lang::parser::ast::{Use, ModuleAccess, Type};
 use move_lang::shared::{Address, Name};
 use move_ir_types::location::{Spanned, Loc};
+use move_core_types::language_storage::TypeTag;
 
 #[derive(Debug, PartialEq)]
 pub enum Value_ {
@@ -36,7 +37,7 @@ pub struct ResourceStore {
 #[derive(Debug, PartialEq)]
 pub struct Call {
     pub name: ModuleAccess,
-    pub t_params: Option<Vec<Type>>,
+    pub t_params: Option<Vec<Spanned<TypeTag>>>,
     pub params: Vec<Value>,
 }
 

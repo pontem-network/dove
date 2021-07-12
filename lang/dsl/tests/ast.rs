@@ -2,10 +2,9 @@ use move_ir_types::location::{Loc, Span};
 use move_lang::parser::ast::{ModuleAccess, ModuleAccess_, ModuleName, Type, Type_, Use};
 use move_lang::parser::syntax::spanned;
 use move_lang::shared::Address;
-
 use dsl::parser::parse;
 use dsl::parser::types::{Ast, Call, Instruction, Struct, Value, Value_, Var};
-
+use lang::lexer::to_typetag::ConvertToTypeTag;
 mod common;
 use common::*;
 
@@ -167,7 +166,7 @@ pub fn test_fun_call() {
 
         test<>();
         test<u8>();
-        test<0x1::Block::T<Block::T>, T<T, u8>>();
+        test<0x1::Block::T<Block::T>>();
 
         test(0, true, foo, [], {value: 100}, 0x1);
         test(foo,);
@@ -223,7 +222,7 @@ pub fn test_fun_call() {
                     98,
                     Call {
                         name: access_name(1, 8, "test"),
-                        t_params: Some(vec![tp("u8")]),
+                        t_params: Some(vec![tp("u8").to_typetag().unwrap()]),
                         params: vec![],
                     },
                 ),
@@ -238,11 +237,15 @@ pub fn test_fun_call() {
                                     107, 149, 112, 122, 117, 122, "0x1", "Block", "T",
                                 ),
                                 vec![tp_mod_access(access_mod_name(0, 0, "Block", "T"), vec![])],
-                            ),
+                            )
+                            .to_typetag()
+                            .unwrap(),
                             tp_mod_access(
                                 access_name(107, 149, "T"),
                                 vec![tp_mod_access(access_name(0, 0, "T"), vec![]), tp("u8")],
-                            ),
+                            )
+                            .to_typetag()
+                            .unwrap(),
                         ]),
                         params: vec![],
                     },

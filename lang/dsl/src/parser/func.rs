@@ -5,6 +5,7 @@ use move_lang::parser::syntax::{
 };
 use move_lang::parser::lexer::{Lexer, Tok};
 use crate::parser::value::parse_value;
+use lang::lexer::to_typetag::ConvertVecTypeToVecTypeTag;
 
 pub fn parse_call(tokens: &mut Lexer) -> Result<Call, Error> {
     let name = parse_module_access(tokens, || {
@@ -13,7 +14,11 @@ pub fn parse_call(tokens: &mut Lexer) -> Result<Call, Error> {
 
     let mut tys = None;
     if tokens.peek() == Tok::Less {
-        tys = parse_optional_type_args(tokens)?;
+        tys = if let Some(tp) = parse_optional_type_args(tokens)? {
+            Some(tp.to_typetag()?)
+        } else {
+            None
+        }
     }
 
     let args = parse_comma_list(

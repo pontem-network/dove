@@ -17,12 +17,11 @@ use lang::compiler::address::ss58::{replace_ss58_addresses, ss58_to_diem};
 use lang::compiler::mut_string::MutString;
 use lang::flow::meta_extractor::{Meta, ScriptMetadata};
 use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
+use lang::lexer::to_typetag::{
+    ConvertVecTypeToVecTypeTag, ResultVecUnspanedAndErrorToAnyhow, VecUnSpanned,
+};
 use crate::context::Context;
 use crate::cmd::load_dependencies;
-
-/// converting Vec<Type> => Vec<TypeTag>
-pub mod typetag;
-use crate::transaction::typetag::ConvertVecTypeToVecTypeTag;
 
 /// converting Vec<Value> => Vec<String>
 pub mod typevalue;
@@ -90,7 +89,9 @@ impl<'a> TransactionBuilder<'a> {
         type_parameters: Option<Vec<String>>,
     ) -> Result<&mut Self, Error> {
         if let Some(type_parameters) = type_parameters {
-            self.type_parameters = type_parameters.to_typetag()?;
+            self.type_parameters = type_parameters
+                .to_typetag()
+                .unspaned_and_error_to_anyhow()?;
         }
         Ok(self)
     }
@@ -443,7 +444,7 @@ pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Err
     lexer.advance().map_err(map_err)?;
     let parse_result = parse_call(&mut lexer).map_err(map_err)?;
 
-    let type_parameters = parse_result.t_params.unwrap_or_default().to_typetag()?;
+    let type_parameters = parse_result.t_params.unwrap_or_default().unspanned();
     let args = parse_result.params.to_string()?;
 
     Ok((parse_result.name.to_string(), type_parameters, args))

@@ -1,12 +1,10 @@
 use std::str::FromStr;
-
 use anyhow::{Result, Error, anyhow};
-
 use move_ir_types::location::Loc;
 use move_core_types::language_storage::TypeTag;
-use lang::lexer::unwrap_spanned_ty;
 use move_lang::parser::lexer::{Lexer, Tok};
 use move_lang::parser::syntax::{parse_type, parse_num};
+use lang::lexer::to_typetag::ResultUnspanedAndErrorToAnyhow;
 
 #[derive(Debug)]
 pub struct TypeTagQuery {
@@ -67,8 +65,10 @@ pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
     let mut lexer = Lexer::new(&q, "query", Default::default());
     lexer.advance().map_err(map_err)?;
 
-    let ty = parse_type(&mut lexer).map_err(map_err)?;
-    let tt = unwrap_spanned_ty(ty)?;
+    use lang::lexer::to_typetag::ConvertToTypeTag;
+    let tt = parse_type(&mut lexer)
+        .to_typetag()
+        .unspaned_and_error_to_anyhow()?;
 
     let mut i = None;
     while lexer.peek() != Tok::EOF {

@@ -1404,6 +1404,7 @@ dependencies = [
 name = "dsl"
 version = "0.1.0"
 dependencies = [
+ "lang",
  "move-core-types",
  "move-ir-types",
  "move-lang",
