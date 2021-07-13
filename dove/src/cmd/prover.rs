@@ -38,8 +38,8 @@ pub struct Prove {
 
 impl Cmd for Prove {
     fn apply(self, ctx: Context) -> Result<()>
-        where
-            Self: std::marker::Sized,
+    where
+        Self: std::marker::Sized,
     {
         let boogie_exe = self.boogie_exe.unwrap_or_else(|| BOOGIE_EXE.to_string());
         ensure!(is_boogie_available(&boogie_exe), "boogie executable not found in PATH. Please install it from https://github.com/boogie-org/boogie");
@@ -125,7 +125,7 @@ fn is_z3_available(z3_exe: &str) -> bool {
 }
 
 /// Checks if executable is available in path by running it.
-fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item=S>>(
+fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item = S>>(
     executable: &str,
     args: I,
 ) -> bool {
