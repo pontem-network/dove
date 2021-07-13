@@ -41,6 +41,7 @@ pub struct TransactionBuilder<'a> {
     /// Launch data: dialect, manifest, project directory
     pub dove_ctx: &'a Context,
 }
+
 impl<'a> TransactionBuilder<'a> {
     /// create an empty TransactionBuilder
     pub fn new(ctx: &Context) -> TransactionBuilder {
@@ -258,13 +259,14 @@ impl<'a> TransactionBuilder<'a> {
                 }
             })
             .filter(|(_, meta)| meta.iter().any(|meta| *name == meta.name))
+            .filter_map(|(path, meta)| MoveFile::load(path).map(|mf| (mf, meta)).ok())
             .collect::<Vec<_>>();
         ensure!(!files.is_empty(), "Script not found.");
 
         if files.len() > 1 {
             let name_list = files
                 .iter()
-                .map(|(mf, _)| mf.clone())
+                .map(|(mf, _)| mf.name())
                 .collect::<Vec<_>>()
                 .join(", ");
             anyhow::bail!(
@@ -283,11 +285,12 @@ impl<'a> TransactionBuilder<'a> {
                 .enumerate()
                 .find_map(|(index, meta)| if meta.name == name { Some(index) } else { None })
                 .map_or_else(|| Err(anyhow!("meta not found")), Ok)?;
-            Ok((file, meta.remove(meta_index)))
+            Ok((file.name().to_owned(), meta.remove(meta_index)))
         } else {
-            Ok((file, meta.remove(0)))
+            Ok((file.name().to_owned(), meta.remove(0)))
         }
     }
+
     fn lookup_script(&self) -> Result<(String, Meta), Error> {
         if let Some(file_name) = &self.script_file_name {
             return self.lookup_script_by_file_name(file_name);
@@ -460,6 +463,7 @@ fn split_movefile_into_scripts<'a>(
 
     Ok(movefiles)
 }
+
 fn parse_text_into_scripts(content: &str) -> Result<Vec<(String, String)>, Error> {
     let mut lexer = Lexer::new(&content, "source", Default::default());
     lexer.advance().unwrap();
@@ -495,6 +499,7 @@ fn parse_text_into_scripts(content: &str) -> Result<Vec<(String, String)>, Error
         .map(|(name, start, end)| (name.clone(), content[*start..*end].to_string()))
         .collect::<Vec<(String, String)>>())
 }
+
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
 /// ```
@@ -612,6 +617,7 @@ pub fn parse_type_params(lexer: &mut Lexer) -> Result<TypeTag, Error> {
     let ty = parse_type(lexer).map_err(|err| Error::msg(format!("{:?}", err)))?;
     unwrap_spanned_ty(ty)
 }
+
 /// search for a script in project/scripts/*.move by name
 pub fn lookup_script_by_name(
     name: &str,
