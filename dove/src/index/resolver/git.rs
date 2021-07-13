@@ -1,21 +1,15 @@
 use std::convert::TryFrom;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
 use anyhow::Error;
 use fs_extra::dir::CopyOptions;
 use git2::{Oid, Repository};
 use git2::build::RepoBuilder;
-use move_core_types::account_address::AccountAddress;
 use tiny_keccak::{Hasher, Sha3};
 
-use lang::compiler::dialects::DialectName;
-
 use crate::context::Context;
-use crate::index::meta::{FileMeta, source_meta};
-use crate::index::move_dir_iter;
-use crate::manifest::{CheckoutParams, default_dialect, Git, MANIFEST, read_manifest};
+use crate::manifest::{CheckoutParams, Git};
 use crate::stdoutln;
 
 /// Git prefix.
@@ -138,48 +132,6 @@ fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
         }
     }
     Ok(())
-}
-
-/// Index of git dependencies.
-pub struct GitIndex<'a> {
-    ctx: &'a Context,
-    path: &'a Path,
-}
-
-impl<'a> GitIndex<'a> {
-    /// Create a new `GitIndex` instance.
-    pub fn new(ctx: &'a Context, path: &'a Path) -> GitIndex<'a> {
-        GitIndex { ctx, path }
-    }
-
-    /// Returns all metadata of this `ChainIndex`.
-    pub fn meta(&self) -> Result<Vec<FileMeta>, Error> {
-        let dep_address = get_dep_address(self.path)?;
-
-        move_dir_iter(self.path)
-            .map(|path| source_meta(path.path(), dep_address, self.ctx.dialect.as_ref()))
-            .collect()
-    }
-}
-
-fn get_dep_address(path: &Path) -> Result<Option<AccountAddress>, Error> {
-    let manifest = path.join(MANIFEST);
-    if manifest.exists() {
-        let manifest = read_manifest(&manifest)?;
-
-        let dialect_name = manifest
-            .package
-            .dialect
-            .clone()
-            .unwrap_or_else(default_dialect);
-        let dialect = DialectName::from_str(&dialect_name)?.get_dialect();
-
-        Ok(Some(
-            dialect.parse_address(&manifest.package.account_address)?,
-        ))
-    } else {
-        Ok(None)
-    }
 }
 
 /// Returns unique repository name for git repository.

@@ -53,13 +53,13 @@ fn test_cmd_dove_tx_with_type() {
     // project_folder/modules/mdemo.move
     write_all(
         &project_folder.join("modules").join("mdemo.move"),
-        "module ModuleDemo{
+        "module ModuleDemo {
             struct T1 {}
             struct T2 {}
-            struct Demo<T> has drop{
-                value:u8
+            struct Demo<T> has drop {
+                value: u8
             }
-            public fun new<T:drop>(value:u8): Demo<T>{
+            public fun new<T: drop>(value: u8): Demo<T> {
                 Demo<T>{
                     value
                 }
@@ -74,7 +74,7 @@ fn test_cmd_dove_tx_with_type() {
         "script {
             use 0x1::ModuleDemo;
             fun sdemo_4<T:drop>(value:u8) {
-                let _tmp:ModuleDemo::Demo<T> = ModuleDemo::new<T>(value);
+                let _tmp: ModuleDemo::Demo<T> = ModuleDemo::new<T>(value);
             }
         }",
     )

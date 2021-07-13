@@ -43,6 +43,8 @@ pub trait Dialect {
         mut_str: &mut MutString,
         source_map: &mut FileOffsetMap,
     );
+
+    fn copy(&self) -> Box<dyn Dialect>;
 }
 
 #[derive(serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]

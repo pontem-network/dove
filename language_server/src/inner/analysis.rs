@@ -1,9 +1,9 @@
 use lang::compiler::file;
 use lang::compiler::file::MoveFile;
-use lang::flow::builder::StaticResolver;
 use lang::flow::checker::MoveChecker;
 
 use crate::inner::db::{FileDiagnostic, RootDatabase};
+use lang::flow::StaticResolver;
 
 #[derive(Debug)]
 pub struct Analysis {

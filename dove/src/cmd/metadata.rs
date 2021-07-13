@@ -26,15 +26,26 @@ fn into_metadata(mut ctx: Context) -> Result<DoveMetadata, Error> {
                 Dependence::Path(dep_path) => {
                     local_deps.push(ctx.str_path_for(&dep_path.path)?);
                 }
+                Dependence::Chain(_) => {
+                    //no-op
+                }
             }
         }
     }
+
+    let chain_deps = ctx.path_for(&ctx.manifest.layout.chain_deps);
+    let chain_dependencies = if chain_deps.exists() {
+        Some(chain_deps.to_string_lossy().to_string())
+    } else {
+        None
+    };
 
     let package_metadata = PackageMetadata {
         name: ctx.project_name(),
         account_address: ctx.manifest.package.account_address,
         blockchain_api: ctx.manifest.package.blockchain_api,
         git_dependencies: git_deps,
+        chain_dependencies,
         local_dependencies: local_deps,
         dialect: ctx.dialect.name().to_string(),
     };
@@ -170,6 +181,8 @@ pub struct PackageMetadata {
     pub blockchain_api: Option<String>,
     /// Git dependency list.
     pub git_dependencies: Vec<GitMetadata>,
+    /// Git dependency list.
+    pub chain_dependencies: Option<String>,
     /// Local dependency list.
     pub local_dependencies: Vec<String>,
     /// Dialect used in the project.
@@ -351,8 +364,11 @@ fn find_error_for_dep(dep: &Dependence, dove_str: &str) -> Option<ValidateJson> 
     };
 
     match dep {
-        Dependence::Git(git_data) => git_data.path.as_ref().and_then(|t| check_path(t)),
         Dependence::Path(dep_path) => check_path(&dep_path.path),
+        _ => {
+            //no-op
+            None
+        }
     }
 }
 

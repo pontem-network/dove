@@ -67,6 +67,10 @@ impl Dialect for PontDialect {
     ) {
         replace_ss58_addresses(source_text, mut_str, source_map)
     }
+
+    fn copy(&self) -> Box<dyn Dialect> {
+        Box::new(PontDialect)
+    }
 }
 
 use once_cell::sync::Lazy;

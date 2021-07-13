@@ -1,15 +1,16 @@
 use std::ffi::OsStr;
-use lang::compiler::dialects::Dialect;
-use lang::compiler::{file::find_move_files, parser};
-use lang::compiler::mut_string::MutString;
+use std::path::Path;
+use std::process::Stdio;
+
+use anyhow::{ensure, Result};
 use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
 use structopt::StructOpt;
-use anyhow::{ensure, Result};
+
+use lang::compiler::{file::find_move_files, parser};
+use lang::compiler::dialects::Dialect;
+use lang::compiler::mut_string::MutString;
 
 use crate::context::Context;
-
-use std::path::{PathBuf, Path};
-use std::process::Stdio;
 
 use super::Cmd;
 
@@ -45,16 +46,8 @@ impl Cmd for Prove {
         let z3_exe = self.z3_exe.unwrap_or_else(|| Z3_EXE.to_string());
         ensure!(is_z3_available(&z3_exe), "z3 executable not found in PATH. Please install it from https://github.com/Z3Prover/z3");
 
-        let dirs = ctx.paths_for(&[
-            &ctx.manifest.layout.scripts_dir,
-            &ctx.manifest.layout.modules_dir,
-        ]);
-
-        let mut index = ctx.build_index()?;
-        let move_deps = index
-            .make_dependency_set(&dirs)?
-            .into_iter()
-            .map(|s| s.to_string())
+        let move_deps = find_move_files(&ctx.build_index()?.into_deps_roots())
+            .map(|p| p.to_string_lossy().to_string())
             .collect();
 
         let output_dir = ctx.path_for(&ctx.manifest.layout.move_prover_output);
@@ -107,8 +100,7 @@ fn prepare_sources(
     dir: &Path,
     output_dir: &Path,
 ) -> Result<()> {
-    let move_files = find_move_files(dir)?.into_iter().map(PathBuf::from);
-    for file_path in move_files {
+    for file_path in find_move_files(&[dir]) {
         let content = std::fs::read_to_string(&file_path)?;
         let mut mut_content = MutString::new(&content);
         parser::normalize_source_text(dialect, (&content, &mut mut_content), &sender);

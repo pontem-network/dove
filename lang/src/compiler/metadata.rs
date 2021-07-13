@@ -1,66 +1,60 @@
-use crate::compiler::{CompileFlow, Step, compile, SourceDeps};
+use std::collections::HashMap;
+
 use anyhow::Error;
-use crate::compiler::parser::{ParsingMeta, ParserArtifact};
-use move_lang::errors::Errors;
-use crate::compiler::error::CompilerError;
-use crate::compiler::dialects::Dialect;
-use crate::compiler::file::MoveFile;
-use move_lang::parser::ast::{Script, Type, Type_, ModuleAccess_, Definition};
-use move_lang::compiled_unit::CompiledUnit;
 use move_core_types::account_address::AccountAddress;
-use move_model::model::GlobalEnv;
+use move_lang::{find_move_filenames, leak_str, parse_file};
+use move_lang::errors::{Errors, FilesSourceText, output_errors};
+use move_lang::parser::ast::{Definition, ModuleAccess_, Script, Type, Type_};
 
-pub struct ScriptMetadata;
+use crate::compiler::dialects::Dialect;
+use crate::compiler::preprocessor::BuilderPreprocessor;
+use codespan_reporting::term::termcolor::{StandardStream, ColorChoice};
 
-impl ScriptMetadata {
-    pub fn extract(
-        dialect: &dyn Dialect,
-        sender: Option<AccountAddress>,
-        scripts: &[&MoveFile],
-    ) -> Result<Vec<Meta>, Error> {
-        compile(dialect, scripts, sender, ScriptMetadata, false)
-    }
+#[derive(Debug)]
+pub struct Meta {
+    pub name: String,
+    pub type_parameters: Vec<String>,
+    pub parameters: Vec<(String, String)>,
 }
 
-impl CompileFlow<Result<Vec<Meta>, Error>> for ScriptMetadata {
-    fn after_parse_target(
-        &mut self,
-        parser_artifact: ParserArtifact,
-    ) -> Step<Result<Vec<Meta>, Error>, (ParserArtifact, Option<SourceDeps>)> {
-        let result = parser_artifact.result;
-        let source_map = parser_artifact.meta.source_map;
-        let offsets_map = parser_artifact.meta.offsets_map;
-        Step::Stop(
-            result
-                .map_err(|err| {
-                    CompilerError {
-                        source_map,
-                        errors: offsets_map.transform(err),
-                    }
-                    .into()
-                })
-                .map(|prog| {
-                    prog.source_definitions
-                        .into_iter()
-                        .filter_map(|def| {
-                            if let Definition::Script(script) = def {
-                                Some(make_script_meta(script))
-                            } else {
-                                None
-                            }
-                        })
-                        .collect::<Vec<_>>()
-                }),
-        )
-    }
+pub fn script_metadata(
+    targets: &[String],
+    dialect: &dyn Dialect,
+    sender: Option<AccountAddress>,
+) -> Result<Vec<Meta>, Error> {
+    let targets = find_move_filenames(targets, true)?
+        .iter()
+        .map(|s| leak_str(s))
+        .collect::<Vec<&'static str>>();
 
-    fn after_translate(
-        &mut self,
-        _: ParsingMeta,
-        _: Option<GlobalEnv>,
-        _: Result<Vec<CompiledUnit>, Errors>,
-    ) -> Result<Vec<Meta>, Error> {
-        Ok(vec![])
+    let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
+
+    let mut files: FilesSourceText = HashMap::new();
+    let mut errors: Errors = Vec::new();
+    let mut source_definitions = Vec::new();
+
+    for fname in targets {
+        let (defs, _, mut es) = parse_file(&mut files, fname, &mut preprocessor)?;
+        source_definitions.extend(defs);
+        errors.append(&mut es);
+    }
+    let errors = preprocessor.transform(errors);
+
+    if errors.is_empty() {
+        Ok(source_definitions
+            .into_iter()
+            .filter_map(|def| {
+                if let Definition::Script(script) = def {
+                    Some(make_script_meta(script))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>())
+    } else {
+        let mut writer = StandardStream::stderr(ColorChoice::Auto);
+        output_errors(&mut writer, files, errors);
+        Err(anyhow!("could not compile scripts."))
     }
 }
 
@@ -141,11 +135,4 @@ fn extract_type_name(tp: Type) -> String {
             )
         }
     }
-}
-
-#[derive(Debug)]
-pub struct Meta {
-    pub name: String,
-    pub type_parameters: Vec<String>,
-    pub parameters: Vec<(String, String)>,
 }

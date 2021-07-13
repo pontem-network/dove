@@ -8,6 +8,7 @@ use lang::compiler::dialects::{Dialect, DialectName};
 
 use crate::index::Index;
 use crate::manifest::{default_dialect, DoveToml, MANIFEST, read_manifest};
+use diem_crypto::hash::CryptoHash;
 
 /// Project context.
 pub struct Context {
@@ -50,9 +51,17 @@ impl Context {
 
     /// Build project index.
     pub fn build_index(&self) -> Result<Index, Error> {
-        let mut index = Index::load(self)?;
-        index.build()?;
-        Ok(index)
+        let index_path = self.path_for(&self.manifest.layout.index);
+        let index = Index::load(&index_path)?.unwrap_or_default();
+
+        let package_hash = self.package_hash();
+        if index.package_hash == package_hash {
+            Ok(index)
+        } else {
+            let index = Index::build(package_hash, &self)?;
+            index.store(&index_path)?;
+            Ok(index)
+        }
     }
 
     /// Returns project name or default name `project` if the name is not defined.
@@ -70,6 +79,17 @@ impl Context {
     pub fn account_address(&self) -> Result<AccountAddress> {
         self.dialect
             .parse_address(&self.manifest.package.account_address)
+    }
+
+    /// Calculates package hash.
+    pub fn package_hash(&self) -> String {
+        self.manifest.package.hash().to_string()
+    }
+
+    /// Returns interface files dir.
+    pub fn interface_files_dir(&self) -> PathBuf {
+        self.path_for(&self.manifest.layout.artifacts)
+            .join("interface_files_dir")
     }
 }
 
