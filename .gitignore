@@ -9,3 +9,6 @@ tests/_*
 /*.move
 execute.sh
 test.sh
+
+# Direnv cache
+.direnv
