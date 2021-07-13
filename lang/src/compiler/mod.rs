@@ -75,11 +75,11 @@ pub fn build(
         &mut preprocessor,
     )?;
 
-    let units_res = units_res.map_err(|errors| preprocessor.into_offset_map().transform(errors));
+    let units_res = units_res.map_err(|errors| preprocessor.transform(errors));
     Ok((files, units_res))
 }
 
-fn map_address(addr: AccountAddress) -> Address {
+pub fn map_address(addr: AccountAddress) -> Address {
     Address::new(addr.to_u8())
 }
 

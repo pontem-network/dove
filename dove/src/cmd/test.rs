@@ -1,7 +1,11 @@
-use crate::cmd::Cmd;
-use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
+
+use lang::compiler::file::{find_move_files, MoveFile};
+use move_executor::executor::{Executor, render_test_result};
+
+use crate::cmd::Cmd;
+use crate::context::Context;
 
 /// Run tests.
 #[derive(StructOpt, Debug)]
@@ -24,45 +28,47 @@ impl Cmd for Test {
             return Ok(());
         }
 
-        let mut dirs = ctx.paths_for(&[
-            &ctx.manifest.layout.scripts_dir,
-            &ctx.manifest.layout.modules_dir,
-        ]);
+        let mut deps = ctx.build_index()?.into_deps_roots();
+        deps.push(
+            ctx.path_for(&ctx.manifest.layout.scripts_dir)
+                .to_string_lossy()
+                .to_string(),
+        );
+        deps.push(
+            ctx.path_for(&ctx.manifest.layout.modules_dir)
+                .to_string_lossy()
+                .to_string(),
+        );
 
-        dirs.push(tests_dir.clone());
+        let deps = find_move_files(&deps)
+            .map(MoveFile::load)
+            .collect::<Result<Vec<_>, _>>()?;
 
-        let index = ctx.build_index()?;
+        let executor = Executor::new(ctx.dialect.as_ref(), ctx.account_address()?, deps);
 
-        // let dep_set = index.make_dependency_set(&dirs)?;
-        // let mut dep_list = load_dependencies(dep_set)?;
-        //
-        // dep_list.extend(load_move_files(&dirs[..dirs.len() - 1])?);
-        //
-        // let executor = Executor::new(ctx.dialect.as_ref(), ctx.account_address()?, dep_list);
-        //
-        // let mut has_failures = false;
-        //
-        // for test in load_move_files(&[tests_dir])? {
-        //     let test_name = Executor::script_name(&test)?;
-        //
-        //     if let Some(pattern) = &self.name_pattern {
-        //         if !test_name.contains(pattern) {
-        //             continue;
-        //         }
-        //     }
-        //
-        //     let is_err =
-        //         render_test_result(&test_name, executor.execute_script(test, None, vec![]))?;
-        //     if is_err {
-        //         has_failures = true;
-        //     }
-        // }
-        //
-        // if has_failures {
-        //     Err(anyhow!("tests failed:{}", ctx.project_name()))
-        // } else {
-        //     Ok(())
-        // }
-        todo!()
+        let mut has_failures = false;
+
+        for test in find_move_files(&[tests_dir]) {
+            let test = MoveFile::load(&test)?;
+            let test_name = Executor::script_name(&test)?;
+
+            if let Some(pattern) = &self.name_pattern {
+                if !test_name.contains(pattern) {
+                    continue;
+                }
+            }
+
+            let is_err =
+                render_test_result(&test_name, executor.execute_script(test, None, vec![]))?;
+            if is_err {
+                has_failures = true;
+            }
+        }
+
+        if has_failures {
+            Err(anyhow!("tests failed:{}", ctx.project_name()))
+        } else {
+            Ok(())
+        }
     }
 }

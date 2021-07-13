@@ -5,12 +5,9 @@ use lang::compiler::dialects::DialectName;
 use lang::compiler::error::CompilerError;
 use move_executor::executor::Executor;
 use move_executor::explain::{AddressResourceChanges, PipelineExecutionResult, ResourceChange};
-use resources::{assets_dir, modules_path, stdlib_path};
+use resources::{modules_path, stdlib_path};
 use std::fs;
-
-fn module_path(name: &str) -> String {
-    assets_dir().join(name).to_str().unwrap().to_owned()
-}
+use lang::compiler::file::MoveFile;
 
 pub fn stdlib_mod(name: &str) -> String {
     stdlib_path().join(name).to_string_lossy().to_string()
@@ -34,8 +31,12 @@ fn execute_script(
         .parse_address(address)
         .with_context(|| format!("Not a valid {:?} address: {:?}", dialect.name(), address))?;
 
+    let deps = deps
+        .iter()
+        .map(|path| MoveFile::load(path).unwrap())
+        .collect();
     let executor = Executor::new(dialect.as_ref(), sender, deps);
-    executor.execute_script(path(&script), None, args)
+    executor.execute_script(MoveFile::load(path(&script)).unwrap(), None, args)
 }
 
 #[test]
@@ -176,7 +177,7 @@ fn test_run_with_non_default_dfinance_dialect() {
 
     let effects = execute_script(
         script_text,
-        vec![module_path("m.move"), path(&module)],
+        vec![path(&module)],
         "dfinance",
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",
         vec![],
@@ -263,17 +264,11 @@ fn test_sender_string_in_script() {
         }
     }
         ";
-    let effects = execute_script(
-        source_text,
-        vec![module_path("debug.move"), path(&module)],
-        "diem",
-        "0x1",
-        vec![],
-    )
-    .unwrap()
-    .last()
-    .unwrap()
-    .effects();
+    let effects = execute_script(source_text, vec![path(&module)], "diem", "0x1", vec![])
+        .unwrap()
+        .last()
+        .unwrap()
+        .effects();
     assert_eq!(effects.resources().len(), 0);
 }
 

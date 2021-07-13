@@ -38,7 +38,7 @@ pub fn script_metadata(
         source_definitions.extend(defs);
         errors.append(&mut es);
     }
-    let errors = preprocessor.into_offset_map().transform(errors);
+    let errors = preprocessor.transform(errors);
 
     if errors.is_empty() {
         Ok(source_definitions

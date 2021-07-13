@@ -4,7 +4,8 @@ use anyhow::{Context, Result};
 
 use clap::{App, Arg};
 
-use lang::compiler::file::find_move_files;
+use lang::compiler::file::MoveFile;
+use lang::compiler::file;
 use lang::compiler::dialects::DialectName;
 use move_executor::executor::{Executor, render_execution_result};
 use std::str::FromStr;
@@ -43,7 +44,13 @@ fn cli() -> App<'static, 'static> {
 fn main() -> Result<()> {
     let cli_arguments = cli().get_matches();
 
-    let script = cli_arguments.value_of("SCRIPT").unwrap().to_owned();
+    let script =
+        MoveFile::load(cli_arguments.value_of("SCRIPT").unwrap()).with_context(|| {
+            format!(
+                "Cannot open {:?}",
+                cli_arguments.value_of("SCRIPT").unwrap()
+            )
+        })?;
 
     let modules_fpaths = cli_arguments
         .values_of("modules")
@@ -51,9 +58,7 @@ fn main() -> Result<()> {
         .map(|path| path.into())
         .collect::<Vec<PathBuf>>();
 
-    let deps = find_move_files(&modules_fpaths)
-        .map(|path| path.to_string_lossy().to_string())
-        .collect();
+    let deps = file::load_move_files(&modules_fpaths)?;
 
     let dialect = cli_arguments.value_of("dialect").unwrap();
     let sender = cli_arguments.value_of("sender").unwrap();

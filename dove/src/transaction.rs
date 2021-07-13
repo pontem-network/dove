@@ -17,7 +17,7 @@ use termcolor::{ColorChoice, StandardStream};
 use lang::compiler::address::ss58::{replace_ss58_addresses, ss58_to_diem};
 use lang::compiler::build;
 use lang::compiler::dialects::Dialect;
-use lang::compiler::file::find_move_files;
+use lang::compiler::file::{find_move_files, MoveFile};
 use lang::compiler::metadata::{Meta, script_metadata};
 use lang::compiler::mut_string::MutString;
 use lang::lexer::unwrap_spanned_ty;
@@ -177,9 +177,17 @@ impl<'a> TransactionBuilder<'a> {
     /// Find and run the script using the specified parameters
     pub fn run(&self) -> Result<PipelineExecutionResult, Error> {
         let (script, _meta) = self.lookup_script()?;
-        let dep_list = self.get_dep_list()?;
-        let executor = Executor::new(self.dove_ctx.dialect.as_ref(), self.signers[0], dep_list);
-        executor.execute_script(script, Some(self.signers.clone()), self.args.clone())
+
+        let deps = find_move_files(&self.get_dep_list()?)
+            .map(MoveFile::load)
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let executor = Executor::new(self.dove_ctx.dialect.as_ref(), self.signers[0], deps);
+        executor.execute_script(
+            MoveFile::load(script)?,
+            Some(self.signers.clone()),
+            self.args.clone(),
+        )
     }
 
     // =============================================================================================
@@ -383,7 +391,7 @@ impl<'a> TransactionBuilder<'a> {
     }
 
     fn build_script(&'a self, script: String) -> Result<Vec<CompiledUnit>, Error> {
-        let dep_list = self.get_dep_list()?.clone();
+        let dep_list = self.get_dep_list()?;
 
         let sender = self.dove_ctx.account_address()?;
 
@@ -605,11 +613,11 @@ pub fn parse_type_params(lexer: &mut Lexer) -> Result<TypeTag, Error> {
     unwrap_spanned_ty(ty)
 }
 /// search for a script in project/scripts/*.move by name
-pub fn lookup_script_by_name<'a>(
+pub fn lookup_script_by_name(
     name: &str,
     script_path: PathBuf,
     sender: AccountAddress,
-    dialect: &'a dyn Dialect,
+    dialect: &dyn Dialect,
 ) -> Result<(String, Meta), Error> {
     let mut files = find_move_files(&[script_path])
         .map(|mf| mf.to_string_lossy().to_string())

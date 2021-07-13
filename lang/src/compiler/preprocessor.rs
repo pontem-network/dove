@@ -1,8 +1,10 @@
-use crate::compiler::dialects::{Dialect, line_endings};
-use move_lang::preprocessor::SourceProcessor;
-use crate::compiler::source_map::{ProjectOffsetMap, FileOffsetMap, len_difference};
 use move_core_types::account_address::AccountAddress;
+use move_lang::errors::Errors;
+use move_lang::preprocessor::SourceProcessor;
+
+use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::mut_string::{MutString, NewValue};
+use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
 
 pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
@@ -22,8 +24,8 @@ impl<'a> BuilderPreprocessor<'a> {
         }
     }
 
-    pub fn into_offset_map(self) -> ProjectOffsetMap {
-        self.offsets_map
+    pub fn transform(&self, errors: Errors) -> Errors {
+        self.offsets_map.transform(errors)
     }
 }
 
@@ -74,8 +76,8 @@ mod test {
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
 
     use crate::compiler::mut_string::MutString;
-    use crate::compiler::source_map::FileOffsetMap;
     use crate::compiler::preprocessor::replace_sender_placeholder;
+    use crate::compiler::source_map::FileOffsetMap;
 
     #[test]
     pub fn test_replace_sender_placeholder() {

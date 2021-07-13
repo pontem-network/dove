@@ -57,11 +57,10 @@ impl Index {
 
             Self::load_deps(&mut deps_roots, &dependencies.deps, &ctx, &ctx, true)?;
 
-            let deps = deps_roots
+            deps_roots
                 .into_iter()
                 .map(|p| p.to_string_lossy().to_string())
-                .collect::<Vec<_>>();
-            deps
+                .collect::<Vec<_>>()
         } else {
             vec![]
         };
@@ -94,10 +93,8 @@ impl Index {
 
                     let path = path.canonicalize()?;
 
-                    if !is_root {
-                        if !path.starts_with(ctx.project_dir.canonicalize()?) {
-                            return Err(anyhow!("A local dependency in an external package cannot be referenced outside of the package."));
-                        }
+                    if !is_root && !path.starts_with(ctx.project_dir.canonicalize()?) {
+                        return Err(anyhow!("A local dependency in an external package cannot be referenced outside of the package."));
                     }
 
                     if !path.exists() {

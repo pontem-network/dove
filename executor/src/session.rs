@@ -13,9 +13,10 @@ use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
 use lang::compiler::parser::{ParsingMeta, ParserArtifact, Comments};
-use lang::compiler::{CompileFlow, CheckerResult, Step, location};
+use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
 use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
+use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
 use crate::constants::extract_error_constants;
 use move_core_types::account_address::AccountAddress;
@@ -154,11 +155,10 @@ impl<'a> SessionBuilder<'a> {
 
     pub fn build(
         self,
-        sources: Vec<String>,
+        sources: &[&MoveFile],
         create_env: bool,
     ) -> Result<ExecutionSession, CompilerError> {
-        todo!()
-        //compile(self.dialect, sources, Some(self.sender), self, create_env)
+        compile(self.dialect, sources, Some(self.sender), self, create_env)
     }
 }
 
