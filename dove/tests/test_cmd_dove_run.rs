@@ -37,6 +37,19 @@ fn test_cmd_dove_run_with_call_and_arguments() {
     }
     project_remove(&project_folder);
 }
+/// dove run 'script_1()'
+/// dove run 'script_2(1)'
+#[test]
+fn test_cmd_dove_run_multiple_scripts() {
+    let project_folder = create_project_with_any_scripts("project_run_run_multiple_scripts");
+    for args in vec![
+        vec!["dove", "run", "script_1()"],
+        vec!["dove", "run", "script_2(1)"],
+    ] {
+        execute_dove_at(args.as_ref(), &project_folder).unwrap();
+    }
+    project_remove(&project_folder);
+}
 
 fn create_project_with_a_single_script_without_parameters(project_name: &str) -> PathBuf {
     let project_folder = project_start_new_and_build(project_name);
@@ -61,6 +74,13 @@ fn create_project_with_any_scripts(project_name: &str) -> PathBuf {
     write_all(
         &project_folder.join("scripts").join("withnums.move"),
         "script { fun withnums(x:u64,y:u64) { let _result = x + y; }  }",
+    )
+    .unwrap();
+    // project_folder/scripts/multiple.move
+    write_all(
+        &project_folder.join("scripts").join("multiple.move"),
+        "script { fun script_1() {  } }\n\
+                script { fun script_2(_a:u64) {  } }",
     )
     .unwrap();
     project_folder
