@@ -20,13 +20,10 @@ use lang::flow::builder::{Artifacts, MoveBuilder, StaticResolver};
 use crate::context::Context;
 use crate::cmd::load_dependencies;
 
-/// converting Vec<Type> => Vec<TypeTag>
-pub mod typetag;
-use crate::transaction::typetag::ConvertVecTypeToVecTypeTag;
-
 /// converting Vec<Value> => Vec<String>
 pub mod typevalue;
 use crate::transaction::typevalue::VecValueToVecString;
+use dsl::parser::types::pretyptag::{ToVecTag, ToAnyhowError};
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -90,7 +87,7 @@ impl<'a> TransactionBuilder<'a> {
         type_parameters: Option<Vec<String>>,
     ) -> Result<&mut Self, Error> {
         if let Some(type_parameters) = type_parameters {
-            self.type_parameters = type_parameters.to_typetag()?;
+            self.type_parameters = type_parameters.to_typetag().error_anyhow()?;
         }
         Ok(self)
     }
@@ -498,13 +495,16 @@ pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Err
     replace_ss58_addresses(call, &mut mut_string, &mut Default::default());
     let call = mut_string.freeze();
 
-    let map_err = |err| Error::msg(format!("{:?}", err));
     let call_for_lexer = format!("{};", call);
     let mut lexer = Lexer::new(call_for_lexer.as_str(), "call", Default::default());
-    lexer.advance().map_err(map_err)?;
-    let parse_result = parse_call(&mut lexer).map_err(map_err)?;
+    lexer.advance().error_anyhow()?;
+    let parse_result = parse_call(&mut lexer).error_anyhow()?;
 
-    let type_parameters = parse_result.t_params.unwrap_or_default().to_typetag()?;
+    let type_parameters = parse_result
+        .t_params
+        .unwrap_or_default()
+        .to_typetag()
+        .error_anyhow()?;
     let args = parse_result.params.to_string()?;
 
     Ok((parse_result.name.to_string(), type_parameters, args))
@@ -596,21 +596,19 @@ fn parse_vec<E>(tkn: &str, tp_name: &str) -> Result<Vec<E>, Error>
 where
     E: FromStr,
 {
-    let map_err = |err| Error::msg(format!("{:?}", err));
-
     let mut lexer = Lexer::new(tkn, "vec", Default::default());
-    lexer.advance().map_err(map_err)?;
+    lexer.advance().error_anyhow()?;
 
     if lexer.peek() != Tok::LBracket {
         anyhow::bail!("Vector in format  [n1, n2, ..., nn] is expected.");
     }
-    lexer.advance().map_err(map_err)?;
+    lexer.advance().error_anyhow()?;
 
     let mut elements = vec![];
     while lexer.peek() != Tok::RBracket {
         match lexer.peek() {
             Tok::Comma => {
-                lexer.advance().map_err(map_err)?;
+                lexer.advance().error_anyhow()?;
                 continue;
             }
             Tok::EOF => {
@@ -624,7 +622,7 @@ where
                         lexer.content()
                     )
                 })?);
-                lexer.advance().map_err(map_err)?;
+                lexer.advance().error_anyhow()?;
             }
         }
     }
