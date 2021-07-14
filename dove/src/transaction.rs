@@ -25,6 +25,7 @@ use move_executor::executor::Executor;
 use move_executor::explain::PipelineExecutionResult;
 
 use crate::context::Context;
+use crate::stdoutln;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -339,10 +340,28 @@ impl<'a> TransactionBuilder<'a> {
             )
         }
 
-        assert_eq!(self.args.len(), arguments.len());
-        let mut signers_count = 0;
-        let mut values = Vec::with_capacity(arguments.len());
-        for ((arg_name, arg_type), arg_value) in arguments.iter().zip(&self.args) {
+        let mut arguments_exp: Vec<Box<&(String, String)>> = arguments
+            .iter()
+            .filter(|(_, name)| name != "signer")
+            .map(Box::new)
+            .collect();
+        let signers_count = arguments.len() - arguments_exp.len();
+
+        if self.args.len() != arguments_exp.len() {
+            if self.args.len() != arguments.len() {
+                anyhow::bail!(
+                    "{} arguments were expected. {} arguments were received",
+                    arguments_exp.len(),
+                    self.args.len(),
+                )
+            }
+            stdoutln!("Note: you don't need to pass \"signers\"");
+            arguments_exp = arguments.iter().map(Box::new).collect();
+        }
+
+        let mut values = Vec::with_capacity(arguments_exp.len());
+        for (arg_type, arg_value) in arguments_exp.iter().zip(&self.args) {
+            let (arg_name, arg_type) = arg_type.as_ref();
             macro_rules! parse_primitive {
                 ($script_arg:expr) => {
                     values.push($script_arg(
@@ -353,9 +372,7 @@ impl<'a> TransactionBuilder<'a> {
                 };
             }
             match arg_type.as_str() {
-                "signer" => {
-                    signers_count += 1;
-                }
+                "signer" => {}
                 "bool" => parse_primitive!(ScriptArg::Bool),
                 "u8" => parse_primitive!(ScriptArg::U8),
                 "u64" => parse_primitive!(ScriptArg::U64),
