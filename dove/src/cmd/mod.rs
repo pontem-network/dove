@@ -42,10 +42,7 @@ pub trait Cmd {
         let manifest = load_manifest(&project_dir)?;
 
         if let Some(required_version) = &manifest.package.dove_version {
-            check_dove_version(
-                required_version,
-                git_hash::crate_version_with_git_hash_short!(),
-            )?;
+            check_dove_version(required_version, env!("CARGO_PKG_VERSION"))?;
         }
 
         get_context(project_dir, manifest)
@@ -95,7 +92,7 @@ mod tests {
 
     #[test]
     fn test_dove_version() {
-        Version::parse(git_hash::crate_version_with_git_hash_short!()).unwrap();
+        Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
     }
 
     #[test]
