@@ -36,6 +36,7 @@ bcs = "0.1.2"
 dunce = "1.0.1"
 atty = "0.2"
 indexmap = { version = "=1.6.2", default-features = false, features = ["std"] }
+semver = "1.0.3"
 
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
