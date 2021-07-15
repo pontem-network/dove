@@ -29,10 +29,14 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
             repo_path = repo_path.join("._tmp_dove_checkout_dir_");
         }
 
-        if let Err(err) = checkout(checkout_params, &repo_path) {
-            fs::remove_dir_all(&repo_path)?;
-            return Err(err);
-        }
+        checkout(checkout_params, &repo_path).map_err(|err| {
+            if repo_path.exists() {
+                if let Err(err) = fs::remove_dir_all(&repo_path) {
+                    stdoutln!("Warning: {:?} {}", repo_path.display(), err.to_string());
+                }
+            }
+            err
+        })?;
 
         if let Err(err) = fs::remove_dir_all(&repo_path.join(".git")) {
             warn!("Failed to remove .git in repo {:?}. {}", repo_path, err);
