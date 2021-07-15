@@ -1365,6 +1365,7 @@ dependencies = [
  "boogie-backend-v2",
  "decompiler",
  "docgen",
+ "dsl",
  "dunce",
  "fs_extra",
  "git-hash",

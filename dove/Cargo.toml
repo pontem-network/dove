@@ -39,6 +39,7 @@ indexmap = { version = "=1.6.2", default-features = false, features = ["std"] }
 
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
+dsl = { path = "../lang/dsl" }
 git-hash = { path = "../common/git-hash" }
 move-executor = { path = "../executor" }
 net = { path = "../net" }
