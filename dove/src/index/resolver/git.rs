@@ -31,17 +31,9 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
 
         checkout(checkout_params, &repo_path).map_err(|err| {
             if repo_path.exists() {
-                return fs::remove_dir_all(&repo_path)
-                    .err()
-                    .map(|serr| {
-                        anyhow!(
-                            "{}\n{:?}: {}",
-                            &err.to_string(),
-                            repo_path.display(),
-                            serr.to_string()
-                        )
-                    })
-                    .unwrap_or(err);
+                if let Err(err) = fs::remove_dir_all(&repo_path) {
+                    stdoutln!("Warning: {:?} {}", repo_path.display(), err.to_string());
+                }
             }
             err
         })?;
