@@ -40,6 +40,8 @@ pub struct Package {
     /// Project account address.
     #[serde(default = "code_code_address")]
     pub account_address: String,
+    /// Minimal dove version.
+    pub dove_version: Option<String>,
     /// dnode base url.
     pub blockchain_api: Option<String>,
     /// Dependency list.
@@ -54,6 +56,7 @@ impl Default for Package {
         Package {
             name: None,
             account_address: code_code_address(),
+            dove_version: None,
             blockchain_api: None,
             dependencies: None,
             dialect: None,
@@ -434,6 +437,7 @@ mod test {
         Package {
             name: Some("Foo".to_owned()),
             account_address: "0x01".to_owned(),
+            dove_version: None,
             blockchain_api: None,
             dependencies: Some(Dependencies {
                 deps: vec![
