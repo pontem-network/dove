@@ -31,7 +31,7 @@ jobs:
           echo "Generating changelog between tags: ${{ steps.version.outputs.value }}...$TAG_FIRST...$TAG_SECOND"
 
           RESULT_FILE=generated-changelog.md
-          RESULT_LOG_ACT="$(git log $TAG_FIRST...${{ steps.version.outputs.value }} --pretty=format:'- %s [·](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
+          RESULT_LOG_ACT="$(git log $TAG_SECOND...${{ steps.version.outputs.value }} --pretty=format:'- %s [·](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
           RESULT_LOG_POST="$(git log $TAG_FIRST...$TAG_SECOND --pretty=format:'- %s [·](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
 
           echo "
@@ -48,7 +48,7 @@ jobs:
 
           - - -
 
-          __Changelog ${{ steps.version.outputs.value }}__…${TAG_FIRST}
+          __Changelog ${{ steps.version.outputs.value }}__…${TAG_SECOND}
 
           $RESULT_LOG_ACT
 
