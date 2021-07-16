@@ -4,6 +4,7 @@ use fs_extra::file::write_all;
 use toml::Value;
 use crate::cli::execute;
 use crate::stdout::{set_print_to_string, get_buffer_value_and_erase};
+use toml::value::Map;
 
 /// get tmp_folder, project_folder and remove project folder if exist
 pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
@@ -28,6 +29,41 @@ pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
     let (base_folder, project_folder) = project_start(project_name);
     project_new_default(&base_folder, &project_folder, project_name);
     project_build(&project_folder);
+    project_folder
+}
+
+/// create new project and add dependencies
+pub fn project_start_new_and_add_dependencies(
+    project_name: &str,
+    dependencies: Vec<Map<String, Value>>,
+) -> PathBuf {
+    let (base_folder, project_folder) = project_start(project_name);
+    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap();
+
+    let dove_toml_path = project_folder.join("Dove.toml");
+    let mut toml_value = read_to_string(&dove_toml_path)
+        .unwrap()
+        .parse::<Value>()
+        .unwrap();
+    for rep in dependencies {
+        toml_value
+            .get_mut("package")
+            .unwrap()
+            .as_table_mut()
+            .unwrap()
+            .get_mut("dependencies")
+            .unwrap()
+            .as_array_mut()
+            .unwrap()
+            .push(Value::Table(rep));
+    }
+
+    write_all(
+        &dove_toml_path,
+        toml::to_string(&toml_value).unwrap().as_str(),
+    )
+    .unwrap();
+
     project_folder
 }
 
