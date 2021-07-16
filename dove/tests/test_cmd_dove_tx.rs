@@ -386,7 +386,7 @@ fn test_cmd_dove_tx_signer() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_signer";
     let project_folder = project_start_new_and_build(project_name);
-    // project_folder/scripts/bug.move
+    // project_folder/scripts/signer.move
     write_all(
         &project_folder.join("scripts").join("signer.move"),
         "script {\
