@@ -1,6 +1,6 @@
 use std::{fmt, fs};
 use std::convert::TryFrom;
-use std::path::Path;
+use std::path::{Path, MAIN_SEPARATOR as MS};
 
 use anyhow::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -79,23 +79,23 @@ fn tests_dir() -> String {
 }
 
 fn modules_output() -> String {
-    "artifacts/modules".to_owned()
+    format!("{}{}{}", artifacts(), MS, "modules")
 }
 
 fn scripts_output() -> String {
-    "artifacts/scripts".to_owned()
+    format!("{}{}{}", artifacts(), MS, "scripts")
 }
 
 fn transactions_output() -> String {
-    "artifacts/transactions".to_owned()
+    format!("{}{}{}", artifacts(), MS, "transactions")
 }
 
 fn bundles_output() -> String {
-    "artifacts/bundles".to_owned()
+    format!("{}{}{}", artifacts(), MS, "bundles")
 }
 
 fn move_prover_output() -> String {
-    "artifacts/move_prover".to_owned()
+    format!("{}{}{}", artifacts(), MS, "move_prover")
 }
 
 fn docs_output() -> String {
@@ -103,11 +103,11 @@ fn docs_output() -> String {
 }
 
 fn deps() -> String {
-    "artifacts/.external".to_owned()
+    format!("{}{}{}", artifacts(), MS, ".external")
 }
 
 fn chain_deps() -> String {
-    "artifacts/.external/chain".to_owned()
+    format!("{}{}{}", deps(), MS, "chain")
 }
 
 fn artifacts() -> String {
@@ -115,7 +115,7 @@ fn artifacts() -> String {
 }
 
 fn index() -> String {
-    "artifacts/.Dove.man".to_owned()
+    format!("{}{}{}", artifacts(), MS, ".Dove.man")
 }
 
 fn code_code_address() -> String {
