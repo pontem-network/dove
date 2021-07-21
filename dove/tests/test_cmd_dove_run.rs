@@ -147,8 +147,6 @@ fn test_cmd_dove_run_dependencies_in_dependencies() {
 }
 
 #[test]
-#[ignore]
-// @todo bug
 fn test_cmd_dove_run_cyclic_dependency_in_the_repository() {
     let project_folder = create_project_for_test_dependency(
         "project_run_cyclic_dependency_in_the_repository",
