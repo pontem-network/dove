@@ -160,10 +160,6 @@ impl Index {
             roots.insert(modules_dir);
         }
 
-        let scripts_dir = ctx.path_for(&ctx.manifest.layout.scripts_dir);
-        if scripts_dir.exists() {
-            roots.insert(scripts_dir);
-        }
         Ok(())
     }
 
