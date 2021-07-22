@@ -16,7 +16,7 @@ fn handle_error<T>(res: Result<T, Error>) -> T {
     match res {
         Ok(t) => t,
         Err(err) => {
-            eprintln!("\n{}: {:?}.", error("ERROR"), err);
+            eprintln!("\n{}: {:?}", error("ERROR"), err);
             exit(1);
         }
     }

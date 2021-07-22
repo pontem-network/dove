@@ -6,11 +6,17 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::transaction::TransactionBuilder;
 
-/// Run script.
+/// Run move script
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+#[structopt(usage = "dove run [call] [OPTIONS]\n
+    Examples:
+    $ dove run script_name([10,10], true, 68656c6c6f776f726c64, 100, 0x1) --f file_name
+    $ dove run --file file_name --name script_name -a [10,10] true 68656c6c6f776f726c64 100 0x1
+    $ dove run script_name() --signers 0x1 0x2\
+")]
 pub struct Run {
-    #[structopt(help = "Script call declaration.\
+    #[structopt(help = "Script call declaration.\n\
         Example: 'create_balance([10,10], true, 68656c6c6f776f726c64, 100, 0x1)'")]
     call: Option<String>,
     #[structopt(help = "Script name.", long = "name", short = "n")]

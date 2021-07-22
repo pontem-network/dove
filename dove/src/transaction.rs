@@ -129,7 +129,15 @@ impl<'a> TransactionBuilder<'a> {
         let mut signers = signers
             .unwrap_or_default()
             .iter()
-            .map(|signer| self.dove_ctx.dialect.parse_address(signer))
+            .map(|signer| {
+                self.dove_ctx.dialect.parse_address(signer).map_err(|err| {
+                    let mut message = format!("\"{}\" - {}", signer, err.to_string());
+                    if signer.contains('(') || signer.contains(')') {
+                        message += "\n\nUSAGE: dove run [call] [OPTIONS]";
+                    };
+                    anyhow!(message)
+                })
+            })
             .collect::<Result<Vec<_>, Error>>()?;
         if signers.is_empty() {
             signers.push(self.dove_ctx.account_address()?);
@@ -537,89 +545,110 @@ fn parse_text_into_scripts(content: &str) -> Result<Vec<(String, String)>, Error
 ///    );
 /// ```
 pub fn parse_call(call: &str) -> Result<(String, Vec<TypeTag>, Vec<String>), Error> {
+    let mut error_message;
     let mut mut_string = MutString::new(call);
     replace_ss58_addresses(call, &mut mut_string, &mut Default::default());
     let call = mut_string.freeze();
 
-    let map_err = |err| Error::msg(format!("{:?}", err));
     let mut lexer = Lexer::new(&call, "call", Default::default());
-    lexer.advance().map_err(map_err)?;
-    if lexer.peek() != Tok::IdentifierValue {
-        anyhow::bail!("Invalid call script format.\
-             Expected function identifier. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
-    }
 
+    // Get the name of the function|script
+    error_message = "Invalid call script format: expected function identifier.\n\n\
+         Use pattern:\n\
+         SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
+    lexer
+        .advance()
+        .map_err(|err| anyhow!("{}\n\n{:?}", &error_message, err))?;
+
+    if lexer.peek() != Tok::IdentifierValue {
+        anyhow::bail!(error_message);
+    }
     let script_name = lexer.content().to_owned();
 
-    lexer.advance().map_err(map_err)?;
+    // Get type params
+    error_message = "Invalid call script format: Invalid type parameters format.\n\n\
+         Use pattern:\n\
+         SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
+    lexer.advance().map_err(|_| anyhow!("{}", error_message))?;
 
     let type_parameters = if lexer.peek() == Tok::Less {
         let mut type_parameter = vec![];
 
-        lexer.advance().map_err(map_err)?;
+        lexer.advance().map_err(|_| anyhow!("{}", &error_message))?;
         while lexer.peek() != Tok::Greater {
             if lexer.peek() == Tok::EOF {
-                anyhow::bail!("Invalid call script format.\
-                     Invalid type parameters format.. Use pattern \
-                     'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
+                anyhow::bail!(error_message);
             }
 
             if lexer.peek() == Tok::Comma {
-                lexer.advance().map_err(map_err)?;
+                lexer
+                    .advance()
+                    .map_err(|err| anyhow!("{}\n\n{}", &error_message, err[0].1))?;
                 continue;
             }
 
-            type_parameter.push(parse_type_params(&mut lexer)?);
+            let type_str = lexer.content().to_string();
+            type_parameter.push(
+                parse_type_params(&mut lexer)
+                    .map_err(|_| anyhow!("{}\n\nUnknown: {}", &error_message, type_str))?,
+            );
         }
-        lexer.advance().map_err(map_err)?;
+        lexer
+            .advance()
+            .map_err(|err| anyhow!("{}\n\n{:?}", &error_message, err))?;
         type_parameter
     } else {
         vec![]
     };
 
+    // Arguments
+    error_message = "Invalid call script format: Invalid script arguments format.\n\n\
+         Use pattern:\n\
+         SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
+
     if lexer.peek() != Tok::LParen {
-        anyhow::bail!("Invalid call script format.\
-             Invalid script arguments format.. Left paren '(' is expected. Use pattern \
-             'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
+        anyhow::bail!(
+            "{}\n\n\
+            Left paren '(' is expected. Use pattern",
+            &error_message
+        );
     }
 
     let mut arguments = vec![];
-
-    lexer.advance().map_err(map_err)?;
+    lexer.advance().map_err(|_| anyhow!("{}", &error_message))?;
     while lexer.peek() != Tok::RParen {
         if lexer.peek() == Tok::EOF {
-            anyhow::bail!("Invalid call script format.\
-                 Invalid arguments format.. Use pattern \
-                 'script_name<comma separated type parameters>(comma separated parameters WITHOUT signers)'");
+            anyhow::bail!("{}", &error_message);
         }
 
         if lexer.peek() == Tok::Comma {
-            lexer.advance().map_err(map_err)?;
+            lexer
+                .advance()
+                .map_err(|err| anyhow!("{}\n\n{}", &error_message, err[0].1))?;
             continue;
         }
 
         let mut token = String::new();
         token.push_str(lexer.content());
         let sw = lexer.peek() == Tok::LBracket;
-        lexer.advance().map_err(map_err)?;
+        lexer.advance().map_err(|_| anyhow!("{}", &error_message))?;
         if sw {
             while lexer.peek() != Tok::RBracket {
                 token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
+                lexer.advance().map_err(|_| anyhow!("{}", &error_message))?;
             }
             token.push_str(lexer.content());
         } else {
             while lexer.peek() != Tok::Comma && lexer.peek() != Tok::RParen {
                 token.push_str(lexer.content());
-                lexer.advance().map_err(map_err)?;
+                lexer.advance().map_err(|_| anyhow!("{}", &error_message))?;
             }
         }
         arguments.push(token);
         if !sw && lexer.peek() == Tok::RParen {
             break;
         }
-        lexer.advance().map_err(map_err)?;
+        lexer.advance().map_err(|_| anyhow!("{}", &error_message))?;
     }
 
     Ok((script_name, type_parameters, arguments))

@@ -42,9 +42,9 @@ fn test_cmd_dove_tx_without_arguments() {
 }
 
 /// $ dove tx -n sdemo_4 -a 16 -t u8
-/// $ dove tx 'sdemo_4()' -a 16 -t u8
-/// $ dove tx 'sdemo_4(16) -t u8'
-/// $ dove tx 'sdemo_4<u8>(16)'
+/// $ dove tx sdemo_4() -a 16 -t u8
+/// $ dove tx sdemo_4(16) -t u8
+/// $ dove tx sdemo_4<u8>(16)
 #[test]
 fn test_cmd_dove_tx_with_type() {
     // Path to dove folder, project and project name
