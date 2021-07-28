@@ -229,13 +229,19 @@ impl<'a> TransactionBuilder<'a> {
                     }
                 })
                 .collect::<Vec<_>>();
-            if scripts.len() > 1 {
-                anyhow::bail!(
-                    "Failed to determine script. There are several scripts in file [{}]. Use '--name' to determine the script.",
+
+            match scripts.len() {
+                0 => anyhow::bail!(
+                    "Failed to determine script. There are several scripts in file [{}].\n\
+                        Use '--name' to determine the script.",
                     file_path
-                );
-            } else {
-                scripts.remove(0)
+                ),
+                1 => scripts.remove(0),
+                _ => anyhow::bail!(
+                    "Failed to determine script. There are several scripts with the specified name in the file [{}]. \n\
+                        Please give the scripts different names.",
+                    file_path
+                )
             }
         } else {
             scripts.remove(0)
