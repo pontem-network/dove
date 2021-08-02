@@ -168,8 +168,6 @@ fn test_cmd_dove_run_cyclic_dependency_in_the_repository() {
 }
 
 #[test]
-#[ignore]
-// @todo bug
 fn test_cmd_dove_run_running_a_script_in_dependencies() {
     let project_folder = create_project_for_test_dependency(
         "project_run_running_a_script_in_dependencies",
