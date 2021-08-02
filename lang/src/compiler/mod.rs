@@ -67,8 +67,8 @@ pub fn build(
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
 
     let (files, units_res) = move_compile(
-        &targets,
-        &deps,
+        targets,
+        deps,
         sender.map(map_address),
         interface_files_dir,
         true,

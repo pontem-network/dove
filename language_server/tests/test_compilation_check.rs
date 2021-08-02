@@ -624,7 +624,7 @@ script {
         let error = diagnostics_with_deps(
             MoveFile::with_content(script_path(), source),
             vec![MoveFile::with_content(
-                leak_str(&modules_path().join("debug.move").to_str().unwrap()),
+                leak_str(modules_path().join("debug.move").to_str().unwrap()),
                 module,
             )],
             config,

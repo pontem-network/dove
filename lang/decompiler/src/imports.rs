@@ -42,7 +42,7 @@ impl<'a> Imports<'a> {
     pub fn get_import(&self, address: &AccountAddress, name: &str) -> Option<Import<'a>> {
         self.imports
             .get(name)
-            .and_then(|imports| imports.get(&address).cloned())
+            .and_then(|imports| imports.get(address).cloned())
     }
 
     /// Returns `true` if the import contains no elements.

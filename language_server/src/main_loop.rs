@@ -116,7 +116,7 @@ pub fn main_loop(global_state: &mut GlobalState, connection: &Connection) -> Res
             recv(fs_events_receiver) -> fs_event => Event::FileSystem(fs_event.unwrap()),
         };
         if let Event::Lsp(Message::Request(req)) = &event {
-            if connection.handle_shutdown(&req)? {
+            if connection.handle_shutdown(req)? {
                 break;
             }
         }
@@ -124,7 +124,7 @@ pub fn main_loop(global_state: &mut GlobalState, connection: &Connection) -> Res
             &pool,
             &resp_events_sender,
             &fs_events_sender,
-            &connection,
+            connection,
             global_state,
             &mut loop_state,
             event,

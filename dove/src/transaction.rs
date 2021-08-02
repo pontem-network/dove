@@ -482,7 +482,7 @@ fn split_movefile_into_scripts<'a>(
 }
 
 fn parse_text_into_scripts(content: &str) -> Result<Vec<(String, String)>, Error> {
-    let mut lexer = Lexer::new(&content, "source", Default::default());
+    let mut lexer = Lexer::new(content, "source", Default::default());
     lexer.advance().unwrap();
 
     let mut scripts_positions: Vec<(String, usize, usize)> = Vec::new();
@@ -818,7 +818,7 @@ impl FromStr for Address {
     fn from_str(addr: &str) -> Result<Self, Self::Err> {
         let addr = match ss58_to_diem(addr) {
             Ok(addr) => AccountAddress::from_hex_literal(&addr)?,
-            Err(_) => AccountAddress::from_hex_literal(&addr)?,
+            Err(_) => AccountAddress::from_hex_literal(addr)?,
         };
         Ok(Address { addr })
     }

@@ -59,7 +59,7 @@ impl<'a> Pack<'a> {
 
             let name = unit.identifier(struct_handler.name);
 
-            let fields = ctx.pack_fields(&def);
+            let fields = ctx.pack_fields(def);
             let type_params = ctx.extract_signature(type_params);
 
             Exp::Pack(Pack {

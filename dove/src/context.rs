@@ -58,7 +58,7 @@ impl Context {
         if index.package_hash == package_hash {
             Ok(index)
         } else {
-            let index = Index::build(package_hash, &self)?;
+            let index = Index::build(package_hash, self)?;
             index.store(&index_path)?;
             Ok(index)
         }

@@ -16,7 +16,7 @@ pub fn generate_docs(
     doc_path: Vec<String>,
     output_directory: String,
 ) -> Result<(), Error> {
-    let options = map_options(&options, doc_path, output_directory);
+    let options = map_options(options, doc_path, output_directory);
     let docgen = Docgen::new(env, &options);
     for (file, content) in docgen.gen() {
         let path = PathBuf::from(&file);

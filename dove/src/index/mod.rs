@@ -55,7 +55,7 @@ impl Index {
         let deps_roots = if let Some(dependencies) = &ctx.manifest.package.dependencies {
             let mut deps_roots = HashSet::new();
 
-            Self::load_deps(&mut deps_roots, &dependencies.deps, &ctx, &ctx, true)?;
+            Self::load_deps(&mut deps_roots, &dependencies.deps, ctx, ctx, true)?;
 
             deps_roots
                 .into_iter()
@@ -103,7 +103,7 @@ impl Index {
                     roots.insert(path);
                 }
                 Dependence::Chain(chain) => {
-                    chain::resolve(root_ctx, &chain.module_id(&root_ctx)?)?;
+                    chain::resolve(root_ctx, &chain.module_id(root_ctx)?)?;
                 }
             }
         }
@@ -118,7 +118,7 @@ impl Index {
         ctx: &Context,
     ) -> Result<HashSet<PathBuf>, Error> {
         let mut result = HashSet::new();
-        let path = git::resolve(&root_ctx, &git)?;
+        let path = git::resolve(root_ctx, git)?;
 
         let manifest = path.join(MANIFEST);
         if manifest.exists() {
@@ -152,7 +152,7 @@ impl Index {
         ctx: &Context,
     ) -> Result<(), Error> {
         if let Some(dependencies) = &ctx.manifest.package.dependencies {
-            Self::load_deps(roots, &dependencies.deps, root_ctx, &ctx, false)?;
+            Self::load_deps(roots, &dependencies.deps, root_ctx, ctx, false)?;
         }
 
         let modules_dir = ctx.path_for(&ctx.manifest.layout.modules_dir);

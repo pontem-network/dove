@@ -5,8 +5,7 @@ use crate::explain::{
 };
 
 fn indent(num: usize) -> String {
-    const STEP_INDENT: &str = "    ";
-    std::iter::repeat(STEP_INDENT).take(num).collect()
+    "    ".repeat(num)
 }
 
 fn format_error(out: &mut String, error: String) {
@@ -24,7 +23,7 @@ fn format_effects(out: &mut String, effects: ExplainedTransactionEffects) {
     if !effects.events().is_empty() {
         write!(out, "{}", textwrap::indent("Events:", &indent(1))).unwrap();
         for event_change in effects.events() {
-            write!(out, "{}", textwrap::indent(&event_change, &indent(2))).unwrap();
+            write!(out, "{}", textwrap::indent(event_change, &indent(2))).unwrap();
         }
     }
 }

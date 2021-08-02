@@ -69,7 +69,7 @@ where
     /// Tries to load the module from the local cache.
     ///  Then tries to load the module from the external module source if the module doesn't exist in cache.
     pub fn get(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
-        let name = self.make_local_name(&module_id);
+        let name = self.make_local_name(module_id);
 
         if let Some(cache_path) = &self.cache_path {
             let local_path = cache_path.join(name);

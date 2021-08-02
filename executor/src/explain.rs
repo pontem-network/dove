@@ -221,13 +221,13 @@ pub fn explain_effects(
         for (struct_tag, written_data) in &writes.resources {
             let resource_change = match written_data {
                 Some(value) => {
-                    let resource = format_struct(state, struct_tag, &value)?;
+                    let resource = format_struct(state, struct_tag, value)?;
                     match state.get_resource_bytes(*addr, struct_tag.clone()) {
                         Some(_) => ResourceChange::Changed(resource),
                         None => ResourceChange::Added(resource),
                     }
                 }
-                None => ResourceChange::Deleted(format_struct_tag(&struct_tag)?),
+                None => ResourceChange::Deleted(format_struct_tag(struct_tag)?),
             };
             changes.push(resource_change);
         }

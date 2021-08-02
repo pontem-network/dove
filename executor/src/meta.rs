@@ -90,7 +90,7 @@ impl ExecutionMeta {
                     eprintln!("Invalid ticker price doc comment: {}", comment);
                     return;
                 }
-                let (ticker_left, ticker_right) = split_around(&tickers, "_");
+                let (ticker_left, ticker_right) = split_around(tickers, "_");
                 let price_struct_tag = oracle_metadata(ticker_left, ticker_right);
                 self.oracle_prices
                     .push((price_struct_tag, value.parse().unwrap()))

@@ -55,7 +55,7 @@ impl<'d, 'n, 'c> Executor<'d, 'n, 'c> {
         let mut sources = Vec::with_capacity(self.deps.len() + 1);
         sources.push(&script);
         for dep in &self.deps {
-            sources.push(&dep);
+            sources.push(dep);
         }
 
         let session = SessionBuilder::new(self.dialect, self.sender).build(&sources, false)?;

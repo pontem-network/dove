@@ -43,7 +43,7 @@ impl Dialect for DiemDialect {
             ));
         }
 
-        Ok(AccountAddress::from_hex_literal(&addr)?)
+        Ok(AccountAddress::from_hex_literal(addr)?)
     }
 
     fn cost_table(&self) -> CostTable {

@@ -161,7 +161,7 @@ fn produce_json_schema(cfg: &Cfg) {
     if let Some(path) = cfg.json_schema.as_ref() {
         let schema = ser::produce_json_schema();
         let render = serde_json::to_string_pretty(&schema).unwrap();
-        write_output(&path, &render, "schema");
+        write_output(path, &render, "schema");
     }
 }
 
