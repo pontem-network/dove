@@ -377,7 +377,10 @@ impl<'a> TransactionBuilder<'a> {
                 "u8" => parse_primitive!(ScriptArg::U8),
                 "u64" => parse_primitive!(ScriptArg::U64),
                 "u128" => parse_primitive!(ScriptArg::U128),
-                "address" => parse_primitive!(ScriptArg::Address),
+                "address" => values.push(ScriptArg::Address(
+                    AccountAddress::from_hex_literal(arg_value)
+                        .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
+                )),
                 "vector<u8>" => {
                     let vec = if arg_value.contains('[') {
                         parse_vec(arg_value, "u8")
