@@ -157,7 +157,7 @@ fn test_cmd_dove_run_cyclic_dependency_in_the_repository() {
 
     execute_dove_bin_at(
         env!("CARGO_BIN_EXE_dove"),
-        &["dove", "run", "version()"],
+        &["dove", "run", "main()"],
         &project_folder,
     )
     .unwrap();
