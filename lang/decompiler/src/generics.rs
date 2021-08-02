@@ -65,7 +65,7 @@ pub struct Generic {
 impl Generic {
     ///Returns generic name.
     pub fn as_name(&self) -> GenericName {
-        GenericName(&self)
+        GenericName(self)
     }
 }
 

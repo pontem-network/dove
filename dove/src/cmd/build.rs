@@ -141,7 +141,7 @@ impl Build {
         let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
         let (modules, scripts): (Vec<_>, Vec<_>) = compiled_units
             .into_iter()
-            .filter(|u| !exclude_modules.contains(&&u.name()))
+            .filter(|u| !exclude_modules.contains(&u.name()))
             .partition(|u| matches!(u, CompiledUnit::Module { .. }));
 
         self.store_modules(ctx, modules, emit_source_maps)?;

@@ -89,7 +89,7 @@ mod tests {
 
     fn parse(source: &str) -> Result<TypeTag, Error> {
         let mut mut_string = MutString::new(source);
-        replace_ss58_addresses(&source, &mut mut_string, &mut Default::default());
+        replace_ss58_addresses(source, &mut mut_string, &mut Default::default());
         let source = mut_string.freeze();
 
         let mut lexer = Lexer::new(&source, "source", Default::default());

@@ -81,7 +81,7 @@ mod test {
     #[test]
     fn test_ss58_to_libra() {
         let polka_address = "G7UkJAutjbQyZGRiP8z5bBSBPBJ66JbTKAkFDq3cANwENyX";
-        let libra_address = ss58_to_diem(&polka_address).unwrap();
+        let libra_address = ss58_to_diem(polka_address).unwrap();
 
         assert_eq!(
             hex::decode(&libra_address[2..]).unwrap().len(),

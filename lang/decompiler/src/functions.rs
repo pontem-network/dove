@@ -57,7 +57,7 @@ impl<'a> FunctionsDef<'a> {
             let body = def
                 .code
                 .as_ref()
-                .map(|code| Body::new(code, ret.len(), unit, &params, &imports, &type_params));
+                .map(|code| Body::new(code, ret.len(), unit, &params, imports, &type_params));
 
             let acquires = def
                 .acquires_global_resources
@@ -90,7 +90,7 @@ impl<'a> FunctionsDef<'a> {
                 let type_params = extract_type_params(type_parameters, generics);
                 let params =
                     FunctionsDef::params(unit, imports, unit.signature(params), &type_params);
-                let body = Body::new(code, 0, unit, &params, &imports, &type_params);
+                let body = Body::new(code, 0, unit, &params, imports, &type_params);
                 (type_params, params, Some(body))
             } else {
                 (vec![], vec![], None)
@@ -116,7 +116,7 @@ impl<'a> FunctionsDef<'a> {
     ) -> Vec<FType<'a>> {
         sign.0
             .iter()
-            .map(|tkn| extract_type_signature(unit, tkn, imports, &type_params))
+            .map(|tkn| extract_type_signature(unit, tkn, imports, type_params))
             .collect::<Vec<_>>()
     }
 
@@ -132,7 +132,7 @@ impl<'a> FunctionsDef<'a> {
             .map(|(index, tkn)| Param {
                 used: Rc::new(AtomicBool::new(false)),
                 index,
-                f_type: Rc::new(extract_type_signature(unit, tkn, imports, &type_params)),
+                f_type: Rc::new(extract_type_signature(unit, tkn, imports, type_params)),
             })
             .collect::<Vec<_>>()
     }

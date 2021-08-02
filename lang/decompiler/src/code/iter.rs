@@ -36,13 +36,12 @@ impl<'a> BytecodeIterator<'a> {
 
     /// Returns a bytecode instruction by absolute offset.
     pub fn absolute(&self, index: usize) -> &Bytecode {
-        &self.code.get(index).unwrap_or(&Bytecode::Nop)
+        self.code.get(index).unwrap_or(&Bytecode::Nop)
     }
 
     /// Returns a bytecode instruction by relative offset.
     pub fn by_relative(&self, offset: isize) -> &Bytecode {
-        &self
-            .code
+        self.code
             .get(self.index() + offset as usize)
             .unwrap_or(&Bytecode::Nop)
     }

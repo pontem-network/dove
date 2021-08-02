@@ -95,7 +95,7 @@ pub fn parse_program(
             let mut lib_definitions = Vec::new();
             let mut errors: Errors = Vec::new();
             for dep in deps {
-                let name = leak_str(&dep.name());
+                let name = leak_str(dep.name());
                 let (defs, _, es, offsets_map) = parse_file(
                     dialect,
                     &mut source_map,

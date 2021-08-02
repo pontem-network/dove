@@ -64,7 +64,7 @@ pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
         }
     };
 
-    let mut lexer = Lexer::new(&q, "query", Default::default());
+    let mut lexer = Lexer::new(q, "query", Default::default());
     lexer.advance().map_err(map_err)?;
 
     let ty = parse_type(&mut lexer).map_err(map_err)?;

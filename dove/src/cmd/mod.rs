@@ -77,7 +77,7 @@ pub fn load_dependencies(
 fn check_dove_version(req_ver: &str, act_ver: &str) -> Result<(), Error> {
     let req = VersionReq::parse(req_ver)
         .map_err(|err| Error::new(err).context("Failed to parse dove_version from Dove.toml"))?;
-    let actual = Version::parse(&act_ver).expect("Expected valid dove version");
+    let actual = Version::parse(act_ver).expect("Expected valid dove version");
     if !req.matches(&actual) {
         Err(anyhow!("The dove version must meet the conditions '{}'. The current version of dove is '{}'.", req_ver, act_ver))
     } else {

@@ -20,7 +20,7 @@ impl<'a> Script<'a> {
         generics: &'a Generics,
         _cfg: &Config,
     ) -> Script<'a> {
-        let main = FunctionsDef::script(unit, &imports, &generics);
+        let main = FunctionsDef::script(unit, imports, generics);
         Script {
             imports,
             function: main,

@@ -61,7 +61,7 @@ pub fn libra_into_bech32(diem_address: &str) -> Result<String> {
         .map(bech32::u5::try_from_u8)
         .collect::<Result<Vec<_>, _>>()?;
 
-    Ok(bech32::encode(&HRP, data)?)
+    Ok(bech32::encode(HRP, data)?)
 }
 
 pub fn replace_bech32_addresses(

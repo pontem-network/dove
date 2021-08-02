@@ -118,7 +118,7 @@ fn artifacts() -> String {
 }
 
 fn index() -> String {
-    "artifacts/.Dove.man".to_owned()
+    "artifacts/.DoveIndex.toml".to_owned()
 }
 
 fn code_code_address() -> String {

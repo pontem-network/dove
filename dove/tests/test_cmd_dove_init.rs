@@ -44,7 +44,7 @@ fn test_cmd_dove_init_dfinance_with_address() {
         .unwrap();
         assert_valid_dove_toml(
             &project_folder,
-            &project_name,
+            project_name,
             Some("dfinance"),
             Some(address),
             None,
@@ -70,7 +70,7 @@ fn test_cmd_dove_init_diem_with_address() {
         .unwrap();
         assert_valid_dove_toml(
             &project_folder,
-            &project_name,
+            project_name,
             Some("diem"),
             Some(address),
             None,
@@ -97,7 +97,7 @@ fn test_cmd_dove_init_pont_with_address() {
         .unwrap();
         assert_valid_dove_toml(
             &project_folder,
-            &project_name,
+            project_name,
             Some("pont"),
             Some(address),
             None,
@@ -123,7 +123,7 @@ fn test_cmd_dove_init_pont_with_repo() {
     ] {
         let project_folder = project_start_for_init(project_name);
         execute_dove_at(&["dove", "init", "-r", api], &project_folder).unwrap();
-        assert_valid_dove_toml(&project_folder, &project_name, None, None, Some(api));
+        assert_valid_dove_toml(&project_folder, project_name, None, None, Some(api));
         assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
         project_build(&project_folder);

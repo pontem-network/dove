@@ -21,7 +21,7 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
     let checkout_params = CheckoutParams::try_from(git)?;
 
     let deps = ctx.path_for(&ctx.manifest.layout.deps);
-    let local_name = make_local_name(&git);
+    let local_name = make_local_name(git);
     let mut repo_path = deps.join(&local_name);
 
     if !repo_path.exists() {
@@ -162,6 +162,6 @@ pub fn make_local_name(git: &Git) -> String {
 fn clone(git: &CheckoutParams, path: &Path) -> Result<Repository, Error> {
     stdoutln!("Download:[{}]", git.repo());
     RepoBuilder::new()
-        .clone(&git.repo(), path)
+        .clone(git.repo(), path)
         .map_err(|err| anyhow!("Failed to clone repository :[{}]:{}", git.repo(), err))
 }

@@ -22,7 +22,7 @@ fn test_cmd_dove_new_dialect() {
     let (base_folder, project_folder) = project_start(project_name);
     project_remove(&project_folder);
     for dialect in &["pont", "diem", "dfinance"] {
-        execute_dove_at(&["dove", "new", &project_name, "-d", dialect], &base_folder).unwrap();
+        execute_dove_at(&["dove", "new", project_name, "-d", dialect], &base_folder).unwrap();
         assert_valid_dove_toml(&project_folder, project_name, Some(dialect), None, None);
         assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
@@ -40,15 +40,7 @@ fn test_cmd_dove_new_difinance_with_address() {
     project_remove(&project_folder);
     for address in &["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"] {
         execute_dove_at(
-            &[
-                "dove",
-                "new",
-                &project_name,
-                "-d",
-                "dfinance",
-                "-a",
-                address,
-            ],
+            &["dove", "new", project_name, "-d", "dfinance", "-a", address],
             &base_folder,
         )
         .unwrap();
@@ -75,7 +67,7 @@ fn test_cmd_dove_new_diem_with_address() {
     project_remove(&project_folder);
     for address in &["0x1"] {
         execute_dove_at(
-            &["dove", "new", &project_name, "-d", "diem", "-a", address],
+            &["dove", "new", project_name, "-d", "diem", "-a", address],
             &base_folder,
         )
         .unwrap();
@@ -102,7 +94,7 @@ fn test_cmd_dove_new_pont_with_address() {
     project_remove(&project_folder);
     for address in &["5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv", "0x1"] {
         execute_dove_at(
-            &["dove", "new", &project_name, "-d", "pont", "-a", address],
+            &["dove", "new", project_name, "-d", "pont", "-a", address],
             &base_folder,
         )
         .unwrap();
@@ -134,7 +126,7 @@ fn test_cmd_dove_new_pont_with_repo() {
         "http://localhost/api",
         "http://localhost:8080/api",
     ] {
-        execute_dove_at(&["dove", "new", &project_name, "-r", api], &base_folder).unwrap();
+        execute_dove_at(&["dove", "new", project_name, "-r", api], &base_folder).unwrap();
         assert_valid_dove_toml(&project_folder, project_name, None, None, Some(api));
         assert_basic_project_dirs_exist(&project_folder);
         set_dependencies_local_move_stdlib(&project_folder);
@@ -161,7 +153,7 @@ fn test_cmd_dove_new_pont_with_incorrect_repo() {
     ] {
         assert!(execute_dove_bin_at(
             env!("CARGO_BIN_EXE_dove"),
-            &["dove", "new", &project_name, "-r", api],
+            &["dove", "new", project_name, "-r", api],
             &base_folder
         )
         .is_err());
@@ -176,7 +168,7 @@ fn test_cmd_dove_new_incorrect_dialect() {
     let (base_folder, project_folder) = project_start(project_name);
     project_remove(&project_folder);
     assert!(execute_dove_at(
-        &["dove", "new", &project_name, "-d", "incorrectdialect"],
+        &["dove", "new", project_name, "-d", "incorrectdialect"],
         &base_folder,
     )
     .is_err());

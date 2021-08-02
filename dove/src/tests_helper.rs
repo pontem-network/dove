@@ -33,8 +33,8 @@ pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
 
 /// $ dove new ###
 pub fn project_new_default(base_folder: &Path, project_folder: &Path, project_name: &str) {
-    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap();
-    set_dependencies_local_move_stdlib(&project_folder);
+    execute_dove_at(&["dove", "new", project_name], base_folder).unwrap();
+    set_dependencies_local_move_stdlib(project_folder);
 }
 
 /// $ dove new ### -d ### -a ### -r ###
@@ -58,15 +58,15 @@ pub fn project_new_with_args(
             "-a",
             project_address,
         ],
-        &base_folder,
+        base_folder,
     )
     .unwrap();
-    set_dependencies_local_move_stdlib(&project_folder);
+    set_dependencies_local_move_stdlib(project_folder);
 }
 
 /// $ dove build
 pub fn project_build(project_folder: &Path) {
-    execute_dove_at(&["dove", "build"], &project_folder).unwrap();
+    execute_dove_at(&["dove", "build"], project_folder).unwrap();
 }
 
 /// remove project

@@ -251,8 +251,8 @@ impl UnitAccess for CompiledUnit {
 
     fn constant(&self, idx: ConstantPoolIndex) -> &Constant {
         match self {
-            CompiledUnit::Script(s) => &s.constant_at(idx),
-            CompiledUnit::Module(m) => &m.constant_at(idx),
+            CompiledUnit::Script(s) => s.constant_at(idx),
+            CompiledUnit::Module(m) => m.constant_at(idx),
         }
     }
 

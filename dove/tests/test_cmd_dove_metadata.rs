@@ -111,7 +111,7 @@ fn validate_manifest(project_folder: &Path, dove_toml_str: &str) -> Value {
     let result = execute_dove_bin_at(
         env!("CARGO_BIN_EXE_dove"),
         &["dove", "metadata", "--validate"],
-        &project_folder,
+        project_folder,
     )
     .unwrap();
     serde_json::from_str::<serde_json::Value>(&result).unwrap()
