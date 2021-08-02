@@ -170,9 +170,10 @@ pub fn execute_dove_bin_at(
         .output()?;
     anyhow::ensure!(
         output.status.success(),
-        "Command {:?} failed with code {}",
+        "Command {:?} failed with code {}. \n Output: \n{}",
         args,
-        output.status
+        output.status,
+        String::from_utf8(output.stdout).unwrap_or_default()
     );
     Ok(String::from_utf8(output.stdout)?)
 }

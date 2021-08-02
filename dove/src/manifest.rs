@@ -1,20 +1,23 @@
 use std::{fmt, fs};
+use std::collections::hash_map::DefaultHasher;
 use std::convert::TryFrom;
-use std::path::{Path, MAIN_SEPARATOR as MS};
+use std::hash::{Hash, Hasher};
+use std::path::{MAIN_SEPARATOR as MS, Path};
 
 use anyhow::Error;
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use move_core_types::identifier::Identifier;
+use move_core_types::language_storage::{CORE_CODE_ADDRESS, ModuleId};
+use move_lang::shared::Address;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
     ser::Error as SerError,
 };
 use toml::Value;
-use move_core_types::language_storage::{CORE_CODE_ADDRESS, ModuleId};
-use move_lang::shared::Address;
+
 use crate::context::Context;
 use crate::docs::options::DocgenOptions;
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use move_core_types::identifier::Identifier;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -219,7 +222,9 @@ impl Default for Layout {
 }
 
 /// Git dependencies.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
+#[derive(
+    Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash, CryptoHasher, BCSCryptoHash,
+)]
 pub struct Git {
     /// Git url.
     pub git: String,
@@ -231,6 +236,16 @@ pub struct Git {
     pub tag: Option<String>,
     /// Path.
     pub path: Option<String>,
+}
+
+impl Git {
+    /// Returns a git dependency identifier.
+    /// Now it uses hashing to calculate the ID.
+    pub fn id(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
 }
 
 /// Type of git dependency check out.
@@ -431,7 +446,7 @@ pub fn default_dialect() -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package, DoveToml};
+    use crate::manifest::{Dependence, Dependencies, DepPath, DoveToml, Git, Package};
 
     fn package() -> Package {
         Package {
