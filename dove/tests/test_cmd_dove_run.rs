@@ -58,8 +58,6 @@ fn test_cmd_dove_run_multiple_scripts() {
 }
 
 #[test]
-#[ignore]
-// @todo bug windows
 fn test_cmd_dove_run_dependency_with_git_tag() {
     for v in 1..=2 {
         let project_folder = create_project_for_test_dependency(
@@ -86,8 +84,6 @@ fn test_cmd_dove_run_dependency_with_git_tag() {
 }
 
 #[test]
-#[ignore]
-// @todo bug windows
 fn test_cmd_dove_run_dependency_with_rev() {
     for (value, rev) in &[
         (1, "049200421c880f9f4269d6406c2b1537891b23c7"),
@@ -117,8 +113,6 @@ fn test_cmd_dove_run_dependency_with_rev() {
 }
 
 #[test]
-#[ignore]
-// @todo bug windows
 fn test_cmd_dove_run_dependencies_in_dependencies() {
     let project_folder = create_project_for_test_dependency(
         "project_run_dependencies_in_dependencies",
