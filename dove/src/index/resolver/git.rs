@@ -6,7 +6,6 @@ use anyhow::Error;
 use fs_extra::dir::CopyOptions;
 use git2::{Oid, Repository};
 use git2::build::RepoBuilder;
-use tiny_keccak::{Hasher, Sha3};
 
 use crate::context::Context;
 use crate::manifest::{CheckoutParams, Git};
@@ -21,7 +20,7 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
     let checkout_params = CheckoutParams::try_from(git)?;
 
     let deps = ctx.path_for(&ctx.manifest.layout.deps);
-    let local_name = make_local_name(git);
+    let local_name = git.local_name()?;
     let mut repo_path = deps.join(&local_name);
 
     if !repo_path.exists() {
@@ -166,27 +165,6 @@ fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
     }
 
     Ok(())
-}
-
-/// Returns unique repository name for git repository.
-pub fn make_local_name(git: &Git) -> String {
-    let mut digest = Sha3::v256();
-    digest.update(git.git.as_bytes());
-    if let Some(branch) = &git.branch {
-        digest.update(branch.as_bytes());
-    }
-    if let Some(rev) = &git.rev {
-        digest.update(rev.as_bytes());
-    }
-    if let Some(path) = &git.path {
-        digest.update(path.as_bytes());
-    }
-    if let Some(tag) = &git.tag {
-        digest.update(tag.as_bytes());
-    }
-    let mut output = [0; 32];
-    digest.finalize(&mut output);
-    format!("{}_{}", PREFIX, hex::encode(&output))
 }
 
 fn clone(git: &CheckoutParams, path: &Path) -> Result<Repository, Error> {
