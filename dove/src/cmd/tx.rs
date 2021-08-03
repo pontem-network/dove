@@ -10,6 +10,11 @@ use crate::transaction::{TransactionBuilder, Transaction};
 /// Create transaction.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+#[structopt(usage = "dove tx [call] [OPTIONS]\n
+    Examples:
+    $ dove tx 'script_name<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)' --f file_name
+    $ dove tx --file file_name --name script_name -a [10,10] true 68656c6c6f776f726c64 100 0x1 -type 0x01::Dfinance::USD
+")]
 pub struct CreateTransactionCmd {
     #[structopt(help = "Script call declaration.\
      Example: 'create_balance<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)'")]

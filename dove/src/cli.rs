@@ -57,7 +57,7 @@ enum Opt {
         #[structopt(flatten)]
         cmd: Test,
     },
-    #[structopt(about = "Run move tests")]
+    #[structopt(about = "Run move script")]
     Run {
         #[structopt(flatten)]
         cmd: Run,
