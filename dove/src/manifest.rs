@@ -1,20 +1,25 @@
 use std::{fmt, fs};
+use std::collections::hash_map::DefaultHasher;
 use std::convert::TryFrom;
-use std::path::Path;
+use std::hash::{Hash, Hasher};
+use tiny_keccak::{Sha3, Hasher as tiny_keccak_hasher};
+use std::path::{MAIN_SEPARATOR as MS, Path};
 
 use anyhow::Error;
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use move_core_types::identifier::Identifier;
+use move_core_types::language_storage::{CORE_CODE_ADDRESS, ModuleId};
+use move_lang::shared::Address;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
     ser::Error as SerError,
 };
 use toml::Value;
-use move_core_types::language_storage::{CORE_CODE_ADDRESS, ModuleId};
-use move_lang::shared::Address;
+
 use crate::context::Context;
 use crate::docs::options::DocgenOptions;
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use move_core_types::identifier::Identifier;
+use http::Uri;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
@@ -82,23 +87,23 @@ fn tests_dir() -> String {
 }
 
 fn modules_output() -> String {
-    "artifacts/modules".to_owned()
+    format!("{}{}{}", artifacts(), MS, "modules")
 }
 
 fn scripts_output() -> String {
-    "artifacts/scripts".to_owned()
+    format!("{}{}{}", artifacts(), MS, "scripts")
 }
 
 fn transactions_output() -> String {
-    "artifacts/transactions".to_owned()
+    format!("{}{}{}", artifacts(), MS, "transactions")
 }
 
 fn bundles_output() -> String {
-    "artifacts/bundles".to_owned()
+    format!("{}{}{}", artifacts(), MS, "bundles")
 }
 
 fn move_prover_output() -> String {
-    "artifacts/move_prover".to_owned()
+    format!("{}{}{}", artifacts(), MS, "move_prover")
 }
 
 fn docs_output() -> String {
@@ -106,11 +111,11 @@ fn docs_output() -> String {
 }
 
 fn deps() -> String {
-    "artifacts/.external".to_owned()
+    format!("{}{}{}", artifacts(), MS, ".external")
 }
 
 fn chain_deps() -> String {
-    "artifacts/.external/chain".to_owned()
+    format!("{}{}{}", deps(), MS, "chain")
 }
 
 fn artifacts() -> String {
@@ -118,7 +123,7 @@ fn artifacts() -> String {
 }
 
 fn index() -> String {
-    "artifacts/.DoveIndex.toml".to_owned()
+    format!("{}{}{}", artifacts(), MS, ".DoveIndex.toml")
 }
 
 fn code_code_address() -> String {
@@ -219,7 +224,9 @@ impl Default for Layout {
 }
 
 /// Git dependencies.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
+#[derive(
+    Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash, CryptoHasher, BCSCryptoHash,
+)]
 pub struct Git {
     /// Git url.
     pub git: String,
@@ -231,6 +238,68 @@ pub struct Git {
     pub tag: Option<String>,
     /// Path.
     pub path: Option<String>,
+}
+
+impl Git {
+    /// Returns a git dependency identifier.
+    /// Now it uses hashing to calculate the ID.
+    pub fn id(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    /// Returns unique repository name for git repository.
+    pub fn local_name(&self) -> Result<String, Error> {
+        Ok(format!("git_{}", self.local_hash_repository()?))
+    }
+
+    /// Returns unique hash repository for git repository.
+    fn local_hash_repository(&self) -> Result<String, Error> {
+        let mut digest = Sha3::v256();
+
+        digest.update(self.git_name_normalization_for_hash()?.as_bytes());
+
+        if let Some(branch) = &self.branch {
+            digest.update(format!("b_{}", branch).as_bytes());
+        }
+        if let Some(rev) = &self.rev {
+            digest.update(format!("r_{}", rev).as_bytes());
+        }
+        if let Some(path) = &self.path {
+            digest.update(format!("p_{}", path).as_bytes());
+        }
+        if let Some(tag) = &self.tag {
+            digest.update(format!("t_{}", tag).as_bytes());
+        }
+        let mut output = [0; 32];
+        digest.finalize(&mut output);
+        Ok(hex::encode(&output))
+    }
+
+    fn git_name_normalization_for_hash(&self) -> Result<String, Error> {
+        let mut git_str = self.git.trim().to_string();
+        if git_str.find("http") == Some(0) {
+            let uri = git_str.parse::<Uri>()?;
+            git_str = format!(
+                "{}{}",
+                uri.host().unwrap_or_default(),
+                uri.path_and_query()
+                    .map(|s| s.to_string())
+                    .unwrap_or_default()
+            );
+        } else if git_str.find("git@") == Some(0) {
+            if let Some(pos) = git_str.find(':') {
+                git_str.replace_range(pos..pos + 1, "/");
+            }
+            git_str = git_str[4..].to_string();
+        }
+
+        if git_str.len() > 4 && &git_str[git_str.len() - 4..] == ".git" {
+            git_str = git_str[..git_str.len() - 4].to_string();
+        }
+        Ok(git_str)
+    }
 }
 
 /// Type of git dependency check out.
@@ -431,7 +500,7 @@ pub fn default_dialect() -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::manifest::{Dependence, Dependencies, DepPath, Git, Package, DoveToml};
+    use crate::manifest::{Dependence, Dependencies, DepPath, DoveToml, Git, Package};
 
     fn package() -> Package {
         Package {
@@ -498,5 +567,87 @@ mod test {
         expected.layout.tests_dir = "runner_tests".to_owned();
 
         assert_eq!(expected, toml::from_str::<DoveToml>(dove_toml).unwrap());
+    }
+
+    #[test]
+    fn git_local_hash() {
+        let h1 = Git {
+            git: "https://github.com/pontem-network/move-stdlib.git".to_string(),
+            path: None,
+            branch: None,
+            rev: None,
+            tag: None,
+        }
+        .local_hash_repository()
+        .unwrap();
+
+        assert_eq!(
+            h1,
+            Git {
+                git: "https://github.com/pontem-network/move-stdlib".to_string(),
+                path: None,
+                branch: None,
+                rev: None,
+                tag: None,
+            }
+            .local_hash_repository()
+            .unwrap()
+        );
+
+        assert_eq!(
+            h1,
+            Git {
+                git: "http://github.com/pontem-network/move-stdlib".to_string(),
+                path: None,
+                branch: None,
+                rev: None,
+                tag: None,
+            }
+            .local_hash_repository()
+            .unwrap()
+        );
+
+        assert_eq!(
+            h1,
+            Git {
+                git: "git@github.com:pontem-network/move-stdlib".to_string(),
+                path: None,
+                branch: None,
+                rev: None,
+                tag: None,
+            }
+            .local_hash_repository()
+            .unwrap()
+        );
+
+        fn get_ob(num: u8) -> String {
+            let mut o = Git {
+                git: "git@github.com:pontem-network/move-stdlib".to_string(),
+                path: None,
+                branch: None,
+                rev: None,
+                tag: None,
+            };
+            let val = Some("1".to_string());
+            match num {
+                1 => o.path = val,
+                2 => o.branch = val,
+                3 => o.rev = val,
+                4 => o.tag = val,
+                _ => (),
+            };
+            o.local_hash_repository().unwrap()
+        }
+        for nh1 in 0..=4 {
+            let h1 = get_ob(nh1);
+            for nh2 in 0..=4 {
+                let h2 = get_ob(nh2);
+                if nh1 == nh2 {
+                    assert_eq!(h1, h2);
+                } else {
+                    assert_ne!(h1, h2);
+                }
+            }
+        }
     }
 }

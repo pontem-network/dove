@@ -54,8 +54,16 @@ impl Index {
     pub fn build(package_hash: String, ctx: &Context) -> Result<Index, Error> {
         let deps_roots = if let Some(dependencies) = &ctx.manifest.package.dependencies {
             let mut deps_roots = HashSet::new();
+            let mut deps_set = HashSet::new();
 
-            Self::load_deps(&mut deps_roots, &dependencies.deps, ctx, ctx, true)?;
+            Self::load_deps(
+                &mut deps_roots,
+                &dependencies.deps,
+                ctx,
+                ctx,
+                true,
+                &mut deps_set,
+            )?;
 
             deps_roots
                 .into_iter()
@@ -77,11 +85,14 @@ impl Index {
         root_ctx: &Context,
         ctx: &Context,
         is_root: bool,
+        deps_set: &mut HashSet<u64>,
     ) -> Result<(), Error> {
         for dep in deps {
             match dep {
                 Dependence::Git(git) => {
-                    Self::load_git_deps(roots, git, root_ctx, ctx)?;
+                    if deps_set.insert(git.id()) {
+                        Self::load_git_deps(roots, git, root_ctx, ctx, deps_set)?;
+                    }
                 }
                 Dependence::Path(path) => {
                     let path = PathBuf::from_str(&path.path)?;
@@ -116,6 +127,7 @@ impl Index {
         git: &Git,
         root_ctx: &Context,
         ctx: &Context,
+        deps_set: &mut HashSet<u64>,
     ) -> Result<HashSet<PathBuf>, Error> {
         let mut result = HashSet::new();
         let path = git::resolve(root_ctx, git)?;
@@ -129,7 +141,7 @@ impl Index {
                         manifest,
                         dialect: ctx.dialect.copy(),
                     };
-                    Self::load_dove_as_deps(roots, root_ctx, &ctx)
+                    Self::load_dove_as_deps(roots, root_ctx, &ctx, deps_set)
                         .map_err(|err| anyhow!("Failed to load {}: Err:{}", git.git, err))?;
                 }
                 Err(err) => {
@@ -150,9 +162,10 @@ impl Index {
         roots: &mut HashSet<PathBuf>,
         root_ctx: &Context,
         ctx: &Context,
+        deps_set: &mut HashSet<u64>,
     ) -> Result<(), Error> {
         if let Some(dependencies) = &ctx.manifest.package.dependencies {
-            Self::load_deps(roots, &dependencies.deps, root_ctx, ctx, false)?;
+            Self::load_deps(roots, &dependencies.deps, root_ctx, ctx, false, deps_set)?;
         }
 
         let modules_dir = ctx.path_for(&ctx.manifest.layout.modules_dir);
@@ -160,10 +173,6 @@ impl Index {
             roots.insert(modules_dir);
         }
 
-        let scripts_dir = ctx.path_for(&ctx.manifest.layout.scripts_dir);
-        if scripts_dir.exists() {
-            roots.insert(scripts_dir);
-        }
         Ok(())
     }
 

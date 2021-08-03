@@ -6,7 +6,6 @@ use anyhow::Error;
 use fs_extra::dir::CopyOptions;
 use git2::{Oid, Repository};
 use git2::build::RepoBuilder;
-use tiny_keccak::{Hasher, Sha3};
 
 use crate::context::Context;
 use crate::manifest::{CheckoutParams, Git};
@@ -21,7 +20,7 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
     let checkout_params = CheckoutParams::try_from(git)?;
 
     let deps = ctx.path_for(&ctx.manifest.layout.deps);
-    let local_name = make_local_name(git);
+    let local_name = git.local_name()?;
     let mut repo_path = deps.join(&local_name);
 
     if !repo_path.exists() {
@@ -80,7 +79,21 @@ pub fn resolve(ctx: &Context, git: &Git) -> Result<PathBuf, Error> {
 }
 
 fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
-    let repo = clone(&params, path)?;
+    let to_path: PathBuf;
+
+    #[cfg(target_os = "windows")]
+    {
+        use rand::random;
+        to_path = std::env::temp_dir().join(format!("git_{}", random::<u64>()));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        to_path = path.to_path_buf();
+    }
+
+    let repo = clone(&params, &to_path)?;
+
     match params {
         CheckoutParams::Branch { repo: _, branch } => {
             if let Some(branch_name) = branch {
@@ -93,6 +106,7 @@ fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
                 let commit = repo.find_commit(oid)?;
 
                 repo.branch(branch_name, &commit, false)?;
+
                 let obj = repo.revparse_single(&refs)?;
                 repo.checkout_tree(&obj, None)?;
                 repo.set_head(&refs)?;
@@ -115,53 +129,78 @@ fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
             tag: tg_name,
         } => {
             let references = repo.references()?;
-
             let refs = format!("refs/tags/{}", tg_name);
 
+            let mut finded = false;
             for reference in references.flatten() {
                 if reference.is_tag() {
                     if let Some(tag_ref) = reference.name() {
                         if tag_ref == refs {
                             let commit = reference.peel_to_commit()?;
+
                             repo.branch(tg_name, &commit, false)?;
+
                             let obj = repo.revparse_single(&refs)?;
                             repo.checkout_tree(&obj, None)?;
                             repo.set_head(&refs)?;
-                            return Ok(());
+                            finded = true;
+                            break;
                         }
                     }
                 }
             }
-            return Err(anyhow!("Tag {} not found.", tg_name));
+            if !finded {
+                return Err(anyhow!("Tag {} not found.", tg_name));
+            }
         }
     }
-    Ok(())
-}
 
-/// Returns unique repository name for git repository.
-pub fn make_local_name(git: &Git) -> String {
-    let mut digest = Sha3::v256();
-    digest.update(git.git.as_bytes());
-    if let Some(branch) = &git.branch {
-        digest.update(branch.as_bytes());
+    #[cfg(target_family = "windows")]
+    {
+        if !path.exists() {
+            fs::create_dir_all(&path)?;
+        }
+        copy_dir_all(&to_path, &path)?;
+        readonly_false(&path)?;
     }
-    if let Some(rev) = &git.rev {
-        digest.update(rev.as_bytes());
-    }
-    if let Some(path) = &git.path {
-        digest.update(path.as_bytes());
-    }
-    if let Some(tag) = &git.tag {
-        digest.update(tag.as_bytes());
-    }
-    let mut output = [0; 32];
-    digest.finalize(&mut output);
-    format!("{}_{}", PREFIX, hex::encode(&output))
+
+    Ok(())
 }
 
 fn clone(git: &CheckoutParams, path: &Path) -> Result<Repository, Error> {
     stdoutln!("Download:[{}]", git.repo());
+
     RepoBuilder::new()
         .clone(git.repo(), path)
         .map_err(|err| anyhow!("Failed to clone repository :[{}]:{}", git.repo(), err))
+}
+
+#[cfg(target_os = "windows")]
+fn readonly_false(dirpath: &Path) -> std::io::Result<()> {
+    let mut p = dirpath.metadata()?.permissions();
+    p.set_readonly(false);
+    fs::set_permissions(dirpath, p)?;
+    if !dirpath.is_dir() {
+        return Ok(());
+    }
+
+    for npatn in dirpath.read_dir()? {
+        readonly_false(npatn?.path().as_path())?;
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(&entry.path(), &dst.join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), &dst.join(entry.file_name()))?;
+        }
+    }
+    Ok(())
 }

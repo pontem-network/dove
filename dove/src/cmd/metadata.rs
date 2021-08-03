@@ -8,7 +8,6 @@ use structopt::StructOpt;
 use lang::compiler::dialects::*;
 use crate::cmd::Cmd;
 use crate::context::{Context, str_path, load_manifest, get_context};
-use crate::index::resolver::git;
 use crate::manifest::{Dependence, Git, Layout, MANIFEST, read_manifest, DoveToml};
 use crate::stdoutln;
 
@@ -210,7 +209,7 @@ impl GitMetadata {
     /// Create a new git metadata.
     pub fn new(git: Git, ctx: &Context) -> Result<GitMetadata, Error> {
         let path: &Path = ctx.manifest.layout.deps.as_ref();
-        let pac_path = ctx.path_for(path.join(&git::make_local_name(&git)));
+        let pac_path = ctx.path_for(path.join(git.local_name()?));
         let mut local_paths = Vec::new();
 
         if pac_path.exists() {
