@@ -60,6 +60,8 @@ impl Context {
         } else {
             let index = Index::build(package_hash, self)?;
             index.store(&index_path)?;
+            index.remove_unused(&self.project_dir.join(&self.manifest.layout.deps))?;
+
             Ok(index)
         }
     }

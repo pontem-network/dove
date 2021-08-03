@@ -4,7 +4,7 @@ use fs_extra::file::write_all;
 use toml::Value;
 use crate::cli::execute;
 use crate::stdout::{set_print_to_string, get_buffer_value_and_erase};
-use toml::value::Map;
+use crate::manifest::Git;
 
 /// get tmp_folder, project_folder and remove project folder if exist
 pub fn project_start(project_name: &str) -> (PathBuf, PathBuf) {
@@ -24,10 +24,23 @@ pub fn project_start_for_init(project_name: &str) -> PathBuf {
     project_folder
 }
 
+/// create new project and set local dependencies
+pub fn project_start_new(project_name: &str) -> PathBuf {
+    let (base_folder, project_folder) = project_start(project_name);
+    project_new_local(&base_folder, &project_folder, project_name);
+    project_folder
+}
+
+/// create new project
+pub fn project_start_new_default(project_name: &str) -> PathBuf {
+    let (base_folder, project_folder) = project_start(project_name);
+    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap();
+    project_folder
+}
+
 /// create default project and return project path
 pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
-    let (base_folder, project_folder) = project_start(project_name);
-    project_new_default(&base_folder, &project_folder, project_name);
+    let project_folder = project_start_new(project_name);
     project_build(&project_folder);
     project_folder
 }
@@ -35,27 +48,41 @@ pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
 /// create new project and add dependencies
 pub fn project_start_new_and_add_dependencies(
     project_name: &str,
-    dependencies: Vec<Map<String, Value>>,
+    mut dependencies: Vec<Git>,
 ) -> PathBuf {
-    let (base_folder, project_folder) = project_start(project_name);
-    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap();
+    let project_folder = project_start_new_default(project_name);
+    dependencies.push(Git {
+        git: "https://github.com/pontem-network/move-stdlib".to_string(),
+        branch: None,
+        tag: Some("v0.1.2".to_string()),
+        rev: None,
+        path: None,
+    });
+    set_dependency_in_toml(&project_folder, &dependencies).unwrap();
 
+    project_folder
+}
+/// Set dependency in Dove.toml
+pub fn set_dependency_in_toml(
+    project_folder: &Path,
+    dependencies_new: &[Git],
+) -> Result<(), anyhow::Error> {
     let dove_toml_path = project_folder.join("Dove.toml");
-    let mut toml_value = read_to_string(&dove_toml_path)
+    let mut toml_value = read_to_string(&dove_toml_path)?.parse::<Value>()?;
+
+    let dependencies = toml_value
+        .get_mut("package")
         .unwrap()
-        .parse::<Value>()
+        .as_table_mut()
+        .unwrap()
+        .get_mut("dependencies")
+        .unwrap()
+        .as_array_mut()
         .unwrap();
-    for rep in dependencies {
-        toml_value
-            .get_mut("package")
-            .unwrap()
-            .as_table_mut()
-            .unwrap()
-            .get_mut("dependencies")
-            .unwrap()
-            .as_array_mut()
-            .unwrap()
-            .push(Value::Table(rep));
+    dependencies.clear();
+
+    for git in dependencies_new.iter() {
+        dependencies.push(Value::try_from(git)?);
     }
 
     write_all(
@@ -64,11 +91,11 @@ pub fn project_start_new_and_add_dependencies(
     )
     .unwrap();
 
-    project_folder
+    Ok(())
 }
 
 /// $ dove new ###
-pub fn project_new_default(base_folder: &Path, project_folder: &Path, project_name: &str) {
+pub fn project_new_local(base_folder: &Path, project_folder: &Path, project_name: &str) {
     execute_dove_at(&["dove", "new", project_name], base_folder).unwrap();
     set_dependencies_local_move_stdlib(project_folder);
 }
