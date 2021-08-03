@@ -1,7 +1,12 @@
-use fs_extra::file::write_all;
-use dove::transaction::Transaction;
-use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_remove};
+use std::fs;
 use std::fs::remove_file;
+
+use fs_extra::file::write_all;
+
+use dove::tests_helper::{execute_dove_at, project_remove, project_start_new_and_build};
+use dove::transaction::{Signer, Transaction};
+use move_core_types::language_storage::{TypeTag, StructTag, CORE_CODE_ADDRESS};
+use move_core_types::identifier::Identifier;
 
 /// $ dove tx
 #[test]
@@ -31,13 +36,10 @@ fn test_cmd_dove_tx_without_arguments() {
         tx_path.display(),
         args.join(" "),
     );
-    let tx_fmt = format!(
-        "{:?}",
-        bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
-    );
-    assert!(tx_fmt.contains(" args: []"));
-    assert!(tx_fmt.contains(" type_args: []"));
-    assert!(tx_fmt.contains(" signers_count: 0"));
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+    assert!(tx.args.is_empty());
+    assert!(tx.type_args.is_empty());
+    assert!(tx.signers.is_empty());
     project_remove(&project_folder);
 }
 
@@ -99,13 +101,10 @@ fn test_cmd_dove_tx_with_type() {
             tx_path.display(),
             args.join(" "),
         );
-        let tx_fmt = format!(
-            "{:?}",
-            bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
-        );
-        assert!(tx_fmt.contains(" args: [[16]]"));
-        assert!(tx_fmt.contains(" type_args: [U8]"));
-        assert!(tx_fmt.contains(" signers_count: 0"));
+        let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+        assert_eq!(tx.args, vec![vec![16]]);
+        assert_eq!(tx.type_args, vec![TypeTag::U8]);
+        assert_eq!(tx.signers, vec![]);
         remove_file(&tx_path).unwrap();
     }
 
@@ -121,14 +120,19 @@ fn test_cmd_dove_tx_with_type() {
             tx_path.display(),
             args.join(" "),
         );
-        let tx_fmt = format!(
-            "{:?}",
-            bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+        let tx =
+            bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap();
+        assert_eq!(tx.args, vec![vec![16]]);
+        assert_eq!(
+            tx.type_args,
+            vec![TypeTag::Struct(StructTag {
+                address: CORE_CODE_ADDRESS,
+                module: Identifier::new("ModuleDemo").unwrap(),
+                name: Identifier::new("T1").unwrap(),
+                type_params: vec![]
+            })]
         );
-        assert!(tx_fmt.contains(" args: [[16]]"));
-        assert!(tx_fmt.contains(" module: Identifier(\"ModuleDemo\")"));
-        assert!(tx_fmt.contains(" name: Identifier(\"T1\")"));
-        assert!(tx_fmt.contains(" signers_count: 0"));
+        assert_eq!(tx.signers, vec![]);
         remove_file(&tx_path).unwrap();
     }
 
@@ -281,7 +285,7 @@ fn test_cmd_dove_tx_with_script_method_args() {
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
         "script {
-                    fun main(a1:u64,a2:u64) { assert((a1!=a2),1); }
+                    fun main(a1: u64, a2: u64) { assert((a1!=a2),1); }
                 }",
     )
     .unwrap();
@@ -298,13 +302,13 @@ fn test_cmd_dove_tx_with_script_method_args() {
         tx_path.display(),
         &args.join(" "),
     );
-    let tx_fmt = format!(
-        "{:?}",
-        bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+    assert_eq!(
+        tx.args,
+        vec![vec![1, 0, 0, 0, 0, 0, 0, 0], vec![2, 0, 0, 0, 0, 0, 0, 0]]
     );
-    assert!(tx_fmt.contains(" args: [[1, 0, 0, 0, 0, 0, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0]]"));
-    assert!(tx_fmt.contains(" type_args: []"));
-    assert!(tx_fmt.contains(" signers_count: 0"));
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![]);
     project_remove(&project_folder);
 }
 
@@ -318,7 +322,7 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
         "script {
-                    fun main(_a1:u64,_a2:u64) { }
+                    fun main(_a1: u64, _a2: u64) { }
                 }",
     )
     .unwrap();
@@ -335,13 +339,14 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
         tx_path.display(),
         args.join(" "),
     );
-    let tx_fmt = format!(
-        "{:?}",
-        bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+
+    assert_eq!(
+        tx.args,
+        vec![vec![1, 0, 0, 0, 0, 0, 0, 0], vec![2, 0, 0, 0, 0, 0, 0, 0]]
     );
-    assert!(tx_fmt.contains(" args: [[1, 0, 0, 0, 0, 0, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0]]"));
-    assert!(tx_fmt.contains(" type_args: []"));
-    assert!(tx_fmt.contains(" signers_count: 0"));
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![]);
     project_remove(&project_folder);
 }
 
@@ -371,13 +376,10 @@ fn test_cmd_dove_tx_multiple_scripts() {
         tx_path.display(),
         args.join(" "),
     );
-    let tx_fmt = format!(
-        "{:?}",
-        bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
-    );
-    assert!(tx_fmt.contains(" args: []"));
-    assert!(tx_fmt.contains(" type_args: []"));
-    assert!(tx_fmt.contains(" signers_count: 0"));
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+    assert!(tx.args.is_empty());
+    assert!(tx.type_args.is_empty());
+    assert!(tx.signers.is_empty());
     project_remove(&project_folder);
 }
 
@@ -400,31 +402,49 @@ fn test_cmd_dove_tx_signer() {
         .join("transactions")
         .join("main.mvt");
 
-    for args in &[
-        vec!["dove", "tx", "main()", "-a", "8"],
-        vec!["dove", "tx", "main()", "-a", "0x1", "0x2", "8"],
-    ] {
+    let perform = |cmd: &[&str]| -> Transaction {
         if tx_path.exists() {
             remove_file(&tx_path).unwrap();
         }
-
-        execute_dove_at(args, &project_folder).unwrap();
-
+        execute_dove_at(cmd, &project_folder).unwrap();
         assert!(
             tx_path.exists(),
             "Transaction not found: {}\n[Command] {}",
             tx_path.display(),
-            args.join(" "),
+            cmd.join(" "),
         );
-        let tx_fmt = format!(
-            "{:?}",
-            bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap()
-        );
+        bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap()
+    };
 
-        assert!(tx_fmt.contains(" args: [[8]]"));
-        assert!(tx_fmt.contains(" type_args: []"));
-        assert!(tx_fmt.contains(" signers_count: 2"));
-    }
+    let tx = perform(&["dove", "tx", "main()", "-a", "8"]);
+    assert_eq!(tx.args, vec![vec![0x8]]);
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![Signer::Placeholder, Signer::Placeholder]);
+
+    let tx = perform(&["dove", "tx", "main(_, 8)"]);
+    assert_eq!(tx.args, vec![vec![0x8]]);
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![Signer::Placeholder, Signer::Placeholder]);
+
+    let tx = perform(&["dove", "tx", "main(_, _, 8)"]);
+    assert_eq!(tx.args, vec![vec![0x8]]);
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![Signer::Placeholder, Signer::Placeholder]);
+
+    let tx = perform(&["dove", "tx", "main(rt, _, 8)"]);
+    assert_eq!(tx.args, vec![vec![0x8]]);
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![Signer::Root, Signer::Placeholder]);
+
+    let tx = perform(&["dove", "tx", "main(root, 8)"]);
+    assert_eq!(tx.args, vec![vec![0x8]]);
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![Signer::Root, Signer::Placeholder]);
+
+    let tx = perform(&["dove", "tx", "main(_, tr, 8)"]);
+    assert_eq!(tx.args, vec![vec![0x8]]);
+    assert!(tx.type_args.is_empty());
+    assert_eq!(tx.signers, vec![Signer::Placeholder, Signer::Treasury]);
 
     project_remove(&project_folder);
 }

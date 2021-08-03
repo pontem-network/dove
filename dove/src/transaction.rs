@@ -25,7 +25,6 @@ use move_executor::executor::Executor;
 use move_executor::explain::PipelineExecutionResult;
 
 use crate::context::Context;
-use crate::stdoutln;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -171,16 +170,11 @@ impl<'a> TransactionBuilder<'a> {
             })
             .ok_or_else(|| anyhow!("Script '{}' not found", meta.name))??;
 
-        let (signers_count, args) = self.prepare_arguments(&meta.parameters)?;
+        let (signers, args) = self.prepare_arguments(&meta.parameters)?;
 
         Ok((
             meta.name,
-            Transaction::new(
-                signers_count as u8,
-                unit,
-                args,
-                self.type_parameters.clone(),
-            )?,
+            Transaction::new(signers, unit, args, self.type_parameters.clone())?,
         ))
     }
 
@@ -343,7 +337,7 @@ impl<'a> TransactionBuilder<'a> {
     fn prepare_arguments(
         &self,
         arguments: &[(String, String)],
-    ) -> Result<(usize, Vec<ScriptArg>), Error> {
+    ) -> Result<(Vec<Signer>, Vec<ScriptArg>), Error> {
         fn parse_err<D: Debug>(name: &str, tp: &str, value: &str, err: D) -> Error {
             anyhow!(
                 "Parameter '{}' has type {}. Failed to parse {}. Error:'{:?}'",
@@ -354,27 +348,34 @@ impl<'a> TransactionBuilder<'a> {
             )
         }
 
-        let mut arguments_exp: Vec<Box<&(String, String)>> = arguments
+        let arguments_exp: Vec<Box<&(String, String)>> = arguments
             .iter()
             .filter(|(_, name)| name != "signer")
             .map(Box::new)
             .collect();
         let signers_count = arguments.len() - arguments_exp.len();
 
-        if self.args.len() != arguments_exp.len() {
-            if self.args.len() != arguments.len() {
-                anyhow::bail!(
-                    "{} arguments were expected. {} arguments were received",
-                    arguments_exp.len(),
-                    self.args.len(),
-                )
-            }
-            stdoutln!("Note: you don't need to pass \"signers\"");
-            arguments_exp = arguments.iter().map(Box::new).collect();
+        let mut signers = (0..signers_count)
+            .map(|i| Signer::from_str(&self.args[i]).ok())
+            .take_while(|s| s.is_some())
+            .flatten()
+            .collect::<Vec<_>>();
+        let explicit_signers = signers.len();
+
+        for _ in explicit_signers..signers_count {
+            signers.push(Signer::Placeholder);
+        }
+
+        if self.args.len() - explicit_signers != arguments_exp.len() {
+            anyhow::bail!(
+                "{} arguments were expected. {} arguments were received",
+                arguments_exp.len(),
+                self.args.len() - explicit_signers,
+            )
         }
 
         let mut values = Vec::with_capacity(arguments_exp.len());
-        for (arg_type, arg_value) in arguments_exp.iter().zip(&self.args) {
+        for (arg_type, arg_value) in arguments_exp.iter().zip(&self.args[explicit_signers..]) {
             let (arg_name, arg_type) = arg_type.as_ref();
             macro_rules! parse_primitive {
                 ($script_arg:expr) => {
@@ -424,7 +425,7 @@ impl<'a> TransactionBuilder<'a> {
                 other => anyhow::bail!("Unexpected script parameter: {}", other),
             }
         }
-        Ok((signers_count, values))
+        Ok((signers, values))
     }
 
     fn build_script(&'a self, script: String) -> Result<Vec<CompiledUnit>, Error> {
@@ -776,19 +777,52 @@ impl From<ScriptArg> for MoveValue {
     }
 }
 
+/// Signer type.
+#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Signer {
+    /// Root signer.
+    Root,
+    /// Treasury signer.
+    Treasury,
+    /// Template to replace.
+    Placeholder,
+}
+
+impl FromStr for Signer {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_str() {
+            "root" | "rt" => Self::Root,
+            "treasury" | "tr" => Self::Treasury,
+            "_" => Self::Placeholder,
+            _ => {
+                return Err(anyhow!(
+                    "Unexpected signer type: '{}'. Expected one of (root, rt, treasury, tr, _)",
+                    s
+                ))
+            }
+        })
+    }
+}
+
 /// Transaction model.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
-    signers_count: u8,
-    code: Vec<u8>,
-    args: Vec<Vec<u8>>,
-    type_args: Vec<TypeTag>,
+    /// Signers.
+    pub signers: Vec<Signer>,
+    /// Move bytecode.
+    pub code: Vec<u8>,
+    /// Script args.
+    pub args: Vec<Vec<u8>>,
+    /// Script type arguments.
+    pub type_args: Vec<TypeTag>,
 }
 
 impl Transaction {
     /// Create a new transaction.
     pub fn new(
-        signers_count: u8,
+        signers: Vec<Signer>,
         code: Vec<u8>,
         args: Vec<ScriptArg>,
         type_args: Vec<TypeTag>,
@@ -801,7 +835,7 @@ impl Transaction {
             .map_err(Error::msg)?;
 
         Ok(Transaction {
-            signers_count,
+            signers,
             code,
             args,
             type_args,
