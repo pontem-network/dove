@@ -393,7 +393,13 @@ fn test_cmd_dove_tx_signer() {
         &project_folder.join("scripts").join("signer.move"),
         "script {\
             fun main(_a:signer, _b:signer, _c:u8){}
-        }",
+        }
+
+        script {
+            fun signers_tr_and_rt_with_user(_rt: signer, _tr: signer, _usr: signer) {
+            }
+        }
+        ",
     )
     .unwrap();
 
@@ -445,6 +451,20 @@ fn test_cmd_dove_tx_signer() {
     assert_eq!(tx.args, vec![vec![0x8]]);
     assert!(tx.type_args.is_empty());
     assert_eq!(tx.signers, vec![Signer::Placeholder, Signer::Treasury]);
+
+    let tx = perform(&[
+        "dove",
+        "tx",
+        "signers_tr_and_rt_with_user(rt, tr)",
+        "-o",
+        "main.mvt",
+    ]);
+    assert!(tx.args.is_empty());
+    assert!(tx.type_args.is_empty());
+    assert_eq!(
+        tx.signers,
+        vec![Signer::Root, Signer::Treasury, Signer::Placeholder]
+    );
 
     project_remove(&project_folder);
 }

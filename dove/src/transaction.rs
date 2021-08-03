@@ -356,6 +356,7 @@ impl<'a> TransactionBuilder<'a> {
         let signers_count = arguments.len() - arguments_exp.len();
 
         let mut signers = (0..signers_count)
+            .take_while(|i| *i < self.args.len())
             .map(|i| Signer::from_str(&self.args[i]).ok())
             .take_while(|s| s.is_some())
             .flatten()
