@@ -66,7 +66,7 @@ pub fn build(
 ) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
 
-    let (files, units_res) = move_compile(
+    let (_, units_res) = move_compile(
         targets,
         deps,
         sender.map(map_address),
@@ -76,7 +76,7 @@ pub fn build(
     )?;
 
     let units_res = units_res.map_err(|errors| preprocessor.transform(errors));
-    Ok((files, units_res))
+    Ok((preprocessor.into_source(), units_res))
 }
 
 pub fn map_address(addr: AccountAddress) -> Address {
