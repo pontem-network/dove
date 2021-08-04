@@ -1,5 +1,6 @@
 use anyhow::Error;
 use structopt::StructOpt;
+
 use move_executor::executor::render_execution_result;
 
 use crate::cmd::Cmd;
@@ -38,21 +39,21 @@ pub struct Run {
 
 impl Cmd for Run {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        let trbuild = TransactionBuilder::from_run_cmd(&self, &ctx)?;
-        render_execution_result(trbuild.run())
+        let tr_build = TransactionBuilder::from_run_cmd(self, &ctx)?;
+        render_execution_result(tr_build.run())
     }
 }
 
 impl<'a> TransactionBuilder<'a> {
     /// Create a TransactionBuilder based on the transmitted data
-    pub fn from_run_cmd(cmd: &'a Run, ctx: &'a Context) -> Result<TransactionBuilder<'a>, Error> {
+    pub fn from_run_cmd(cmd: Run, ctx: &'a Context) -> Result<TransactionBuilder<'a>, Error> {
         let mut trbuild = Self::new(ctx);
-        trbuild.script_file_name = cmd.file_name.clone();
+        trbuild.script_file_name = cmd.file_name;
         trbuild
-            .with_cmd_call(cmd.call.clone())?
-            .with_cmd_script_name(cmd.script_name.clone())
-            .with_cmd_args(cmd.args.clone())
-            .with_cmd_signers(cmd.signers.clone())?;
+            .with_cmd_call(cmd.call)?
+            .with_cmd_script_name(cmd.script_name)
+            .with_cmd_args(cmd.args)
+            .with_cmd_signers(cmd.signers)?;
 
         Ok(trbuild)
     }
