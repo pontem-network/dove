@@ -1,5 +1,5 @@
 use move_core_types::account_address::AccountAddress;
-use move_lang::errors::Errors;
+use move_lang::errors::{Errors, FilesSourceText};
 use move_lang::preprocessor::SourceProcessor;
 
 use crate::compiler::dialects::{Dialect, line_endings};
@@ -10,6 +10,7 @@ pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
     dialect: &'a dyn Dialect,
     sender: Option<String>,
+    files: FilesSourceText,
 }
 
 impl<'a> BuilderPreprocessor<'a> {
@@ -21,7 +22,12 @@ impl<'a> BuilderPreprocessor<'a> {
             offsets_map: Default::default(),
             dialect,
             sender: sender.map(|sender| format!("{:#x}", sender)),
+            files: Default::default(),
         }
+    }
+
+    pub fn into_source(self) -> FilesSourceText {
+        self.files
     }
 
     pub fn transform(&self, errors: Errors) -> Errors {
@@ -34,9 +40,12 @@ impl<'a> SourceProcessor for BuilderPreprocessor<'a> {
         let mut mut_source = MutString::new(&source);
         let file_source_map =
             normalize_source_text(self.dialect, (&source, &mut mut_source), &self.sender);
+        let post_processed_source = mut_source.freeze();
 
         self.offsets_map.insert(name, file_source_map);
-        mut_source.freeze()
+        self.files.insert(name, source);
+
+        post_processed_source
     }
 }
 
