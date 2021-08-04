@@ -153,6 +153,7 @@ impl Index {
                 }
             }
         } else {
+            roots.insert(path.clone());
             result.insert(path);
         }
         Ok(result)
@@ -224,12 +225,12 @@ impl Index {
             .filter(|path: &PathBuf| path.starts_with(deps_path))
             .collect();
 
-        for finded in deps_path
+        for found in deps_path
             .read_dir()?
             .filter_map(|path| path.ok().map(|path| path.path()))
             .filter(|path| path.is_dir() && !deps.contains(path) && path.exists())
         {
-            remove_dir_all(&finded)?;
+            remove_dir_all(&found)?;
         }
 
         Ok(())

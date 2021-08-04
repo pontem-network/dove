@@ -18,7 +18,7 @@ fn test_dependency_with_git_tag() {
         );
 
         // project_folder/scripts/version.move
-        add_sctipt_getversion(&project_folder);
+        add_script_getversion(&project_folder);
 
         let output = execute_dove_bin_at(
             env!("CARGO_BIN_EXE_dove"),
@@ -47,7 +47,7 @@ fn test_dependency_with_rev() {
         );
 
         // project_folder/scripts/version.move
-        add_sctipt_getversion(&project_folder);
+        add_script_getversion(&project_folder);
 
         let output = execute_dove_bin_at(
             env!("CARGO_BIN_EXE_dove"),
@@ -60,6 +60,30 @@ fn test_dependency_with_rev() {
 
         project_remove(&project_folder);
     }
+}
+
+#[test]
+fn test_dependency_without_dove_toml() {
+    let project_folder = create_project_for_test_dependency(
+        "project_dependency_without_dove_toml",
+        Some("no_dove_toml"),
+        None,
+        None,
+    );
+
+    // project_folder/scripts/version.move
+    add_script_getversion(&project_folder);
+
+    let output = execute_dove_bin_at(
+        env!("CARGO_BIN_EXE_dove"),
+        &["dove", "run", "version()"],
+        &project_folder,
+    )
+    .unwrap();
+
+    assert!(output.contains("[debug] 3"));
+
+    project_remove(&project_folder);
 }
 
 #[test]
@@ -139,16 +163,17 @@ fn test_dependency_running_a_script_in_dependencies() {
 #[test]
 fn test_removing_old_external_dependencies() {
     let project_folder = project_start_new_default("project_removing_old_external_dependencies");
+    let stdlib: Git = Git {
+        git: "https://github.com/pontem-network/move-stdlib".to_string(),
+        branch: None,
+        tag: Some("v0.1.2".to_string()),
+        rev: None,
+        path: None,
+    };
 
     let steps = vec![
         vec![
-            Git {
-                git: "https://github.com/pontem-network/move-stdlib".to_string(),
-                branch: None,
-                tag: Some("v0.1.2".to_string()),
-                rev: None,
-                path: None,
-            },
+            stdlib.clone(),
             Git {
                 git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
                 branch: None,
@@ -158,21 +183,9 @@ fn test_removing_old_external_dependencies() {
             },
         ],
         vec![],
-        vec![Git {
-            git: "https://github.com/pontem-network/move-stdlib".to_string(),
-            branch: None,
-            tag: Some("v0.1.2".to_string()),
-            rev: None,
-            path: None,
-        }],
+        vec![stdlib.clone()],
         vec![
-            Git {
-                git: "https://github.com/pontem-network/move-stdlib".to_string(),
-                branch: None,
-                tag: Some("v0.1.2".to_string()),
-                rev: None,
-                path: None,
-            },
+            stdlib.clone(),
             Git {
                 git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
                 branch: None,
@@ -182,16 +195,20 @@ fn test_removing_old_external_dependencies() {
             },
         ],
         vec![
-            Git {
-                git: "https://github.com/pontem-network/move-stdlib".to_string(),
-                branch: None,
-                tag: Some("v0.1.2".to_string()),
-                rev: None,
-                path: None,
-            },
+            stdlib.clone(),
             Git {
                 git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
                 branch: Some("master".to_string()),
+                tag: None,
+                rev: None,
+                path: None,
+            },
+        ],
+        vec![
+            stdlib,
+            Git {
+                git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
+                branch: Some("no_dove_toml".to_string()),
                 tag: None,
                 rev: None,
                 path: None,
@@ -208,7 +225,7 @@ fn test_removing_old_external_dependencies() {
     project_remove(&project_folder);
 }
 
-fn add_sctipt_getversion(project_folder: &Path) {
+fn add_script_getversion(project_folder: &Path) {
     // project_folder/scripts/version.move
     write_all(
         &project_folder.join("scripts").join("version.move"),
