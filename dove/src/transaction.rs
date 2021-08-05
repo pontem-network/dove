@@ -794,8 +794,8 @@ impl FromStr for Signer {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s.to_lowercase().as_str() {
-            "root" | "rt" => Self::Root,
-            "treasury" | "tr" => Self::Treasury,
+            "root" | "rt" | "dr" => Self::Root,
+            "treasury" | "tr" | "tc" => Self::Treasury,
             "_" => Self::Placeholder,
             _ => {
                 return Err(anyhow!(
