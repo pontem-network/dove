@@ -8,8 +8,7 @@ use std::path::{MAIN_SEPARATOR as MS, Path};
 use anyhow::Error;
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::{CORE_CODE_ADDRESS, ModuleId};
-use move_lang::shared::Address;
+use move_core_types::language_storage::ModuleId;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
@@ -127,7 +126,7 @@ fn index() -> String {
 }
 
 fn code_code_address() -> String {
-    Address::new(CORE_CODE_ADDRESS.to_u8()).to_string()
+    "0x1".to_string()
 }
 
 /// Project layout.
