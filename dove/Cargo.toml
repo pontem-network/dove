@@ -45,21 +45,18 @@ git-hash = { path = "../common/git-hash" }
 move-executor = { path = "../executor" }
 net = { path = "../net" }
 
-vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-docgen = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+docgen = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 
 # move-prover deps
-move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", optional = true }
-boogie-backend-v2 = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1", optional = true }
+move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 
 [features]
 default = []
-prover = ['move-prover', 'boogie-backend-v2']
 
 [build-dependencies]
 git2 = "0.13"

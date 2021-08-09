@@ -1,5 +1,5 @@
 use crate::code::exp::{Exp, SourceRange};
-use vm::file_format::{ConstantPoolIndex, Bytecode};
+use move_binary_format::file_format::{ConstantPoolIndex, Bytecode};
 use crate::Encode;
 use anyhow::Error;
 use std::fmt::Write;

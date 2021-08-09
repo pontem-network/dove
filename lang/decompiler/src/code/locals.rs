@@ -6,7 +6,7 @@ use crate::Encode;
 use crate::functions::Param;
 use std::sync::atomic::{Ordering, AtomicBool};
 use std::rc::Rc;
-use vm::file_format::*;
+use move_binary_format::file_format::*;
 use crate::types::{FType, extract_type_signature};
 use crate::unit::UnitAccess;
 

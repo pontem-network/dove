@@ -8,7 +8,7 @@ use schemars::{JsonSchema, schema_for, schema::RootSchema};
 use move_core_types::identifier::Identifier;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{StructTag, TypeTag};
-use vm::file_format::AbilitySet;
+use move_binary_format::file_format::AbilitySet;
 
 #[cfg(feature = "json-schema")]
 pub fn produce_json_schema() -> RootSchema {
@@ -140,7 +140,7 @@ mod schema_support {
         schema::{ArrayValidation, InstanceType, Schema, SchemaObject, SingleOrVec},
     };
     use move_core_types::language_storage::TypeTag;
-    use vm::file_format::AbilitySet;
+    use move_binary_format::file_format::AbilitySet;
 
     #[derive(Serialize, JsonSchema)]
     #[serde(remote = "AbilitySet")]

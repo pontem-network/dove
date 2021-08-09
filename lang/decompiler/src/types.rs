@@ -3,7 +3,7 @@ use crate::Encode;
 use std::fmt::Write;
 use anyhow::Error;
 use crate::imports::{Import, Imports};
-use vm::file_format::*;
+use move_binary_format::file_format::*;
 use crate::unit::UnitAccess;
 
 /// Extract type signature.

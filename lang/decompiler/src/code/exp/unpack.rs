@@ -6,7 +6,7 @@ use crate::{Encode, write_array};
 use anyhow::Error;
 use std::fmt::Write;
 use crate::code::translator::Context;
-use vm::file_format::*;
+use move_binary_format::file_format::*;
 use crate::unit::UnitAccess;
 
 /// Unpack expressions.

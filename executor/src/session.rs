@@ -5,8 +5,8 @@ use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
 use move_ir_types::location::Loc;
 use move_lang::{compiled_unit::CompiledUnit, FullyCompiledProgram, FileCommentMap};
 use move_vm_types::gas_schedule::CostStrategy;
-use vm::CompiledModule;
-use vm::file_format::CompiledScript;
+use move_binary_format::CompiledModule;
+use move_binary_format::file_format::CompiledScript;
 
 use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;

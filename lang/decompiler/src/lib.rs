@@ -138,8 +138,8 @@ pub fn write_array<E: Encode, W: Write>(
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
     use move_lang::errors::report_errors_to_buffer;
-    use vm::CompiledModule;
-    use vm::file_format::{Bytecode, CodeUnit, FunctionDefinition};
+    use move_binary_format::CompiledModule;
+    use move_binary_format::file_format::{Bytecode, CodeUnit, FunctionDefinition};
 
     use lang::compiler::dialects::DialectName;
 

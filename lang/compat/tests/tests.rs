@@ -1,6 +1,6 @@
-use vm::CompiledModule;
+use move_binary_format::CompiledModule;
 use move_compat::{adapt_to_basis, adapt_from_basis, AddressType};
-use vm::file_format::CompiledScript;
+use move_binary_format::file_format::CompiledScript;
 
 const DFI_FOO: &[u8] = include_bytes!("assets/dfi/1_Foo.mv");
 const DFI_SCRIPT: &[u8] = include_bytes!("assets/dfi/0_main.mv");

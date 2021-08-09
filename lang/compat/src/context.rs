@@ -1,4 +1,4 @@
-use vm::file_format_common::VersionedCursor;
+use move_binary_format::file_format_common::VersionedCursor;
 
 pub struct TableContext<'a, 'b> {
     pub cursor: &'a mut VersionedCursor<'b>,

@@ -1,7 +1,9 @@
 use anyhow::{Error, Result};
-use vm::deserializer::{load_constant_size, load_signature_token};
-use vm::file_format::SignatureToken;
-use vm::file_format_common::{BinaryData, TableType, VersionedCursor, write_u64_as_uleb128};
+use move_binary_format::deserializer::{load_constant_size, load_signature_token};
+use move_binary_format::file_format::SignatureToken;
+use move_binary_format::file_format_common::{
+    BinaryData, TableType, VersionedCursor, write_u64_as_uleb128,
+};
 
 use crate::context::TableContext;
 use crate::mutator::Mutator;
