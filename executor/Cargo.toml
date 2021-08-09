@@ -24,7 +24,6 @@ move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "rele
 move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-#vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff", features = ["debug_module"] }
 resource-viewer = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }

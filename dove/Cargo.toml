@@ -42,7 +42,6 @@ semver = "1.0.3"
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
 git-hash = { path = "../common/git-hash" }
-move-executor = { path = "../executor" }
 net = { path = "../net" }
 
 move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }

@@ -1,8 +1,5 @@
 use anyhow::Error;
 use structopt::StructOpt;
-
-use move_executor::executor::render_execution_result;
-
 use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::transaction::TransactionBuilder;
