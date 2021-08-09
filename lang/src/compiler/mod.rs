@@ -1,6 +1,5 @@
 pub use anyhow::Result;
 use codespan_reporting::term::termcolor::Buffer;
-use move_core_types::account_address::AccountAddress;
 use move_lang::{move_compile, move_check};
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::{Errors, FilesSourceText};
@@ -20,7 +19,6 @@ pub mod file;
 pub mod location;
 pub mod metadata;
 pub mod mut_string;
-pub mod parser;
 pub mod preprocessor;
 pub mod source_map;
 
@@ -28,9 +26,9 @@ pub fn build_global_env(
     targets: Vec<String>,
     deps: Vec<String>,
     dialect: &dyn Dialect,
-    sender: AccountAddress,
+    sender: &str,
 ) -> anyhow::Result<GlobalEnv> {
-    let mut preprocessor = BuilderPreprocessor::new(dialect, Some(sender));
+    let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
 
     let env: GlobalEnv = run_model_builder(&targets, &deps, &mut preprocessor)?;
 
@@ -48,7 +46,7 @@ pub fn build(
     targets: &[String],
     deps: &[String],
     dialect: &dyn Dialect,
-    sender: Option<AccountAddress>,
+    sender: &str,
     interface_files_dir: Option<String>,
     flags: Flags,
 ) -> anyhow::Result<(FilesSourceText, Result<Vec<CompiledUnit>, Errors>)> {
@@ -65,7 +63,7 @@ pub fn check(
     targets: &[String],
     deps: &[String],
     dialect: &dyn Dialect,
-    sender: Option<AccountAddress>,
+    sender: &str,
     interface_files_dir: Option<String>,
     flags: Flags,
 ) -> Result<(), Errors> {

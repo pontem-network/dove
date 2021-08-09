@@ -73,7 +73,7 @@ impl Cmd for Build {
             &ctx.manifest.layout.modules_dir,
         ]);
 
-        let (index, interface) = ctx.build_index(true)?;
+        let (index, interface) = ctx.build_index()?;
 
         let (exclude_files, exclude_dirs): (Vec<_>, Vec<_>) =
             self.exclude.iter().partition(|e| e.ends_with(".move"));
@@ -92,19 +92,17 @@ impl Cmd for Build {
         let dep_list = if self.tree {
             source_list.extend(index.into_deps_roots());
             vec![]
-        } else if let Some(interface) = interface {
-            vec![interface.to_string_lossy().to_string()]
         } else {
-            index.into_deps_roots()
+            vec![interface.dir.to_string_lossy().to_string()]
         };
 
-        let sender = ctx.account_address()?;
+        let sender = ctx.account_address_str()?;
 
         let (files, res) = build(
             &source_list,
             &dep_list,
             ctx.dialect.as_ref(),
-            Some(sender),
+            &sender,
             None,
             Flags::empty(),
         )?;

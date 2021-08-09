@@ -8,8 +8,46 @@ use move_lang::shared::Flags;
 use move_lang::{unwrap_or_report_errors, interface_generator};
 use serde::{Deserialize, Serialize};
 use move_lang::compiled_unit::CompiledUnit;
+use move_binary_format::CompiledModule;
+
+/// Dependencies interface.
+pub struct Interface {
+    /// Path to interface directory.
+    pub dir: PathBuf,
+    /// Path to dependencies bytecode.
+    pub vm_dir: PathBuf,
+}
+
+impl Interface {
+    /// Loads dependencies bytecode from disk.
+    pub fn load_mv(&self) -> Result<Vec<CompiledModule>, Error> {
+        fs::read_dir(&self.vm_dir)?
+            .map(|dir| {
+                dir.map_err(Error::new)
+                    .map(|dir| dir.path())
+                    .and_then(|path| {
+                        Ok(if path.is_file() {
+                            Some(CompiledModule::deserialize(&fs::read(path)?)?)
+                        } else {
+                            None
+                        })
+                    })
+            })
+            .filter_map(|mv| match mv {
+                Ok(Some(mv)) => Some(Ok(mv)),
+                Ok(None) => None,
+                Err(err) => Some(Err(err)),
+            })
+            .collect()
+    }
+}
 
 /// Move modules interface builder.
+/// The builder interface allows you to convert the source code in the move language into
+/// a minimalistic representation of this module.
+/// The conversion process:
+///     1) Build.
+///     2) Decompile the module interface.
 pub struct InterfaceBuilder<'a> {
     ctx: &'a Context,
     index: &'a Index,
@@ -22,39 +60,48 @@ impl<'a> InterfaceBuilder<'a> {
     }
 
     /// Build.
-    pub fn build(&self) -> Result<PathBuf, Error> {
-        let dir = self.ctx.interface_files_dir();
-        if !dir.exists() {
-            fs::create_dir_all(&dir)?;
-        }
+    pub fn build(&self) -> Result<Interface, Error> {
+        let interface_dir = self.ctx.interface_files_dir();
+        let mv_dir = self.ctx.deps_mv_dir();
 
         let lock_path = self.ctx.interface_files_lock();
         let lock = read_lock(&lock_path);
         if let Some(lock) = lock {
             if lock.revision == self.index.package_hash {
-                return Ok(dir);
+                return Ok(Interface {
+                    dir: interface_dir,
+                    vm_dir: mv_dir,
+                });
             }
         }
 
+        if interface_dir.exists() {
+            fs::remove_dir_all(&interface_dir)?;
+        }
+        fs::create_dir_all(&interface_dir)?;
+
+        if mv_dir.exists() {
+            fs::remove_dir_all(&mv_dir)?;
+        }
+        fs::create_dir_all(&mv_dir)?;
+
         let lock = self
-            .make_interfaces(&dir)
+            .make_interfaces(&interface_dir, &mv_dir)
             .map_err(|err| anyhow!("Failed to generate dependencies interface: {}", err))?;
         write_lock(lock_path, &lock)?;
 
-        Ok(dir)
+        Ok(Interface {
+            dir: interface_dir,
+            vm_dir: mv_dir,
+        })
     }
 
-    fn make_interfaces(&self, dir: &Path) -> Result<InterfaceLock, Error> {
-        let vm_dir = dir.join("mv");
-        if vm_dir.exists() {
-            fs::remove_dir_all(&vm_dir)?;
-        }
-        fs::create_dir_all(&vm_dir)?;
+    fn make_interfaces(&self, dir: &Path, mv_dir: &Path) -> Result<InterfaceLock, Error> {
         let (files, res) = build(
             &self.index.deps_roots,
             &[],
             self.ctx.dialect.as_ref(),
-            Some(self.ctx.account_address()?),
+            &self.ctx.account_address_str()?,
             None,
             Flags::empty(),
         )?;
@@ -63,7 +110,7 @@ impl<'a> InterfaceBuilder<'a> {
             if let CompiledUnit::Module { module, .. } = unit {
                 let mut buff = Vec::new();
                 module.serialize(&mut buff)?;
-                let mv = vm_dir.join(format!("{}_.mv", i));
+                let mv = mv_dir.join(format!("{}_.mv", i));
                 fs::write(&mv, &buff)?;
                 let (id, interface_contents) =
                     interface_generator::write_to_string(&mv.to_string_lossy())?;
@@ -80,8 +127,6 @@ impl<'a> InterfaceBuilder<'a> {
                 fs::write(f_name, interface_contents)?;
             }
         }
-
-        fs::remove_dir_all(vm_dir)?;
 
         Ok(InterfaceLock {
             revision: self.index.package_hash.to_owned(),

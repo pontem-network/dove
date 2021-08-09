@@ -4,15 +4,13 @@ use core::fmt;
 use serde::Deserialize;
 use lang::compiler::dialects::{DialectName, Dialect};
 use lang::compiler::file::find_move_files;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 #[derive(Clone)]
 pub struct Config {
     pub dialect_name: DialectName,
     pub stdlib_folder: Option<PathBuf>,
     pub modules_folders: Vec<PathBuf>,
-    pub sender_address: AccountAddress,
+    pub sender_address: String,
 }
 
 impl fmt::Debug for Config {
@@ -32,10 +30,7 @@ impl Default for Config {
             dialect_name: DialectName::Diem,
             stdlib_folder: None,
             modules_folders: vec![],
-            sender_address: DialectName::Diem
-                .get_dialect()
-                .parse_address("0x1")
-                .unwrap(),
+            sender_address: "0x1".to_owned(),
         }
     }
 }
@@ -69,8 +64,8 @@ impl Config {
         self.dialect_name.get_dialect()
     }
 
-    pub fn sender(&self) -> AccountAddress {
-        self.sender_address
+    pub fn sender(&self) -> &str {
+        &self.sender_address
     }
 
     pub fn update(&mut self, value: &serde_json::Value) {
@@ -116,14 +111,14 @@ impl Config {
         self.sender_address = match get(value, "/sender_address") {
             None => {
                 log::info!("Using default account address 0x1");
-                CORE_CODE_ADDRESS
+                "0x1".to_owned()
             }
             Some(address) => match self.dialect().parse_address(address) {
-                Ok(provided_address) => provided_address,
+                Ok(provided_address) => format!("0x{}", provided_address),
                 Err(error) => {
                     log::error!("Invalid sender_address string: {:?}", error);
                     log::info!("Using default account address 0x1");
-                    CORE_CODE_ADDRESS
+                    "0x1".to_owned()
                 }
             },
         };

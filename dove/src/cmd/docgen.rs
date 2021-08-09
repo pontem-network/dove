@@ -21,16 +21,15 @@ impl Cmd for DocGen {
             &ctx.manifest.layout.modules_dir,
         ]);
 
-        let (index, _) = ctx.build_index(false)?;
+        let (index, _) = ctx.build_index()?;
         let dep_list = index.into_deps_roots();
-
-        let sender = ctx.account_address()?;
+        let sender = ctx.account_address_str()?;
 
         let source_list = find_move_files(&dirs)
             .map(|path| path.to_string_lossy().to_string())
             .collect::<Vec<_>>();
 
-        let env = build_global_env(source_list, dep_list, ctx.dialect.as_ref(), sender)?;
+        let env = build_global_env(source_list, dep_list, ctx.dialect.as_ref(), &sender)?;
 
         Self::gen(&ctx, env)
     }

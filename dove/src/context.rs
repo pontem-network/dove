@@ -9,7 +9,7 @@ use lang::compiler::dialects::{Dialect, DialectName};
 use crate::index::Index;
 use crate::manifest::{default_dialect, DoveToml, MANIFEST, read_manifest};
 use diem_crypto::hash::CryptoHash;
-use crate::index::interface::InterfaceBuilder;
+use crate::index::interface::{InterfaceBuilder, Interface};
 
 /// Project context.
 pub struct Context {
@@ -51,7 +51,7 @@ impl Context {
     }
 
     /// Build project index.
-    pub fn build_index(&self, build_interface: bool) -> Result<(Index, Option<PathBuf>), Error> {
+    pub fn build_index(&self) -> Result<(Index, Interface), Error> {
         let index_path = self.path_for(&self.manifest.layout.index);
         let old_index = Index::load(&index_path)?.unwrap_or_default();
 
@@ -65,18 +65,9 @@ impl Context {
             new_index.remove_unnecessary_elements_in_dependencies();
             new_index
         };
-        if build_interface {
-            let builder = InterfaceBuilder::new(self, &index);
-            match builder.build() {
-                Ok(dir) => Ok((index, Some(dir))),
-                Err(err) => {
-                    println!("{}", err);
-                    Ok((index, None))
-                }
-            }
-        } else {
-            Ok((index, None))
-        }
+        let builder = InterfaceBuilder::new(self, &index);
+        let interface = builder.build()?;
+        Ok((index, interface))
     }
 
     /// Returns project name or default name `project` if the name is not defined.
@@ -96,6 +87,14 @@ impl Context {
             .parse_address(&self.manifest.package.account_address)
     }
 
+    /// Returns provided account address.
+    pub fn account_address_str(&self) -> Result<String> {
+        Ok(format!(
+            "0x{}",
+            self.dialect
+                .parse_address(&self.manifest.package.account_address)?
+        ))
+    }
     /// Calculates package hash.
     pub fn package_hash(&self) -> String {
         self.manifest.package.hash().to_string()
@@ -105,6 +104,11 @@ impl Context {
     pub fn interface_files_dir(&self) -> PathBuf {
         self.path_for(&self.manifest.layout.artifacts)
             .join("interface_files_dir")
+    }
+
+    /// Returns directory for dependency bytecode.
+    pub fn deps_mv_dir(&self) -> PathBuf {
+        self.path_for(&self.manifest.layout.artifacts).join("depmv")
     }
 
     /// Interface files lock.

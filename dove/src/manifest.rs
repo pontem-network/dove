@@ -133,11 +133,11 @@ fn index() -> String {
 }
 
 fn storage_dir() -> String {
-    format!("{}{}{}", artifacts(), MS, "storage_dir")
+    format!("{}{}{}", artifacts(), MS, "storage")
 }
 
 fn exe_build_dir() -> String {
-    format!("{}{}{}", artifacts(), MS, "exe_build_dir")
+    format!("{}{}{}", artifacts(), MS, "exe_build")
 }
 
 fn code_code_address() -> String {

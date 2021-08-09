@@ -7,7 +7,7 @@ use std::path::PathBuf;
 fn test_cmd_dove_run_without_arguments() {
     let project_folder =
         create_project_with_a_single_script_without_parameters("project_run_without_arguments");
-    let args = &["dove", "run"];
+    let args = &["dove", "run", "main"];
     execute_dove_at(args, &project_folder).unwrap();
     project_remove(&project_folder);
 }
@@ -25,15 +25,24 @@ fn test_cmd_dove_run_with_call_and_arguments() {
     let project_folder = create_project_with_any_scripts("project_run_with_call_and_arguments");
     for args in vec![
         vec!["dove", "run", "noparams()"],
-        vec!["dove", "run", "noparams()", "-s", "0x1"],
-        vec!["dove", "run", "-f", "noparams"],
-        vec!["dove", "run", "-n", "noparams"],
-        vec!["dove", "run", "withnums(1,2)"],
-        vec!["dove", "run", "withnums(1,2)", "--signers", "0x1", "0x2"],
-        vec!["dove", "run", "--file", "withnums", "-a", "1", "2"],
-        vec!["dove", "run", "--name", "withnums", "--args", "1", "2"],
+        vec!["dove", "run", "noparams", "-f", "noparams.move"],
+        vec!["dove", "run", "withnums(1, 2)"],
+        vec!["dove", "run", "withnums(1, 2)"],
+        vec![
+            "dove",
+            "run",
+            "withnums",
+            "--file",
+            "withnums.move",
+            "-a",
+            "1",
+            "2",
+        ],
+        vec!["dove", "run", "withnums", "--args", "1", "2"],
     ] {
-        execute_dove_at(args.as_ref(), &project_folder).unwrap();
+        execute_dove_at(args.as_ref(), &project_folder)
+            .map(|err| format!("Failed to execute '{}'. Error:{}", args.join(" "), err))
+            .unwrap();
     }
     project_remove(&project_folder);
 }

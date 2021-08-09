@@ -153,8 +153,6 @@ mod tests {
 
     fn compile(source: &str) -> Vec<u8> {
         let dialect = DialectName::DFinance.get_dialect();
-
-        let sender = dialect.parse_address("0x1").unwrap();
         let deps = &[
             "src/assets/base.move".to_string(),
             "src/assets/tx.move".to_string(),
@@ -164,7 +162,7 @@ mod tests {
             &[source.to_owned()],
             deps,
             dialect.as_ref(),
-            Some(sender),
+            "0x1",
             None,
             Flags::empty(),
         )
