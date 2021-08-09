@@ -105,7 +105,9 @@ fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
                     .ok_or_else(|| anyhow!("Failed to take repo {} head.", params.repo()))?;
                 let commit = repo.find_commit(oid)?;
 
-                repo.branch(branch_name, &commit, false)?;
+                if head.shorthand() != Some(branch_name.as_str()) {
+                    repo.branch(branch_name, &commit, false)?;
+                }
 
                 let obj = repo.revparse_single(&refs)?;
                 repo.checkout_tree(&obj, None)?;

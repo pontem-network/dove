@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::fs;
-use std::fs::OpenOptions;
+use std::fs::{OpenOptions, remove_dir_all};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -153,6 +153,7 @@ impl Index {
                 }
             }
         } else {
+            roots.insert(path.clone());
             result.insert(path);
         }
         Ok(result)
@@ -193,6 +194,44 @@ impl Index {
             .open(path)?;
         f.set_len(0)?;
         f.write_all(&value)?;
+
+        Ok(())
+    }
+    /// removing unused external dependencies
+    pub fn remove_unused(&self, deps_path: &Path) -> Result<(), Error> {
+        if !deps_path.exists() {
+            return Ok(());
+        }
+
+        let deps: Vec<PathBuf> = self
+            .deps_roots
+            .iter()
+            .filter_map(|item| {
+                let path = PathBuf::from(item);
+                path.components()
+                    .enumerate()
+                    .filter_map(|(num, part)| {
+                        part.as_os_str().to_str().and_then(|n| {
+                            if n.starts_with("git_") {
+                                Some(num)
+                            } else {
+                                None
+                            }
+                        })
+                    })
+                    .last()
+                    .map(|num| path.components().take(num + 1).collect())
+            })
+            .filter(|path: &PathBuf| path.starts_with(deps_path))
+            .collect();
+
+        for found in deps_path
+            .read_dir()?
+            .filter_map(|path| path.ok().map(|path| path.path()))
+            .filter(|path| path.is_dir() && !deps.contains(path) && path.exists())
+        {
+            remove_dir_all(&found)?;
+        }
 
         Ok(())
     }
