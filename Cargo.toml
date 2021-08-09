@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "language_server",
-    "executor",
     "net",
     "dove",
     "lang",

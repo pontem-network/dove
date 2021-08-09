@@ -81,7 +81,6 @@ jobs:
         run: >
           cargo build --release --bins
           -p=dove
-          -p=move-executor
           -p=decompiler
           -p=move-language-server
 
@@ -94,11 +93,6 @@ jobs:
         name: get version of dove
         uses: ./.github/actions/crate-version
         with: { crate: dove }
-
-      - id: executor
-        name: get version of move-executor
-        uses: ./.github/actions/crate-version
-        with: { crate: move-executor }
 
       - id: decompiler
         name: get version of decompiler
@@ -148,7 +142,6 @@ jobs:
           DOVE_NAME=dove$OS_BIN_EXT
           MLS_NAME=move-language-server$OS_BIN_EXT
           MRV_NAME=move-resource-viewer$OS_BIN_EXT
-          EXECUTOR_NAME=move-executor$OS_BIN_EXT
           TESTRUNNER_NAME=move-testrunner$OS_BIN_EXT
           DECOMPILER_NAME=move-decompiler$OS_BIN_EXT
 
@@ -183,7 +176,6 @@ jobs:
           MLS_NAME=move-language-server-${{ steps.mls.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           MRV_NAME=move-resource-viewer-${{ steps.mrv.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           DOVE_NAME=dove-${{ steps.dove.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
-          EXECUTOR_NAME=move-executor-${{ steps.executor.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           TESTRUNNER_NAME=move-testrunner-${{ steps.executor.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           DECOMPILER_NAME=move-decompiler-${{ steps.decompiler.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           cd $RELEASE_DIR

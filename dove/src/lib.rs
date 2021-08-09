@@ -21,6 +21,8 @@ pub mod index;
 pub mod manifest;
 /// StdOut stream
 pub mod stdout;
+/// Test runner.
+pub mod tests;
 /// for tests
 pub mod tests_helper;
 /// Build|Run transaction. Used in "dove run" and "dove tx"
