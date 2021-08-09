@@ -20,8 +20,8 @@ fn cli() -> App<'static, 'static> {
         )
         .arg(
             Arg::from_usage("-d --dialect=[DIALECT]")
-                .possible_values(&["libra", "dfinance"])
-                .default_value("libra")
+                .possible_values(&["diem", "dfinance"])
+                .default_value("diem")
                 .help("Move language dialect"),
         )
         .arg(

@@ -1,17 +1,17 @@
-use std::borrow::Cow;
 use crossbeam_channel::unbounded;
 
 use lsp_types::{Diagnostic, Position, Range};
 use move_language_server::main_loop::{compute_file_diagnostics, FileSystemEvent, ResponseEvent};
 use move_language_server::inner::config::Config;
 use move_language_server::inner::db::FileDiagnostic;
-use resources::{modules_path, resources_dir, stdlib_path};
+use resources::{modules_path, stdlib_path};
 use move_language_server::global_state::{
     GlobalState, GlobalStateSnapshot, initialize_new_global_state,
 };
 use lang::compiler::file::*;
 use move_language_server::inner::change::AnalysisChange;
-use move_lang::leak_str;
+use tempfile::NamedTempFile;
+use std::io::Write;
 
 macro_rules! config {
     () => {{
@@ -25,33 +25,29 @@ macro_rules! config {
     }};
 }
 
-fn path(name: &str) -> String {
-    modules_path().join(name).to_str().unwrap().to_owned()
-}
-
-fn script_path<'a>() -> impl Into<Cow<'a, str>> {
-    resources_dir()
-        .join("script.move")
-        .to_string_lossy()
-        .to_string()
-}
-
 fn range(start: (u32, u32), end: (u32, u32)) -> Range {
     Range::new(Position::new(start.0, start.1), Position::new(end.0, end.1))
 }
 
-fn diagnostics(file: MoveFile) -> Vec<Diagnostic> {
-    diagnostics_with_config(file, Config::default())
+fn diagnostics(source: &str) -> Vec<Diagnostic> {
+    diagnostics_with_config(source, Config::default())
 }
 
-fn diagnostics_with_config(file: MoveFile, config: Config) -> Vec<Diagnostic> {
-    let loc_ds = diagnostics_with_config_and_filename(file, config);
+fn diagnostics_with_config(source: &str, config: Config) -> Vec<Diagnostic> {
+    let loc_ds = diagnostics_with_config_and_filename(source, config);
     loc_ds.into_iter().filter_map(|d| d.diagnostic).collect()
 }
 
-fn diagnostics_with_config_and_filename(file: MoveFile, config: Config) -> Vec<FileDiagnostic> {
-    let fpath = file.name().to_owned();
-    let state_snapshot = global_state_snapshot(file, config, vec![]);
+fn diagnostics_with_config_and_filename(source: &str, config: Config) -> Vec<FileDiagnostic> {
+    let mut f = NamedTempFile::new().unwrap();
+    f.write_all(source.as_bytes()).unwrap();
+    let fpath = f.path().to_string_lossy().to_string();
+
+    let state_snapshot = global_state_snapshot(
+        MoveFile::with_content(fpath.clone(), source.to_owned()),
+        config,
+        vec![],
+    );
     let (task_sender, task_receiver) = unbounded::<ResponseEvent>();
 
     compute_file_diagnostics(state_snapshot.analysis, task_sender, vec![fpath]);
@@ -112,14 +108,10 @@ pub fn global_state_snapshot(
 mod tests {
     use super::*;
 
-    use move_language_server::inner::db::RootDatabase;
-    use move_language_server::inner::analysis::Analysis;
-    use std::collections::HashMap;
-
     #[test]
     fn test_fail_on_non_ascii_character() {
         let source = r"fun main() { return; }ффф";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((0, 22), (0, 22)));
     }
@@ -131,14 +123,14 @@ script {
     fun main() {}
 }
 ";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert!(errors.is_empty());
     }
 
     #[test]
     fn test_function_parse_error() {
         let source = "module M { struc S { f: u64 } }";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
 
         assert_eq!(errors[0].message, "Unexpected 'struc'");
@@ -148,7 +140,7 @@ script {
     #[test]
     fn test_main_function_parse_error() {
         let source = "script { main() {} }";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unexpected 'main'");
     }
@@ -162,7 +154,7 @@ module M {
     }
 }
 ";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unexpected \'struc\'");
     }
@@ -170,14 +162,14 @@ module M {
     #[test]
     fn test_expansion_checks_duplicates() {
         let source = r"
-module M {
+module 0x1::M {
     struct S {
         f: u64,
         f: u64,
     }
 }
 ";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -189,7 +181,7 @@ module M {
     fn test_expansion_checks_public_main_redundancy() {
         let source = r"script { public fun main() {} }";
 
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -200,12 +192,12 @@ module M {
     #[test]
     fn test_naming_checks_generics_with_type_parameters() {
         let source = r"
-module M {
+module 0x1::M {
     struct S<T> { f: T<u64> }
 }
 ";
 
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -216,13 +208,13 @@ module M {
     #[test]
     fn test_typechecking_invalid_local_borrowing() {
         let source = r"
-module M {
+module 0x1::M {
     fun t0(r: &u64) {
         &r;
     }
 }
 ";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Invalid borrow");
     }
@@ -230,7 +222,7 @@ module M {
     #[test]
     fn test_stdlib_modules_are_available_if_loaded() {
         let source = r"
-module MyModule {
+module 0x1::MyModule {
     use 0x1::Signer;
 
     public fun how_main(s: &signer) {
@@ -238,10 +230,7 @@ module MyModule {
     }
 }
 ";
-        let errors = diagnostics_with_config(
-            MoveFile::with_content(script_path(), source),
-            config!({ "stdlib_folder": stdlib_path() }),
-        );
+        let errors = diagnostics_with_config(source, config!({ "stdlib_folder": stdlib_path() }));
         assert!(errors.is_empty());
     }
 
@@ -266,14 +255,13 @@ script {
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()],
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
     #[test]
     fn test_compile_check_module_from_a_folder_with_folder_provided_as_dependencies() {
-        let record = MoveFile::load(modules_path().join("record.move")).unwrap();
+        let record = include_str!("../../resources/assets/modules/record.move");
         let config = config!({
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()],
@@ -304,8 +292,7 @@ script {
             "modules_folders": [modules_path()],
             "sender_address": "0x1",
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
@@ -327,46 +314,9 @@ script {
             "stdlib_folder": stdlib_path(),
             "modules_folders": [modules_path()]
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].related_information.as_ref().unwrap().len(), 2);
-    }
-
-    #[test]
-    fn test_syntax_error_in_dependency() {
-        let config = config!({ "modules_folders": [modules_path()] });
-
-        let mut files = HashMap::new();
-
-        files.insert(
-            path("dep_module.move"),
-            "address 0x0 { modules T { public fun how_many() {} } }".to_owned(),
-        );
-
-        let source = r"
-    module HowMany {
-        use 0x0::T;
-        public fun how() {
-            T::how_many()
-        }
-    }
-";
-        files.insert(path("module.move"), source.to_owned());
-
-        let db = RootDatabase {
-            config,
-            available_files: files,
-        };
-        let analysis = Analysis::new(db);
-        let error = analysis
-            .check_file(MoveFile::with_content(path("module.move"), source))
-            .unwrap();
-        assert_eq!(error.fpath, path("dep_module.move"));
-        assert_eq!(
-            error.diagnostic.as_ref().unwrap().message,
-            "Unexpected 'modules'"
-        );
     }
 
     #[test]
@@ -383,10 +333,7 @@ address 0x0 {
         let config = config!({
             "stdlib_folder": stdlib_path(),
         });
-        let errors = diagnostics_with_config_and_filename(
-            MoveFile::with_content(script_path(), source),
-            config,
-        );
+        let errors = diagnostics_with_config_and_filename(source, config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -399,10 +346,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     }
 }
  ";
-        let errors = diagnostics_with_config(
-            MoveFile::with_content(script_path(), source),
-            config!({"dialect": "dfinance"}),
-        );
+        let errors = diagnostics_with_config(source, config!({"dialect": "dfinance"}));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unexpected \'pubic\'");
         assert_eq!(errors[0].range, range((3, 8), (3, 13)))
@@ -414,30 +358,24 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     module Debug {
         public fun main() {
-            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let _ = @wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
         }
     }
 }
 ";
-        let errors = diagnostics_with_config(
-            MoveFile::with_content(script_path(), source),
-            config!({"dialect": "dfinance"}),
-        );
+        let errors = diagnostics_with_config(source, config!({"dialect": "dfinance"}));
         assert!(errors.is_empty(), "{:?}", errors);
 
         let source = r"
 address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     module Debug {
         public fun main() {
-            let addr = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let addr = @wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
         }
     }
 }
         ";
-        let errors = diagnostics_with_config(
-            MoveFile::with_content(script_path(), source),
-            config!({"dialect": "dfinance"}),
-        );
+        let errors = diagnostics_with_config(source, config!({"dialect": "dfinance"}));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unused assignment or binding for local 'addr'. Consider removing, replacing with '_', or prefixing with '_' (e.g., '_addr')");
         assert_eq!(errors[0].range, range((4, 16), (4, 20)));
@@ -446,17 +384,14 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
 address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
     module Debug {
         public fun main() {
-            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
-            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let _ = @wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let _ = @wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
             let _: u10;
         }
     }
 }
  ";
-        let errors = diagnostics_with_config(
-            MoveFile::with_content(script_path(), source),
-            config!({"dialect": "dfinance"}),
-        );
+        let errors = diagnostics_with_config(source, config!({"dialect": "dfinance"}));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unbound type 'u10' in current scope");
         assert_eq!(errors[0].range, range((6, 19), (6, 22)));
@@ -475,8 +410,7 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -491,11 +425,10 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             }
         }";
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "sender_address": "0x1111111111111111"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -510,11 +443,10 @@ address wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh {
             }
         }";
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "sender_address": "0x1111111111111111"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
@@ -529,13 +461,12 @@ address {{sender}} {
     }
 }";
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "sender_address": "0x1111111111111111"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
-        assert_eq!(errors[0].range, range((4, 20), (4, 41)));
+        assert_eq!(errors[0].range, range((4, 20), (4, 32)));
     }
 
     #[test]
@@ -550,13 +481,12 @@ address {{sender}} {
     }
 }";
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "sender_address": "0x1111111111111111"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
-        assert_eq!(errors[0].range, range((5, 20), (5, 41)));
+        assert_eq!(errors[0].range, range((5, 20), (5, 32)));
     }
 
     #[test]
@@ -565,8 +495,8 @@ address {{sender}} {
 address {{ sender }} {
     module Debug {
         public fun main() {
-            let _ = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
-            let _ = {{ sender }};
+            let _ = @wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;
+            let _ = @{{ sender }};
             // errors out
             0x0::Unknown::unknown();
         }
@@ -576,11 +506,10 @@ address {{ sender }} {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].message, "Unbound module \'0x0::Unknown\'");
-        assert_eq!(errors[0].range, range((7, 12), (7, 33)));
+        assert_eq!(errors[0].range, range((7, 12), (7, 24)));
     }
 
     #[test]
@@ -592,41 +521,36 @@ address {{sender}} {
     }
 }";
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "sender_address": "0x1"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert!(errors.is_empty(), "{:?}", errors);
     }
 
     #[test]
     fn test_sender_replacement_in_script() {
-        let module = r"
-address {{sender}} {
-    module Debug {
-        public fun debug(): u8 {
-            1
-        }
-    }
-}";
         let source = r"
 script {
     fun main() {
-        let _ = {{sender}}::Debug::debug();
+        let _ = {{sender}}::Debug1::debug();
     }
 }
         ";
+        let mut script = NamedTempFile::new().unwrap();
+        script.write_all(source.as_bytes()).unwrap();
+
         let config = config!({
-            "dialect": "libra",
+            "dialect": "diem",
             "sender_address": "0x1",
         });
+
         let error = diagnostics_with_deps(
-            MoveFile::with_content(script_path(), source),
-            vec![MoveFile::with_content(
-                leak_str(modules_path().join("debug.move").to_str().unwrap()),
-                module,
-            )],
+            MoveFile::load(script.path()).unwrap(),
+            vec![MoveFile::load(move_lang::leak_str(
+                modules_path().join("debug.move").to_str().unwrap(),
+            ))
+            .unwrap()],
             config,
         );
         assert!(error.is_none(), "{:#?}", error);
@@ -642,8 +566,7 @@ script {
         }
         ";
         let config = config!({"dialect": "dfinance"});
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -664,10 +587,9 @@ script {
             "dialect": "dfinance",
             "sender_address": "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"
         });
-        let errors =
-            diagnostics_with_config(MoveFile::with_content(script_path(), source), config);
+        let errors = diagnostics_with_config(source, config);
         assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].range, range((3, 16), (3, 44)));
+        assert_eq!(errors[0].range, range((3, 16), (3, 35)));
         assert_eq!(
             errors[0].message,
             "Unbound module \'0xDE5F86CE8AD7944F272D693CB4625A955B610150::Unknown\'"
@@ -683,7 +605,7 @@ script {
             struct T {}
         }
         }";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 0);
     }
 
@@ -695,7 +617,7 @@ script {
                 UnknownPayments::send_payment_event();
             }
         }";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(
             errors[0].message,
@@ -706,31 +628,20 @@ script {
     #[test]
     fn test_windows_line_endings_are_allowed() {
         let source = "script { fun main() {} \r\n } \r\n";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert!(errors.is_empty(), "{:#?}", errors);
     }
 
     #[test]
     fn test_windows_line_endings_do_not_offset_errors() {
         let source = "script {\r\n func main() {} \r\n }";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((1, 1), (1, 5)));
 
         let source = "script {\r\n\r\n\r\n func main() {} \r\n }";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
+        let errors = diagnostics(source);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].range, range((3, 1), (3, 5)));
-    }
-
-    #[test]
-    fn test_docstrings_are_allowed_on_scripts() {
-        let source = r"
-/// signer: 0x1
-script {
-    fun main(_: signer) {}
-}";
-        let errors = diagnostics(MoveFile::with_content(script_path(), source));
-        assert!(errors.is_empty(), "{:#?}", errors);
     }
 }

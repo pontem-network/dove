@@ -28,3 +28,6 @@ lang = { path = "../lang" }
 move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+
+[dev-dependencies]
+tempfile = "3.2.0"

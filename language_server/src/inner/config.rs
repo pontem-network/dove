@@ -79,13 +79,15 @@ impl Config {
         set(value, "/dialect", &mut self.dialect_name);
         self.stdlib_folder = match get::<PathBuf>(value, "/stdlib_folder") {
             None => {
-                log::error!("\"stdlib_folder\" not specified or invalid, standard library won't be loaded");
+                log::error!(
+                    "\"stdlib_folder\" not specified or invalid, standard diemry won't be loaded"
+                );
                 None
             }
             Some(folder) => {
                 if !folder.exists() {
                     log::error!(
-                        "Invalid configuration: {:?}  does not exist, standard library won't be loaded", 
+                        "Invalid configuration: {:?}  does not exist, standard diemry won't be loaded",
                         folder.into_os_string()
                     );
                     None

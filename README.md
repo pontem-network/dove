@@ -4,7 +4,7 @@ Toolset for work with Move language based projects:
 
 * [dove](/dove/) - package manager and compiler.
 * [language server](/language_server/) - Move language server.
-* [resource viewer](/resource-viewer/) - [LCS](https://github.com/librastartup/libra-canonical-serialization) resource viewer.
+* [resource viewer](/resource-viewer/) - [LCS](https://github.com/diemstartup/diem-canonical-serialization) resource viewer.
 * [executor](/executor/) - launch and test Move code without sending transactions.
 
 Supported projects and dialects:
@@ -46,7 +46,7 @@ Create new project:
 dove new first_project --dialect polkadot
 ```
 
-`dialect` - dialect of the Move language. Either `move` (for original Libra version)  or `polkadot`, or `dfinance` (bech32 addresses and some other stuff). Default is `move`.
+`dialect` - dialect of the Move language. Either `move` (for original diem version)  or `polkadot`, or `dfinance` (bech32 addresses and some other stuff). Default is `move`.
 
 Build project:
 
@@ -175,7 +175,7 @@ See [documentation](/resource-viewer/README.md).
 
 ## Language Server
 
-Implementation of Language Server Protocol for [Move language](https://developers.libra.org/docs/crates/move-language).
+Implementation of Language Server Protocol for [Move language](https://developers.diem.org/docs/crates/move-language).
 
 ```shell script
 RUST_LOG=info cargo run --bin move-language-server
@@ -188,7 +188,7 @@ For the corresponding VSCode extension, see https://marketplace.visualstudio.com
 
 #### Configuration
 
-`dialect` - dialect of the Move language. Either `move` (for original Libra version) or `polkadot` (ss58), or ` (bech32 addresses and some other stuff). Default is `move`.
+`dialect` - dialect of the Move language. Either `move` (for original diem version) or `polkadot` (ss58), or ` (bech32 addresses and some other stuff). Default is `move`.
 
 `sender_address` - address of the user, used for module imports. Default is `0x0`.
 
