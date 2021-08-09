@@ -1,9 +1,9 @@
-use lang::compiler::file;
+use move_lang::shared::Flags;
+
+use lang::compiler::{check, file};
 use lang::compiler::file::MoveFile;
-use lang::flow::checker::MoveChecker;
 
 use crate::inner::db::{FileDiagnostic, RootDatabase};
-use lang::flow::StaticResolver;
 
 #[derive(Debug)]
 pub struct Analysis {
@@ -30,22 +30,19 @@ impl Analysis {
         let deps = self
             .read_stdlib_files()
             .into_iter()
-            .chain(
-                self.db
-                    .module_files()
-                    .into_iter()
-                    .map(|(name, text)| MoveFile::with_content(name, text)),
-            )
-            .filter(|file| file.name() != current_file.name())
-            .collect::<Vec<MoveFile<'static, 'static>>>();
+            .map(|mf| mf.into().0)
+            .chain(self.db.module_files().into_iter().map(|(name, _)| name))
+            .filter(|file| file != current_file.name())
+            .collect::<Vec<String>>();
 
-        let resolver = StaticResolver::new(deps);
-        MoveChecker::new(
+        check(
+            &[current_file.into().0],
+            &deps,
             self.db.config.dialect().as_ref(),
             Some(self.db.config.sender()),
-            resolver,
+            None,
+            Flags::empty(),
         )
-        .check(&[&current_file])
         .map_err(|errors| {
             errors
                 .into_iter()

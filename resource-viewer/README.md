@@ -1,6 +1,6 @@
 # Move Resource Viewer
 
-Move Resource Viewer is a tool to query [LCS](https://github.com/librastartup/libra-canonical-serialization/blob/master/DOCUMENTATION.md) resources data from blockchain nodes storage (i.e. [dnode](http://github.com/dfinance/dnode) or [diem](https://github.com/diem/diem)) and represent them in JSON or human readable format.
+Move Resource Viewer is a tool to query [LCS](https://github.com/diemstartup/diem-canonical-serialization/blob/master/DOCUMENTATION.md) resources data from blockchain nodes storage (i.e. [dnode](http://github.com/dfinance/dnode) or [diem](https://github.com/diem/diem)) and represent them in JSON or human readable format.
 
 ## How does it works?
 
@@ -27,14 +27,14 @@ cargo install --git https://github.com/pontem-network/move-tools.git move-resour
 
 - `json-schema` - add option to export json schema for output format
 - `dfinance_address` - add option to support [DFinance][] node & address format
-- `libra_address` - add option to support [Libra/Diem][] address format
+- `diem_address` - add option to support [diem/Diem][] address format
 - `ps_address` - add option to support Substrate node & [ss58][] address format
 
 These three `.._address` options are mutually exclusive, so they conflicts with each other.
 
 
 [DFinance]: https://github.com/dfinance
-[Libra/Diem]: https://github.com/diem
+[diem/Diem]: https://github.com/diem
 [ss58]: "https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)"
 
 

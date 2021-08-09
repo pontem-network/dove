@@ -3436,6 +3436,7 @@ dependencies = [
  "resources",
  "serde",
  "serde_json",
+ "tempfile",
  "threadpool",
  "walkdir",
 ]
@@ -3514,6 +3515,7 @@ dependencies = [
  "http",
  "lang",
  "log",
+ "move-binary-format",
  "move-compat",
  "move-core-types",
  "move-ir-types",
@@ -3677,6 +3679,7 @@ dependencies = [
  "http",
  "lang",
  "log",
+ "move-binary-format",
  "move-core-types",
  "move-vm-runtime",
  "reqwest 0.10.10",
