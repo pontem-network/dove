@@ -1,0 +1,7 @@
+[package]
+name = "for_test_dove_repositories"
+dialect = "pont"
+
+dependencies = [
+    { path = "pathdemo" }
+]

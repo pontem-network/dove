@@ -48,24 +48,19 @@ pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
 /// create new project and add dependencies
 pub fn project_start_new_and_add_dependencies(
     project_name: &str,
-    mut dependencies: Vec<Git>,
+    git_dependencies: &[Git],
+    path_dependencies: &[&str],
 ) -> PathBuf {
     let project_folder = project_start_new_default(project_name);
-    dependencies.push(Git {
-        git: "https://github.com/pontem-network/move-stdlib".to_string(),
-        branch: None,
-        tag: Some("v0.1.2".to_string()),
-        rev: None,
-        path: None,
-    });
-    set_dependency_in_toml(&project_folder, &dependencies).unwrap();
+    set_dependency_in_toml(&project_folder, git_dependencies, path_dependencies).unwrap();
 
     project_folder
 }
 /// Set dependency in Dove.toml
 pub fn set_dependency_in_toml(
     project_folder: &Path,
-    dependencies_new: &[Git],
+    git_dependencies: &[Git],
+    path_dependencies: &[&str],
 ) -> Result<(), anyhow::Error> {
     let dove_toml_path = project_folder.join("Dove.toml");
     let mut toml_value = read_to_string(&dove_toml_path)?.parse::<Value>()?;
@@ -81,8 +76,13 @@ pub fn set_dependency_in_toml(
         .unwrap();
     dependencies.clear();
 
-    for git in dependencies_new.iter() {
+    for git in git_dependencies {
         dependencies.push(Value::try_from(git)?);
+    }
+    for path in path_dependencies {
+        let mut dd = toml::map::Map::new();
+        dd.insert("path".to_string(), Value::String(path.to_string()));
+        dependencies.push(Value::try_from(Value::Table(dd))?);
     }
 
     write_all(
