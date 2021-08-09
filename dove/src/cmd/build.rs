@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+use move_lang::shared::Flags;
 use anyhow::Error;
 use move_lang::{
     compiled_unit,
@@ -108,6 +109,7 @@ impl Cmd for Build {
             ctx.dialect.as_ref(),
             Some(sender),
             Some(interface_files_dir.to_string_lossy().to_string()),
+            Flags::empty(),
         )?;
         let units = unwrap_or_report_errors!(files, res);
 

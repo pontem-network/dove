@@ -1,22 +1,61 @@
 use anyhow::Error;
 use structopt::StructOpt;
 
-use lang::compiler::file::{find_move_files, MoveFile};
-use move_executor::executor::{Executor, render_test_result};
+use lang::compiler::file::find_move_files;
 
 use crate::cmd::Cmd;
 use crate::context::Context;
+use lang::compiler::preprocessor::BuilderPreprocessor;
+use move_unit_test::UnitTestingConfig;
 
 /// Run tests.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Test {
+    /// Bound the number of instructions that can be executed by any one test.
     #[structopt(
-        short = "k",
-        long = "name-pattern",
-        help = "Specify test name to run (or substring)"
+    name = "instructions",
+    default_value = "5000",
+    short = "i",
+    long = "instructions"
     )]
-    name_pattern: Option<String>,
+    pub instruction_execution_bound: u64,
+
+    /// A filter string to determine which unit tests to run
+    #[structopt(name = "filter", short = "f", long = "filter")]
+    pub filter: Option<String>,
+
+    /// List all tests
+    #[structopt(name = "list", short = "l", long = "list")]
+    pub list: bool,
+
+    /// Number of threads to use for running tests.
+    #[structopt(
+    name = "num_threads",
+    default_value = "8",
+    short = "t",
+    long = "threads"
+    )]
+    pub num_threads: usize,
+
+    /// Report test statistics at the end of testing
+    #[structopt(name = "report_statistics", short = "s", long = "statistics")]
+    pub report_statistics: bool,
+
+    /// Show the storage state at the end of execution of a failing test
+    #[structopt(name = "global_state_on_error", short = "g", long = "state_on_error")]
+    pub report_storage_on_error: bool,
+
+    /// Use the stackless bytecode interpreter to run the tests and cross check its results with
+    /// the execution result from Move VM.
+    #[structopt(long = "stackless")]
+    pub check_stackless_vm: bool,
+
+    /// Verbose mode
+    #[structopt(short = "v", long = "verbose")]
+    pub verbose: bool,
+
+    /// Color mode.
     #[structopt(long, hidden = true)]
     color: Option<String>,
 }
@@ -29,46 +68,38 @@ impl Cmd for Test {
         }
 
         let mut deps = ctx.build_index()?.into_deps_roots();
-        deps.push(
-            ctx.path_for(&ctx.manifest.layout.scripts_dir)
-                .to_string_lossy()
-                .to_string(),
+        deps.push(tests_dir.to_string_lossy().to_string());
+        deps.push(ctx.path_for(&ctx.manifest.layout.modules_dir)
+            .to_string_lossy()
+            .to_string());
+
+        let source_files = find_move_files(&deps)
+            .into_iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect::<Vec<_>>();
+
+        let unit_test_config = UnitTestingConfig {
+            instruction_execution_bound: self.instruction_execution_bound,
+            filter: self.filter,
+            list: self.list,
+            num_threads: self.num_threads,
+            report_statistics: self.report_statistics,
+            report_storage_on_error: self.report_storage_on_error,
+            source_files,
+            check_stackless_vm: self.check_stackless_vm,
+            verbose: self.verbose,
+        };
+
+        let mut preprocessor = BuilderPreprocessor::new(
+            ctx.dialect.as_ref(),
+            Some(ctx.account_address()?),
         );
-        deps.push(
-            ctx.path_for(&ctx.manifest.layout.modules_dir)
-                .to_string_lossy()
-                .to_string(),
-        );
-
-        let deps = find_move_files(&deps)
-            .map(MoveFile::load)
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let executor = Executor::new(ctx.dialect.as_ref(), ctx.account_address()?, deps);
-
-        let mut has_failures = false;
-
-        for test in find_move_files(&[tests_dir]) {
-            let test = MoveFile::load(&test)?;
-            let test_name = Executor::script_name(&test)?;
-
-            if let Some(pattern) = &self.name_pattern {
-                if !test_name.contains(pattern) {
-                    continue;
-                }
-            }
-
-            let is_err =
-                render_test_result(&test_name, executor.execute_script(test, None, vec![]))?;
-            if is_err {
-                has_failures = true;
-            }
+        let test_plan = unit_test_config.build_test_plan(&mut preprocessor);
+        if let Some(test_plan) = test_plan {
+            unit_test_config.run_and_report_unit_tests(test_plan, std::io::stdout())
+                .map_err(|_| anyhow!("tests failed:{}", ctx.project_name()))?;
         }
 
-        if has_failures {
-            Err(anyhow!("tests failed:{}", ctx.project_name()))
-        } else {
-            Ok(())
-        }
+        Ok(())
     }
 }

@@ -8,6 +8,7 @@ use anyhow::Error;
 use std::fs;
 use std::path::PathBuf;
 use termcolor::Buffer;
+use codespan_reporting::diagnostic::Severity;
 
 /// Generate move documentation.
 pub fn generate_docs(
@@ -26,7 +27,7 @@ pub fn generate_docs(
 
     if env.has_errors() {
         let mut error_writer = Buffer::no_color();
-        env.report_errors(&mut error_writer);
+        env.report_diag(&mut error_writer, Severity::Warning);
         println!("{}", String::from_utf8_lossy(&error_writer.into_inner()));
         Err(anyhow!("exiting with documentation generation errors"))
     } else {

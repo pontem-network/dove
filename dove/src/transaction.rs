@@ -21,10 +21,8 @@ use lang::compiler::file::{find_move_files, MoveFile};
 use lang::compiler::metadata::{Meta, script_metadata};
 use lang::compiler::mut_string::MutString;
 use lang::lexer::unwrap_spanned_ty;
-use move_executor::executor::Executor;
-use move_executor::explain::PipelineExecutionResult;
-
 use crate::context::Context;
+use move_lang::shared::Flags;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -440,6 +438,7 @@ impl<'a> TransactionBuilder<'a> {
             self.dove_ctx.dialect.as_ref(),
             Some(sender),
             None,
+            Flags::empty()
         )?;
 
         match prog {

@@ -38,6 +38,7 @@ dunce = "1.0.1"
 atty = "0.2"
 indexmap = { version = "=1.6.2", default-features = false, features = ["std"] }
 semver = "1.0.3"
+codespan-reporting = "0.8.0"
 
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
@@ -50,6 +51,7 @@ docgen = { git = "https://github.com/pontem-network/diem.git", branch = "release
 move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+move-unit-test = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
 
 # move-prover deps
 move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
