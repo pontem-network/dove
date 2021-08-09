@@ -25,6 +25,6 @@ hex = "0.4.2"
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
-move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v1" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }

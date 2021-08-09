@@ -2,7 +2,7 @@ use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{StructTag, TypeTag};
-use move_lang::parser::ast::{ModuleAccess_, Type, Type_};
+use move_lang::parser::ast::{LeadingNameAccess_, NameAccessChain_, Type, Type_};
 
 pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
     fn unwrap_spanned_ty_(ty: Type, this: Option<AccountAddress>) -> Result<TypeTag, Error> {
@@ -10,7 +10,7 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
             Type_::Apply(ma, mut ty_params) => {
                 match (ma.value, this) {
                     // N
-                    (ModuleAccess_::Name(name), this) => match name.value.as_ref() {
+                    (NameAccessChain_::One(name), this) => match name.value.as_ref() {
                         "bool" => TypeTag::Bool,
                         "u8" => TypeTag::U8,
                         "u64" => TypeTag::U64,
@@ -26,19 +26,24 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
                             "Could not parse input: type without struct name & module address"
                         ),
                     },
-                    // M.S
-                    (ModuleAccess_::ModuleAccess(_module, _struct_name), None) => {
+                    (NameAccessChain_::Two(_, _), None) => {
                         bail!("Could not parse input: type without module address");
                     }
-                    // M.S + parent address
-                    (ModuleAccess_::ModuleAccess(name, struct_name), Some(this)) => {
+                    (NameAccessChain_::Three(access, name), this) => {
+                        let (addr, m_name) = access.value;
+                        let address = match addr.value {
+                            LeadingNameAccess_::AnonymousAddress(addr) => AccountAddress::new(addr.into_bytes()),
+                            LeadingNameAccess_::Name(name) => {
+                                this.ok_or_else(|| anyhow!("Could not parse input: unsupported named address. Name '{}'.", name))?
+                            }
+                        };
                         TypeTag::Struct(StructTag {
-                            address: this,
-                            module: Identifier::new(name.0.value)?,
-                            name: Identifier::new(struct_name.value)?,
+                            address,
+                            module: Identifier::new(m_name.value)?,
+                            name: Identifier::new(name.value)?,
                             type_params: ty_params
                                 .into_iter()
-                                .map(|ty| unwrap_spanned_ty_(ty, Some(this)))
+                                .map(|ty| unwrap_spanned_ty_(ty, Some(address)))
                                 .map(|res| match res {
                                     Ok(st) => st,
                                     Err(err) => panic!("{:?}", err),
@@ -46,15 +51,18 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
                                 .collect(),
                         })
                     }
+                    (NameAccessChain_::Two(access, name), Some(address)) => {
+                        let m_name = match access.value {
+                            LeadingNameAccess_::AnonymousAddress(_) => {
+                                bail!("Could not parse input: type without module name");
+                            }
+                            LeadingNameAccess_::Name(name) => name,
+                        };
 
-                    // OxADDR.M.S
-                    (ModuleAccess_::QualifiedModuleAccess(module_id, struct_name), _) => {
-                        let (address, name) = module_id.value;
-                        let address = AccountAddress::new(address.to_u8());
                         TypeTag::Struct(StructTag {
                             address,
-                            module: Identifier::new(name)?,
-                            name: Identifier::new(struct_name.value)?,
+                            module: Identifier::new(m_name.value)?,
+                            name: Identifier::new(name.value)?,
                             type_params: ty_params
                                 .into_iter()
                                 .map(|ty| unwrap_spanned_ty_(ty, Some(address)))
@@ -83,9 +91,10 @@ mod tests {
     use move_lang::parser::lexer::Lexer;
     use move_lang::parser::syntax::parse_type;
 
-    use super::*;
     use crate::compiler::address::ss58::replace_ss58_addresses;
     use crate::compiler::mut_string::MutString;
+
+    use super::*;
 
     fn parse(source: &str) -> Result<TypeTag, Error> {
         let mut mut_string = MutString::new(source);
@@ -96,7 +105,6 @@ mod tests {
         lexer
             .advance()
             .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
-
         let ty =
             parse_type(&mut lexer).map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
         unwrap_spanned_ty(ty)

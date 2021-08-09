@@ -9,8 +9,8 @@ use move_core_types::transaction_argument::TransactionArgument;
 use move_core_types::vm_status::{AbortLocation, StatusCode, VMStatus};
 use move_core_types::effects::Event as MoveCoreEvent;
 use move_lang::shared::Address;
-use vm::access::ScriptAccess;
-use vm::file_format::CompiledScript;
+use move_binary_format::access::ScriptAccess;
+use move_binary_format::file_format::CompiledScript;
 
 use crate::execution::{FakeRemoteCache, TransactionEffects};
 use crate::session::ConstsMap;
@@ -244,7 +244,7 @@ pub fn explain_type_error(
     signers: &[AccountAddress],
     txn_args: &[TransactionArgument],
 ) -> String {
-    use vm::file_format::SignatureToken::*;
+    use move_binary_format::file_format::SignatureToken::*;
 
     let script_params = script.signature_at(script.as_inner().parameters);
     let expected_num_signers = script_params

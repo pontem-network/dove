@@ -1,4 +1,4 @@
-use vm::file_format::Bytecode;
+use move_binary_format::file_format::Bytecode;
 use std::slice::Iter;
 
 /// Bytecode iterator.

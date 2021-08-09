@@ -1,4 +1,4 @@
-use vm::file_format::*;
+use move_binary_format::file_format::*;
 use crate::imports::Imports;
 use crate::generics::{Generics, Generic, extract_type_params, write_type_parameters};
 use crate::{Encode, write_array, Config};

@@ -11,10 +11,10 @@ use move_vm_runtime::logging::NoContextLog;
 use move_vm_runtime::move_vm::MoveVM;
 use move_vm_types::gas_schedule::CostStrategy;
 use move_vm_types::natives::balance::{NativeBalance, WalletId};
-use vm::access::ModuleAccess;
-use vm::CompiledModule;
-use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
-use vm::file_format::{CompiledScript, FunctionDefinitionIndex};
+use move_binary_format::access::ModuleAccess;
+use move_binary_format::CompiledModule;
+use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
+use move_binary_format::file_format::{CompiledScript, FunctionDefinitionIndex};
 
 use crate::explain::{
     explain_abort, explain_effects, explain_execution_failure, explain_type_error,

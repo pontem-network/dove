@@ -4,7 +4,7 @@ use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
 use move_lang::{find_move_filenames, leak_str, parse_file};
 use move_lang::errors::{Errors, FilesSourceText, output_errors};
-use move_lang::parser::ast::{Definition, ModuleAccess_, Script, Type, Type_};
+use move_lang::parser::ast::{Definition, Script, Type, Type_, NameAccessChain_};
 
 use crate::compiler::dialects::Dialect;
 use crate::compiler::preprocessor::BuilderPreprocessor;
@@ -83,12 +83,12 @@ fn extract_type_name(tp: Type) -> String {
     match tp.value {
         Type_::Apply(name, types) => {
             let mut tp = match name.value {
-                ModuleAccess_::Name(name) => name.value,
-                ModuleAccess_::ModuleAccess(module, name) => {
-                    format!("{}::{}", module.0.value, name.value)
+                NameAccessChain_::One(name) => name.value,
+                NameAccessChain_::Two(access, name) => {
+                    format!("{}::{}", access.value, name.value)
                 }
-                ModuleAccess_::QualifiedModuleAccess(module, name) => {
-                    let (address, m_name) = module.value;
+                NameAccessChain_::Three(access, name) => {
+                    let (address, m_name) = access.value;
                     format!("{}::{}::{}", address, m_name, name.value)
                 }
             };

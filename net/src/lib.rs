@@ -5,7 +5,7 @@ use move_core_types::language_storage::{ModuleId, StructTag};
 use move_core_types::vm_status::StatusCode;
 use move_vm_runtime::data_cache::RemoteCache;
 use substrate_api_client::Api;
-use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
+use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 
 use lang::compiler::dialects::Dialect as DialectTrait;
 use lang::compiler::dialects::DialectName;
