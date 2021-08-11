@@ -231,6 +231,30 @@ fn test_removing_old_external_dependencies() {
     project_remove(&project_folder);
 }
 
+#[test]
+fn test_remove_unnecessary_elements_in_dependencies() {
+    let project_folder = create_project_for_test_dependency(
+        "project_remove_unnecessary_elements_in_dependencies",
+        Some("unnecessary_elements"),
+        None,
+        None,
+    );
+
+    // project_folder/scripts/version.move
+    add_sctipt_getversion(&project_folder);
+
+    let output = execute_dove_bin_at(
+        env!("CARGO_BIN_EXE_dove"),
+        &["dove", "run", "version()"],
+        &project_folder,
+    )
+    .unwrap();
+
+    assert!(output.contains("[debug] 9"));
+
+    project_remove(&project_folder);
+}
+
 fn add_sctipt_getversion(project_folder: &Path) {
     // project_folder/scripts/version.move
     write_all(

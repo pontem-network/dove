@@ -1,5 +1,5 @@
-module Demo{
+module Version{
     public fun get():u8{
-        5
+        9
     }
 }

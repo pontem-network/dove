@@ -14,6 +14,7 @@ use resolver::git;
 use crate::context::Context;
 use crate::index::resolver::chain;
 use crate::manifest::{Dependence, Git, MANIFEST, read_manifest};
+use itertools::Itertools;
 
 /// Dependency resolver.
 pub mod resolver;
@@ -197,6 +198,7 @@ impl Index {
 
         Ok(())
     }
+
     /// removing unused external dependencies
     pub fn remove_unused(&self, deps_path: &Path) -> Result<(), Error> {
         if !deps_path.exists() {
@@ -234,5 +236,45 @@ impl Index {
         }
 
         Ok(())
+    }
+
+    /// remove unnecessary elements in dependencies
+    /// leave only *.move and *.toml
+    pub fn remove_unnecessary_elements_in_dependencies(&self) {
+        fn remove(path: PathBuf) {
+            let ans = if path.is_file()
+                && !path
+                    .extension()
+                    .and_then(|t| t.to_str())
+                    .map(|t| t.to_lowercase())
+                    .map_or(false, |ex| vec!["toml", "move"].contains(&ex.as_str()))
+            {
+                std::fs::remove_file(path)
+            } else if path.is_dir() {
+                path.read_dir()
+                    .map(|r| r.filter_map(|t| t.ok()).map(|t| t.path()).for_each(remove))
+            } else {
+                Ok(())
+            };
+
+            if let Err(err) = ans {
+                println!("Warning: {:?}", err);
+            }
+        }
+
+        self.deps_roots
+            .iter()
+            .map(PathBuf::from)
+            .filter(|path| {
+                let com = path
+                    .components()
+                    .filter_map(|el| el.as_os_str().to_str())
+                    .collect::<Vec<&str>>();
+                com.iter()
+                    .find_position(|el| el == &&".external")
+                    .and_then(|(pos, _)| com.get(pos + 1))
+                    .map_or(false, |el| el.starts_with("git_"))
+            })
+            .for_each(remove);
     }
 }
