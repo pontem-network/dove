@@ -1,7 +1,9 @@
 use anyhow::Error;
 use structopt::StructOpt;
+
 use crate::cmd::Cmd;
 use crate::context::Context;
+use crate::executor::execute_transaction;
 use crate::transaction::TransactionBuilder;
 
 /// Run move script
@@ -32,12 +34,23 @@ pub struct Run {
     signers: Option<Vec<String>>,
     #[structopt(long, hidden = true)]
     color: Option<String>,
+    /// If set, the effects of executing `script_file` (i.e., published, updated, and
+    /// deleted resources) will NOT be committed to disk.
+    #[structopt(long = "dry-run", short = "n")]
+    dry_run: bool,
+    /// Print additional diagnostics
+    #[structopt(short = "v", global = true)]
+    verbose: bool,
 }
 
 impl Cmd for Run {
     fn apply(self, ctx: Context) -> Result<(), Error> {
+        let verbose = self.verbose;
+        let dry_run = self.dry_run;
         let tr_build = TransactionBuilder::from_run_cmd(self, &ctx)?;
-        render_execution_result(tr_build.run())
+        let (_, tx) = tr_build.to_transaction()?;
+        let deps = tr_build.build_dependencies()?;
+        execute_transaction(&ctx, tr_build.signers, tx, deps, verbose, dry_run)
     }
 }
 

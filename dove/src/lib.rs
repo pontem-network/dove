@@ -15,6 +15,8 @@ pub mod cmd;
 pub mod context;
 /// Docgen.
 pub mod docs;
+/// Move executor.
+pub mod executor;
 /// Dove modules index.
 pub mod index;
 /// Dove configuration.
