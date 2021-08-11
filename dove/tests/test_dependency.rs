@@ -183,13 +183,29 @@ fn test_removing_old_external_dependencies() {
             path: None,
         }],
         vec![],
-        vec![Git {
-            git: test_git.clone(),
-            branch: None,
-            tag: None,
-            rev: None,
-            path: None,
-        }],
+        vec![
+            Git {
+                git: test_git.clone(),
+                branch: None,
+                tag: None,
+                rev: None,
+                path: None,
+            },
+            Git {
+                git: test_git.clone(),
+                branch: Some("no_dove_toml".to_string()),
+                tag: None,
+                rev: None,
+                path: None,
+            },
+            Git {
+                git: test_git.clone(),
+                branch: Some("path".to_string()),
+                tag: None,
+                rev: None,
+                path: None,
+            },
+        ],
         vec![Git {
             git: test_git,
             branch: Some("master".to_string()),

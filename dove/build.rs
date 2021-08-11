@@ -23,6 +23,7 @@ fn create_test_repository() {
     create_branch("test_rec", false, None);
     create_branch("without_dove_toml", false, None);
     create_branch("no_dove_toml", false, None);
+    create_branch("unnecessary_elements", false, None);
 
     if remove_dir_all(&get_path_projectgit()).is_err() {
         // windows does not allow you to delete a directory
