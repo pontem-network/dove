@@ -14,10 +14,10 @@ use move_unit_test::UnitTestingConfig;
 pub struct Test {
     /// Bound the number of instructions that can be executed by any one test.
     #[structopt(
-    name = "instructions",
-    default_value = "5000",
-    short = "i",
-    long = "instructions"
+        name = "instructions",
+        default_value = "5000",
+        short = "i",
+        long = "instructions"
     )]
     pub instruction_execution_bound: u64,
 
@@ -31,10 +31,10 @@ pub struct Test {
 
     /// Number of threads to use for running tests.
     #[structopt(
-    name = "num_threads",
-    default_value = "8",
-    short = "t",
-    long = "threads"
+        name = "num_threads",
+        default_value = "8",
+        short = "t",
+        long = "threads"
     )]
     pub num_threads: usize,
 
@@ -69,9 +69,11 @@ impl Cmd for Test {
 
         let mut deps = ctx.build_index()?.into_deps_roots();
         deps.push(tests_dir.to_string_lossy().to_string());
-        deps.push(ctx.path_for(&ctx.manifest.layout.modules_dir)
-            .to_string_lossy()
-            .to_string());
+        deps.push(
+            ctx.path_for(&ctx.manifest.layout.modules_dir)
+                .to_string_lossy()
+                .to_string(),
+        );
 
         let source_files = find_move_files(&deps)
             .into_iter()
@@ -90,13 +92,12 @@ impl Cmd for Test {
             verbose: self.verbose,
         };
 
-        let mut preprocessor = BuilderPreprocessor::new(
-            ctx.dialect.as_ref(),
-            Some(ctx.account_address()?),
-        );
+        let mut preprocessor =
+            BuilderPreprocessor::new(ctx.dialect.as_ref(), Some(ctx.account_address()?));
         let test_plan = unit_test_config.build_test_plan(&mut preprocessor);
         if let Some(test_plan) = test_plan {
-            unit_test_config.run_and_report_unit_tests(test_plan, std::io::stdout())
+            unit_test_config
+                .run_and_report_unit_tests(test_plan, std::io::stdout())
                 .map_err(|_| anyhow!("tests failed:{}", ctx.project_name()))?;
         }
 

@@ -125,6 +125,14 @@ fn index() -> String {
     format!("{}{}{}", artifacts(), MS, ".DoveIndex.toml")
 }
 
+fn storage_dir() -> String {
+    format!("{}{}{}", artifacts(), MS, "storage_dir")
+}
+
+fn exe_build_dir() -> String {
+    format!("{}{}{}", artifacts(), MS, "exe_build_dir")
+}
+
 fn code_code_address() -> String {
     "0x1".to_string()
 }
@@ -175,10 +183,15 @@ pub struct Layout {
     /// Artifacts directory.
     #[serde(default = "artifacts")]
     pub artifacts: String,
-
     /// Path to index.
     #[serde(default = "index")]
     pub index: String,
+    /// Path to executor directory.
+    #[serde(default = "storage_dir")]
+    pub storage_dir: String,
+    /// Path to executor build directory.
+    #[serde(default = "exe_build_dir")]
+    pub exe_build_dir: String,
 }
 
 impl Layout {
@@ -198,6 +211,8 @@ impl Layout {
             chain_deps: ctx.str_path_for(&self.chain_deps)?,
             artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
+            storage_dir: ctx.str_path_for(&self.storage_dir)?,
+            exe_build_dir: ctx.str_path_for(&self.exe_build_dir)?,
         })
     }
 }
@@ -218,6 +233,8 @@ impl Default for Layout {
             chain_deps: chain_deps(),
             artifacts: artifacts(),
             index: index(),
+            storage_dir: storage_dir(),
+            exe_build_dir: exe_build_dir(),
         }
     }
 }

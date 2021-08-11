@@ -143,21 +143,57 @@ impl<'a> TransactionBuilder<'a> {
         Ok(self)
     }
 
+    fn build(&self, targets: &[String], deps: &[String]) -> Result<Vec<CompiledUnit>, Error> {
+        let sender = self.dove_ctx.account_address()?;
+        let (files, prog) = build(
+            targets,
+            deps,
+            self.dove_ctx.dialect.as_ref(),
+            Some(sender),
+            None,
+            Flags::empty(),
+        )?;
+
+        match prog {
+            Err(errors) => {
+                let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                output_errors(&mut writer, files, errors);
+                anyhow::bail!("could not compile:{}", self.dove_ctx.project_name())
+            }
+            Ok(compiled_units) => {
+                let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
+
+                if !ice_errors.is_empty() {
+                    let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                    output_errors(&mut writer, files, ice_errors);
+                    anyhow::bail!("could not verify:{}", self.dove_ctx.project_name())
+                } else {
+                    Ok(compiled_units)
+                }
+            }
+        }
+    }
+
+    /// Build transaction dependencies.
+    pub fn build_dependencies(&self) -> Result<Vec<CompiledUnit>, Error> {
+        self.build(&self.get_dep_list()?, &[])
+    }
+
     // =============================================================================================
     /// Create transaction
     /// Return: Ok(name_transaction, Transaction)
     pub fn to_transaction(&self) -> Result<(String, Transaction), Error> {
         let (script, meta) = self.lookup_script()?;
-        let units = self.build_script(script)?;
+        let units = self.build(&[script], &self.get_dep_list()?)?;
 
         let unit = units
             .into_iter()
             .find(|unit| {
-                let is_module = match &unit {
+                let is_script = match &unit {
                     CompiledUnit::Module { .. } => false,
                     CompiledUnit::Script { .. } => true,
                 };
-                is_module && unit.name() == meta.name
+                is_script && unit.name() == meta.name
             })
             .map(|unit| unit.serialize())
             .map(|mut unit| {
@@ -174,22 +210,6 @@ impl<'a> TransactionBuilder<'a> {
             meta.name,
             Transaction::new(signers, unit, args, self.type_parameters.clone())?,
         ))
-    }
-
-    /// Find and run the script using the specified parameters
-    pub fn run(&self) -> Result<PipelineExecutionResult, Error> {
-        let (script, _meta) = self.lookup_script()?;
-
-        let deps = find_move_files(&self.get_dep_list()?)
-            .map(MoveFile::load)
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let executor = Executor::new(self.dove_ctx.dialect.as_ref(), self.signers[0], deps);
-        executor.execute_script(
-            MoveFile::load(script)?,
-            Some(self.signers.clone()),
-            self.args.clone(),
-        )
     }
 
     // =============================================================================================
@@ -425,40 +445,6 @@ impl<'a> TransactionBuilder<'a> {
             }
         }
         Ok((signers, values))
-    }
-
-    fn build_script(&'a self, script: String) -> Result<Vec<CompiledUnit>, Error> {
-        let dep_list = self.get_dep_list()?;
-
-        let sender = self.dove_ctx.account_address()?;
-
-        let (files, prog) = build(
-            &[script],
-            &dep_list,
-            self.dove_ctx.dialect.as_ref(),
-            Some(sender),
-            None,
-            Flags::empty()
-        )?;
-
-        match prog {
-            Err(errors) => {
-                let mut writer = StandardStream::stderr(ColorChoice::Auto);
-                output_errors(&mut writer, files, errors);
-                anyhow::bail!("could not compile:{}", self.dove_ctx.project_name())
-            }
-            Ok(compiled_units) => {
-                let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
-
-                if !ice_errors.is_empty() {
-                    let mut writer = StandardStream::stderr(ColorChoice::Auto);
-                    output_errors(&mut writer, files, ice_errors);
-                    anyhow::bail!("could not verify:{}", self.dove_ctx.project_name())
-                } else {
-                    Ok(compiled_units)
-                }
-            }
-        }
     }
 
     fn get_dep_list(&self) -> Result<Vec<String>, Error> {
