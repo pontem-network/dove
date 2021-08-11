@@ -1,6 +1,6 @@
 [package]
 name = "dove"
-version = "1.2.9"
+version = "1.3.0"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
     "Dm. Yakushev <dmitryyakushev@wings.ai>",
