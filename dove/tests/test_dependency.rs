@@ -36,8 +36,12 @@ fn test_dependency_with_git_tag() {
 #[test]
 fn test_dependency_with_rev() {
     for (value, rev) in &[
-        (1, get_commit_by_branch("for_tag_v1")),
-        (2, get_commit_by_branch("for_tag_v2")),
+        // rev on commit
+        (1, get_rev_on_branch("for_tag_v1")),
+        (2, get_rev_on_branch("for_tag_v2")),
+        // rev on tag
+        (1, get_rev_on_tag("v1")),
+        (2, get_rev_on_tag("v2")),
     ] {
         let project_folder = create_project_for_test_dependency(
             "project_dependency_with_rev",
@@ -295,7 +299,7 @@ fn check_external(project_folder: &Path, dep: &[Git]) {
     assert_eq!(finded_folders, expected_folders);
 }
 
-fn get_commit_by_branch(tag: &str) -> String {
+fn get_rev_on_branch(tag: &str) -> String {
     let ref_remote = format!("refs/heads/{}", tag);
     let repo = git2::Repository::open("./target/test.git").unwrap();
     let find = repo
@@ -304,6 +308,24 @@ fn get_commit_by_branch(tag: &str) -> String {
         .flatten()
         .find_map(|rf| {
             if rf.is_branch() && rf.name() == Some(&ref_remote) {
+                Some(rf.target().unwrap().to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap();
+    find
+}
+
+fn get_rev_on_tag(tag: &str) -> String {
+    let ref_remote = format!("refs/tags/{}", tag);
+    let repo = git2::Repository::open("./target/test.git").unwrap();
+    let find = repo
+        .references()
+        .unwrap()
+        .flatten()
+        .find_map(|rf| {
+            if rf.is_tag() && rf.name() == Some(&ref_remote) {
                 Some(rf.target().unwrap().to_string())
             } else {
                 None
