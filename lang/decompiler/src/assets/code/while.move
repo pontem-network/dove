@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
     fun w(v: u64) {
         while (v < 3) {
             v = v + 1

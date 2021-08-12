@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
    struct Pair has key, store { f: u64, g: u64}
 
    public fun test_eq(addr1: address, addr2: address): bool acquires Pair {

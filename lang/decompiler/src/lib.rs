@@ -137,17 +137,19 @@ pub fn write_array<E: Encode, W: Write>(
 #[cfg(test)]
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
-    use move_lang::errors::report_errors_to_buffer;
-    use move_binary_format::CompiledModule;
-    use move_binary_format::file_format::{Bytecode, CodeUnit, FunctionDefinition};
+    use std::fs::File;
+    use std::io::Write;
 
+    use move_binary_format::CompiledModule;
+    use move_binary_format::file_format::{Bytecode, CodeUnit, CompiledScript, FunctionDefinition};
+    use move_lang::errors::report_errors_to_buffer;
+    use move_lang::shared::Flags;
+    use tempfile::tempdir;
+
+    use lang::compiler::build;
     use lang::compiler::dialects::DialectName;
 
     use crate::{Config, decompile_str};
-    use lang::compiler::build;
-    use tempfile::tempdir;
-    use std::fs::File;
-    use std::io::Write;
 
     fn compile(source: &str) -> Vec<u8> {
         let dialect = DialectName::DFinance.get_dialect();
@@ -164,6 +166,7 @@ mod tests {
             dialect.as_ref(),
             Some(sender),
             None,
+            Flags::empty(),
         )
         .unwrap();
 
@@ -186,7 +189,11 @@ mod tests {
         let restored_source = decompile_str(&original_bytecode, config).unwrap();
         println!("decompiled:\n{}", restored_source);
 
-        let original_bytecode = CompiledModule::deserialize(&original_bytecode).unwrap();
+        let original_bytecode = CompiledModule::deserialize(&original_bytecode)
+            .or_else(|_| {
+                CompiledScript::deserialize(&original_bytecode).map(|s| s.into_module().1)
+            })
+            .unwrap();
 
         let dir = tempdir().unwrap();
         let tmp_file = dir.path().join("source.move");
@@ -197,7 +204,11 @@ mod tests {
         let restored_bytecode = compile(tmp_file.to_string_lossy().as_ref());
         compare_bytecode(
             original_bytecode,
-            CompiledModule::deserialize(&restored_bytecode).unwrap(),
+            CompiledModule::deserialize(&restored_bytecode)
+                .or_else(|_| {
+                    CompiledScript::deserialize(&restored_bytecode).map(|s| s.into_module().1)
+                })
+                .unwrap(),
         );
     }
 

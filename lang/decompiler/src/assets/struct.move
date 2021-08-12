@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
     struct T {g: u64}
 
     struct Vec<G> {g: vector<G>, t: vector<T> }
