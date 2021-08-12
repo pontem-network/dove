@@ -45,19 +45,19 @@ decompiler = { path = "../lang/decompiler" }
 git-hash = { path = "../common/git-hash" }
 net = { path = "../net" }
 
-move-cli = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-docgen = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-move-unit-test = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
-move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+move-cli = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+docgen = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+move-unit-test = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
 
 # move-prover deps
-move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3-diff" }
+move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
 
 [features]
 default = []
