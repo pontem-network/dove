@@ -96,9 +96,11 @@ impl Cmd for Test {
             BuilderPreprocessor::new(ctx.dialect.as_ref(), Some(ctx.account_address()?));
         let test_plan = unit_test_config.build_test_plan(&mut preprocessor);
         if let Some(test_plan) = test_plan {
-            unit_test_config
-                .run_and_report_unit_tests(test_plan, std::io::stdout())
-                .map_err(|_| anyhow!("tests failed:{}", ctx.project_name()))?;
+            let (_, is_ok) =
+                unit_test_config.run_and_report_unit_tests(test_plan, std::io::stdout())?;
+            if !is_ok {
+                bail!("Tests failed: {}", ctx.project_name());
+            }
         }
 
         Ok(())
