@@ -22,10 +22,11 @@ fn test_cmd_dove_test_run_all_test_in_project() {
     // project_folder/tests/test_1.move
     write_all(
         &project_folder.join("tests").join("test_1.move"),
-        "script {
-                fun main() {
-                    assert((3+1)==4,1);
-                }
+        "module 0x1::Tests {
+                    #[test]
+                    fun main() {
+                        assert((3+1)==4,1);
+                    }
             }",
     )
     .unwrap();
@@ -54,7 +55,8 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     // project_folder/tests/test_1.move
     write_all(
         &project_folder.join("tests").join("test_1.move"),
-        "script {
+        "module 0x1::Tests {
+                 #[test]
                 fun main() {
                     assert((1+3)==4,1);
                 }
@@ -64,7 +66,8 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     // project_folder/tests/test_2.move
     write_all(
         &project_folder.join("tests").join("test_2.move"),
-        "script {
+        "module 0x1::Tests_2 {
+                #[test]
                 fun main() {
                     assert((2+2)==4,2);
                 }
@@ -84,7 +87,8 @@ fn test_cmd_dove_test_fail_test_in_project() {
     // project_folder/tests/test_1.move
     write_all(
         &project_folder.join("tests").join("test_1.move"),
-        "script {
+        "module 0x1::Tests {
+                #[test]
                 fun main() {
                     assert((3+2)==4,1);
                 }
