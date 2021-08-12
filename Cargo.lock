@@ -15,7 +15,7 @@ dependencies = [
 [[package]]
 name = "abigen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -459,9 +459,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "1.2.1"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
+checksum = "2da1976d75adbe5fbc88130ecd119529cf1cc6a93ae1546d8696ee66f0d21af1"
 
 [[package]]
 name = "bitmaps"
@@ -574,7 +574,7 @@ dependencies = [
 [[package]]
 name = "boogie-backend"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -602,7 +602,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "mirai-annotations",
@@ -663,7 +663,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "borrow-graph",
  "bytecode-verifier",
@@ -687,7 +687,7 @@ dependencies = [
 [[package]]
 name = "bytecode-interpreter"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bytecode",
@@ -706,7 +706,7 @@ dependencies = [
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -722,7 +722,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -1207,7 +1207,7 @@ checksum = "850878694b7933ca4c9569d30a34b55031b9b139ee1fc7b94a527c4ef960d690"
 [[package]]
 name = "diem-config"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "bcs",
  "diem-crypto",
@@ -1232,7 +1232,7 @@ dependencies = [
 [[package]]
 name = "diem-crypto"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1261,7 +1261,7 @@ dependencies = [
 [[package]]
 name = "diem-crypto-derive"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "proc-macro2 1.0.28",
  "quote 1.0.9",
@@ -1271,7 +1271,7 @@ dependencies = [
 [[package]]
 name = "diem-framework"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "abigen",
  "anyhow",
@@ -1299,7 +1299,7 @@ dependencies = [
 [[package]]
 name = "diem-framework-releases"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1314,7 +1314,7 @@ dependencies = [
 [[package]]
 name = "diem-github-client"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "proxy",
@@ -1327,12 +1327,12 @@ dependencies = [
 [[package]]
 name = "diem-global-constants"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 
 [[package]]
 name = "diem-infallible"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
 ]
@@ -1340,7 +1340,7 @@ dependencies = [
 [[package]]
 name = "diem-log-derive"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "proc-macro2 1.0.28",
@@ -1351,7 +1351,7 @@ dependencies = [
 [[package]]
 name = "diem-logger"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "backtrace",
  "chrono",
@@ -1369,7 +1369,7 @@ dependencies = [
 [[package]]
 name = "diem-metrics"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "diem-logger",
@@ -1386,7 +1386,7 @@ dependencies = [
 [[package]]
 name = "diem-metrics-core"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "prometheus 0.12.0",
@@ -1395,7 +1395,7 @@ dependencies = [
 [[package]]
 name = "diem-network-address-encryption"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "base64",
  "bcs",
@@ -1412,7 +1412,7 @@ dependencies = [
 [[package]]
 name = "diem-secure-storage"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "base64",
  "bcs",
@@ -1435,7 +1435,7 @@ dependencies = [
 [[package]]
 name = "diem-state-view"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "diem-crypto",
@@ -1446,7 +1446,7 @@ dependencies = [
 [[package]]
 name = "diem-temppath"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "hex",
@@ -1456,7 +1456,7 @@ dependencies = [
 [[package]]
 name = "diem-time-service"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-infallible",
  "diem-workspace-hack",
@@ -1467,7 +1467,7 @@ dependencies = [
 [[package]]
 name = "diem-transaction-builder"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1480,7 +1480,7 @@ dependencies = [
 [[package]]
 name = "diem-types"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1506,7 +1506,7 @@ dependencies = [
 [[package]]
 name = "diem-vault-client"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "base64",
  "chrono",
@@ -1523,7 +1523,7 @@ dependencies = [
 [[package]]
 name = "diem-vm"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1548,7 +1548,7 @@ dependencies = [
 [[package]]
 name = "diem-workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "Inflector",
  "anyhow",
@@ -1635,7 +1635,7 @@ dependencies = [
 [[package]]
 name = "disassembler"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1652,7 +1652,7 @@ dependencies = [
 [[package]]
 name = "docgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bytecode",
@@ -1676,6 +1676,7 @@ dependencies = [
  "atty",
  "bcs",
  "bech32",
+ "boogie-backend",
  "codespan-reporting 0.8.0",
  "decompiler",
  "diem-crypto",
@@ -1887,7 +1888,7 @@ dependencies = [
 [[package]]
 name = "errmapgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2943,7 +2944,7 @@ checksum = "68f2d64f2edebec4ce84ad108148e67e1064789bee435edc5b60ad398714a3a9"
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -2962,7 +2963,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -3578,7 +3579,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "move-binary-format"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "diem-workspace-hack",
@@ -3592,7 +3593,7 @@ dependencies = [
 [[package]]
 name = "move-cli"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3630,7 +3631,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3647,7 +3648,7 @@ dependencies = [
 [[package]]
 name = "move-coverage"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3668,7 +3669,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -3682,7 +3683,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3737,7 +3738,7 @@ dependencies = [
 [[package]]
 name = "move-model"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -3762,7 +3763,7 @@ dependencies = [
 [[package]]
 name = "move-prover"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "abigen",
  "anyhow",
@@ -3824,7 +3825,7 @@ dependencies = [
 [[package]]
 name = "move-stdlib"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "docgen",
@@ -3836,7 +3837,7 @@ dependencies = [
 [[package]]
 name = "move-unit-test"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bytecode-interpreter",
@@ -3859,7 +3860,7 @@ dependencies = [
 [[package]]
 name = "move-vm-natives"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "byteorder",
  "diem-crypto",
@@ -3877,7 +3878,7 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "bytecode-verifier",
  "diem-crypto",
@@ -3896,7 +3897,7 @@ dependencies = [
 [[package]]
 name = "move-vm-test-utils"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "diem-workspace-hack",
@@ -3908,7 +3909,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "bcs",
  "diem-workspace-hack",
@@ -4169,7 +4170,7 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "proc-macro2 1.0.28",
@@ -4847,7 +4848,7 @@ dependencies = [
 [[package]]
 name = "proxy"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "ipnet",
@@ -5167,7 +5168,7 @@ dependencies = [
 [[package]]
 name = "read-write-set"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bytecode",
@@ -5324,7 +5325,7 @@ dependencies = [
 [[package]]
 name = "resource-viewer"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -5820,7 +5821,7 @@ dependencies = [
 [[package]]
 name = "short-hex-str"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "diem-workspace-hack",
  "mirai-annotations",
@@ -6964,7 +6965,7 @@ dependencies = [
 [[package]]
 name = "transaction-builder-generator"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",
@@ -7284,7 +7285,7 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 [[package]]
 name = "vm-genesis"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#3e5a02312676c42d2888d6ca5bd5eadbd6a547ab"
+source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#7af824b60da06cf9d63e98104c7400f31bfa9454"
 dependencies = [
  "anyhow",
  "bcs",

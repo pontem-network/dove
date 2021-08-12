@@ -1,18 +1,17 @@
 use std::ffi::OsStr;
-use std::path::Path;
 use std::process::Stdio;
 
 use anyhow::{ensure, Result};
 use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
 use structopt::StructOpt;
 
-use lang::compiler::{file::find_move_files, parser};
-use lang::compiler::dialects::Dialect;
-use lang::compiler::mut_string::MutString;
+use lang::compiler::{file::find_move_files};
 
 use crate::context::Context;
 
 use super::Cmd;
+use boogie_backend::options::BoogieOptions;
+use lang::compiler::preprocessor::BuilderPreprocessor;
 
 #[cfg(target_family = "unix")]
 const BOOGIE_EXE: &str = "boogie";
@@ -50,70 +49,30 @@ impl Cmd for Prove {
             .map(|p| p.to_string_lossy().to_string())
             .collect();
 
-        let output_dir = ctx.path_for(&ctx.manifest.layout.move_prover_output);
-        if output_dir.exists() {
-            std::fs::remove_dir_all(&output_dir)?;
-        }
-        let output_modules_dir = output_dir.join("modules");
-        let output_scripts_dir = output_dir.join("scripts");
-        std::fs::create_dir_all(&output_modules_dir)?;
-        std::fs::create_dir_all(&output_scripts_dir)?;
-
-        let dialect = &*ctx.dialect;
-        let sender = Some(ctx.manifest.package.account_address.clone());
-        prepare_sources(
-            dialect,
-            &sender,
-            &ctx.path_for(&ctx.manifest.layout.modules_dir),
-            &output_modules_dir,
-        )?;
-        prepare_sources(
-            dialect,
-            &sender,
-            &ctx.path_for(&ctx.manifest.layout.scripts_dir),
-            &output_scripts_dir,
-        )?;
+        let dirs = ctx.paths_for(&[
+            &ctx.manifest.layout.scripts_dir,
+            &ctx.manifest.layout.modules_dir,
+        ]);
+        let move_sources = find_move_files(&dirs)
+            .map(|path| path.to_string_lossy().to_string())
+            .collect::<Vec<_>>();
 
         let options = Options {
-            backend: boogie_backend_v2::options::BoogieOptions {
+            backend: BoogieOptions {
                 boogie_exe,
                 z3_exe,
                 ..Default::default()
             },
             move_deps,
-            move_sources: vec![output_dir.to_string_lossy().to_string()],
-            account_address: ctx.manifest.package.account_address.clone(),
+            move_sources,
             ..Default::default()
         };
         options.setup_logging();
-        run_move_prover_errors_to_stderr(options)
+        let mut preprocessor =
+            BuilderPreprocessor::new(ctx.dialect.as_ref(), Some(ctx.account_address()?));
+
+        run_move_prover_errors_to_stderr(options, &mut preprocessor)
     }
-}
-
-/// Normalizes move files sources and outputs them into `output_dir`.
-///
-/// Namely, replaces `{{sender}}` placeholders with the actual value and translates addresses
-/// to current dialect.
-fn prepare_sources(
-    dialect: &dyn Dialect,
-    sender: &Option<String>,
-    dir: &Path,
-    output_dir: &Path,
-) -> Result<()> {
-    for file_path in find_move_files(&[dir]) {
-        let content = std::fs::read_to_string(&file_path)?;
-        let mut mut_content = MutString::new(&content);
-        parser::normalize_source_text(dialect, (&content, &mut mut_content), &sender);
-        let content = mut_content.freeze();
-
-        let relative_path = file_path
-            .strip_prefix(&dir)
-            .expect("File path does not contain parent dir");
-        let output_path = output_dir.join(relative_path);
-        std::fs::write(&output_path, content)?;
-    }
-
-    Ok(())
 }
 
 fn is_boogie_available(boogie_exe: &str) -> bool {

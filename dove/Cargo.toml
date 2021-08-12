@@ -58,6 +58,7 @@ move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "
 
 # move-prover deps
 move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+boogie-backend = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
 
 [features]
 default = []
