@@ -183,13 +183,29 @@ fn test_removing_old_external_dependencies() {
             path: None,
         }],
         vec![],
-        vec![Git {
-            git: test_git.clone(),
-            branch: None,
-            tag: None,
-            rev: None,
-            path: None,
-        }],
+        vec![
+            Git {
+                git: test_git.clone(),
+                branch: None,
+                tag: None,
+                rev: None,
+                path: None,
+            },
+            Git {
+                git: test_git.clone(),
+                branch: Some("no_dove_toml".to_string()),
+                tag: None,
+                rev: None,
+                path: None,
+            },
+            Git {
+                git: test_git.clone(),
+                branch: Some("path".to_string()),
+                tag: None,
+                rev: None,
+                path: None,
+            },
+        ],
         vec![Git {
             git: test_git,
             branch: Some("master".to_string()),
@@ -211,6 +227,30 @@ fn test_removing_old_external_dependencies() {
         execute_dove_at(&["dove", "build"], &project_folder).unwrap();
         check_external(&project_folder, &dep);
     }
+
+    project_remove(&project_folder);
+}
+
+#[test]
+fn test_remove_unnecessary_elements_in_dependencies() {
+    let project_folder = create_project_for_test_dependency(
+        "project_remove_unnecessary_elements_in_dependencies",
+        Some("unnecessary_elements"),
+        None,
+        None,
+    );
+
+    // project_folder/scripts/version.move
+    add_sctipt_getversion(&project_folder);
+
+    let output = execute_dove_bin_at(
+        env!("CARGO_BIN_EXE_dove"),
+        &["dove", "run", "version()"],
+        &project_folder,
+    )
+    .unwrap();
+
+    assert!(output.contains("[debug] 9"));
 
     project_remove(&project_folder);
 }
