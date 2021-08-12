@@ -61,6 +61,7 @@ impl Context {
             let index = Index::build(package_hash, self)?;
             index.store(&index_path)?;
             index.remove_unused(&self.project_dir.join(&self.manifest.layout.deps))?;
+            index.remove_unnecessary_elements_in_dependencies();
 
             Ok(index)
         }

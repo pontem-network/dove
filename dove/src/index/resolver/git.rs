@@ -115,16 +115,8 @@ fn checkout(params: CheckoutParams<'_>, path: &Path) -> Result<(), Error> {
             }
         }
         CheckoutParams::Rev { repo: _, rev } => {
-            let oid = Oid::from_str(rev)?;
-            let commit = repo.find_commit(oid)?;
-
-            repo.branch(rev, &commit, false)?;
-
-            let refs = format!("refs/heads/{}", rev);
-
-            let obj = repo.revparse_single(&refs)?;
+            let obj = repo.find_object(Oid::from_str(rev)?, None)?;
             repo.checkout_tree(&obj, None)?;
-            repo.set_head(&refs)?;
         }
         CheckoutParams::Tag {
             repo: _,

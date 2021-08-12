@@ -18,7 +18,7 @@ fn test_dependency_with_git_tag() {
         );
 
         // project_folder/scripts/version.move
-        add_script_getversion(&project_folder);
+        add_sctipt_getversion(&project_folder);
 
         let output = execute_dove_bin_at(
             env!("CARGO_BIN_EXE_dove"),
@@ -36,8 +36,12 @@ fn test_dependency_with_git_tag() {
 #[test]
 fn test_dependency_with_rev() {
     for (value, rev) in &[
-        (1, "049200421c880f9f4269d6406c2b1537891b23c7"),
-        (2, "c276307c355d3c72e3daeb80f46e21272c6fab97"),
+        // rev on commit
+        (1, get_rev_on_branch("for_tag_v1")),
+        (2, get_rev_on_branch("for_tag_v2")),
+        // rev on tag
+        (1, get_rev_on_tag("v1")),
+        (2, get_rev_on_tag("v2")),
     ] {
         let project_folder = create_project_for_test_dependency(
             "project_dependency_with_rev",
@@ -45,9 +49,8 @@ fn test_dependency_with_rev() {
             None,
             Some(rev),
         );
-
         // project_folder/scripts/version.move
-        add_script_getversion(&project_folder);
+        add_sctipt_getversion(&project_folder);
 
         let output = execute_dove_bin_at(
             env!("CARGO_BIN_EXE_dove"),
@@ -72,7 +75,7 @@ fn test_dependency_without_dove_toml() {
     );
 
     // project_folder/scripts/version.move
-    add_script_getversion(&project_folder);
+    add_sctipt_getversion(&project_folder);
 
     let output = execute_dove_bin_at(
         env!("CARGO_BIN_EXE_dove"),
@@ -120,6 +123,7 @@ fn test_dependency_in_dependencies() {
     project_remove(&project_folder);
 }
 
+#[cfg(not(target_family = "windows"))]
 #[test]
 fn test_dependency_cyclic_dependency_in_the_repository() {
     let project_folder = create_project_for_test_dependency(
@@ -163,61 +167,63 @@ fn test_dependency_running_a_script_in_dependencies() {
 #[test]
 fn test_removing_old_external_dependencies() {
     let project_folder = project_start_new_default("project_removing_old_external_dependencies");
-    let stdlib: Git = Git {
-        git: "https://github.com/pontem-network/move-stdlib".to_string(),
-        branch: None,
-        tag: Some("v0.1.2".to_string()),
-        rev: None,
-        path: None,
-    };
-
+    let test_git = PathBuf::from("target/test.git")
+        .canonicalize()
+        .unwrap()
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .to_string();
     let steps = vec![
-        vec![
-            stdlib.clone(),
-            Git {
-                git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
-                branch: None,
-                tag: Some("v1".to_string()),
-                rev: None,
-                path: None,
-            },
-        ],
+        vec![Git {
+            git: test_git.clone(),
+            branch: None,
+            tag: Some("v1".to_string()),
+            rev: None,
+            path: None,
+        }],
         vec![],
-        vec![stdlib.clone()],
         vec![
-            stdlib.clone(),
             Git {
-                git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
+                git: test_git.clone(),
                 branch: None,
                 tag: None,
                 rev: None,
                 path: None,
             },
-        ],
-        vec![
-            stdlib.clone(),
             Git {
-                git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
-                branch: Some("master".to_string()),
-                tag: None,
-                rev: None,
-                path: None,
-            },
-        ],
-        vec![
-            stdlib,
-            Git {
-                git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
+                git: test_git.clone(),
                 branch: Some("no_dove_toml".to_string()),
                 tag: None,
                 rev: None,
                 path: None,
             },
+            Git {
+                git: test_git.clone(),
+                branch: Some("path".to_string()),
+                tag: None,
+                rev: None,
+                path: None,
+            },
         ],
+        vec![Git {
+            git: test_git,
+            branch: Some("master".to_string()),
+            tag: None,
+            rev: None,
+            path: None,
+        }],
     ];
 
+    let stdlib = PathBuf::from("resources/test_move_project")
+        .canonicalize()
+        .unwrap()
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .to_string();
     for dep in steps {
-        set_dependency_in_toml(&project_folder, &dep).unwrap();
+        set_dependency_in_toml(&project_folder, &dep, &[&stdlib]).unwrap();
         execute_dove_at(&["dove", "build"], &project_folder).unwrap();
         check_external(&project_folder, &dep);
     }
@@ -225,7 +231,31 @@ fn test_removing_old_external_dependencies() {
     project_remove(&project_folder);
 }
 
-fn add_script_getversion(project_folder: &Path) {
+#[test]
+fn test_remove_unnecessary_elements_in_dependencies() {
+    let project_folder = create_project_for_test_dependency(
+        "project_remove_unnecessary_elements_in_dependencies",
+        Some("unnecessary_elements"),
+        None,
+        None,
+    );
+
+    // project_folder/scripts/version.move
+    add_sctipt_getversion(&project_folder);
+
+    let output = execute_dove_bin_at(
+        env!("CARGO_BIN_EXE_dove"),
+        &["dove", "run", "version()"],
+        &project_folder,
+    )
+    .unwrap();
+
+    assert!(output.contains("[debug] 9"));
+
+    project_remove(&project_folder);
+}
+
+fn add_sctipt_getversion(project_folder: &Path) {
     // project_folder/scripts/version.move
     write_all(
         &project_folder.join("scripts").join("version.move"),
@@ -247,14 +277,26 @@ fn create_project_for_test_dependency(
     rev: Option<&str>,
 ) -> PathBuf {
     let rep = Git {
-        git: "https://github.com/pontem-network/test-dove-dependency".to_string(),
+        git: PathBuf::from("target/test.git")
+            .canonicalize()
+            .unwrap()
+            .as_os_str()
+            .to_str()
+            .unwrap()
+            .to_string(),
         branch: branch.map(|b| b.to_string()),
         tag: tag.map(|b| b.to_string()),
         rev: rev.map(|b| b.to_string()),
         path: None,
     };
-
-    let project_folder = project_start_new_and_add_dependencies(project_name, vec![rep]);
+    let stdlib = PathBuf::from("resources/test_move_project")
+        .canonicalize()
+        .unwrap()
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .to_string();
+    let project_folder = project_start_new_and_add_dependencies(project_name, &[rep], &[&stdlib]);
 
     // project_folder/scripts/main.move
     write_all(
@@ -295,4 +337,40 @@ fn check_external(project_folder: &Path, dep: &[Git]) {
         .collect();
 
     assert_eq!(finded_folders, expected_folders);
+}
+
+fn get_rev_on_branch(tag: &str) -> String {
+    let ref_remote = format!("refs/heads/{}", tag);
+    let repo = git2::Repository::open("./target/test.git").unwrap();
+    let find = repo
+        .references()
+        .unwrap()
+        .flatten()
+        .find_map(|rf| {
+            if rf.is_branch() && rf.name() == Some(&ref_remote) {
+                Some(rf.target().unwrap().to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap();
+    find
+}
+
+fn get_rev_on_tag(tag: &str) -> String {
+    let ref_remote = format!("refs/tags/{}", tag);
+    let repo = git2::Repository::open("./target/test.git").unwrap();
+    let find = repo
+        .references()
+        .unwrap()
+        .flatten()
+        .find_map(|rf| {
+            if rf.is_tag() && rf.name() == Some(&ref_remote) {
+                Some(rf.target().unwrap().to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap();
+    find
 }

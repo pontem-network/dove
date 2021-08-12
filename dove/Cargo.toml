@@ -7,6 +7,7 @@ authors = [
     "Maxim Kurnikov <maximkurnikov@wings.ai>"
 ]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 structopt = "0.3"
@@ -59,3 +60,8 @@ boogie-backend-v2 = { git = "https://github.com/pontem-network/diem.git", branch
 [features]
 default = []
 prover = ['move-prover', 'boogie-backend-v2']
+
+[build-dependencies]
+git2 = "0.13"
+fs_extra ="1.2.0"
+anyhow = "1.0.42"
