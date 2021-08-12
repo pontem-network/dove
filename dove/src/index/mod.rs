@@ -277,4 +277,94 @@ impl Index {
             })
             .for_each(remove);
     }
+
+    /// difference in indexes
+    pub fn diff<'a>(&'a self, index: &'a Index) -> Vec<Diff<'a>> {
+        let cur_paths = &self.deps_roots;
+        let oth_paths = &index.deps_roots;
+
+        let mut diff: Vec<Diff> = cur_paths
+            .iter()
+            .map(|path| {
+                if oth_paths.contains(path) {
+                    Diff::Unchanged(path)
+                } else {
+                    Diff::Deleted(path)
+                }
+            })
+            .collect();
+
+        diff.extend(oth_paths.iter().filter_map(|path| {
+            if cur_paths.contains(path) {
+                None
+            } else {
+                Some(Diff::Added(path))
+            }
+        }));
+
+        diff
+    }
+}
+
+/// difference in indexes
+#[derive(Debug, Eq, PartialEq)]
+pub enum Diff<'a> {
+    Added(&'a str),
+    Deleted(&'a str),
+    Unchanged(&'a str),
+}
+
+#[test]
+fn test_diff_in_index() {
+    for (vec_a, variants) in &[
+        (
+            vec!["a", "b"],
+            vec![
+                (Vec::new(), vec![Diff::Deleted("a"), Diff::Deleted("b")]),
+                (
+                    vec!["a", "b"],
+                    vec![Diff::Unchanged("a"), Diff::Unchanged("b")],
+                ),
+                (
+                    vec!["b", "a"],
+                    vec![Diff::Unchanged("a"), Diff::Unchanged("b")],
+                ),
+                (
+                    vec!["b", "a", "c"],
+                    vec![Diff::Unchanged("a"), Diff::Unchanged("b"), Diff::Added("c")],
+                ),
+                (vec!["a"], vec![Diff::Unchanged("a"), Diff::Deleted("b")]),
+                (vec!["b"], vec![Diff::Deleted("a"), Diff::Unchanged("b")]),
+                (
+                    vec!["c", "a"],
+                    vec![Diff::Unchanged("a"), Diff::Deleted("b"), Diff::Added("c")],
+                ),
+                (
+                    vec!["b", "c"],
+                    vec![Diff::Deleted("a"), Diff::Unchanged("b"), Diff::Added("c")],
+                ),
+            ],
+        ),
+        (
+            Vec::new(),
+            vec![
+                (Vec::new(), Vec::new()),
+                (vec!["a"], vec![Diff::Added("a")]),
+                (vec!["b", "c"], vec![Diff::Added("b"), Diff::Added("c")]),
+            ],
+        ),
+    ] {
+        let index_a = Index {
+            package_hash: "".to_string(),
+            deps_roots: vec_a.iter().map(|t| t.to_string()).collect(),
+        };
+        for (vec_b, diffs) in variants {
+            let index_b = Index {
+                package_hash: "".to_string(),
+                deps_roots: vec_b.iter().map(|t| t.to_string()).collect(),
+            };
+
+            assert_eq!(&index_a.diff(&index_b), diffs);
+        }
+    }
 }
