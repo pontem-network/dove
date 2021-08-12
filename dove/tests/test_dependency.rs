@@ -18,7 +18,7 @@ fn test_dependency_with_git_tag() {
         );
 
         // project_folder/scripts/version.move
-        add_sctipt_getversion(&project_folder);
+        add_script_getversion(&project_folder);
 
         let output = execute_dove_bin_at(
             env!("CARGO_BIN_EXE_dove"),
@@ -50,7 +50,7 @@ fn test_dependency_with_rev() {
             Some(rev),
         );
         // project_folder/scripts/version.move
-        add_sctipt_getversion(&project_folder);
+        add_script_getversion(&project_folder);
 
         let output = execute_dove_bin_at(
             env!("CARGO_BIN_EXE_dove"),
@@ -75,7 +75,7 @@ fn test_dependency_without_dove_toml() {
     );
 
     // project_folder/scripts/version.move
-    add_sctipt_getversion(&project_folder);
+    add_script_getversion(&project_folder);
 
     let output = execute_dove_bin_at(
         env!("CARGO_BIN_EXE_dove"),
@@ -241,7 +241,7 @@ fn test_remove_unnecessary_elements_in_dependencies() {
     );
 
     // project_folder/scripts/version.move
-    add_sctipt_getversion(&project_folder);
+    add_script_getversion(&project_folder);
 
     let output = execute_dove_bin_at(
         env!("CARGO_BIN_EXE_dove"),
@@ -255,7 +255,7 @@ fn test_remove_unnecessary_elements_in_dependencies() {
     project_remove(&project_folder);
 }
 
-fn add_sctipt_getversion(project_folder: &Path) {
+fn add_script_getversion(project_folder: &Path) {
     // project_folder/scripts/version.move
     write_all(
         &project_folder.join("scripts").join("version.move"),
