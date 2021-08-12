@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
     struct R {
         f: u64,
         g : bool

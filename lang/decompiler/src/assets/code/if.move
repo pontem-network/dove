@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
     struct S { f: u64, g: u64 }
 
     fun r() {}

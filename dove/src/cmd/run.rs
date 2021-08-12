@@ -36,7 +36,7 @@ pub struct Run {
     color: Option<String>,
     /// If set, the effects of executing `script_file` (i.e., published, updated, and
     /// deleted resources) will NOT be committed to disk.
-    #[structopt(long = "dry-run", short = "n")]
+    #[structopt(long = "dry-run", short = "d")]
     dry_run: bool,
     /// Print additional diagnostics
     #[structopt(short = "v", global = true)]

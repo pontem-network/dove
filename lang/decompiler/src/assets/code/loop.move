@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
 //    public fun l() {
 //        l1();
 //        loop {

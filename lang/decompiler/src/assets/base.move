@@ -1,4 +1,4 @@
-module Base {
+module 0x1::Base {
     struct Test has key, store {
         val: u64,
     }
