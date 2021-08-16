@@ -13,16 +13,16 @@ module Coins {
     }
 
     public fun get_price<Curr1: key + store, Curr2: key + store>(): u128 acquires Price {
-        borrow_global<Price<Curr1, Curr2>>(0x1).value
+        borrow_global<Price<Curr1, Curr2>>(@0x1).value
     }
 
     public fun increment_price<Curr1: key + store, Curr2: key + store>(inc: u128) acquires Price {
-        let price = borrow_global_mut<Price<Curr1, Curr2>>(0x1);
+        let price = borrow_global_mut<Price<Curr1, Curr2>>(@0x1);
         price.value = price.value + inc;
     }
 
     public fun has_price<Curr1: key + store, Curr2: key + store>(): bool {
-        exists<Price<Curr1, Curr2>>(0x1)
+        exists<Price<Curr1, Curr2>>(@0x1)
     }
 }
 }

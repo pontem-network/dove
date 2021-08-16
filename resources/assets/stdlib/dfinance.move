@@ -72,27 +72,27 @@ module Dfinance {
 
     /// getter for denom. reads denom information from 0x1 resource
     public fun denom<Coin: key + store>(): vector<u8> acquires Info {
-        *&borrow_global<Info<Coin>>(0x1).denom
+        *&borrow_global<Info<Coin>>(@0x1).denom
     }
 
     /// getter for currency decimals
     public fun decimals<Coin: key + store>(): u8 acquires Info {
-        borrow_global<Info<Coin>>(0x1).decimals
+        borrow_global<Info<Coin>>(@0x1).decimals
     }
 
     /// getter for is_token property of Info
     public fun is_token<Coin: key + store>(): bool acquires Info {
-        borrow_global<Info<Coin>>(0x1).is_token
+        borrow_global<Info<Coin>>(@0x1).is_token
     }
 
     /// getter for total_supply property of Info
     public fun total_supply<Coin: key + store>(): u128 acquires Info {
-        borrow_global<Info<Coin>>(0x1).total_supply
+        borrow_global<Info<Coin>>(@0x1).total_supply
     }
 
     /// getter for owner property of Info
     public fun owner<Coin: key + store>(): address acquires Info {
-        borrow_global<Info<Coin>>(0x1).owner
+        borrow_global<Info<Coin>>(@0x1).owner
     }
 
     /// only 0x1 address and add denom descriptions, 0x1 holds information resource
@@ -103,7 +103,7 @@ module Dfinance {
             denom,
             decimals,
 
-            owner: 0x1,
+            owner: @0x1,
             total_supply: 0,
             is_token: false
         });
@@ -111,7 +111,7 @@ module Dfinance {
 
     /// check whether sender is 0x1, helper method
     fun assert_can_register_coin(account: &signer) {
-        assert(Signer::address_of(account) == 0x1, ERR_NOT_CORE_ADDRESS);
+        assert(Signer::address_of(account) == @0x1, ERR_NOT_CORE_ADDRESS);
     }
 
     const DECIMALS_MIN : u8 = 0;
@@ -142,7 +142,7 @@ module Dfinance {
     ): T<Token<Tok>> {
 
         // check if this token has never been registered
-        assert(!exists<Info<Tok>>(0x1), ERR_NOT_REGISTERED);
+        assert(!exists<Info<Tok>>(@0x1), ERR_NOT_REGISTERED);
 
         // no more than DECIMALS MAX is allowed
         assert(decimals >= DECIMALS_MIN && decimals <= DECIMALS_MAX, ERR_INVALID_NUMBER_OF_DECIMALS);
@@ -174,7 +174,7 @@ module Dfinance {
     /// Created Info resource must be attached to 0x1 address.
     /// Keeping this public until native function is ready.
     fun register_token_info<Coin: copy + store + key>(info: Info<Coin>) {
-        let sig = create_signer(0x1);
+        let sig = create_signer(@0x1);
         move_to<Info<Coin>>(&sig, info);
         destroy_signer(sig);
     }
