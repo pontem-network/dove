@@ -17,7 +17,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 const PONT_STDLIB: &str =
-    r#"{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.1.2" }"#;
+    r#"{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.2.0" }"#;
 
 use crate::stdoutln;
 use crate::stdout::colorize::good;
