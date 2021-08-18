@@ -1,6 +1,10 @@
 use move_lang::parser::ast::{Use, ModuleAccess, Type};
 use move_lang::shared::{Address, Name};
 use move_ir_types::location::{Spanned, Loc};
+use crate::parser::types::pretyptag::PreTypeTag;
+
+pub mod pretyptag;
+pub mod to_typeparams;
 
 #[derive(Debug, PartialEq)]
 pub enum Value_ {
@@ -36,7 +40,7 @@ pub struct ResourceStore {
 #[derive(Debug, PartialEq)]
 pub struct Call {
     pub name: ModuleAccess,
-    pub t_params: Option<Vec<Type>>,
+    pub t_params: Option<Vec<PreTypeTag>>,
     pub params: Vec<Value>,
 }
 

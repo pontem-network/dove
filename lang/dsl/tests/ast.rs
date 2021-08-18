@@ -1,13 +1,13 @@
 use move_ir_types::location::{Loc, Span};
-use move_lang::parser::ast::{ModuleAccess, ModuleAccess_, ModuleName, Type, Type_, Use};
+use move_lang::parser::ast::{ModuleAccess, ModuleAccess_, ModuleName, Use};
 use move_lang::parser::syntax::spanned;
 use move_lang::shared::Address;
-
 use dsl::parser::parse;
 use dsl::parser::types::{Ast, Call, Instruction, Struct, Value, Value_, Var};
 
 mod common;
 use common::*;
+use dsl::parser::types::pretyptag::ToPreTypeTag;
 
 #[test]
 pub fn parse_empty_dsl() {
@@ -175,6 +175,7 @@ pub fn test_fun_call() {
         "dsl",
     )
     .unwrap();
+
     assert_eq!(
         ast,
         Ast {
@@ -223,7 +224,7 @@ pub fn test_fun_call() {
                     98,
                     Call {
                         name: access_name(1, 8, "test"),
-                        t_params: Some(vec![tp("u8")]),
+                        t_params: Some(vec!["u8".to_pretypetag().unwrap()]),
                         params: vec![],
                     },
                 ),
@@ -233,16 +234,8 @@ pub fn test_fun_call() {
                     Call {
                         name: access_name(1, 8, "test"),
                         t_params: Some(vec![
-                            tp_mod_access(
-                                access_addr_mod_name(
-                                    107, 149, 112, 122, 117, 122, "0x1", "Block", "T",
-                                ),
-                                vec![tp_mod_access(access_mod_name(0, 0, "Block", "T"), vec![])],
-                            ),
-                            tp_mod_access(
-                                access_name(107, 149, "T"),
-                                vec![tp_mod_access(access_name(0, 0, "T"), vec![]), tp("u8")],
-                            ),
+                            "0x1::Block::T<Block::T>".to_pretypetag().unwrap(),
+                            "T<T, u8>>".to_pretypetag().unwrap(),
                         ]),
                         params: vec![],
                     },
@@ -348,15 +341,6 @@ fn access_mod_name(start: u32, end: u32, m: &str, n: &str) -> ModuleAccess {
         start as usize,
         end as usize,
         ModuleAccess_::ModuleAccess(ModuleName(name(m)), name(n)),
-    )
-}
-
-fn tp(name: &str) -> Type {
-    spanned(
-        "dsl",
-        0,
-        0,
-        Type_::Apply(Box::new(access_name(0, 0, name)), vec![]),
     )
 }
 
