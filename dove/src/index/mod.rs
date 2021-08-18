@@ -200,16 +200,13 @@ impl Index {
     }
 
     /// removing unused external dependencies
-    pub fn remove_unused(&self, deps_path: &Path) -> Result<(), Error> {
-        if !deps_path.exists() {
-            return Ok(());
-        }
-
-        let deps: Vec<PathBuf> = self
-            .deps_roots
+    pub fn remove_unused(&self, diff: Vec<Diff>) -> Result<(), Error> {
+        for need_delete in diff
             .iter()
-            .filter_map(|item| {
-                let path = PathBuf::from(item);
+            .filter(|diff| diff.is_deleted())
+            .map(|diff| diff.to_pathbuf())
+            .filter(|path| is_external_git(path))
+            .filter_map(|path| {
                 path.components()
                     .enumerate()
                     .filter_map(|(num, part)| {
@@ -222,17 +219,11 @@ impl Index {
                         })
                     })
                     .last()
-                    .map(|num| path.components().take(num + 1).collect())
+                    .map(|num| path.components().take(num + 1).collect::<PathBuf>())
             })
-            .filter(|path: &PathBuf| path.starts_with(deps_path))
-            .collect();
-
-        for found in deps_path
-            .read_dir()?
-            .filter_map(|path| path.ok().map(|path| path.path()))
-            .filter(|path| path.is_dir() && !deps.contains(path) && path.exists())
+            .filter(|path| path.exists() && path.is_dir())
         {
-            remove_dir_all(&found)?;
+            remove_dir_all(&need_delete)?
         }
 
         Ok(())
@@ -265,16 +256,112 @@ impl Index {
         self.deps_roots
             .iter()
             .map(PathBuf::from)
-            .filter(|path| {
-                let com = path
-                    .components()
-                    .filter_map(|el| el.as_os_str().to_str())
-                    .collect::<Vec<&str>>();
-                com.iter()
-                    .find_position(|el| el == &&".external")
-                    .and_then(|(pos, _)| com.get(pos + 1))
-                    .map_or(false, |el| el.starts_with("git_"))
-            })
+            .filter(|path| is_external_git(path))
             .for_each(remove);
+    }
+
+    /// difference in indexes
+    pub fn diff<'a>(&'a self, index: &'a Index) -> Vec<Diff<'a>> {
+        let ours = &self.deps_roots;
+        let theirs = &index.deps_roots;
+
+        let mut diff: Vec<Diff> = ours
+            .iter()
+            .filter_map(|path| {
+                if theirs.contains(path) {
+                    None
+                } else {
+                    Some(Diff::Deleted(path))
+                }
+            })
+            .collect();
+
+        diff.extend(theirs.iter().filter_map(|path| {
+            if ours.contains(path) {
+                None
+            } else {
+                Some(Diff::Added(path))
+            }
+        }));
+
+        diff
+    }
+}
+
+/// difference in indexes
+#[derive(Debug, Eq, PartialEq)]
+pub enum Diff<'a> {
+    /// Added the path to the index
+    Added(&'a str),
+    /// The path was removed from the index
+    Deleted(&'a str),
+}
+
+impl<'a> Diff<'a> {
+    /// Check if the path to delete is marked
+    pub fn is_deleted(&self) -> bool {
+        matches!(self, Diff::Deleted(_))
+    }
+
+    /// convert to path
+    pub fn to_pathbuf(&self) -> PathBuf {
+        let path = match self {
+            Diff::Deleted(path) => path,
+            Diff::Added(path) => path,
+        };
+        PathBuf::from(path)
+    }
+}
+
+/// Is the directory of the downloaded repository
+fn is_external_git(path: &Path) -> bool {
+    let path_components = path
+        .components()
+        .filter_map(|el| el.as_os_str().to_str())
+        .collect::<Vec<&str>>();
+    path_components
+        .iter()
+        .find_position(|el| el == &&".external")
+        .and_then(|(pos, _)| path_components.get(pos + 1))
+        .map_or(false, |el| el.starts_with("git_"))
+}
+
+#[test]
+fn test_diff_in_index() {
+    for (vec_a, variants) in &[
+        (
+            vec!["a", "b"],
+            vec![
+                (Vec::new(), vec![Diff::Deleted("a"), Diff::Deleted("b")]),
+                (vec!["a", "b"], vec![]),
+                (vec!["b", "a"], vec![]),
+                (vec!["b", "a", "c"], vec![Diff::Added("c")]),
+                (vec!["a"], vec![Diff::Deleted("b")]),
+                (vec!["b"], vec![Diff::Deleted("a")]),
+                (vec!["c", "a"], vec![Diff::Deleted("b"), Diff::Added("c")]),
+                (vec!["b", "c"], vec![Diff::Deleted("a"), Diff::Added("c")]),
+            ],
+        ),
+        (
+            Vec::new(),
+            vec![
+                (Vec::new(), Vec::new()),
+                (vec!["a"], vec![Diff::Added("a")]),
+                (vec!["b", "c"], vec![Diff::Added("b"), Diff::Added("c")]),
+            ],
+        ),
+    ] {
+        let index_a = Index {
+            package_hash: "".to_string(),
+            deps_roots: vec_a.iter().map(|t| t.to_string()).collect(),
+        };
+        for (vec_b, diffs) in variants {
+            let index_b = Index {
+                package_hash: "".to_string(),
+                deps_roots: vec_b.iter().map(|t| t.to_string()).collect(),
+            };
+
+            assert_eq!(&index_a.diff(&index_b), diffs);
+        }
     }
 }

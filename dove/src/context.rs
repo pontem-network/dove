@@ -52,18 +52,18 @@ impl Context {
     /// Build project index.
     pub fn build_index(&self) -> Result<Index, Error> {
         let index_path = self.path_for(&self.manifest.layout.index);
-        let index = Index::load(&index_path)?.unwrap_or_default();
+        let old_index = Index::load(&index_path)?.unwrap_or_default();
 
         let package_hash = self.package_hash();
-        if index.package_hash == package_hash {
-            Ok(index)
+        if old_index.package_hash == package_hash {
+            Ok(old_index)
         } else {
-            let index = Index::build(package_hash, self)?;
-            index.store(&index_path)?;
-            index.remove_unused(&self.project_dir.join(&self.manifest.layout.deps))?;
-            index.remove_unnecessary_elements_in_dependencies();
+            let new_index = Index::build(package_hash, self)?;
+            new_index.store(&index_path)?;
+            new_index.remove_unused(old_index.diff(&new_index))?;
+            new_index.remove_unnecessary_elements_in_dependencies();
 
-            Ok(index)
+            Ok(new_index)
         }
     }
 
