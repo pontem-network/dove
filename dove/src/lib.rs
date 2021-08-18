@@ -13,6 +13,8 @@ pub mod cli;
 pub mod cmd;
 /// Dove execution context.
 pub mod context;
+/// Docgen.
+pub mod docs;
 /// Dove modules index.
 pub mod index;
 /// Dove configuration.
@@ -21,3 +23,5 @@ pub mod manifest;
 pub mod stdout;
 /// for tests
 pub mod tests_helper;
+/// Build|Run transaction. Used in "dove run" and "dove tx"
+pub mod transaction;

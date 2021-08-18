@@ -158,7 +158,7 @@ mod tests {
         let resolver = StaticResolver::new(deps.to_vec());
         let target = &[&MoveFile::with_content("target.move", source)];
         let builder = MoveBuilder::new(dialect.as_ref(), Some(sender), resolver);
-        let Artifacts { files, prog } = builder.build(target);
+        let Artifacts { files, prog, .. } = builder.build(target, false);
 
         match prog {
             Ok(mut prog) => prog.remove(0).serialize(),

@@ -1,6 +1,6 @@
 [package]
 name = "dove"
-version = "1.2.2"
+version = "1.2.3"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
     "Dm. Yakushev <dmitryyakushev@wings.ai>",
@@ -35,9 +35,11 @@ git2 = "0.13"
 bcs = "0.1.2"
 dunce = "1.0.1"
 atty = "0.2"
+indexmap = { version = "=1.6.2", default-features = false, features = ["std"] }
 
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
+dsl = { path = "../lang/dsl" }
 git-hash = { path = "../common/git-hash" }
 move-executor = { path = "../executor" }
 net = { path = "../net" }
@@ -45,6 +47,8 @@ net = { path = "../net" }
 vm = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
 move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
 move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+docgen = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
+move-model = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
 ir-to-bytecode-syntax = { git = "https://github.com/pontem-network/diem.git", branch = "release-1.2.0-v2" }
 
 # move-prover deps

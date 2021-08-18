@@ -195,6 +195,9 @@ pub fn make_local_name(git: &Git) -> String {
     if let Some(path) = &git.path {
         digest.update(path.as_bytes());
     }
+    if let Some(tag) = &git.tag {
+        digest.update(tag.as_bytes());
+    }
     let mut output = [0; 32];
     digest.finalize(&mut output);
     format!("{}_{}", PREFIX, hex::encode(&output))

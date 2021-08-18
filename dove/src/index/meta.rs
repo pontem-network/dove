@@ -29,7 +29,7 @@ pub fn source_meta(
     let mut files = HashMap::new();
 
     let (defs, _, errors, file_offset_map) =
-        parse_file(dialect, &mut files, name, &source, sender);
+        parse_file(dialect, &mut files, name, &source, sender, false);
     if errors.is_empty() {
         let mut metadata = Vec::new();
         for def in defs {

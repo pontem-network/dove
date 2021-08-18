@@ -163,7 +163,7 @@ pub fn execute_script(
     cost_strategy: &mut CostStrategy,
     consts_map: &ConstsMap,
 ) -> Result<StepExecutionResult> {
-    let mut ds = data_store.clone();
+    let ds = data_store.clone();
     let ExecutionMeta {
         signers,
         aborts_with,

@@ -1,7 +1,7 @@
 use move_ir_types::location::{Loc, Span};
 use move_lang::shared::{Address, Name};
 use move_lang::parser::syntax::spanned;
-use move_lang::parser::ast::{ModuleAccess, ModuleAccess_, Type, Type_, ModuleIdent};
+use move_lang::parser::ast::{ModuleAccess, ModuleAccess_, ModuleIdent};
 
 pub fn loc(start: u32, end: u32) -> Loc {
     Loc::new("dsl", Span::new(start, end))
@@ -15,6 +15,7 @@ pub fn name(name: &str) -> Name {
     Name::new(loc(0, 0), name.to_owned())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn access_addr_mod_name(
     start: u32,
     end: u32,
@@ -35,10 +36,6 @@ pub fn access_addr_mod_name(
             name(n),
         ),
     )
-}
-
-pub fn tp_mod_access(access: ModuleAccess, tps: Vec<Type>) -> Type {
-    spanned("dsl", 0, 0, Type_::Apply(Box::new(access), tps))
 }
 
 pub fn module(

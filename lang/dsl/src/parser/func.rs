@@ -5,15 +5,21 @@ use move_lang::parser::syntax::{
 };
 use move_lang::parser::lexer::{Lexer, Tok};
 use crate::parser::value::parse_value;
+use crate::parser::types::pretyptag::{ToVecTag, PreTypeTag};
 
 pub fn parse_call(tokens: &mut Lexer) -> Result<Call, Error> {
     let name = parse_module_access(tokens, || {
         panic!("parse_call with something other than a ModuleAccess")
     })?;
 
-    let mut tys = None;
+    let mut tys: Option<Vec<PreTypeTag>> = None;
     if tokens.peek() == Tok::Less {
-        tys = parse_optional_type_args(tokens)?;
+        let pt = parse_optional_type_args(tokens)?;
+        tys = if let Some(pt) = pt {
+            pt.to_pretypetag().map(Some)?
+        } else {
+            None
+        }
     }
 
     let args = parse_comma_list(

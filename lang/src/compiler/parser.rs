@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use anyhow::Result;
 use move_core_types::account_address::AccountAddress;
-use move_lang::{FileCommentMap, parser, strip_comments_and_verify};
+use move_lang::{FileCommentMap, leak_str, MatchedFileCommentMap, parser, strip_comments_and_verify};
 use move_lang::errors::{Errors, FilesSourceText};
 use move_lang::parser::syntax::parse_file_string;
 
@@ -10,7 +10,6 @@ use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::file::MoveFile;
 use crate::compiler::mut_string::{MutString, NewValue};
 use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
-use ir_to_bytecode_syntax::syntax::leak_str;
 
 pub type CommentsMap = BTreeMap<&'static str, FileCommentMap>;
 
@@ -22,25 +21,32 @@ pub struct ParserArtifact {
 pub struct ParsingMeta {
     pub source_map: FilesSourceText,
     pub offsets_map: ProjectOffsetMap,
-    pub comments: CommentsMap,
+    pub comments: HashMap<&'static str, Comments>,
 }
 
 pub fn parse_target(
     dialect: &dyn Dialect,
     targets: &[&MoveFile],
     sender: Option<AccountAddress>,
+    create_env: bool,
 ) -> ParserArtifact {
     let mut files: FilesSourceText = HashMap::new();
     let mut source_definitions = Vec::new();
-    let mut comment_map = CommentsMap::new();
+    let mut comment_map = HashMap::new();
 
     let mut project_offsets_map = ProjectOffsetMap::default();
     let mut errors: Errors = Vec::new();
 
     for target in targets {
         let name = leak_str(target.name());
-        let (defs, comments, es, offsets_map) =
-            parse_file(dialect, &mut files, name, target.content(), sender);
+        let (defs, comments, es, offsets_map) = parse_file(
+            dialect,
+            &mut files,
+            name,
+            target.content(),
+            sender,
+            create_env,
+        );
         source_definitions.extend(defs);
         comment_map.insert(name, comments);
         project_offsets_map.0.insert(name, offsets_map);
@@ -71,6 +77,7 @@ pub fn parse_program(
     parser_artifact: ParserArtifact,
     deps: &[MoveFile],
     sender: Option<AccountAddress>,
+    create_env: bool,
 ) -> ParserArtifact {
     let ParserArtifact {
         meta:
@@ -89,8 +96,14 @@ pub fn parse_program(
             let mut errors: Errors = Vec::new();
             for dep in deps {
                 let name = leak_str(&dep.name());
-                let (defs, _, es, offsets_map) =
-                    parse_file(dialect, &mut source_map, name, dep.content(), sender);
+                let (defs, _, es, offsets_map) = parse_file(
+                    dialect,
+                    &mut source_map,
+                    name,
+                    dep.content(),
+                    sender,
+                    create_env,
+                );
                 project_offsets_map.0.insert(name, offsets_map);
                 lib_definitions.extend(defs);
                 errors.extend(es);
@@ -124,15 +137,21 @@ pub fn parse_program(
     }
 }
 
+pub enum Comments {
+    MatchedCommentMap(MatchedFileCommentMap),
+    CommentMap(FileCommentMap),
+}
+
 pub fn parse_file(
     dialect: &dyn Dialect,
     files: &mut FilesSourceText,
     fname: &'static str,
     source_buffer: &str,
     sender: Option<AccountAddress>,
+    create_env: bool,
 ) -> (
     Vec<parser::ast::Definition>,
-    FileCommentMap,
+    Comments,
     Errors,
     FileOffsetMap,
 ) {
@@ -148,14 +167,46 @@ pub fn parse_file(
     let (no_comments_buffer, comment_map) =
         match strip_comments_and_verify(fname, &mutated_source) {
             Err(errors) => {
-                return (vec![], Default::default(), errors, file_source_map);
+                return (
+                    vec![],
+                    Comments::CommentMap(Default::default()),
+                    errors,
+                    file_source_map,
+                );
             }
             Ok(result) => result,
         };
 
-    match parse_file_string(fname, &no_comments_buffer, FileCommentMap::default()) {
-        Ok((defs, _)) => (defs, comment_map, Vec::default(), file_source_map),
-        Err(errors) => (vec![], comment_map, errors, file_source_map),
+    if create_env {
+        match parse_file_string(fname, &no_comments_buffer, comment_map) {
+            Ok(defs_and_comments) => (
+                defs_and_comments.0,
+                Comments::MatchedCommentMap(defs_and_comments.1),
+                Vec::default(),
+                file_source_map,
+            ),
+            Err(errors) => (
+                vec![],
+                Comments::MatchedCommentMap(MatchedFileCommentMap::new()),
+                errors,
+                file_source_map,
+            ),
+        }
+    } else {
+        match parse_file_string(fname, &no_comments_buffer, FileCommentMap::default()) {
+            Ok((defs, _)) => (
+                defs,
+                Comments::CommentMap(comment_map),
+                Vec::default(),
+                file_source_map,
+            ),
+            Err(errors) => (
+                vec![],
+                Comments::CommentMap(comment_map),
+                errors,
+                file_source_map,
+            ),
+        }
     }
 }
 

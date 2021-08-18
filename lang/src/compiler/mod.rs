@@ -1,15 +1,21 @@
+use std::collections::HashSet;
+
 pub use anyhow::Result;
+use codespan_reporting::diagnostic::{Diagnostic, Label};
+use itertools::Itertools;
 use move_core_types::account_address::AccountAddress;
 use move_lang::{cfgir, FullyCompiledProgram, move_continue_up_to, Pass, PassResult};
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::errors::Errors;
 use move_lang::shared::Address;
+use move_model::model::GlobalEnv;
+use move_model::run_spec_checker;
 
 use parser::parse_program;
 
 use crate::compiler::dialects::Dialect;
 use crate::compiler::file::MoveFile;
-use crate::compiler::parser::{parse_target, ParserArtifact, ParsingMeta};
+use crate::compiler::parser::{Comments, parse_target, ParserArtifact, ParsingMeta};
 
 pub mod address;
 pub mod dialects;
@@ -46,6 +52,7 @@ pub trait CompileFlow<A> {
     fn after_translate(
         &mut self,
         meta: ParsingMeta,
+        env: Option<GlobalEnv>,
         translation_result: Result<Vec<CompiledUnit>, Errors>,
     ) -> A;
 }
@@ -60,21 +67,51 @@ pub fn compile<A>(
     targets: &[&MoveFile],
     sender: Option<AccountAddress>,
     mut flow: impl CompileFlow<A>,
+    create_env: bool,
 ) -> A {
     // Init compiler flow.
     flow.init(dialect, sender);
 
-    // Parse target.
-    let (ast, deps) = match flow.after_parse_target(parse_target(dialect, targets, sender)) {
-        Step::Stop(artifact) => return artifact,
-        Step::Next(target_with_deps) => target_with_deps,
+    let mut env = if create_env {
+        Some(GlobalEnv::new())
+    } else {
+        None
     };
+
+    // Parse target.
+    let (ast, deps) =
+        match flow.after_parse_target(parse_target(dialect, targets, sender, create_env)) {
+            Step::Stop(artifact) => return artifact,
+            Step::Next(target_with_deps) => target_with_deps,
+        };
+
+    let source_keys = ast
+        .meta
+        .source_map
+        .keys()
+        .map(|key| key.to_owned())
+        .collect::<HashSet<_>>();
 
     // Parse program.
     let program = match deps {
         None => ast,
-        Some(deps) => parse_program(dialect, ast, &deps, sender),
+        Some(deps) => parse_program(dialect, ast, &deps, sender, create_env),
     };
+
+    if let Some(env) = env.as_mut() {
+        for fname in program.meta.source_map.keys().sorted() {
+            let fsrc = &program.meta.source_map[fname];
+            env.add_source(fname, fsrc, !source_keys.contains(fname));
+        }
+
+        for (fname, documentation) in &program.meta.comments {
+            if let Comments::MatchedCommentMap(matched) = documentation {
+                let file_id = env.get_file_id(fname).expect("file name defined");
+                env.add_documentation(file_id, matched.to_owned());
+            }
+        }
+    }
+
     let (ast, precompiled) = match flow.after_parse_program(program) {
         Step::Stop(artifact) => return artifact,
         Step::Next((ast, precompiled)) => (ast, precompiled),
@@ -92,13 +129,28 @@ pub fn compile<A>(
             move_continue_up_to(
                 precompiled.as_ref(),
                 PassResult::Parser(sender, pprog),
-                Pass::CFGIR,
+                Pass::Expansion,
             )
         })
-        .map(|res| match res {
-            PassResult::CFGIR(cfgir) => cfgir,
+        .and_then(|pass_res| match pass_res {
+            PassResult::Expansion(eprog, eerrors) => {
+                Ok((eprog.clone(), PassResult::Expansion(eprog, eerrors)))
+            }
+            _ => unreachable!(),
+        })
+        .and_then(|(eprog, pass_res)| {
+            move_continue_up_to(precompiled.as_ref(), pass_res, Pass::CFGIR)
+                .map(|pass| (eprog, pass))
+        })
+        .map(|(eprog, res)| match res {
+            PassResult::CFGIR(cfgir) => (eprog, cfgir),
             _ => unreachable!(),
         });
+
+    let (eprog, check_result) = match check_result {
+        Ok((eprog, cfgir)) => (Some(eprog), Ok(cfgir)),
+        Err(errs) => (None, Err(errs)),
+    };
 
     let (meta, check_result) = match flow.after_check(meta, check_result) {
         Step::Stop(artifact) => return artifact,
@@ -119,5 +171,31 @@ pub fn compile<A>(
             _ => unreachable!(),
         });
 
-    flow.after_translate(meta, units)
+    if let Some(env) = env.as_mut() {
+        match &units {
+            Ok(units) => {
+                if let Some(eprog) = eprog {
+                    run_spec_checker(env, units.clone(), eprog);
+                }
+            }
+            Err(errs) => {
+                add_move_lang_errors(env, meta.offsets_map.transform(errs.to_owned()));
+            }
+        }
+    }
+
+    flow.after_translate(meta, env, units)
+}
+
+fn add_move_lang_errors(env: &mut GlobalEnv, errors: Errors) {
+    let mk_label = |env: &mut GlobalEnv, err: (move_ir_types::location::Loc, String)| {
+        let loc = env.to_loc(&err.0);
+        Label::new(loc.file_id(), loc.span(), err.1)
+    };
+    for mut error in errors {
+        let primary = error.remove(0);
+        let diag = Diagnostic::new_error("", mk_label(env, primary))
+            .with_secondary_labels(error.into_iter().map(|e| mk_label(env, e)));
+        env.add_diag(diag);
+    }
 }

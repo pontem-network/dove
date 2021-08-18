@@ -9,9 +9,11 @@ use crate::compiler::file::MoveFile;
 use crate::compiler::parser::{ParserArtifact, ParsingMeta};
 use crate::flow::DependencyResolver;
 use move_lang::parser::ast::{Program, Definition};
+use move_model::model::GlobalEnv;
 
 pub struct Artifacts {
     pub files: FilesSourceText,
+    pub env: Option<GlobalEnv>,
     pub prog: Result<Vec<CompiledUnit>, Errors>,
 }
 
@@ -34,8 +36,8 @@ impl<'a, R: DependencyResolver> MoveBuilder<'a, R> {
         }
     }
 
-    pub fn build(self, targets: &[&MoveFile]) -> Artifacts {
-        compile(self.dialect, targets, self.sender, self)
+    pub fn build(self, targets: &[&MoveFile], create_env: bool) -> Artifacts {
+        compile(self.dialect, targets, self.sender, self, create_env)
     }
 }
 
@@ -49,6 +51,7 @@ impl<'a, R: DependencyResolver> CompileFlow<Artifacts> for MoveBuilder<'a, R> {
                 Ok(deps) => Step::Next((parser_artifact, deps)),
                 Err(error) => Step::Stop(Artifacts {
                     files: parser_artifact.meta.source_map,
+                    env: None,
                     prog: Err(vec![error]),
                 }),
             }
@@ -66,6 +69,7 @@ impl<'a, R: DependencyResolver> CompileFlow<Artifacts> for MoveBuilder<'a, R> {
                 Ok(precompiled) => Step::Next((parser_artifact, precompiled)),
                 Err(error) => Step::Stop(Artifacts {
                     files: parser_artifact.meta.source_map,
+                    env: Default::default(),
                     prog: Err(vec![error]),
                 }),
             }
@@ -77,11 +81,13 @@ impl<'a, R: DependencyResolver> CompileFlow<Artifacts> for MoveBuilder<'a, R> {
     fn after_translate(
         &mut self,
         meta: ParsingMeta,
+        env: Option<GlobalEnv>,
         result: Result<Vec<CompiledUnit>, Errors>,
     ) -> Artifacts {
         let prog = result.map_err(|errors| meta.offsets_map.transform(errors));
         Artifacts {
             files: meta.source_map,
+            env,
             prog,
         }
     }

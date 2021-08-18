@@ -8,6 +8,7 @@ use crate::compiler::file::MoveFile;
 use move_lang::parser::ast::{Script, Type, Type_, ModuleAccess_, Definition};
 use move_lang::compiled_unit::CompiledUnit;
 use move_core_types::account_address::AccountAddress;
+use move_model::model::GlobalEnv;
 
 pub struct ScriptMetadata;
 
@@ -17,7 +18,7 @@ impl ScriptMetadata {
         sender: Option<AccountAddress>,
         scripts: &[&MoveFile],
     ) -> Result<Vec<Meta>, Error> {
-        compile(dialect, scripts, sender, ScriptMetadata)
+        compile(dialect, scripts, sender, ScriptMetadata, false)
     }
 }
 
@@ -56,6 +57,7 @@ impl CompileFlow<Result<Vec<Meta>, Error>> for ScriptMetadata {
     fn after_translate(
         &mut self,
         _: ParsingMeta,
+        _: Option<GlobalEnv>,
         _: Result<Vec<CompiledUnit>, Errors>,
     ) -> Result<Vec<Meta>, Error> {
         Ok(vec![])

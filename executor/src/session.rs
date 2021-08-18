@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use anyhow::Error;
 use move_core_types::gas_schedule::{CostTable, GasAlgebra, GasUnits};
 use move_ir_types::location::Loc;
-use move_lang::{compiled_unit::CompiledUnit, FileCommentMap, FullyCompiledProgram};
+use move_lang::{compiled_unit::CompiledUnit, FullyCompiledProgram, FileCommentMap};
 use move_vm_types::gas_schedule::CostStrategy;
 use vm::CompiledModule;
 use vm::file_format::CompiledScript;
@@ -12,7 +12,7 @@ use crate::execution::{execute_script, FakeRemoteCache};
 use crate::explain::PipelineExecutionResult;
 use crate::explain::StepExecutionResult;
 use crate::meta::ExecutionMeta;
-use lang::compiler::parser::{ParsingMeta, ParserArtifact};
+use lang::compiler::parser::{ParsingMeta, ParserArtifact, Comments};
 use lang::compiler::{CompileFlow, CheckerResult, Step, compile, location};
 use move_lang::errors::Errors;
 use lang::compiler::dialects::Dialect;
@@ -20,6 +20,7 @@ use lang::compiler::file::MoveFile;
 use lang::compiler::error::CompilerError;
 use crate::constants::extract_error_constants;
 use move_core_types::account_address::AccountAddress;
+use move_model::model::GlobalEnv;
 
 #[derive(Debug, Clone)]
 pub enum ExecutionUnit {
@@ -152,8 +153,12 @@ impl<'a> SessionBuilder<'a> {
         }
     }
 
-    pub fn build(self, sources: &[&MoveFile]) -> Result<ExecutionSession, CompilerError> {
-        compile(self.dialect, sources, Some(self.sender), self)
+    pub fn build(
+        self,
+        sources: &[&MoveFile],
+        create_env: bool,
+    ) -> Result<ExecutionSession, CompilerError> {
+        compile(self.dialect, sources, Some(self.sender), self, create_env)
     }
 }
 
@@ -191,6 +196,7 @@ impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder
     fn after_translate(
         &mut self,
         meta: ParsingMeta,
+        _: Option<GlobalEnv>,
         translation_result: Result<Vec<CompiledUnit>, Errors>,
     ) -> Result<ExecutionSession, CompilerError> {
         let mut execution_units = vec![];
@@ -223,8 +229,11 @@ impl<'a> CompileFlow<Result<ExecutionSession, CompilerError>> for SessionBuilder
                     let mut meta = ExecutionMeta::default();
                     if let Some(comments) = comments.get(loc.file()) {
                         let source = source_map.get(loc.file()).map(|s| s.as_str()).unwrap_or("");
-                        let doc_comments =
-                            extract_script_doc_comments(script_loc, source, comments);
+                        let doc_comments = if let Comments::CommentMap(comments) = comments {
+                            extract_script_doc_comments(script_loc, source, comments)
+                        } else {
+                            vec![]
+                        };
                         for doc_comment in doc_comments {
                             meta.apply_meta_comment(doc_comment)
                         }
