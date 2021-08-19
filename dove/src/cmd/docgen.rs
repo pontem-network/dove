@@ -21,7 +21,7 @@ impl Cmd for DocGen {
             &ctx.manifest.layout.modules_dir,
         ]);
 
-        let index = ctx.build_index()?;
+        let (index, _) = ctx.build_index(false)?;
         let dep_list = index.into_deps_roots();
 
         let sender = ctx.account_address()?;

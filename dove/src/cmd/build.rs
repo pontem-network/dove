@@ -73,9 +73,7 @@ impl Cmd for Build {
             &ctx.manifest.layout.modules_dir,
         ]);
 
-        let index = ctx.build_index()?;
-
-        let mut dep_list = index.into_deps_roots();
+        let (index, interface) = ctx.build_index(true)?;
 
         let (exclude_files, exclude_dirs): (Vec<_>, Vec<_>) =
             self.exclude.iter().partition(|e| e.ends_with(".move"));
@@ -91,24 +89,23 @@ impl Cmd for Build {
             .map(|path| path.to_string_lossy().to_string())
             .collect::<Vec<_>>();
 
-        if self.tree {
-            source_list.extend(dep_list);
-            dep_list = vec![];
-        }
+        let dep_list = if self.tree {
+            source_list.extend(index.into_deps_roots());
+            vec![]
+        } else if let Some(interface) = interface {
+            vec![interface.to_string_lossy().to_string()]
+        } else {
+            index.into_deps_roots()
+        };
 
         let sender = ctx.account_address()?;
-
-        let interface_files_dir = ctx.interface_files_dir();
-        if !interface_files_dir.exists() {
-            fs::create_dir_all(&interface_files_dir)?;
-        }
 
         let (files, res) = build(
             &source_list,
             &dep_list,
             ctx.dialect.as_ref(),
             Some(sender),
-            Some(interface_files_dir.to_string_lossy().to_string()),
+            None,
             Flags::empty(),
         )?;
         let units = unwrap_or_report_errors!(files, res);

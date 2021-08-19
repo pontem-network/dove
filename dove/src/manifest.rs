@@ -143,31 +143,24 @@ pub struct Layout {
     /// Directory with module sources.
     #[serde(default = "modules_dir")]
     pub modules_dir: String,
-
     /// Directory with script sources.
     #[serde(default = "scripts_dir")]
     pub scripts_dir: String,
-
     /// Directory with tests.
     #[serde(default = "tests_dir")]
     pub tests_dir: String,
-
     /// Directory with compiled modules.
     #[serde(default = "modules_output")]
     pub modules_output: String,
-
     /// Directory with module package.
     #[serde(default = "bundles_output")]
     pub bundles_output: String,
-
     /// Directory with compiled scripts.
     #[serde(default = "scripts_output")]
     pub scripts_output: String,
-
     /// Directory with transactions.
     #[serde(default = "transactions_output")]
     pub transactions_output: String,
-
     /// Directory with move-prover intermediate artifacts.
     #[serde(default = "move_prover_output")]
     pub move_prover_output: String,

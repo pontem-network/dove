@@ -448,7 +448,7 @@ impl<'a> TransactionBuilder<'a> {
     }
 
     fn get_dep_list(&self) -> Result<Vec<String>, Error> {
-        let index = self.dove_ctx.build_index()?;
+        let (index, interface_dir) = self.dove_ctx.build_index(true)?;
 
         let module_dir = self
             .dove_ctx
@@ -456,9 +456,16 @@ impl<'a> TransactionBuilder<'a> {
             .to_string_lossy()
             .to_string();
 
-        let mut roots = index.into_deps_roots();
-        roots.push(module_dir);
-        Ok(roots)
+        if let Some(interface_dir) = interface_dir {
+            Ok(vec![
+                module_dir,
+                interface_dir.to_string_lossy().to_string(),
+            ])
+        } else {
+            let mut roots = index.into_deps_roots();
+            roots.push(module_dir);
+            Ok(roots)
+        }
     }
 }
 
