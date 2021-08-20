@@ -167,13 +167,7 @@ fn test_dependency_running_a_script_in_dependencies() {
 #[test]
 fn test_removing_old_external_dependencies() {
     let project_folder = project_start_new_default("project_removing_old_external_dependencies");
-    let test_git = PathBuf::from("target/test.git")
-        .canonicalize()
-        .unwrap()
-        .as_os_str()
-        .to_str()
-        .unwrap()
-        .to_string();
+    let test_git = get_testgit_path();
     let steps = vec![
         vec![Git {
             git: test_git.clone(),
@@ -277,13 +271,7 @@ fn create_project_for_test_dependency(
     rev: Option<&str>,
 ) -> PathBuf {
     let rep = Git {
-        git: PathBuf::from("target/test.git")
-            .canonicalize()
-            .unwrap()
-            .as_os_str()
-            .to_str()
-            .unwrap()
-            .to_string(),
+        git: get_testgit_path(),
         branch: branch.map(|b| b.to_string()),
         tag: tag.map(|b| b.to_string()),
         rev: rev.map(|b| b.to_string()),
@@ -341,7 +329,7 @@ fn check_external(project_folder: &Path, dep: &[Git]) {
 
 fn get_rev_on_branch(tag: &str) -> String {
     let ref_remote = format!("refs/heads/{}", tag);
-    let repo = git2::Repository::open("./target/test.git").unwrap();
+    let repo = git2::Repository::open(get_testgit_path()).unwrap();
     let find = repo
         .references()
         .unwrap()
@@ -359,7 +347,7 @@ fn get_rev_on_branch(tag: &str) -> String {
 
 fn get_rev_on_tag(tag: &str) -> String {
     let ref_remote = format!("refs/tags/{}", tag);
-    let repo = git2::Repository::open("./target/test.git").unwrap();
+    let repo = git2::Repository::open(get_testgit_path()).unwrap();
     let find = repo
         .references()
         .unwrap()
@@ -373,4 +361,14 @@ fn get_rev_on_tag(tag: &str) -> String {
         })
         .unwrap();
     find
+}
+
+fn get_testgit_path() -> String {
+    PathBuf::from("../target/test.git")
+        .canonicalize()
+        .unwrap()
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .to_string()
 }
