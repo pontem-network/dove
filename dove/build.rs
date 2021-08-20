@@ -13,6 +13,7 @@ fn create_test_repository() {
     if get_path_target(None).join("test.git").exists() {
         return;
     }
+
     git2::Repository::init_bare(&get_path_git()).unwrap();
 
     create_branch("master", true, None);
@@ -34,13 +35,13 @@ fn get_path_target(sub: Option<&str>) -> PathBuf {
     let path = if let Some(sub) = sub {
         get_path_target(None).join(sub)
     } else {
-        PathBuf::from("target")
+        PathBuf::from("../target")
     };
 
     if !path.exists() {
         create_dir_all(&path).unwrap();
     }
-    path
+    path.canonicalize().unwrap()
 }
 
 fn get_path_git() -> PathBuf {
@@ -86,14 +87,7 @@ fn copy_template(name: &str) {
         }
         if cont.contains("###current_git###") {
             save = true;
-            cont = cont.replace(
-                "###current_git###",
-                &PathBuf::from("target/test.git")
-                    .canonicalize()
-                    .unwrap()
-                    .display()
-                    .to_string(),
-            );
+            cont = cont.replace("###current_git###", &get_path_git().display().to_string());
         }
         if save {
             write_all(&path_dovetoml, &cont).unwrap();
