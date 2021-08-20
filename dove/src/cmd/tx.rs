@@ -60,7 +60,7 @@ impl<'a> TransactionBuilder<'a> {
         cmd: CreateTransactionCmd,
         ctx: &'a Context,
     ) -> Result<TransactionBuilder, Error> {
-        let mut trbuild = Self::new(ctx);
+        let mut trbuild = Self::new(ctx, true);
         trbuild.script_file_name = cmd.file_name;
         trbuild
             .with_cmd_call(cmd.call.clone())?

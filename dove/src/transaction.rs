@@ -38,11 +38,13 @@ pub struct TransactionBuilder<'a> {
     pub signers: Vec<AccountAddress>,
     /// Launch data: dialect, manifest, project directory
     pub dove_ctx: &'a Context,
+    /// Use dependencies interface instead of dependencies.
+    pub use_interface_deps: bool,
 }
 
 impl<'a> TransactionBuilder<'a> {
     /// create an empty TransactionBuilder
-    pub fn new(ctx: &Context) -> TransactionBuilder {
+    pub fn new(ctx: &Context, use_interface_deps: bool) -> TransactionBuilder {
         TransactionBuilder {
             script_file_name: None,
             script_name: None,
@@ -50,6 +52,7 @@ impl<'a> TransactionBuilder<'a> {
             args: Vec::new(),
             signers: Vec::new(),
             dove_ctx: ctx,
+            use_interface_deps,
         }
     }
     // =============================================================================================
@@ -448,7 +451,7 @@ impl<'a> TransactionBuilder<'a> {
     }
 
     fn get_dep_list(&self) -> Result<Vec<String>, Error> {
-        let (index, interface_dir) = self.dove_ctx.build_index(true)?;
+        let (index, interface_dir) = self.dove_ctx.build_index(self.use_interface_deps)?;
 
         let module_dir = self
             .dove_ctx
