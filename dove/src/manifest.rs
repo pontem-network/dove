@@ -19,12 +19,13 @@ use toml::Value;
 use crate::context::Context;
 use crate::docs::options::DocgenOptions;
 use http::Uri;
+use boogie_backend::options::BoogieOptions;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
 
 /// Dove manifest.
-#[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default, Eq, PartialEq)]
 pub struct DoveToml {
     /// Project info.
     pub package: Package,
@@ -34,10 +35,12 @@ pub struct DoveToml {
     /// Documentation generator operations.
     #[serde(default)]
     pub doc: DocgenOptions,
+    /// Boogie Options
+    pub boogie_options: Option<BoogieOptions>,
 }
 
 /// Project info.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
+#[derive(Deserialize, Serialize, Debug, Clone, CryptoHasher, BCSCryptoHash, PartialEq, Eq)]
 pub struct Package {
     /// Project name.
     pub name: Option<String>,
@@ -83,6 +86,10 @@ fn scripts_dir() -> String {
 
 fn tests_dir() -> String {
     "tests".to_owned()
+}
+
+fn prover_toml() -> String {
+    "prover-env.toml".to_owned()
 }
 
 fn modules_output() -> String {
@@ -171,27 +178,38 @@ pub struct Layout {
     /// Directory with move-prover intermediate artifacts.
     #[serde(default = "move_prover_output")]
     pub move_prover_output: String,
+
     /// Directory with move documentation.
     #[serde(default = "docs_output")]
     pub docs_output: String,
+
     /// Directory with external dependencies.
     #[serde(default = "deps")]
     pub deps: String,
+
     /// Directory with external chain dependencies.
     #[serde(default = "chain_deps")]
     pub chain_deps: String,
+
     /// Artifacts directory.
     #[serde(default = "artifacts")]
     pub artifacts: String,
+
     /// Path to index.
     #[serde(default = "index")]
     pub index: String,
+
     /// Path to executor directory.
     #[serde(default = "storage_dir")]
     pub storage_dir: String,
+
     /// Path to executor build directory.
     #[serde(default = "exe_build_dir")]
     pub exe_build_dir: String,
+
+    /// Path to pover settings
+    #[serde(default = "prover_toml")]
+    pub prover_toml: String,
 }
 
 impl Layout {
@@ -213,6 +231,7 @@ impl Layout {
             index: ctx.str_path_for(&self.index)?,
             storage_dir: ctx.str_path_for(&self.storage_dir)?,
             exe_build_dir: ctx.str_path_for(&self.exe_build_dir)?,
+            prover_toml: ctx.str_path_for(&self.prover_toml)?,
         })
     }
 }
@@ -235,6 +254,7 @@ impl Default for Layout {
             index: index(),
             storage_dir: storage_dir(),
             exe_build_dir: exe_build_dir(),
+            prover_toml: prover_toml(),
         }
     }
 }
