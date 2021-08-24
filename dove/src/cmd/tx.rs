@@ -41,10 +41,14 @@ pub struct CreateTransactionCmd {
     args: Option<Vec<String>>,
     #[structopt(long, hidden = true)]
     color: Option<String>,
+    #[structopt(help = "Owner's account address", long = "account-address")]
+    account_address: Option<String>,
 }
 
 impl Cmd for CreateTransactionCmd {
-    fn apply(mut self, ctx: Context) -> Result<(), Error> {
+    fn apply(mut self, mut ctx: Context) -> Result<(), Error> {
+        ctx.set_account_address(self.account_address.as_ref())?;
+
         let output_filename = self.output.take();
 
         let builder = TransactionBuilder::from_create_transaction_cmd(self, &ctx)?;

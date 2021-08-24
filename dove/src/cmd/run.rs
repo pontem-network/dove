@@ -41,10 +41,14 @@ pub struct Run {
     /// Print additional diagnostics
     #[structopt(short = "v", global = true)]
     verbose: bool,
+    #[structopt(help = "Owner's account address", long = "account-address")]
+    account_address: Option<String>,
 }
 
 impl Cmd for Run {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
+    fn apply(self, mut ctx: Context) -> Result<(), Error> {
+        ctx.set_account_address(self.account_address.as_ref())?;
+
         let verbose = self.verbose;
         let dry_run = self.dry_run;
         let tr_build = TransactionBuilder::from_run_cmd(self, &ctx)?;

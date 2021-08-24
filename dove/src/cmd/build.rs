@@ -64,10 +64,14 @@ pub struct Build {
     doc: bool,
     #[structopt(long, hidden = true)]
     color: Option<String>,
+    #[structopt(help = "Owner's account address", long = "account-address")]
+    account_address: Option<String>,
 }
 
 impl Cmd for Build {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
+    fn apply(self, mut ctx: Context) -> Result<(), Error> {
+        ctx.set_account_address(self.account_address.as_ref())?;
+
         let dirs = ctx.paths_for(&[
             &ctx.manifest.layout.scripts_dir,
             &ctx.manifest.layout.modules_dir,

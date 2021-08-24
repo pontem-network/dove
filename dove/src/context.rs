@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR as MS};
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
@@ -93,6 +93,38 @@ impl Context {
     pub fn interface_files_dir(&self) -> PathBuf {
         self.path_for(&self.manifest.layout.artifacts)
             .join("interface_files_dir")
+    }
+
+    /// Change account address
+    pub fn set_account_address(&mut self, account_address: Option<&String>) -> Result<(), Error> {
+        if account_address.is_none() {
+            return Ok(());
+        }
+
+        fn insert_account_into_path(path: &mut String, account: &str) {
+            if let Some(position) = path.rfind(MS) {
+                *path = format!(
+                    "{}{}{}{}",
+                    &path[..position],
+                    MS,
+                    account,
+                    &path[position..]
+                );
+            }
+        }
+        let account_address = account_address.unwrap();
+
+        self.manifest.package.account_address = account_address.clone();
+
+        [
+            &mut self.manifest.layout.modules_output,
+            &mut self.manifest.layout.scripts_output,
+            &mut self.manifest.layout.transactions_output,
+        ]
+        .iter_mut()
+        .for_each(|str| insert_account_into_path(str, account_address));
+
+        Ok(())
     }
 }
 

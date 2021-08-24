@@ -468,3 +468,26 @@ fn test_cmd_dove_tx_signer() {
 
     project_remove(&project_folder);
 }
+
+#[test]
+fn test_cmd_dove_tx_account_address() {
+    // Path to dove folder, project and project name
+    let project_name = "project_tx_account_address";
+    let project_folder = project_start_new_and_build(project_name);
+    // project_folder/scripts/sdemo.move
+    write_all(
+        &project_folder.join("scripts").join("sdemo.move"),
+        "script {
+                    fun main() {
+                        assert((1+3)==4,1);
+                    }
+                }",
+    )
+    .unwrap();
+    let args = &["dove", "tx", "--account-address", "0x2"];
+    execute_dove_at(args, &project_folder).unwrap();
+
+    assert!(project_folder.join("artifacts").join("0x2").exists());
+
+    project_remove(&project_folder);
+}
