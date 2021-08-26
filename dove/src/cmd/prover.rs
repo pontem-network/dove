@@ -59,7 +59,7 @@ impl Cmd for Prove {
         ensure!(is_z3_available(&z3_exe), "z3 executable not found in PATH. Please install it from https://github.com/Z3Prover/z3");
         ensure!(is_cvc4_available(&cvc4_exe), "cvc4 executable not found in PATH. Please install it from https://github.com/CVC4/CVC4-archived");
 
-        let move_deps = find_move_files(&ctx.build_index()?.into_deps_roots())
+        let move_deps = find_move_files(&ctx.build_index(false)?.0.into_deps_roots())
             .map(|p| p.to_string_lossy().to_string())
             .collect();
 

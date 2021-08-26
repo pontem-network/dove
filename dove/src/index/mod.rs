@@ -16,6 +16,8 @@ use crate::index::resolver::chain;
 use crate::manifest::{Dependence, Git, MANIFEST, read_manifest};
 use itertools::Itertools;
 
+/// Move modules interface generator.
+pub mod interface;
 /// Dependency resolver.
 pub mod resolver;
 

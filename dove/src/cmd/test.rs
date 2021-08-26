@@ -67,7 +67,7 @@ impl Cmd for Test {
             return Ok(());
         }
 
-        let mut deps = ctx.build_index()?.into_deps_roots();
+        let mut deps = ctx.build_index(false)?.0.into_deps_roots();
         deps.push(tests_dir.to_string_lossy().to_string());
         deps.push(
             ctx.path_for(&ctx.manifest.layout.modules_dir)

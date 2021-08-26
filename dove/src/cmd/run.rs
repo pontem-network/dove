@@ -57,7 +57,7 @@ impl Cmd for Run {
 impl<'a> TransactionBuilder<'a> {
     /// Create a TransactionBuilder based on the transmitted data
     pub fn from_run_cmd(cmd: Run, ctx: &'a Context) -> Result<TransactionBuilder<'a>, Error> {
-        let mut trbuild = Self::new(ctx);
+        let mut trbuild = Self::new(ctx, false);
         trbuild.script_file_name = cmd.file_name;
         trbuild
             .with_cmd_call(cmd.call)?
