@@ -142,15 +142,12 @@ jobs:
           DOVE_NAME=dove$OS_BIN_EXT
           MLS_NAME=move-language-server$OS_BIN_EXT
           MRV_NAME=move-resource-viewer$OS_BIN_EXT
-          TESTRUNNER_NAME=move-testrunner$OS_BIN_EXT
           DECOMPILER_NAME=move-decompiler$OS_BIN_EXT
 
           mkdir -p $PKG_BIN_DIR
           cp build-info.txt $PKG_DIR/
 
           set +e
-          cp $RELEASE_DIR/executor$OS_BIN_EXT $PKG_BIN_DIR/$EXECUTOR_NAME
-          cp $RELEASE_DIR/testrunner$OS_BIN_EXT $PKG_BIN_DIR/$TESTRUNNER_NAME
           cp $RELEASE_DIR/decompiler$OS_BIN_EXT $PKG_BIN_DIR/$DECOMPILER_NAME
           cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
           cp $RELEASE_DIR/move-resource-viewer$OS_BIN_EXT $PKG_BIN_DIR/$MRV_NAME
@@ -176,13 +173,10 @@ jobs:
           MLS_NAME=move-language-server-${{ steps.mls.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           MRV_NAME=move-resource-viewer-${{ steps.mrv.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           DOVE_NAME=dove-${{ steps.dove.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
-          TESTRUNNER_NAME=move-testrunner-${{ steps.executor.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           DECOMPILER_NAME=move-decompiler-${{ steps.decompiler.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           cd $RELEASE_DIR
 
           set +e
-          mv executor$OS_BIN_EXT $EXECUTOR_NAME
-          mv testrunner$OS_BIN_EXT $TESTRUNNER_NAME
           mv decompiler$OS_BIN_EXT $DECOMPILER_NAME
           mv move-language-server$OS_BIN_EXT $MLS_NAME
           mv move-resource-viewer$OS_BIN_EXT $MRV_NAME
@@ -192,14 +186,10 @@ jobs:
           echo "::set-output name=mls::$MLS_NAME"
           echo "::set-output name=mrv::$MRV_NAME"
           echo "::set-output name=dove::$DOVE_NAME"
-          echo "::set-output name=executor::$EXECUTOR_NAME"
-          echo "::set-output name=testrunner::$TESTRUNNER_NAME"
           echo "::set-output name=decompiler::$DECOMPILER_NAME"
           echo "::set-output name=mls_path::$RELEASE_DIR/$MLS_NAME"
           echo "::set-output name=mrv_path::$RELEASE_DIR/$MRV_NAME"
           echo "::set-output name=dove_path::$RELEASE_DIR/$DOVE_NAME"
-          echo "::set-output name=executor_path::$RELEASE_DIR/$EXECUTOR_NAME"
-          echo "::set-output name=testrunner_path::$RELEASE_DIR/$TESTRUNNER_NAME"
           echo "::set-output name=decompiler_path::$RELEASE_DIR/$DECOMPILER_NAME"
 
       - name: upload Toolchain
@@ -241,26 +231,6 @@ jobs:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ${{ steps.artifact.outputs.dove_path }}
           asset_name: ${{ steps.artifact.outputs.dove }}
-          asset_content_type: application/gzip
-
-      - name: upload Executor
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ${{ steps.artifact.outputs.executor_path }}
-          asset_name: ${{ steps.artifact.outputs.executor }}
-          asset_content_type: application/gzip
-
-      - name: upload TestRunner
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ${{ steps.artifact.outputs.testrunner_path }}
-          asset_name: ${{ steps.artifact.outputs.testrunner }}
           asset_content_type: application/gzip
 
       - name: upload Decompiler
