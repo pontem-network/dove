@@ -13,9 +13,5 @@ module Signer {
     public fun address_of(s: &signer): address {
         *borrow_address(s)
     }
-
-    spec module {
-        native define get_address(account: signer): address;
-    }
 }
 }

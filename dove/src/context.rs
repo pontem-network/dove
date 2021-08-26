@@ -9,6 +9,7 @@ use lang::compiler::dialects::{Dialect, DialectName};
 use crate::index::Index;
 use crate::manifest::{default_dialect, DoveToml, MANIFEST, read_manifest};
 use diem_crypto::hash::CryptoHash;
+use crate::index::interface::InterfaceBuilder;
 
 /// Project context.
 pub struct Context {
@@ -50,20 +51,31 @@ impl Context {
     }
 
     /// Build project index.
-    pub fn build_index(&self) -> Result<Index, Error> {
+    pub fn build_index(&self, build_interface: bool) -> Result<(Index, Option<PathBuf>), Error> {
         let index_path = self.path_for(&self.manifest.layout.index);
         let old_index = Index::load(&index_path)?.unwrap_or_default();
 
         let package_hash = self.package_hash();
-        if old_index.package_hash == package_hash {
-            Ok(old_index)
+        let index = if old_index.package_hash == package_hash {
+            old_index
         } else {
             let new_index = Index::build(package_hash, self)?;
             new_index.store(&index_path)?;
             new_index.remove_unused(old_index.diff(&new_index))?;
             new_index.remove_unnecessary_elements_in_dependencies();
-
-            Ok(new_index)
+            new_index
+        };
+        if build_interface {
+            let builder = InterfaceBuilder::new(self, &index);
+            match builder.build() {
+                Ok(dir) => Ok((index, Some(dir))),
+                Err(err) => {
+                    println!("{}", err);
+                    Ok((index, None))
+                }
+            }
+        } else {
+            Ok((index, None))
         }
     }
 
@@ -93,6 +105,12 @@ impl Context {
     pub fn interface_files_dir(&self) -> PathBuf {
         self.path_for(&self.manifest.layout.artifacts)
             .join("interface_files_dir")
+    }
+
+    /// Interface files lock.
+    pub fn interface_files_lock(&self) -> PathBuf {
+        self.path_for(&self.manifest.layout.artifacts)
+            .join("interface.lock")
     }
 }
 

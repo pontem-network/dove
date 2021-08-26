@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
    use 0x00000000000000000000000000000001::Base;
 
     fun r() : u8 {

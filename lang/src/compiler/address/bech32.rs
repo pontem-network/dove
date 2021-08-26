@@ -15,7 +15,7 @@ pub static HRP: &str = "wallet";
 
 lazy_static! {
     static ref BECH32_REGEX: Regex = Regex::new(
-        r#"[\s=]+(["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})"#,
+        r#"[\s@=]+(["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})"#,
     )
     .unwrap();
 }
@@ -50,7 +50,7 @@ pub fn bech32_into_diem(address: &str) -> Result<String> {
 }
 
 #[cfg(test)]
-pub fn libra_into_bech32(diem_address: &str) -> Result<String> {
+pub fn diem_into_bech32(diem_address: &str) -> Result<String> {
     ensure!(
         diem_address.starts_with("0x"),
         "Pass address with 0x prefix"

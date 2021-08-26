@@ -67,7 +67,6 @@ enum Opt {
         #[structopt(flatten)]
         cmd: CreateTransactionCmd,
     },
-    #[cfg(feature = "prover")]
     #[structopt(about = "Run move prover")]
     Prove {
         #[structopt(flatten)]
@@ -98,7 +97,6 @@ where
         Opt::Test { cmd } => cmd.execute(cwd),
         Opt::Run { cmd } => cmd.execute(cwd),
         Opt::Tx { cmd } => cmd.execute(cwd),
-        #[cfg(feature = "prover")]
         Opt::Prove { cmd } => cmd.execute(cwd),
         Opt::DocGen { cmd } => cmd.execute(cwd),
     }

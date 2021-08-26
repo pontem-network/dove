@@ -1,4 +1,4 @@
-module M {
+module 0x1::M {
     use 0x1::Transaction;
 
     struct R<T: key + store> has key, store {
@@ -15,15 +15,15 @@ module M {
     }
 
     fun mf(): R1 acquires R1 {
-        move_from(0x0)
+        move_from(@0x0)
     }
 
     fun mfg<T: key + store>(): R<T> acquires R {
-        move_from(0x0)
+        move_from(@0x0)
     }
 
     fun bg1<T: key + store>() acquires R {
-        let r = borrow_global<R<T>>(0x0);
+        let r = borrow_global<R<T>>(@0x0);
         let t = &r.t;
         supply_ref(t);
         supply_ref(t);
@@ -34,12 +34,12 @@ module M {
     }
 
     fun bg<T: key + store>() acquires R, R1 {
-        borrow_global<R1>(0x0);
-        borrow_global<R<T>>(0x0);
+        borrow_global<R1>(@0x0);
+        borrow_global<R<T>>(@0x0);
     }
 
     fun bgm<T: key + store>() acquires R, R1 {
-        borrow_global_mut<R1>(0x0);
-        borrow_global_mut<R<T>>(0x0);
+        borrow_global_mut<R1>(@0x0);
+        borrow_global_mut<R<T>>(@0x0);
     }
 }

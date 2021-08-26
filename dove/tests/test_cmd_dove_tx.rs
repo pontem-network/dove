@@ -55,7 +55,7 @@ fn test_cmd_dove_tx_with_type() {
     // project_folder/modules/mdemo.move
     write_all(
         &project_folder.join("modules").join("mdemo.move"),
-        "module ModuleDemo {
+        "module 0x1::ModuleDemo {
             struct T1 {}
             struct T2 {}
             struct Demo<T> has drop {

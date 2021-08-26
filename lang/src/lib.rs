@@ -2,5 +2,4 @@
 extern crate anyhow;
 
 pub mod compiler;
-pub mod flow;
 pub mod lexer;

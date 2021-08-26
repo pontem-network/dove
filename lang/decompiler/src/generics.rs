@@ -3,7 +3,7 @@ use std::fmt::Write;
 use std::rc::Rc;
 
 use anyhow::Error;
-use vm::file_format::*;
+use move_binary_format::file_format::*;
 
 use crate::{Encode, write_array};
 use crate::unit::UnitAccess;

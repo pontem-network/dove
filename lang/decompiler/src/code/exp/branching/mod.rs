@@ -2,7 +2,7 @@ mod algorithms;
 
 use crate::code::exp::Exp;
 use crate::code::translator::Context;
-use vm::file_format::*;
+use move_binary_format::file_format::*;
 use crate::code::exp::block::Block;
 
 /// Handles `BrTrue` instruction.

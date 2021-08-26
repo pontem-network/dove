@@ -59,7 +59,7 @@
           PROTOC_INCLUDE="${protobuf}/include";
           LLVM_CONFIG_PATH="${llvmPackages.bintools}/bin/llvm-config";
           LIBCLANG_PATH="${llvmPackages.clang-unwrapped.lib}/lib";
-          RUST_SRC_PATH = "${rustToolchain.rust-src}/lib/rustlib/src/rust/library/";
+          RUST_SRC_PATH = "${rustToolchain.rust-src}/lib/rustlib/src/rust/diemry/";
 
         };
 

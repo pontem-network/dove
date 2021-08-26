@@ -7,12 +7,12 @@ module Time {
 
     // Get the timestamp representing `now` in seconds.
     public fun now(): u64 acquires CurrentTimestamp {
-        borrow_global<CurrentTimestamp>(0x1).seconds
+        borrow_global<CurrentTimestamp>(@0x1).seconds
     }
 
     // Helper function to determine if the blockchain is at genesis state.
     public fun is_genesis(): bool {
-        !exists<Self::CurrentTimestamp>(0x1)
+        !exists<Self::CurrentTimestamp>(@0x1)
     }
 }
 }

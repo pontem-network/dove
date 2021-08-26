@@ -1,5 +1,5 @@
 use crate::code::exp::{Exp, SourceRange};
-use vm::file_format::{ConstantPoolIndex, Bytecode};
+use move_binary_format::file_format::{ConstantPoolIndex, Bytecode};
 use crate::Encode;
 use anyhow::Error;
 use std::fmt::Write;
@@ -81,7 +81,7 @@ impl Encode for Ld {
             Ld::U64(val) => write!(w, "{}", val)?,
             Ld::U128(val) => write!(w, "{}u128", val)?,
             Ld::Bool(val) => write!(w, "{}", val)?,
-            Ld::Address(val) => write!(w, "0x{}", val)?,
+            Ld::Address(val) => write!(w, "@0x{}", val)?,
             Ld::Vector(val) => write!(w, "x\"{}\"", hex::encode(&val))?,
         }
         Ok(())

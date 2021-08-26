@@ -6,7 +6,7 @@ use move_ir_types::location::Loc;
 use move_core_types::language_storage::TypeTag;
 use lang::lexer::unwrap_spanned_ty;
 use move_lang::parser::lexer::{Lexer, Tok};
-use move_lang::parser::syntax::{parse_type, parse_num};
+use move_lang::parser::syntax::parse_type;
 
 #[derive(Debug)]
 pub struct TypeTagQuery {
@@ -76,7 +76,17 @@ pub fn parse(s: &str) -> Result<TypeTagQuery, Error> {
         lexer.advance().map_err(map_err)?;
 
         match tok {
-            Tok::LBracket => i = parse_num(&mut lexer).ok(),
+            Tok::LBracket => {
+                i = {
+                    assert_eq!(lexer.peek(), Tok::NumValue);
+                    let res = match u128::from_str(lexer.content()) {
+                        Ok(i) => Ok(i),
+                        Err(_) => Err(anyhow!("largest number type 'u128'")),
+                    };
+                    lexer.advance().map_err(map_err)?;
+                    res.ok()
+                }
+            }
             _ => break,
         }
     }

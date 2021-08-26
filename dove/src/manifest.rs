@@ -8,8 +8,7 @@ use std::path::{MAIN_SEPARATOR as MS, Path};
 use anyhow::Error;
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::{CORE_CODE_ADDRESS, ModuleId};
-use move_lang::shared::Address;
+use move_core_types::language_storage::ModuleId;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::{
     de::{Error as DeError, SeqAccess, Visitor},
@@ -20,12 +19,13 @@ use toml::Value;
 use crate::context::Context;
 use crate::docs::options::DocgenOptions;
 use http::Uri;
+use boogie_backend::options::BoogieOptions;
 
 /// Dove manifest name.
 pub const MANIFEST: &str = "Dove.toml";
 
 /// Dove manifest.
-#[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default, Eq, PartialEq)]
 pub struct DoveToml {
     /// Project info.
     pub package: Package,
@@ -35,10 +35,12 @@ pub struct DoveToml {
     /// Documentation generator operations.
     #[serde(default)]
     pub doc: DocgenOptions,
+    /// Boogie Options
+    pub boogie_options: Option<BoogieOptions>,
 }
 
 /// Project info.
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
+#[derive(Deserialize, Serialize, Debug, Clone, CryptoHasher, BCSCryptoHash, PartialEq, Eq)]
 pub struct Package {
     /// Project name.
     pub name: Option<String>,
@@ -86,6 +88,10 @@ fn tests_dir() -> String {
     "tests".to_owned()
 }
 
+fn prover_toml() -> String {
+    "prover-env.toml".to_owned()
+}
+
 fn modules_output() -> String {
     format!("{}{}{}", artifacts(), MS, "modules")
 }
@@ -126,8 +132,16 @@ fn index() -> String {
     format!("{}{}{}", artifacts(), MS, ".DoveIndex.toml")
 }
 
+fn storage_dir() -> String {
+    format!("{}{}{}", artifacts(), MS, "storage_dir")
+}
+
+fn exe_build_dir() -> String {
+    format!("{}{}{}", artifacts(), MS, "exe_build_dir")
+}
+
 fn code_code_address() -> String {
-    Address::new(CORE_CODE_ADDRESS.to_u8()).to_string()
+    "0x1".to_string()
 }
 
 /// Project layout.
@@ -136,43 +150,40 @@ pub struct Layout {
     /// Directory with module sources.
     #[serde(default = "modules_dir")]
     pub modules_dir: String,
-
     /// Directory with script sources.
     #[serde(default = "scripts_dir")]
     pub scripts_dir: String,
-
     /// Directory with tests.
     #[serde(default = "tests_dir")]
     pub tests_dir: String,
-
     /// Directory with compiled modules.
     #[serde(default = "modules_output")]
     pub modules_output: String,
-
     /// Directory with module package.
     #[serde(default = "bundles_output")]
     pub bundles_output: String,
-
     /// Directory with compiled scripts.
     #[serde(default = "scripts_output")]
     pub scripts_output: String,
-
     /// Directory with transactions.
     #[serde(default = "transactions_output")]
     pub transactions_output: String,
-
     /// Directory with move-prover intermediate artifacts.
     #[serde(default = "move_prover_output")]
     pub move_prover_output: String,
+
     /// Directory with move documentation.
     #[serde(default = "docs_output")]
     pub docs_output: String,
+
     /// Directory with external dependencies.
     #[serde(default = "deps")]
     pub deps: String,
+
     /// Directory with external chain dependencies.
     #[serde(default = "chain_deps")]
     pub chain_deps: String,
+
     /// Artifacts directory.
     #[serde(default = "artifacts")]
     pub artifacts: String,
@@ -180,6 +191,18 @@ pub struct Layout {
     /// Path to index.
     #[serde(default = "index")]
     pub index: String,
+
+    /// Path to executor directory.
+    #[serde(default = "storage_dir")]
+    pub storage_dir: String,
+
+    /// Path to executor build directory.
+    #[serde(default = "exe_build_dir")]
+    pub exe_build_dir: String,
+
+    /// Path to pover settings
+    #[serde(default = "prover_toml")]
+    pub prover_toml: String,
 }
 
 impl Layout {
@@ -199,6 +222,9 @@ impl Layout {
             chain_deps: ctx.str_path_for(&self.chain_deps)?,
             artifacts: ctx.str_path_for(&self.artifacts)?,
             index: ctx.str_path_for(&self.index)?,
+            storage_dir: ctx.str_path_for(&self.storage_dir)?,
+            exe_build_dir: ctx.str_path_for(&self.exe_build_dir)?,
+            prover_toml: ctx.str_path_for(&self.prover_toml)?,
         })
     }
 }
@@ -219,6 +245,9 @@ impl Default for Layout {
             chain_deps: chain_deps(),
             artifacts: artifacts(),
             index: index(),
+            storage_dir: storage_dir(),
+            exe_build_dir: exe_build_dir(),
+            prover_toml: prover_toml(),
         }
     }
 }

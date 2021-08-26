@@ -21,10 +21,8 @@ use lang::compiler::file::{find_move_files, MoveFile};
 use lang::compiler::metadata::{Meta, script_metadata};
 use lang::compiler::mut_string::MutString;
 use lang::lexer::unwrap_spanned_ty;
-use move_executor::executor::Executor;
-use move_executor::explain::PipelineExecutionResult;
-
 use crate::context::Context;
+use move_lang::shared::Flags;
 
 /// Creating a transaction to run or save
 pub struct TransactionBuilder<'a> {
@@ -40,11 +38,13 @@ pub struct TransactionBuilder<'a> {
     pub signers: Vec<AccountAddress>,
     /// Launch data: dialect, manifest, project directory
     pub dove_ctx: &'a Context,
+    /// Use dependencies interface instead of dependencies.
+    pub use_interface_deps: bool,
 }
 
 impl<'a> TransactionBuilder<'a> {
     /// create an empty TransactionBuilder
-    pub fn new(ctx: &Context) -> TransactionBuilder {
+    pub fn new(ctx: &Context, use_interface_deps: bool) -> TransactionBuilder {
         TransactionBuilder {
             script_file_name: None,
             script_name: None,
@@ -52,6 +52,7 @@ impl<'a> TransactionBuilder<'a> {
             args: Vec::new(),
             signers: Vec::new(),
             dove_ctx: ctx,
+            use_interface_deps,
         }
     }
     // =============================================================================================
@@ -145,21 +146,57 @@ impl<'a> TransactionBuilder<'a> {
         Ok(self)
     }
 
+    fn build(&self, targets: &[String], deps: &[String]) -> Result<Vec<CompiledUnit>, Error> {
+        let sender = self.dove_ctx.account_address()?;
+        let (files, prog) = build(
+            targets,
+            deps,
+            self.dove_ctx.dialect.as_ref(),
+            Some(sender),
+            None,
+            Flags::empty(),
+        )?;
+
+        match prog {
+            Err(errors) => {
+                let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                output_errors(&mut writer, files, errors);
+                anyhow::bail!("could not compile:{}", self.dove_ctx.project_name())
+            }
+            Ok(compiled_units) => {
+                let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
+
+                if !ice_errors.is_empty() {
+                    let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                    output_errors(&mut writer, files, ice_errors);
+                    anyhow::bail!("could not verify:{}", self.dove_ctx.project_name())
+                } else {
+                    Ok(compiled_units)
+                }
+            }
+        }
+    }
+
+    /// Build transaction dependencies.
+    pub fn build_dependencies(&self) -> Result<Vec<CompiledUnit>, Error> {
+        self.build(&self.get_dep_list()?, &[])
+    }
+
     // =============================================================================================
     /// Create transaction
     /// Return: Ok(name_transaction, Transaction)
     pub fn to_transaction(&self) -> Result<(String, Transaction), Error> {
         let (script, meta) = self.lookup_script()?;
-        let units = self.build_script(script)?;
+        let units = self.build(&[script], &self.get_dep_list()?)?;
 
         let unit = units
             .into_iter()
             .find(|unit| {
-                let is_module = match &unit {
+                let is_script = match &unit {
                     CompiledUnit::Module { .. } => false,
                     CompiledUnit::Script { .. } => true,
                 };
-                is_module && unit.name() == meta.name
+                is_script && unit.name() == meta.name
             })
             .map(|unit| unit.serialize())
             .map(|mut unit| {
@@ -176,22 +213,6 @@ impl<'a> TransactionBuilder<'a> {
             meta.name,
             Transaction::new(signers, unit, args, self.type_parameters.clone())?,
         ))
-    }
-
-    /// Find and run the script using the specified parameters
-    pub fn run(&self) -> Result<PipelineExecutionResult, Error> {
-        let (script, _meta) = self.lookup_script()?;
-
-        let deps = find_move_files(&self.get_dep_list()?)
-            .map(MoveFile::load)
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let executor = Executor::new(self.dove_ctx.dialect.as_ref(), self.signers[0], deps);
-        executor.execute_script(
-            MoveFile::load(script)?,
-            Some(self.signers.clone()),
-            self.args.clone(),
-        )
     }
 
     // =============================================================================================
@@ -429,41 +450,8 @@ impl<'a> TransactionBuilder<'a> {
         Ok((signers, values))
     }
 
-    fn build_script(&'a self, script: String) -> Result<Vec<CompiledUnit>, Error> {
-        let dep_list = self.get_dep_list()?;
-
-        let sender = self.dove_ctx.account_address()?;
-
-        let (files, prog) = build(
-            &[script],
-            &dep_list,
-            self.dove_ctx.dialect.as_ref(),
-            Some(sender),
-            None,
-        )?;
-
-        match prog {
-            Err(errors) => {
-                let mut writer = StandardStream::stderr(ColorChoice::Auto);
-                output_errors(&mut writer, files, errors);
-                anyhow::bail!("could not compile:{}", self.dove_ctx.project_name())
-            }
-            Ok(compiled_units) => {
-                let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
-
-                if !ice_errors.is_empty() {
-                    let mut writer = StandardStream::stderr(ColorChoice::Auto);
-                    output_errors(&mut writer, files, ice_errors);
-                    anyhow::bail!("could not verify:{}", self.dove_ctx.project_name())
-                } else {
-                    Ok(compiled_units)
-                }
-            }
-        }
-    }
-
     fn get_dep_list(&self) -> Result<Vec<String>, Error> {
-        let index = self.dove_ctx.build_index()?;
+        let (index, interface_dir) = self.dove_ctx.build_index(self.use_interface_deps)?;
 
         let module_dir = self
             .dove_ctx
@@ -471,9 +459,16 @@ impl<'a> TransactionBuilder<'a> {
             .to_string_lossy()
             .to_string();
 
-        let mut roots = index.into_deps_roots();
-        roots.push(module_dir);
-        Ok(roots)
+        if let Some(interface_dir) = interface_dir {
+            Ok(vec![
+                module_dir,
+                interface_dir.to_string_lossy().to_string(),
+            ])
+        } else {
+            let mut roots = index.into_deps_roots();
+            roots.push(module_dir);
+            Ok(roots)
+        }
     }
 }
 

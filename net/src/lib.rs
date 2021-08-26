@@ -3,15 +3,15 @@ use http::Uri;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{ModuleId, StructTag};
 use move_core_types::vm_status::StatusCode;
-use move_vm_runtime::data_cache::RemoteCache;
 use substrate_api_client::Api;
-use vm::errors::{Location, PartialVMError, PartialVMResult, VMResult};
+use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 
 use lang::compiler::dialects::Dialect as DialectTrait;
 use lang::compiler::dialects::DialectName;
 
 use crate::dnode::DnodeNet;
 use crate::pont::PontNet;
+use move_vm_runtime::data_cache::MoveStorage;
 
 mod dnode;
 mod pont;
@@ -69,7 +69,7 @@ impl NetView {
     }
 }
 
-impl RemoteCache for NetView {
+impl MoveStorage for NetView {
     fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
         self.net
             .get_module(module_id, &self.block)

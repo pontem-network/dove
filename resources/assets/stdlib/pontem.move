@@ -71,38 +71,38 @@ module Pontem {
 
     /// getter for denom. reads denom information from 0x1 resource
     public fun denom<Coin: store>(): vector<u8> acquires Info {
-        *&borrow_global<Info<Coin>>(0x1).denom
+        *&borrow_global<Info<Coin>>(@0x1).denom
     }
 
     /// getter for currency decimals
     public fun decimals<Coin: store>(): u8 acquires Info {
-        borrow_global<Info<Coin>>(0x1).decimals
+        borrow_global<Info<Coin>>(@0x1).decimals
     }
 
     /// getter for is_token property of Info
     public fun is_token<Coin: store>(): bool acquires Info {
-        borrow_global<Info<Coin>>(0x1).is_token
+        borrow_global<Info<Coin>>(@0x1).is_token
     }
 
     /// getter for total_supply property of Info
     public fun total_supply<Coin: store>(): u128 acquires Info {
-        borrow_global<Info<Coin>>(0x1).total_supply
+        borrow_global<Info<Coin>>(@0x1).total_supply
     }
 
     /// getter for owner property of Info
     public fun owner<Coin: store>(): address acquires Info {
-        borrow_global<Info<Coin>>(0x1).owner
+        borrow_global<Info<Coin>>(@0x1).owner
     }
 
     /// only 0x1 address and add denom descriptions, 0x1 holds information resource
     public fun register_coin<Coin: store>(denom: vector<u8>, decimals: u8) {
-        let sig = create_signer(0x1);
+        let sig = create_signer(@0x1);
 
-        if (!exists<Info<Coin>>(0x1)) {
+        if (!exists<Info<Coin>>(@0x1)) {
             move_to<Info<Coin>>(&sig, Info {
                 denom,
                 decimals,
-                owner: 0x1,
+                owner: @0x1,
                 total_supply: 0,
                 is_token: false
             });
@@ -113,7 +113,7 @@ module Pontem {
 
     /// check whether sender is 0x1, helper method
     //fun assert_can_register_coin(account: &signer) {
-    //    assert(Signer::address_of(account) == 0x1, 1);
+    //    assert(Signer::address_of(account) == @0x1, 1);
     //}
 
     // ..... TOKEN .....
@@ -149,7 +149,7 @@ module Pontem {
         denom: vector<u8>
     ): T<Tok> {
         // check if this token type has never been registered
-        assert(!exists<Info<Tok>>(0x1), 1);
+        assert(!exists<Info<Tok>>(@0x1), 1);
 
         // no more than DECIMALS MAX is allowed
         assert(decimals >= DECIMALS_MIN && decimals <= DECIMALS_MAX, 20);
@@ -180,7 +180,7 @@ module Pontem {
 
     /// Created Info resource must be attached to 0x1 address.
     fun register_token_info<Coin: store>(info: Info<Coin>) {
-        let sig = create_signer(0x1);
+        let sig = create_signer(@0x1);
         move_to<Info<Coin>>(&sig, info);
         destroy_signer(sig);
     }

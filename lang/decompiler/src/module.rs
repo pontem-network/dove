@@ -10,7 +10,7 @@ use move_core_types::account_address::AccountAddress;
 
 /// Module representation.
 pub struct Module<'a> {
-    address: Option<AccountAddress>,
+    address: AccountAddress,
     name: String,
     structs: Vec<StructDef<'a>>,
     functions: Vec<FunctionsDef<'a>>,
@@ -39,7 +39,7 @@ impl<'a> Module<'a> {
 
         let id = unit.self_id();
         Module {
-            address: None, //Some(*id.address()),
+            address: *id.address(),
             name: id.name().as_str().to_owned(),
             structs,
             functions,
@@ -50,11 +50,7 @@ impl<'a> Module<'a> {
 
 impl<'a> Encode for Module<'a> {
     fn encode<W: Write>(&self, w: &mut W, _indent: usize) -> Result<(), Error> {
-        if let Some(address) = self.address {
-            writeln!(w, "address 0x{} {{ ", address)?;
-        }
-
-        writeln!(w, "module {} {{", self.name)?;
+        writeln!(w, "module 0x{}::{} {{", self.address, self.name)?;
 
         self.imports.encode(w, INDENT)?;
         writeln!(w)?;
@@ -70,10 +66,6 @@ impl<'a> Encode for Module<'a> {
         }
 
         writeln!(w, "}}")?;
-
-        if self.address.is_some() {
-            writeln!(w, "}}")?;
-        }
         Ok(())
     }
 }

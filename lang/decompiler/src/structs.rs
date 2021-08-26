@@ -2,7 +2,7 @@ use crate::{Encode, INDENT, Config};
 use anyhow::Error;
 use std::fmt::Write;
 use crate::generics::{Generics, Generic, extract_type_params, write_type_parameters};
-use vm::file_format::*;
+use move_binary_format::file_format::*;
 use crate::imports::Imports;
 use crate::types::{FType, extract_type_signature};
 use crate::unit::{UnitAccess};

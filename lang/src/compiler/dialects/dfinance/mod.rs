@@ -79,7 +79,7 @@ use crate::compiler::mut_string::MutString;
 
 pub static INITIAL_GAS_SCHEDULE: Lazy<CostTable> = Lazy::new(|| {
     use move_vm_types::gas_schedule::{self, NativeCostIndex as N};
-    use vm::{
+    use move_binary_format::{
         file_format::{
             Bytecode, ConstantPoolIndex, FieldHandleIndex, FieldInstantiationIndex,
             FunctionHandleIndex, FunctionInstantiationIndex, StructDefInstantiationIndex,

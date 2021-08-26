@@ -22,10 +22,11 @@ fn test_cmd_dove_test_run_all_test_in_project() {
     // project_folder/tests/test_1.move
     write_all(
         &project_folder.join("tests").join("test_1.move"),
-        "script {
-                fun main() {
-                    assert((3+1)==4,1);
-                }
+        "module 0x1::Tests {
+                    #[test]
+                    fun main() {
+                        assert((3+1)==4,1);
+                    }
             }",
     )
     .unwrap();
@@ -33,7 +34,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
     project_remove(&project_folder);
 }
 
-/// $ dove test -k test_2
+/// $ dove test -f test_2
 #[test]
 fn test_cmd_dove_test_run_one_test_in_project() {
     // Path to dove folder, project and project name
@@ -54,8 +55,9 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     // project_folder/tests/test_1.move
     write_all(
         &project_folder.join("tests").join("test_1.move"),
-        "script {
-                fun main() {
+        "module 0x1::Tests {
+                 #[test]
+                fun test_1() {
                     assert((1+3)==4,1);
                 }
             }",
@@ -64,14 +66,15 @@ fn test_cmd_dove_test_run_one_test_in_project() {
     // project_folder/tests/test_2.move
     write_all(
         &project_folder.join("tests").join("test_2.move"),
-        "script {
-                fun main() {
+        "module 0x1::Tests_2 {
+                #[test]
+                fun test_2() {
                     assert((2+2)==4,2);
                 }
             }",
     )
     .unwrap();
-    execute_dove_at(&["dove", "test", "-k", "test_2"], &project_folder).unwrap();
+    execute_dove_at(&["dove", "test", "-f", "test_2"], &project_folder).unwrap();
     project_remove(&project_folder);
 }
 
@@ -84,7 +87,8 @@ fn test_cmd_dove_test_fail_test_in_project() {
     // project_folder/tests/test_1.move
     write_all(
         &project_folder.join("tests").join("test_1.move"),
-        "script {
+        "module 0x1::Tests {
+                #[test]
                 fun main() {
                     assert((3+2)==4,1);
                 }

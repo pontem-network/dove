@@ -56,7 +56,7 @@ pub fn replace_ss58_addresses(
 
         let orig_address = item.as_str();
         if orig_address.starts_with("0x") {
-            // libra match, don't replace
+            // diem match, don't replace
             continue;
         }
         if let Ok(diem_address) = ss58_to_diem(orig_address) {
@@ -79,18 +79,18 @@ mod test {
     use crate::compiler::mut_string::MutString;
 
     #[test]
-    fn test_ss58_to_libra() {
+    fn test_ss58_to_diem() {
         let polka_address = "G7UkJAutjbQyZGRiP8z5bBSBPBJ66JbTKAkFDq3cANwENyX";
-        let libra_address = ss58_to_diem(polka_address).unwrap();
+        let diem_address = ss58_to_diem(polka_address).unwrap();
 
         assert_eq!(
-            hex::decode(&libra_address[2..]).unwrap().len(),
+            hex::decode(&diem_address[2..]).unwrap().len(),
             PUB_KEY_LENGTH
         );
 
         assert_eq!(
             "0x9C786090E2598AE884FF9D1F01D6A1A9BAF13A9E61F73633A8928F4D80BF7DFE",
-            libra_address
+            diem_address
         );
     }
 
