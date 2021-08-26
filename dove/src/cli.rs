@@ -18,9 +18,14 @@ use crate::cmd::Cmd;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use crate::cmd::docgen::DocGen;
+use crate::{DOVE_VERSION, DOVE_HASH, PONT_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Dove", version = git_hash::crate_version_with_git_hash_short!())]
+#[structopt(
+    name = "Dove",
+    version = git_hash::crate_version_with_git_hash_short!(),
+    long_version = create_long_version(),
+)]
 enum Opt {
     #[structopt(about = "Init directory as move project")]
     Init {
@@ -100,4 +105,29 @@ where
         Opt::Prove { cmd } => cmd.execute(cwd),
         Opt::DocGen { cmd } => cmd.execute(cwd),
     }
+}
+
+fn create_long_version() -> &'static str {
+    let dove: String = [DOVE_VERSION, DOVE_HASH]
+        .iter()
+        .filter(|str| !str.is_empty())
+        .map(|str| str.to_string())
+        .collect::<Vec<String>>()
+        .join("-");
+    let diem: String = [DIEM_VERSION, DIEM_HASH]
+        .iter()
+        .filter(|str| !str.is_empty())
+        .map(|str| str.to_string())
+        .collect::<Vec<String>>()
+        .join("-");
+
+    Box::leak(
+        format!(
+            "{}\n\
+            Diem {}\n\
+            Move-Stdlib {}",
+            dove, diem, PONT_STDLIB_VERSION
+        )
+        .into_boxed_str(),
+    )
 }

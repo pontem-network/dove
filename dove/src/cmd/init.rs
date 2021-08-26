@@ -16,10 +16,7 @@ use crate::manifest::{DoveToml, MANIFEST};
 use lazy_static::lazy_static;
 use regex::Regex;
 
-const PONT_STDLIB: &str =
-    r#"{ git = "https://github.com/pontem-network/move-stdlib", tag = "v0.2.1" }"#;
-
-use crate::stdoutln;
+use crate::{stdoutln, PONT_STDLIB_URL, PONT_STDLIB_VERSION};
 use crate::stdout::colorize::good;
 
 /// Init project command.
@@ -147,7 +144,10 @@ dependencies = [
     {}
 ]
 "#,
-                PONT_STDLIB
+                format!(
+                    r#"{{ git = "{}", tag = "{}"}}"#,
+                    PONT_STDLIB_URL, PONT_STDLIB_VERSION
+                )
             )?;
         }
         stdoutln!(
