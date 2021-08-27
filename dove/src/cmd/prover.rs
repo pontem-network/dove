@@ -43,11 +43,11 @@ pub struct Prove {
 }
 
 impl Cmd for Prove {
-    fn apply(self, ctx: Context) -> Result<()>
+    fn apply(mut self, ctx: Context) -> Result<()>
     where
         Self: std::marker::Sized,
     {
-        let (boogie_exe, z3_exe, cvc4_exe) = self.get_prover_conf(&ctx).map(|conf| {
+        let (boogie_exe, z3_exe, cvc4_exe) = self.make_config(&ctx).map(|conf| {
             (
                 conf.boogie_exe.unwrap_or_default(),
                 conf.z3_exe.unwrap_or_default(),
@@ -57,7 +57,10 @@ impl Cmd for Prove {
 
         ensure!(is_boogie_available(&boogie_exe), "boogie executable not found in PATH. Please install it from https://github.com/boogie-org/boogie");
         ensure!(is_z3_available(&z3_exe), "z3 executable not found in PATH. Please install it from https://github.com/Z3Prover/z3");
-        ensure!(is_cvc4_available(&cvc4_exe), "cvc4 executable not found in PATH. Please install it from https://github.com/CVC4/CVC4-archived");
+
+        if !cvc4_exe.is_empty() {
+            ensure!(is_cvc4_available(&cvc4_exe), "cvc4 executable not found in PATH. Please install it from https://github.com/CVC4/CVC4-archived");
+        }
 
         let move_deps = find_move_files(&ctx.build_index(false)?.0.into_deps_roots())
             .map(|p| p.to_string_lossy().to_string())
@@ -70,7 +73,13 @@ impl Cmd for Prove {
         let move_sources = find_move_files(&dirs)
             .map(|path| path.to_string_lossy().to_string())
             .collect::<Vec<_>>();
-        let boogie_options = ctx.manifest.boogie_options.clone().unwrap_or_default();
+
+        let mut boogie_options = ctx.manifest.boogie_options.clone().unwrap_or_default();
+        if cvc4_exe.is_empty() && boogie_options.use_cvc4 {
+            println!("Warning: cvc4 is not defined.");
+            boogie_options.use_cvc4 = false;
+        }
+
         let options = Options {
             backend: BoogieOptions {
                 boogie_exe,
@@ -89,21 +98,34 @@ impl Cmd for Prove {
         run_move_prover_errors_to_stderr(options, &mut preprocessor)
     }
 }
+
 impl Prove {
-    fn get_prover_conf(&self, ctx: &Context) -> Result<ProverConfig, anyhow::Error> {
+    fn make_config(&mut self, ctx: &Context) -> Result<ProverConfig, anyhow::Error> {
         let mut conf = ProverConfig::new()?;
         // prover-env.toml
         let toml_conf = ctx.path_for(&ctx.manifest.layout.prover_toml);
         if toml_conf.exists() {
             let toml_conf = toml::from_str::<ProverConfig>(&read_to_string(&toml_conf)?)?;
-            conf.boogie_exe = toml_conf.boogie_exe.or_else(|| conf.boogie_exe.clone());
-            conf.z3_exe = toml_conf.z3_exe.or_else(|| conf.z3_exe.clone());
-            conf.cvc4_exe = toml_conf.cvc4_exe.or_else(|| conf.cvc4_exe.clone());
+            if let Some(boogie_exe) = toml_conf.boogie_exe {
+                conf.boogie_exe = Some(boogie_exe);
+            }
+            if let Some(z3_exe) = toml_conf.z3_exe {
+                conf.z3_exe = Some(z3_exe);
+            }
+            if let Some(cvc4_exe) = toml_conf.cvc4_exe {
+                conf.cvc4_exe = Some(cvc4_exe);
+            }
         }
         // cmd
-        conf.boogie_exe = self.boogie_exe.clone().or_else(|| conf.boogie_exe.clone());
-        conf.z3_exe = self.z3_exe.clone().or_else(|| conf.z3_exe.clone());
-        conf.cvc4_exe = self.z3_exe.clone().or_else(|| conf.cvc4_exe.clone());
+        if let Some(boogie_exe) = self.boogie_exe.take() {
+            conf.boogie_exe = Some(boogie_exe);
+        }
+        if let Some(z3_exe) = self.z3_exe.take() {
+            conf.z3_exe = Some(z3_exe);
+        }
+        if let Some(cvc4_exe) = self.cvc4_exe.take() {
+            conf.cvc4_exe = Some(cvc4_exe);
+        }
 
         Ok(conf)
     }
@@ -140,8 +162,7 @@ fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item = S>>(
     }
 }
 
-/// get path to z3
-fn get_path_z3() -> Result<String, anyhow::Error> {
+fn find_path(name: &str) -> Result<Option<String>, anyhow::Error> {
     let env_path = std::env::var("PATH")?;
 
     #[cfg(not(target_family = "windows"))]
@@ -150,13 +171,12 @@ fn get_path_z3() -> Result<String, anyhow::Error> {
     #[cfg(target_family = "windows")]
     let separator = ';';
 
-    env_path
+    Ok(env_path
         .split(separator)
         .map(PathBuf::from)
-        .map(|path| path.join(Z3_EXE))
-        .find(|path|path.exists())
-        .and_then(|path|path.to_str().map(|path|path.to_string()))
-        .ok_or_else(|| anyhow!("z3 executable not found in PATH. Please install it from https://github.com/Z3Prover/z3"))
+        .map(|path| path.join(name))
+        .find(|path| path.exists())
+        .and_then(|path| path.to_str().map(|path| path.to_string())))
 }
 
 /// Paths to the boogie, z3 and cvc4 binaries
@@ -169,12 +189,13 @@ struct ProverConfig {
     #[serde(rename = "cvc4")]
     pub cvc4_exe: Option<String>,
 }
+
 impl ProverConfig {
     fn new() -> Result<Self, anyhow::Error> {
         Ok(ProverConfig {
-            boogie_exe: Some(BOOGIE_EXE.to_string()),
-            z3_exe: Some(get_path_z3()?),
-            cvc4_exe: Some(CVC4_EXE.to_string()),
+            boogie_exe: find_path(BOOGIE_EXE)?,
+            z3_exe: find_path(Z3_EXE)?,
+            cvc4_exe: find_path(CVC4_EXE)?,
         })
     }
 }
