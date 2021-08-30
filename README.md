@@ -84,7 +84,7 @@ You can use type parameters like in the Move language.
 Example:
 
 ```shell script
-dove tx 'create_account<0x01::PONT::T>()'
+dove tx 'create_account<0x01::PONT::PONT>()'
 ```
 
 You allow can use SS58 address format:
