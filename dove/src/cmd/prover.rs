@@ -12,6 +12,8 @@ use boogie_backend::options::BoogieOptions;
 use lang::compiler::preprocessor::BuilderPreprocessor;
 use std::path::PathBuf;
 use std::fs::read_to_string;
+use std::env;
+use std::str::FromStr;
 
 #[cfg(target_family = "unix")]
 const BOOGIE_EXE: &str = "boogie";
@@ -126,7 +128,7 @@ impl Prove {
         if let Some(cvc4_exe) = self.cvc4_exe.take() {
             conf.cvc4_exe = Some(cvc4_exe);
         }
-
+        conf.normalize()?;
         Ok(conf)
     }
 }
@@ -197,5 +199,30 @@ impl ProverConfig {
             z3_exe: find_path(Z3_EXE)?,
             cvc4_exe: find_path(CVC4_EXE)?,
         })
+    }
+
+    fn normalize(&mut self) -> Result<(), anyhow::Error> {
+        fn canonicalize(path: Option<&mut String>, home: &str) -> Result<(), anyhow::Error> {
+            if let Some(path) = path {
+                if path.starts_with("~/") {
+                    *path = path.replacen("~", home, 1);
+                }
+                let mut path_buff = PathBuf::from_str(path)?;
+                if path_buff.exists() {
+                    path_buff = path_buff.canonicalize()?;
+                }
+                *path = path_buff.to_string_lossy().to_string();
+            }
+            Ok(())
+        }
+
+        if let Some(home) = env::var_os("HOME") {
+            let home = home.to_string_lossy().to_string();
+
+            canonicalize(self.boogie_exe.as_mut(), &home)?;
+            canonicalize(self.z3_exe.as_mut(), &home)?;
+            canonicalize(self.cvc4_exe.as_mut(), &home)?;
+        }
+        Ok(())
     }
 }
