@@ -50,7 +50,7 @@ dove new first_project --dialect pont --address <your address> # Replace <your a
 * `dialect` - dialect of the Move language. Default is `pont`. Supported dialects:
   * `diem` - for original diem version.
   * `pont` - Polkadot SS58 addresses.
-  * `bech32` - `dfinance` bech32 addresses .
+  * `dfinance` - bech32 addresses.
 
 Build project:
 
