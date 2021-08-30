@@ -2,9 +2,9 @@
 
 Toolset for work with Move language based projects:
 
-* [dove](/dove/) - package manager and compiler.
-* [language server](/language_server/) - Move language server.
-* [resource viewer](/resource-viewer/) - [BCS](https://github.com/diem/bcs) resource viewer.
+* [dove](#dove) - package manager and compiler.
+* [language server](#language-server) - Move language server.
+* [resource viewer](#resource-viewer) - [BCS](https://github.com/diem/bcs) resource viewer.
 
 Supported projects and dialects:
 
@@ -82,15 +82,16 @@ This command will fail if:
 You can use type parameters like in the Move language.
 
 Example:
+
 ```shell script
-dove tx 'create_account<0x01::PONT::T, 0x01::Coins::USDT>()'
+dove tx 'create_account<0x01::PONT::T>()'
 ```
 
 You allow can use SS58 address format:
 
 ```shell script
-dove tx 'create_account<1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::MyToken::Token>()'
-dove tx 'create_account(1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 10, true, [10, 20, 30, 40])'
+dove tx 'create_account<5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY::MyToken::Token>()'
+dove tx 'create_account(5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY, 10, true, [10, 20, 30, 40])'
 ```
 
 Supported types:
@@ -99,6 +100,7 @@ Supported types:
 * Boolean
 * Addresses
 * Vectors
+* Type parameters (generics).
 
 For more commands and parameters look at help:
 
