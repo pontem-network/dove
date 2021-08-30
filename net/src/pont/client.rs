@@ -1,5 +1,5 @@
 use log::*;
-use keyring::sr25519::sr25519::Pair;
+use sp_keyring::sr25519::sr25519::Pair;
 use substrate_api_client::Api;
 use anyhow::{Error, Result};
 use http::Uri;

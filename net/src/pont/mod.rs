@@ -8,7 +8,7 @@ use lang::compiler::dialects::Dialect;
 use crate::{Block, Net, BytesForBlock};
 use crate::pont::client::data_request_with;
 use sp_core::H256;
-use keyring::sr25519::sr25519::Pair;
+use sp_keyring::sr25519::sr25519::Pair;
 use std::str::FromStr;
 use substrate_api_client::Api;
 use move_core_types::account_address::AccountAddress;
