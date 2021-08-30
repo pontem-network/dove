@@ -103,7 +103,7 @@ impl Cmd for Prove {
 
 impl Prove {
     fn make_config(&mut self, ctx: &Context) -> Result<ProverConfig, anyhow::Error> {
-        let mut conf = ProverConfig::new()?;
+        let mut conf = ProverConfig::new();
         // prover-env.toml
         let toml_conf = ctx.path_for(&ctx.manifest.layout.prover_toml);
         if toml_conf.exists() {
@@ -164,7 +164,7 @@ fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item = S>>(
     }
 }
 
-fn find_path(name: &str) -> Option<String> {
+fn path() -> Option<Vec<PathBuf>> {
     if let Some(env_path) = std::env::var("PATH").ok() {
         #[cfg(not(target_family = "windows"))]
         let separator = ':';
@@ -172,15 +172,18 @@ fn find_path(name: &str) -> Option<String> {
         #[cfg(target_family = "windows")]
         let separator = ';';
 
-        env_path
-            .split(separator)
-            .map(PathBuf::from)
-            .map(|path| path.join(name))
-            .find(|path| path.exists())
-            .and_then(|path| path.to_str().map(|path| path.to_string()))
+        Some(env_path.split(separator).map(PathBuf::from).collect())
     } else {
         None
     }
+}
+
+fn find_path(paths: &[PathBuf], name: &str) -> Option<String> {
+    paths
+        .iter()
+        .map(|path| path.join(name))
+        .find(|path| path.exists())
+        .and_then(|path| path.to_str().map(|path| path.to_string()))
 }
 
 /// Paths to the boogie, z3 and cvc4 binaries
@@ -195,12 +198,20 @@ struct ProverConfig {
 }
 
 impl ProverConfig {
-    fn new() -> Result<Self, anyhow::Error> {
-        Ok(ProverConfig {
-            boogie_exe: find_path(BOOGIE_EXE),
-            z3_exe: find_path(Z3_EXE),
-            cvc4_exe: find_path(CVC4_EXE),
-        })
+    fn new() -> Self {
+        if let Some(env_path) = path() {
+            ProverConfig {
+                boogie_exe: find_path(&env_path, BOOGIE_EXE),
+                z3_exe: find_path(&env_path, Z3_EXE),
+                cvc4_exe: find_path(&env_path, CVC4_EXE),
+            }
+        } else {
+            ProverConfig {
+                boogie_exe: None,
+                z3_exe: None,
+                cvc4_exe: None,
+            }
+        }
     }
 
     fn normalize(&mut self) -> Result<(), anyhow::Error> {
