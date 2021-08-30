@@ -26,10 +26,8 @@ rev = "62afbac0be1928681d8c70565fa0cc39a92cf4c8"
 
 [dependencies.sp-keyring]
 version = '2.0.0'
-package = "sp-keyring"
 
 [dependencies.sp-core]
 version = '2.0.0'
-package = "sp-core"
 default-features = false
 features = ["full_crypto"]
