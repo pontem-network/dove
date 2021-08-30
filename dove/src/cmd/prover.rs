@@ -165,7 +165,7 @@ fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item = S>>(
 }
 
 fn path() -> Option<Vec<PathBuf>> {
-    if let Some(env_path) = std::env::var("PATH").ok() {
+    if let Ok(env_path) = std::env::var("PATH") {
         #[cfg(not(target_family = "windows"))]
         let separator = ':';
 
