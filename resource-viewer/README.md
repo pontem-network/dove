@@ -1,6 +1,13 @@
 # Move Resource Viewer
 
-Move Resource Viewer is a tool to query [LCS](https://github.com/diemstartup/diem-canonical-serialization/blob/master/DOCUMENTATION.md) resources data from blockchain nodes storage (i.e. [dnode](http://github.com/dfinance/dnode) or [diem](https://github.com/diem/diem)) and represent them in JSON or human readable format.
+**Resource viewer is currently out of date and pending migration inside dove in future versions.**
+
+Move Resource Viewer is a tool to query [BCS](https://github.com/diem/bcs) resources data from blockchain nodes storage and represent them in JSON or human readable format.
+
+Supported nodes:
+* [pontem](https://github.com/pontem-network/pontem)
+* [dnode](http://github.com/dfinance/dnode)
+* [diem](https://github.com/diem/diem)
 
 ## How does it works?
 
@@ -23,58 +30,25 @@ cargo install --git https://github.com/pontem-network/move-tools.git move-resour
 [Rustup]: https://rustup.rs
 
 
-### Build with optional features
-
-- `json-schema` - add option to export json schema for output format
-- `dfinance_address` - add option to support [DFinance][] node & address format
-- `diem_address` - add option to support [diem/Diem][] address format
-- `ps_address` - add option to support Substrate node & [ss58][] address format
-
-These three `.._address` options are mutually exclusive, so they conflicts with each other.
-
-
 [DFinance]: https://github.com/dfinance
 [diem/Diem]: https://github.com/diem
-[ss58]: "https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)"
-
-
-Add several features as list to the command line, like:
-```bash
-cargo install --git https://github.com/pontem-network/move-tools.git move-resource-viewer \
-    --no-default-features \
-    --features="json-schema, ps_address"
-```
-
-For example, to build Resource Viewer for Polkadot/Substrate use:
-```bash
-    --no-default-features --features="ps_address"
-```
+[SS58]: "https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)"
 
 
 ## Usage example
 
-Query the user's ETH balance:
+Query the user's store contract balance:
 
 ```bash
-move-resource-viewer -a wallet1n9w22mvaq7uuswr4j53usd0spd2mznphq3q3zp \
-                          -q "0x1::Account::Balance<0x1::ETH::T>" \
-                          --api="https://rest.testnet.dfinance.co" \
-                          -o=output.json
-# optional block number:  --height 42
-
-# Optionally add          --json-schema schema.json
-# or just                 --json-schema -
-# It exports schema for output format to specified file (schema.json)
-# In case of `-` as path, it just prints schema to stdout.
+move-resource-viewer --address 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY  --query "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY::Store::Store<u64>" --api="ws://127.0.0.1:9946"
 ```
 
 ### Input parameters
 
-- `-a` / `--account` can be in Dfinance [bech32][] or hex `0x…{16-20 bytes}`, or Substrate's [ss58][] encoding formats
+- `-a` / `--account` can be in Pontem [ss58][], Dfinance [bech32][] or hex `0x…{16-20 bytes}`.
 - `-q` / `--query` resource type-path, e.g.:
-    - `0x1::Account::Balance<0x1::PONT::T>`
-    - `0x1::Account::Balance<0x1::XFI::T>`
-    - `0x1::Account::Balance<0x1::Coins::ETH>`
+    - `0x1::Account::Balance<0x1::PONT::PONT>`
+    - `5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY::Store::Store<u64>`
     - In general: `0xDEADBEEF::Module::Struct< 0xBADBEEF::Mod::Struct<...>, ... >`
     - Inner address can be omitted, it's inherited by parent:
 	   `0xDEADBEEF::Module::Struct<Mod::Struct>` expands to `0xDEADBEEF::Module::Struct<0xDEADBEEF::Mod::Struct>`
@@ -88,13 +62,6 @@ For more info check out `--help`.
 
 [dnode]: https://github.com/dfinance/dnode
 [bech32]: https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki
-
-
-### Substrate
-
-Additionally if Resource Viewer was built with `ps_address` feature,
-[ss58][]-addresses are acceptable for `--account` and `--query` parameters.
-
 
 ### Output
 
