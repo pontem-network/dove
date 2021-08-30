@@ -4,14 +4,21 @@ Toolset for work with Move language based projects:
 
 * [dove](/dove/) - package manager and compiler.
 * [language server](/language_server/) - Move language server.
-* [resource viewer](/resource-viewer/) - [LCS](https://github.com/diemstartup/diem-canonical-serialization) resource viewer.
-* [executor](/executor/) - launch and test Move code without sending transactions.
+* [resource viewer](/resource-viewer/) - [BCS](https://github.com/diem/bcs) resource viewer.
 
 Supported projects and dialects:
 
 * [Diem](https://www.diem.com/en-us/)
 * [Pontem](https://pontem.network/)
 * [Dfinance](https://dfinance.co/)
+
+## Installation
+
+**Using pre-compiled binaries:**
+
+Just visit [releases page](https://github.com/pontem-network/pontem/releases/tag/v0.3.1) and download binaries you are going to use.
+
+**Using source code:**
 
 Clone this repository and follow documentation:
 
@@ -21,12 +28,6 @@ cd move-tools
 ```
 
 ## Dove
-
-Installation with **Polkadot** support:
-
-```shell script
-cargo install --bin=dove --path dove --features="ps_address" --no-default-features
-```
 
 Regular installation:
 
@@ -43,21 +44,24 @@ dove -h
 Create new project:
 
 ```shell script
-dove new first_project --dialect polkadot
+dove new first_project --dialect pont --address <your address> # Replace <your address> with your SS58 address.
 ```
 
-`dialect` - dialect of the Move language. Either `move` (for original diem version)  or `polkadot`, or `dfinance` (bech32 addresses and some other stuff). Default is `move`.
+* `dialect` - dialect of the Move language. Default is `pont`. Supported dialects:
+  * `diem` - for original diem version.
+  * `pont` - Polkadot SS58 addresses.
+  * `bech32` - `dfinance` bech32 addresses .
 
 Build project:
 
 ```shell script
 dove build
 ```
-See `./target/` folder to get scripts/modules binaries.
+See `./artifacts/` folder to get scripts/modules binaries.
 
-### Arguments
+### Pallet Transactions
 
-Command `tx` allows you to create transactions for `polkadot` chain with [Move Pallete](https://github.com/pontem-network/sp-move).
+Command `tx` allows you to create transactions for Polkadot chain with [Move Pallete](https://github.com/pontem-network/sp-move) on board.
 
 `tx` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
 
@@ -65,6 +69,7 @@ Example:
 ```shell script
 dove tx 'store_u64(60)'
 ```
+
 This command searches for the script by name 'store_u64' in the script directory. Then it compiles it and creates a transaction file.
 
 This command will fail if:
@@ -74,106 +79,46 @@ This command will fail if:
 - The passed parameters or type parameters do not match the script parameters.
 - There are syntax errors in the script.
 
-You can use type parameters like in the move language.
+You can use type parameters like in the Move language.
 
 Example:
 ```shell script
 dove tx 'create_account<0x01::PONT::T, 0x01::Coins::USDT>()'
 ```
 
-You allow can use ss58 address format:
+You allow can use SS58 address format:
+
 ```shell script
 dove tx 'create_account<1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::MyToken::Token>()'
+dove tx 'create_account(1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 10, true, [10, 20, 30, 40])'
 ```
 
 Supported types:
 
-**Numbers (u8, u64, u128):**
+* Numbers (u8, u64, u128)
+* Boolean
+* Addresses
+* Vectors
+
+For more commands and parameters look at help:
 
 ```shell script
-dove tx 'my_script(10, 1024)'
+dove tx --help
 ```
 
-**Boolean:**
+### More
 
-```shell script
-dove tx 'my_script(true, false)'
-```
-
-**Addresses:**
-
-```shell script
-dove tx 'my_script(1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F)'
-```
-
-**Vectors:**
-
-```shell script
-dove tx 'my_script([10, 20, 1024])' // Vector u64
-dove tx 'my_script([1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE, 0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F, 0x01])' // Vector addresses.
-```
-
-You can define or override script arguments by using '--args' or '-a' parameter.
-
-Example:
-
-```shell script
-dove tx 'store_u64()' -a [10, 1024] 10 0x01
-```
-```shell script
-dove tx -n store_u64 -a [10, 1024] 10 0x01
-```
-
-**Script name**
-
-You can define or override script names by using '--name' or '-n' parameter.
-
-Example:
-
-```shell script
-dove tx 'store_u64(60)' -n store_u126
-```
-
-Define script name:
-
-```shell script
-dove tx -n store_u126
-```
-
-**Script file**
-
-You can define the file name by using '--file' or '-f' parameter.
-
-With this option 'tx' searches in a specified file. It may be useful when there is more than one script with the same name in different files.
-Or the specified file has one script.
-
-Example:
-
-```shell script
-dove tx 'store_u64(60)' -n store_u126 -f script.move
-```
-```shell script
-dove tx -n store_u126 -f script
-```
-
-**Types**
-
-You can define or override script type parameters by using '--type' or '-t' parameter.
-
-Example:
-
-```shell script
-dove tx 'store_u64()' -t 0x01::Coins::USDT u8
-```
-```shell script
-dove tx -n store_u64 -t 0x01::Coin::USDT u8
-```
-
+If you look for examples, guidelines how to write modules/scripts or tests, visit [Pontem Documentation](https://docs.pontem.network/03.-move-vm/compiler_and_toolset).
+ 
 ## Resource Viewer
+
+**Resource viewer is currently out of date and pending migration inside dove in future versions.**
 
 See [documentation](/resource-viewer/README.md).
 
 ## Language Server
+ 
+**Language server is currently out of date and currently in process of migration in a separate project.**
 
 Implementation of Language Server Protocol for [Move language](https://developers.diem.org/docs/crates/move-language).
 
@@ -188,9 +133,9 @@ For the corresponding VSCode extension, see https://marketplace.visualstudio.com
 
 #### Configuration
 
-`dialect` - dialect of the Move language. Either `move` (for original diem version) or `polkadot` (ss58), or ` (bech32 addresses and some other stuff). Default is `move`.
+`dialect` - dialect of the Move language. Either `diem` (for original diem version) or `pont` (ss58), or `dfinance` (bech32 addresses and some other stuff). Default is `pont`.
 
-`sender_address` - address of the user, used for module imports. Default is `0x0`.
+`account_address` - address of the user, used for module imports. Default is `0x0`.
 
 `stdlib_folder` - stdlib folder path. Default is `null`, no stdlib is loaded.
 
@@ -198,14 +143,10 @@ For the corresponding VSCode extension, see https://marketplace.visualstudio.com
 
 ## Executor
 
-Install **executor**:
+Migrated inside Dove, see help:
 
 ```shell script
-cargo install --path executor
-```
-See help:
-```
-executor -h
+dove run --help
 ```
 
 ## Decompiler:
