@@ -164,21 +164,23 @@ fn is_executable_available<S: AsRef<OsStr>, I: IntoIterator<Item = S>>(
     }
 }
 
-fn find_path(name: &str) -> Result<Option<String>, anyhow::Error> {
-    let env_path = std::env::var("PATH")?;
+fn find_path(name: &str) -> Option<String> {
+    if let Some(env_path) = std::env::var("PATH").ok() {
+        #[cfg(not(target_family = "windows"))]
+        let separator = ':';
 
-    #[cfg(not(target_family = "windows"))]
-    let separator = ':';
+        #[cfg(target_family = "windows")]
+        let separator = ';';
 
-    #[cfg(target_family = "windows")]
-    let separator = ';';
-
-    Ok(env_path
-        .split(separator)
-        .map(PathBuf::from)
-        .map(|path| path.join(name))
-        .find(|path| path.exists())
-        .and_then(|path| path.to_str().map(|path| path.to_string())))
+        env_path
+            .split(separator)
+            .map(PathBuf::from)
+            .map(|path| path.join(name))
+            .find(|path| path.exists())
+            .and_then(|path| path.to_str().map(|path| path.to_string()))
+    } else {
+        None
+    }
 }
 
 /// Paths to the boogie, z3 and cvc4 binaries
@@ -195,9 +197,9 @@ struct ProverConfig {
 impl ProverConfig {
     fn new() -> Result<Self, anyhow::Error> {
         Ok(ProverConfig {
-            boogie_exe: find_path(BOOGIE_EXE)?,
-            z3_exe: find_path(Z3_EXE)?,
-            cvc4_exe: find_path(CVC4_EXE)?,
+            boogie_exe: find_path(BOOGIE_EXE),
+            z3_exe: find_path(Z3_EXE),
+            cvc4_exe: find_path(CVC4_EXE),
         })
     }
 
