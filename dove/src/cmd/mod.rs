@@ -1,12 +1,7 @@
-use std::collections::HashSet;
 use std::path::PathBuf;
-use std::rc::Rc;
 
 use anyhow::{Error, Result};
 use semver::{Version, VersionReq};
-
-use lang::compiler::file::MoveFile;
-
 use crate::context::{Context, get_context, load_manifest};
 
 /// Project builder.
@@ -59,17 +54,6 @@ pub trait Cmd {
         let context = self.context(project_dir)?;
         self.apply(context)
     }
-}
-
-/// Load dependencies by set of path.
-pub fn load_dependencies(
-    path_set: HashSet<Rc<str>>,
-) -> Result<Vec<MoveFile<'static, 'static>>, Error> {
-    path_set
-        .iter()
-        .map(|path| path.as_ref())
-        .map(MoveFile::load)
-        .collect()
 }
 
 fn check_dove_version(req_ver: &str, act_ver: &str) -> Result<(), Error> {

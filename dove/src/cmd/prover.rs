@@ -64,7 +64,7 @@ impl Cmd for Prove {
             ensure!(is_cvc4_available(&cvc4_exe), "cvc4 executable not found in PATH. Please install it from https://github.com/CVC4/CVC4-archived");
         }
 
-        let move_deps = find_move_files(&ctx.build_index(false)?.0.into_deps_roots())
+        let move_deps = find_move_files(&ctx.build_index()?.0.into_deps_roots())
             .map(|p| p.to_string_lossy().to_string())
             .collect();
 
@@ -94,8 +94,8 @@ impl Cmd for Prove {
             ..Default::default()
         };
         options.setup_logging();
-        let mut preprocessor =
-            BuilderPreprocessor::new(ctx.dialect.as_ref(), Some(ctx.account_address()?));
+        let address = ctx.account_address_str()?;
+        let mut preprocessor = BuilderPreprocessor::new(ctx.dialect.as_ref(), &address);
 
         run_move_prover_errors_to_stderr(options, &mut preprocessor)
     }

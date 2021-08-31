@@ -13,7 +13,7 @@ pub struct Fetch {
 
 impl Cmd for Fetch {
     fn apply(self, ctx: Context) -> Result<(), Error> {
-        ctx.build_index(false)?;
+        ctx.build_index()?;
         Ok(())
     }
 }

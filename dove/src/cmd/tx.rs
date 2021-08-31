@@ -5,7 +5,10 @@ use structopt::StructOpt;
 use std::fmt::Debug;
 use std::fs;
 use crate::stdoutln;
-use crate::transaction::{TransactionBuilder, Transaction};
+use crate::tx::cmd::CallDeclarationCmd;
+use crate::tx::model::{Transaction, EnrichedTransaction};
+use crate::tx::make_transaction;
+use crate::tx::fn_call::Config;
 
 /// Create transaction.
 #[derive(StructOpt, Debug)]
@@ -13,62 +16,28 @@ use crate::transaction::{TransactionBuilder, Transaction};
 #[structopt(usage = "dove tx [call] [OPTIONS]\n
     Examples:
     $ dove tx 'script_name<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)' --f file_name
-    $ dove tx --file file_name --name script_name -a [10,10] true 68656c6c6f776f726c64 100 0x1 -type 0x01::Dfinance::USD
+    $ dove tx script_name --file file_name -a [10,10] true 68656c6c6f776f726c64 100 0x1 -type 0x01::Dfinance::USD
+    $ dove tx '0x1::Module::script_name<0x01::Dfinance::USD>()'
 ")]
 pub struct CreateTransactionCmd {
-    #[structopt(help = "Script call declaration.\
-     Example: 'create_balance<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)'")]
-    call: Option<String>,
-    #[structopt(help = "Script name.", long = "name", short = "n")]
-    script_name: Option<String>,
+    #[structopt(flatten)]
+    call: CallDeclarationCmd,
     #[structopt(help = "Output file name.", long = "output", short = "o")]
     output: Option<String>,
-    #[structopt(help = "Script file name.", long = "file", short = "f")]
-    file_name: Option<String>,
-    #[structopt(
-        help = r#"Script type parametrs, e.g. 0x1::Dfinance::USD"#,
-        name = "Script type parameters.",
-        long = "type",
-        short = "t"
-    )]
-    type_parameters: Option<Vec<String>>,
-    #[structopt(
-        help = r#"Script arguments, e.g. 10 20 30"#,
-        name = "Script arguments.",
-        long = "args",
-        short = "a"
-    )]
-    args: Option<Vec<String>>,
     #[structopt(long, hidden = true)]
     color: Option<String>,
 }
 
 impl Cmd for CreateTransactionCmd {
     fn apply(mut self, ctx: Context) -> Result<(), Error> {
+        let tx = make_transaction(&ctx, self.call, Config::for_tx())?;
         let output_filename = self.output.take();
-
-        let builder = TransactionBuilder::from_create_transaction_cmd(self, &ctx)?;
-        let (script_name, transaction) = builder.to_transaction()?;
-
-        store_transaction(&ctx, &output_filename.unwrap_or(script_name), transaction)
-    }
-}
-
-impl<'a> TransactionBuilder<'a> {
-    /// Create a TransactionBuilder based on the transmitted data
-    pub fn from_create_transaction_cmd(
-        cmd: CreateTransactionCmd,
-        ctx: &'a Context,
-    ) -> Result<TransactionBuilder, Error> {
-        let mut trbuild = Self::new(ctx, true);
-        trbuild.script_file_name = cmd.file_name;
-        trbuild
-            .with_cmd_call(cmd.call.clone())?
-            .with_cmd_script_name(cmd.script_name)
-            .with_cmd_type_parameters(cmd.type_parameters)?
-            .with_cmd_args(cmd.args);
-
-        Ok(trbuild)
+        match tx {
+            EnrichedTransaction::Local { .. } => unreachable!(),
+            EnrichedTransaction::Global { tx, name } => {
+                store_transaction(&ctx, &output_filename.unwrap_or(name), tx)
+            }
+        }
     }
 }
 

@@ -67,7 +67,7 @@ impl Cmd for Test {
             return Ok(());
         }
 
-        let mut deps = ctx.build_index(false)?.0.into_deps_roots();
+        let mut deps = ctx.build_index()?.0.into_deps_roots();
         deps.push(tests_dir.to_string_lossy().to_string());
         deps.push(
             ctx.path_for(&ctx.manifest.layout.modules_dir)
@@ -92,8 +92,8 @@ impl Cmd for Test {
             verbose: self.verbose,
         };
 
-        let mut preprocessor =
-            BuilderPreprocessor::new(ctx.dialect.as_ref(), Some(ctx.account_address()?));
+        let address = ctx.account_address_str()?;
+        let mut preprocessor = BuilderPreprocessor::new(ctx.dialect.as_ref(), &address);
         let test_plan = unit_test_config.build_test_plan(&mut preprocessor);
         if let Some(test_plan) = test_plan {
             let (_, is_ok) =

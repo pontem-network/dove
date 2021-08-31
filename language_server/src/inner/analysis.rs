@@ -39,7 +39,7 @@ impl Analysis {
             &[current_file.into().0],
             &deps,
             self.db.config.dialect().as_ref(),
-            Some(self.db.config.sender()),
+            self.db.config.sender(),
             None,
             Flags::empty(),
         )

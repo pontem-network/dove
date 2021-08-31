@@ -4,9 +4,9 @@ use std::fs::remove_file;
 use fs_extra::file::write_all;
 
 use dove::tests_helper::{execute_dove_at, project_remove, project_start_new_and_build};
-use dove::transaction::{Signer, Transaction};
 use move_core_types::language_storage::{TypeTag, StructTag, CORE_CODE_ADDRESS};
 use move_core_types::identifier::Identifier;
+use dove::tx::model::{Transaction, Signer, V1};
 
 /// $ dove tx
 #[test]
@@ -24,7 +24,7 @@ fn test_cmd_dove_tx_without_arguments() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "tx"];
+    let args = &["dove", "tx", "main"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
         .join("artifacts")
@@ -36,7 +36,9 @@ fn test_cmd_dove_tx_without_arguments() {
         tx_path.display(),
         args.join(" "),
     );
-    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap())
+        .unwrap()
+        .inner();
     assert!(tx.args.is_empty());
     assert!(tx.type_args.is_empty());
     assert!(tx.signers.is_empty());
@@ -89,7 +91,7 @@ fn test_cmd_dove_tx_with_type() {
 
     // u8
     for args in vec![
-        vec!["dove", "tx", "-n", "sdemo_4", "-a", "16", "-t", "u8"],
+        vec!["dove", "tx", "sdemo_4", "-a", "16", "-t", "u8"],
         vec!["dove", "tx", "sdemo_4()", "-a", "16", "-t", "u8"],
         vec!["dove", "tx", "sdemo_4(16)", "-t", "u8"],
         vec!["dove", "tx", "sdemo_4<u8>(16)"],
@@ -101,7 +103,9 @@ fn test_cmd_dove_tx_with_type() {
             tx_path.display(),
             args.join(" "),
         );
-        let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+        let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap())
+            .unwrap()
+            .inner();
         assert_eq!(tx.args, vec![vec![16]]);
         assert_eq!(tx.type_args, vec![TypeTag::U8]);
         assert_eq!(tx.signers, vec![]);
@@ -120,8 +124,9 @@ fn test_cmd_dove_tx_with_type() {
             tx_path.display(),
             args.join(" "),
         );
-        let tx =
-            bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref()).unwrap();
+        let tx = bcs::from_bytes::<Transaction>(std::fs::read(&tx_path).unwrap().as_ref())
+            .unwrap()
+            .inner();
         assert_eq!(tx.args, vec![vec![16]]);
         assert_eq!(
             tx.type_args,
@@ -155,7 +160,7 @@ fn test_cmd_dove_tx_with_output_file_name() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "tx", "-o", "z"];
+    let args = &["dove", "tx", "main", "-o", "z"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
         .join("artifacts")
@@ -187,7 +192,7 @@ fn test_cmd_dove_tx_with_script_name_arg() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "tx", "-f", "sdemo", "-n", "test_fun"];
+    let args = &["dove", "tx", "test_fun", "-f", "sdemo.move"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
         .join("artifacts")
@@ -219,7 +224,7 @@ fn test_cmd_dove_tx_with_script_name_option() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "tx", "test_fun()", "-f", "sdemo"];
+    let args = &["dove", "tx", "test_fun()", "-f", "sdemo.move"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
         .join("artifacts")
@@ -260,7 +265,7 @@ fn test_cmd_dove_tx_with_script_file_name() {
                 }",
     )
     .unwrap();
-    let args = &["dove", "tx", "-f", "sdemo_2"];
+    let args = &["dove", "tx", "sdemo_2", "-f", "sdemo_2.move"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
         .join("artifacts")
@@ -290,7 +295,7 @@ fn test_cmd_dove_tx_with_script_method_args() {
     )
     .unwrap();
     // $ dove tx -a 1 2
-    let args = &["dove", "tx", "-a", "1", "2"];
+    let args = &["dove", "tx", "main", "-a", "1", "2"];
     execute_dove_at(args, &project_folder).unwrap();
     let tx_path = project_folder
         .join("artifacts")
@@ -302,7 +307,9 @@ fn test_cmd_dove_tx_with_script_method_args() {
         tx_path.display(),
         &args.join(" "),
     );
-    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap())
+        .unwrap()
+        .inner();
     assert_eq!(
         tx.args,
         vec![vec![1, 0, 0, 0, 0, 0, 0, 0], vec![2, 0, 0, 0, 0, 0, 0, 0]]
@@ -339,7 +346,9 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
         tx_path.display(),
         args.join(" "),
     );
-    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap())
+        .unwrap()
+        .inner();
 
     assert_eq!(
         tx.args,
@@ -376,7 +385,9 @@ fn test_cmd_dove_tx_multiple_scripts() {
         tx_path.display(),
         args.join(" "),
     );
-    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap();
+    let tx = bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap())
+        .unwrap()
+        .inner();
     assert!(tx.args.is_empty());
     assert!(tx.type_args.is_empty());
     assert!(tx.signers.is_empty());
@@ -408,7 +419,7 @@ fn test_cmd_dove_tx_signer() {
         .join("transactions")
         .join("main.mvt");
 
-    let perform = |cmd: &[&str]| -> Transaction {
+    let perform = |cmd: &[&str]| -> V1 {
         if tx_path.exists() {
             remove_file(&tx_path).unwrap();
         }
@@ -419,7 +430,9 @@ fn test_cmd_dove_tx_signer() {
             tx_path.display(),
             cmd.join(" "),
         );
-        bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap()).unwrap()
+        bcs::from_bytes::<Transaction>(&fs::read(&tx_path).unwrap())
+            .unwrap()
+            .inner()
     };
 
     let tx = perform(&["dove", "tx", "main()", "-a", "8"]);

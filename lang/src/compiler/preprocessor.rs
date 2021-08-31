@@ -1,4 +1,3 @@
-use move_core_types::account_address::AccountAddress;
 use move_lang::errors::{Errors, FilesSourceText};
 use move_lang::preprocessor::SourceProcessor;
 
@@ -9,19 +8,16 @@ use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMa
 pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
     dialect: &'a dyn Dialect,
-    sender: Option<String>,
+    sender: &'a str,
     files: FilesSourceText,
 }
 
 impl<'a> BuilderPreprocessor<'a> {
-    pub fn new(
-        dialect: &'a dyn Dialect,
-        sender: Option<AccountAddress>,
-    ) -> BuilderPreprocessor<'a> {
+    pub fn new(dialect: &'a dyn Dialect, sender: &'a str) -> BuilderPreprocessor<'a> {
         BuilderPreprocessor {
             offsets_map: Default::default(),
             dialect,
-            sender: sender.map(|sender| format!("{:#x}", sender)),
+            sender,
             files: Default::default(),
         }
     }
@@ -39,7 +35,7 @@ impl<'a> SourceProcessor for BuilderPreprocessor<'a> {
     fn process(&mut self, name: &'static str, source: String) -> String {
         let mut mut_source = MutString::new(&source);
         let file_source_map =
-            normalize_source_text(self.dialect, (&source, &mut mut_source), &self.sender);
+            normalize_source_text(self.dialect, (&source, &mut mut_source), self.sender);
         let post_processed_source = mut_source.freeze();
 
         self.offsets_map.insert(name, file_source_map);
@@ -52,13 +48,10 @@ impl<'a> SourceProcessor for BuilderPreprocessor<'a> {
 pub fn normalize_source_text<'a, 'b>(
     dialect: &dyn Dialect,
     (source_text, mut_str): (&'a str, &mut MutString<'a, 'b>),
-    sender: &'b Option<String>,
+    sender: &'b str,
 ) -> FileOffsetMap {
     let mut file_source_map = line_endings::normalize(mut_str);
-
-    if let Some(sender) = sender {
-        replace_sender_placeholder(mut_str, sender, &mut file_source_map);
-    }
+    replace_sender_placeholder(mut_str, sender, &mut file_source_map);
     dialect.replace_addresses(source_text, mut_str, &mut file_source_map);
     file_source_map
 }
