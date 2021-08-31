@@ -8,7 +8,7 @@ pub const DOVE_VERSION: &str = git_hash::crate_version!();
 pub const DOVE_HASH: &str = git_hash::git_hash_short_as_str!();
 
 /// Version and Tag (v###) for PONT STDLIB
-pub const PONT_STDLIB_VERSION: &str = "v0.2.1";
+pub const PONT_STDLIB_VERSION: &str = "v0.3.0";
 /// GIT URL for PONT STDLIB
 pub const PONT_STDLIB_URL: &str = "https://github.com/pontem-network/move-stdlib";
 
