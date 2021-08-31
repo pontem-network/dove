@@ -28,7 +28,7 @@ pub(crate) fn find_module_function(
     let move_files = find_by_regexp(
         move_files,
         &format!(
-            r#""module([\s]+|[\s]+[\dA-Za-z{{}}]+::){}[\s]+\{{"#,
+            r#"module([\s]+|[\s]+[\dA-Za-z{{}}]+::){}[\s]+\{{"#,
             m_name
         ),
     )?;
