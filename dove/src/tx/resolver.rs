@@ -27,10 +27,7 @@ pub(crate) fn find_module_function(
 
     let move_files = find_by_regexp(
         move_files,
-        &format!(
-            r#"module([\s]+|[\s]+[\dA-Za-z{{}}]+::){}[\s]+\{{"#,
-            m_name
-        ),
+        &format!(r#"module([\s]+|[\s]+[\dA-Za-z{{}}]+::){}[\s]+\{{"#, m_name),
     )?;
 
     let sender = ctx.account_address_str()?;
