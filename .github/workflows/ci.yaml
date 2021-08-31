@@ -34,7 +34,7 @@ jobs:
           args: --tests --examples -- -Dwarnings
 
   tests:
-    name: ${{ matrix.name }}
+    name: tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -83,6 +83,62 @@ jobs:
         with:
           command: test
           args: --no-fail-fast --all --all-features
+
+  install-test:
+    runs-on: ${{ matrix.cfg.os }}
+    name: install (${{ matrix.cfg.name }})
+    if: "!contains(github.event.head_commit.message, 'fast')"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        cfg:
+          - name: macos
+            os: macos-latest
+            triplet: x64-osx
+          - name: ubuntu
+            os: ubuntu-latest
+            triplet: x64-linux
+          - name: windows
+            os: windows-latest
+            triplet: x64-windows-static-md
+        cmd:
+          - --path=dove
+          # - --git=todo://get-url
+
+    env:
+      CARGO_INCREMENTAL: 1
+      RUSTUP_MAX_RETRIES: 10
+      CARGO_NET_RETRY: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Restore from cache and run vcpkg
+        uses: lukka/run-vcpkg@v7
+        with:
+          vcpkgArguments: openssl
+          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+          vcpkgTriplet: ${{ matrix.cfg.triplet }}
+          vcpkgGitCommitId: de623488c7d9ab90328ec447f241dfff172b1c45
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - uses: Swatinem/rust-cache@v1
+
+      - name: Installation test
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: --bin=dove ${{ matrix.cmd }}
+
+      - run: dove -V
 
   wasm:
     name: wasm
