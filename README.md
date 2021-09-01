@@ -131,7 +131,7 @@ RUST_LOG=info cargo run --bin move-language-server
 Features:
 * check source code files with the official compiler on-the-fly
 
-For the corresponding VSCode extension, see https://marketplace.visualstudio.com/items?itemName=damirka.move-ide
+For the corresponding VSCode extension, see https://marketplace.visualstudio.com/items?itemName=PontemNetwork.move-language
 
 #### Configuration
 
