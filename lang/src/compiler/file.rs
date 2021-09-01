@@ -1,10 +1,5 @@
-use std::borrow::Cow;
-use std::convert::TryFrom;
-use std::fs::File;
-use std::io::Read;
 use std::path::{Path, PathBuf};
-
-use anyhow::{Error, Result};
+use anyhow::Result;
 use walkdir::{DirEntry, IntoIter};
 
 pub struct Files<'a, P: AsRef<Path>> {
@@ -50,16 +45,6 @@ impl<'a, P: AsRef<Path>> Iterator for Files<'a, P> {
     }
 }
 
-pub fn find_move_files<P>(paths: &[P]) -> Files<P>
-where
-    P: AsRef<Path>,
-{
-    Files {
-        paths,
-        walker_iter: None,
-    }
-}
-
 fn is_move_file(entry: &DirEntry) -> bool {
     entry.file_type().is_file()
         && !entry
@@ -74,96 +59,17 @@ fn is_move_file(entry: &DirEntry) -> bool {
             .unwrap_or(false)
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct MoveFile<'n, 'c> {
-    name: Cow<'n, str>,
-    content: Cow<'c, str>,
-}
-
-impl<'n, 'c> MoveFile<'n, 'c> {
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<MoveFile<'static, 'static>> {
-        let path = path.as_ref();
-        let mut f = File::open(&path)
-            .map_err(|err| std::io::Error::new(err.kind(), format!("{}: {:?}", err, path)))?;
-        let mut content = String::new();
-        f.read_to_string(&mut content)?;
-
-        let name = path
-            .to_str()
-            .map(|path| path.to_owned())
-            .ok_or_else(|| anyhow!("Failed to convert source path"))?;
-
-        Ok(MoveFile {
-            name: Cow::Owned(name),
-            content: Cow::Owned(content),
-        })
-    }
-
-    pub fn with_content<N, C>(name: N, content: C) -> MoveFile<'n, 'c>
-    where
-        N: Into<Cow<'n, str>>,
-        C: Into<Cow<'c, str>>,
-    {
-        MoveFile {
-            name: name.into(),
-            content: content.into(),
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn content(&self) -> &str {
-        &self.content
-    }
-
-    pub fn into(self) -> (String, String) {
-        (self.name.into_owned(), self.content.into_owned())
-    }
-}
-
-impl TryFrom<&PathBuf> for MoveFile<'static, 'static> {
-    type Error = Error;
-
-    fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
-        MoveFile::load(value)
-    }
-}
-// TODO refactoring. Make iterator like api to work with move files.
-
-pub fn load_move_files_with_filter<P, F>(
-    paths: &[P],
-    filter: &F,
-) -> Result<Vec<MoveFile<'static, 'static>>>
+pub fn find_move_files<P>(paths: &[P]) -> Files<P>
 where
-    F: Fn(&Path) -> bool,
     P: AsRef<Path>,
 {
-    let mut module_files = vec![];
-    for path in paths {
-        let path = path.as_ref();
-        anyhow::ensure!(
-            path.exists(),
-            "Cannot open {:?}: No such file or directory",
-            path
-        );
-        if path.is_file() {
-            module_files.push(MoveFile::load(path)?);
-        } else {
-            for path in find_move_files_with_filter(path, filter)? {
-                module_files.push(MoveFile::load(path)?);
-            }
-        }
+    Files {
+        paths,
+        walker_iter: None,
     }
-    Ok(module_files)
 }
 
-pub fn load_move_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<MoveFile<'static, 'static>>> {
-    load_move_files_with_filter(paths, &|_| true)
-}
-
-pub fn find_move_files_with_filter<P, F>(path: P, filter: &F) -> Result<Vec<String>>
+pub fn find_move_files_with_filter<P, F>(path: P, filter: &F) -> Result<Vec<PathBuf>>
 where
     P: AsRef<Path>,
     F: Fn(&Path) -> bool,
@@ -175,11 +81,7 @@ where
                 if is_move_file(&entry) {
                     let path = entry.into_path();
                     if filter(&path) {
-                        Some(
-                            path.into_os_string()
-                                .into_string()
-                                .map_err(|path| anyhow!("Failed to convert path:{:?}", path)),
-                        )
+                        Some(Ok(path))
                     } else {
                         None
                     }

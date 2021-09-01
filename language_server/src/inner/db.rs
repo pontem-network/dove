@@ -5,8 +5,9 @@ use move_ir_types::location::Loc;
 use std::fmt;
 use crate::inner::config::Config;
 use crate::inner::change::{AnalysisChange, RootChange};
-use std::collections::HashMap;
+use std::collections::HashSet;
 use lang::compiler::location::File;
+use std::fs::read_to_string;
 
 pub struct FileDiagnostic {
     pub fpath: String,
@@ -61,7 +62,7 @@ pub struct FilePosition {
 #[derive(Debug, Default, Clone)]
 pub struct RootDatabase {
     pub config: Config,
-    pub available_files: HashMap<String, String>,
+    pub available_files: HashSet<String>,
 }
 
 impl RootDatabase {
@@ -72,11 +73,11 @@ impl RootDatabase {
         }
     }
 
-    pub fn module_files(&self) -> HashMap<String, String> {
+    pub fn module_files(&self) -> HashSet<String> {
         self.available_files
             .clone()
             .into_iter()
-            .filter(|(f, _)| self.is_fpath_for_a_module(f))
+            .filter(|f| self.is_fpath_for_a_module(f))
             .collect()
     }
 
@@ -86,14 +87,14 @@ impl RootDatabase {
         }
         for root_change in change.tracked_files_changed {
             match root_change {
-                RootChange::AddFile { path, text } => {
-                    self.available_files.insert(path, text);
+                RootChange::AddFile { path } => {
+                    self.available_files.insert(path);
                 }
-                RootChange::ChangeFile { path, text } => {
-                    self.available_files.insert(path, text);
+                RootChange::ChangeFile { path } => {
+                    self.available_files.insert(path);
                 }
                 RootChange::RemoveFile { path } => {
-                    if !self.available_files.contains_key(&path) {
+                    if !self.available_files.contains(&path) {
                         log::warn!("RemoveFile: file {:?} does not exist", path);
                     }
                     self.available_files.remove(&path);
@@ -104,16 +105,18 @@ impl RootDatabase {
 
     fn loc_to_range(&self, loc: &Loc) -> Result<Range> {
         let file = loc.file();
+
         let text = match self.available_files.get(file) {
-            Some(text) => text.clone(),
+            Some(text) => read_to_string(text)?,
             None => {
                 anyhow::bail!(
                     "File {:?} is not present in the available files {:#?}",
                     file,
-                    &self.available_files.keys()
+                    &self.available_files
                 );
             }
         };
+
         let file = File::new(text);
         let start_pos = file.position(loc.span().start())?;
         let end_pos = file.position(loc.span().end())?;

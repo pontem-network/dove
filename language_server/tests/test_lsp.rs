@@ -11,7 +11,6 @@ use move_language_server::main_loop::{main_loop, notification_new, request_new, 
 use move_language_server::server::run_server;
 use move_language_server::inner::config::Config;
 use lang::compiler::dialects::DialectName;
-use lang::compiler::file::MoveFile;
 use resources::assets_dir;
 
 const SHUTDOWN_REQ_ID: i32 = 10;
@@ -174,15 +173,8 @@ fn test_removed_file_not_present_in_the_diagnostics() {
     let script_path = assets_dir().join("script.move");
     let (client_conn, server_conn) = Connection::memory();
 
-    let script_text = r"script {
-        use 0x0::Unknown;
-        fun main() {}
-    }";
-    let script_file =
-        MoveFile::with_content(script_path.to_string_lossy().to_string(), script_text);
-
     let mut global_state = global_state(Config::default());
-    global_state.update_from_events(vec![FileSystemEvent::AddFile(script_file)]);
+    global_state.update_from_events(vec![FileSystemEvent::AddFile(script_path.clone())]);
 
     let delete_event = FileEvent::new(
         Url::from_file_path(script_path).unwrap(),
