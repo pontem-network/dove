@@ -42,3 +42,5 @@ pub mod stdout;
 pub mod tests_helper;
 /// Transactions.
 pub mod tx;
+/// Dove home.
+pub mod home;

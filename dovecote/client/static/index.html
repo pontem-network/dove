@@ -1,0 +1,19 @@
+<html>
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+</head>
+<body>
+<script type="module">
+    import init, { project_list } from './pkg/client.js';
+
+    async function run() {
+        await init();
+
+       let res = await project_list();
+       console.log(res);
+    }
+
+    run();
+</script>
+</body>
+</html>

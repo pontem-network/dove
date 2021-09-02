@@ -18,39 +18,40 @@ use regex::Regex;
 
 use crate::{stdoutln, PONT_STDLIB_URL, PONT_STDLIB_VERSION};
 use crate::stdout::colorize::good;
+use crate::home::Home;
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Init {
     #[structopt(
-        help = "Basic uri to blockchain api.",
-        name = "Blockchain API",
-        long = "repo",
-        short = "r"
+    help = "Basic uri to blockchain api.",
+    name = "Blockchain API",
+    long = "repo",
+    short = "r"
     )]
     repository: Option<Uri>,
     #[structopt(
-        help = "Account address.",
-        name = "address",
-        long = "address",
-        short = "a"
+    help = "Account address.",
+    name = "address",
+    long = "address",
+    short = "a"
     )]
     address: Option<String>,
     #[structopt(
-        help = "Compiler dialect",
-        default_value = "pont",
-        name = "Dialect",
-        long = "dialect",
-        short = "d"
+    help = "Compiler dialect",
+    default_value = "pont",
+    name = "Dialect",
+    long = "dialect",
+    short = "d"
     )]
     dialect: String,
 
     #[structopt(
-        help = "Creates only Dove.toml.",
-        name = "minimal",
-        long = "minimal",
-        short = "m"
+    help = "Creates only Dove.toml.",
+    name = "minimal",
+    long = "minimal",
+    short = "m"
     )]
     minimal: bool,
     #[structopt(long, hidden = true)]
@@ -150,6 +151,15 @@ dependencies = [
                 )
             )?;
         }
+
+        let res = Home::get()
+            .and_then(|home| {
+                home.reg_package(&ctx.project_dir)
+            });
+        if let Err(err) = res {
+            stdoutln!("failed to registr project. {}", err);
+        }
+
         stdoutln!(
             "Project {} initialized in {}",
             good("successfully"),

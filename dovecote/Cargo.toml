@@ -1,0 +1,19 @@
+[package]
+name = "dovecote"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+actix = "0.10"
+actix-codec = "0.3"
+actix-web = "3"
+actix-web-actors = "3"
+actix-files = "0.3"
+awc = "2"
+env_logger = "0.8"
+futures = "0.3.1"
+bytes = "0.5.3"
+anyhow = "1.0.43"
+proto = { path = "proto" }
+once_cell = "1.8.0"
+dove = { path = "../dove" }

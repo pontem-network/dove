@@ -9,6 +9,9 @@ members = [
     "resource-viewer",
     "resources",
     "common/git-hash",
+    "dovecote",
+    "dovecote/client",
+    "dovecote/proto",
 ]
 
 [profile.release]
