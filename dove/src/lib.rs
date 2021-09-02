@@ -32,6 +32,8 @@ pub mod context;
 pub mod docs;
 /// Move executor.
 pub mod executor;
+/// Dove home.
+pub mod home;
 /// Dove modules index.
 pub mod index;
 /// Dove configuration.
@@ -42,5 +44,3 @@ pub mod stdout;
 pub mod tests_helper;
 /// Transactions.
 pub mod tx;
-/// Dove home.
-pub mod home;

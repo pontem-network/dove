@@ -21,9 +21,7 @@ impl Home {
         if !dove_home.exists() {
             fs::create_dir_all(&dove_home)?;
         }
-        Ok(Home {
-            path: dove_home
-        })
+        Ok(Home { path: dove_home })
     }
 
     /// Reg dove project.
@@ -36,10 +34,7 @@ impl Home {
         let rf = bcs::to_bytes(&Ref {
             path: path.to_string_lossy().to_string(),
         })?;
-        fs::write(
-            projects_dir.join(format!("{}", id)),
-            rf,
-        )?;
+        fs::write(projects_dir.join(format!("{}", id)), rf)?;
         Ok(())
     }
 
@@ -50,7 +45,8 @@ impl Home {
             fs::create_dir_all(&projects_dir)?;
         }
 
-        Ok(fs::read_dir(projects_dir)?.into_iter()
+        Ok(fs::read_dir(projects_dir)?
+            .into_iter()
             .filter_map(|path| path.map(|entry| entry.path()).ok())
             .filter_map(|path| {
                 if path.is_file() {
@@ -58,7 +54,8 @@ impl Home {
                 } else {
                     load_project(path).ok()
                 }
-            }).collect())
+            })
+            .collect())
     }
 }
 
@@ -100,17 +97,19 @@ fn load_project<P: AsRef<Path>>(path: P) -> Result<Project, Error> {
 
     let manifest = project_path.join(MANIFEST);
     let manifest = if !manifest.exists() {
-        bail!(
-            "could not find `{}` in `{:?}`.",
-            MANIFEST,
-            project_path
-        )
+        bail!("could not find `{}` in `{:?}`.", MANIFEST, project_path)
     } else {
         read_manifest(&manifest)?
     };
 
-    let name = manifest.package.name
-        .or_else(|| project_path.file_name().map(|n| n.to_string_lossy().to_string()))
+    let name = manifest
+        .package
+        .name
+        .or_else(|| {
+            project_path
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+        })
         .unwrap_or_else(|| "untitled".to_string());
 
     Ok(Project {

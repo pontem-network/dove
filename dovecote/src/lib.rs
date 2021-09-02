@@ -12,8 +12,7 @@ pub struct State {
 impl State {
     pub fn new() -> Result<State, Error> {
         Ok(State {
-            rpc: Arc::new(Rpc::new()?)
+            rpc: Arc::new(Rpc::new()?),
         })
     }
 }
-

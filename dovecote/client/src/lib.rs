@@ -28,7 +28,12 @@ pub fn main() -> Result<(), JsValue> {
     let window = web_sys::window().expect("no global `window` exists");
     let document = window.document().expect("should have a document on window");
     let body = document.body().expect("document should have a body");
-    set_base_url(&window.location().origin().expect("no location origin exists"));
+    set_base_url(
+        &window
+            .location()
+            .origin()
+            .expect("no location origin exists"),
+    );
 
     let val = document.create_element("p")?;
     val.set_inner_html("Hello from Rust!");
@@ -39,8 +44,12 @@ pub fn main() -> Result<(), JsValue> {
 
 #[wasm_bindgen]
 pub async fn project_list() -> Result<JsValue, JsValue> {
-    JsValue::from_serde(&proto::project_list(api_url(), Empty).await.map_err(js_err)?)
-        .map_err(js_err)
+    JsValue::from_serde(
+        &proto::project_list(api_url(), Empty)
+            .await
+            .map_err(js_err)?,
+    )
+    .map_err(js_err)
 }
 
 // #[test]

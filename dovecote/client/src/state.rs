@@ -9,7 +9,7 @@ struct State {
 
 pub fn set_base_url(url: &str) {
     INSTANCE.get_or_init(|| State {
-        api_url: format!("{}/api/rpc", url)
+        api_url: format!("{}/api/rpc", url),
     });
 }
 

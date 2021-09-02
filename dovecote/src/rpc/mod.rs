@@ -14,19 +14,23 @@ pub struct Rpc {
 impl Rpc {
     pub fn new() -> Result<Rpc, Error> {
         Ok(Rpc {
-            dove_home: Home::get()?
+            dove_home: Home::get()?,
         })
     }
 }
 
 impl OnRequest for Rpc {
     fn project_list(&self, _: Empty) -> Result<ProjectList, anyhow::Error> {
-        let projects = self.dove_home.load_project_list()?.into_iter()
+        let projects = self
+            .dove_home
+            .load_project_list()?
+            .into_iter()
             .map(|p| ProjectShortInfo {
                 id: p.id,
                 name: p.name,
                 path: p.path,
-            }).collect();
+            })
+            .collect();
 
         Ok(ProjectList { projects })
     }
