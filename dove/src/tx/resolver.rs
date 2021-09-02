@@ -5,7 +5,7 @@ use anyhow::Error;
 use lang::compiler::file::find_move_files;
 use std::fs;
 use regex::Regex;
-use lang::compiler::metadata::{module_meta, FuncMeta, script_meta};
+use lang::compiler::metadata::{module_meta, script_meta, FuncMeta};
 use std::path::PathBuf;
 
 pub(crate) fn find_module_function(
@@ -41,12 +41,12 @@ pub(crate) fn find_module_function(
         })
         .flat_map(|(p, m)| {
             m.into_iter()
-                .filter(|m| m.address == *address && &m.name == m_name)
-                .flat_map(|m| m.funs)
-                .filter(|f| &f.name == f_name)
+                .filter(|m| m.value.address == *address && &m.value.name == m_name)
+                .flat_map(|m| m.value.funs)
+                .filter(|f| &f.value.name == f_name)
                 .filter(|f| {
                     if script_only {
-                        f.visibility.is_script()
+                        f.value.visibility.is_script()
                     } else {
                         false
                     }
@@ -80,7 +80,7 @@ pub(crate) fn find_script(
         })
         .flat_map(|(p, m)| {
             m.into_iter()
-                .filter(|m| &m.name == name)
+                .filter(|m| &m.value.name == name)
                 .map(|m| (p.to_owned(), m))
                 .collect::<Vec<_>>()
         })

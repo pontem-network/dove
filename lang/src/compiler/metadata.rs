@@ -2,24 +2,75 @@ use std::collections::HashMap;
 
 use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
-use move_lang::{leak_str, parse_file};
+use move_lang::{leak_str, parse_file, MatchedFileCommentMap};
 use move_lang::errors::{FilesSourceText, output_errors};
 use move_lang::parser::ast::{
     Definition, Script, Type, Type_, NameAccessChain_, LeadingNameAccess_, ModuleDefinition,
-    ModuleMember, Visibility as AstVisibility,
+    ModuleMember, Visibility as AstVisibility, StructFields,
 };
 
 use crate::compiler::dialects::Dialect;
 use crate::compiler::preprocessor::BuilderPreprocessor;
 use codespan_reporting::term::termcolor::{StandardStream, ColorChoice};
 use move_core_types::identifier::Identifier;
+use move_ir_types::location::Spanned;
+use move_lang::shared::Identifier as Iden;
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct FuncMeta {
+pub enum Unit {
+    Module(ModuleMeta),
+    Script(FuncMeta),
+}
+
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub struct FuncMeta_ {
     pub name: Identifier,
     pub visibility: Visibility,
     pub type_parameters: Vec<String>,
     pub parameters: Vec<(String, String)>,
+    pub doc: Option<String>,
+}
+
+pub type FuncMeta = Spanned<FuncMeta_>;
+
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub struct StructMeta_ {
+    /// struct Name { ... }
+    pub name: Identifier,
+    /// struct Name has ability1, ability2 { ... }
+    pub abilities: Vec<String>,
+    /// struct Name<Type1: copy + drop, Type2> { ... }
+    pub type_parameters: Vec<(String, Vec<String>)>,
+    /// struct Example {
+    ///     /// doc for field
+    ///     field1: type,
+    ///     field2: u8,
+    ///     field3: u64,
+    ///     ...
+    /// }
+    pub fields: Vec<StructMetaField>,
+    /// /// Doc text
+    /// struct Example {
+    ///     ...
+    /// }
+    pub doc: Option<String>,
+}
+
+pub type StructMeta = Spanned<StructMeta_>;
+
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub struct StructMetaField_ {
+    pub name: Identifier,
+    pub type_field: String,
+    pub doc: Option<String>,
+}
+
+pub type StructMetaField = Spanned<StructMetaField_>;
+
+fn processing_docs(docs: &mut MatchedFileCommentMap) {
+    docs.iter_mut()
+        .for_each(|(_, doc)| *doc = doc.trim().to_string());
+    docs.retain(|_, doc| !doc.is_empty());
 }
 
 pub fn script_meta(
@@ -27,11 +78,14 @@ pub fn script_meta(
     dialect: &dyn Dialect,
     sender: &str,
 ) -> Result<Vec<FuncMeta>, Error> {
-    Ok(parse(script_path, dialect, sender)?
+    let (def, mut docs) = parse(script_path, dialect, sender)?;
+    processing_docs(&mut docs);
+
+    Ok(def
         .into_iter()
         .filter_map(|def| {
             if let Definition::Script(script) = def {
-                make_script_meta(script).ok()
+                make_script_meta(script, &docs).ok()
             } else {
                 None
             }
@@ -54,11 +108,15 @@ impl Visibility {
 }
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct ModuleMeta {
+pub struct ModuleMeta_ {
     pub address: AccountAddress,
     pub name: Identifier,
     pub funs: Vec<FuncMeta>,
+    pub structs: Vec<StructMeta>,
+    pub doc: Option<String>,
 }
+
+pub type ModuleMeta = Spanned<ModuleMeta_>;
 
 pub fn module_meta(
     module_path: &str,
@@ -66,11 +124,13 @@ pub fn module_meta(
     sender: &str,
 ) -> Result<Vec<ModuleMeta>, Error> {
     let mut modules = Vec::new();
+    let (defs, mut docs) = parse(module_path, dialect, sender)?;
+    processing_docs(&mut docs);
 
-    for def in parse(module_path, dialect, sender)? {
+    for def in defs {
         match def {
             Definition::Module(module) => {
-                modules.push(parse_module_definition(module, None)?);
+                modules.push(parse_module_definition(module, &docs, None)?);
             }
             Definition::Address(def) => {
                 let addr = match def.addr.value {
@@ -82,7 +142,7 @@ pub fn module_meta(
                         .map(|addr| AccountAddress::new(addr.value.into_bytes())),
                 };
                 for def in def.modules {
-                    modules.push(parse_module_definition(def, addr)?);
+                    modules.push(parse_module_definition(def, &docs, addr)?);
                 }
             }
             Definition::Script(_) => {
@@ -90,19 +150,19 @@ pub fn module_meta(
             }
         }
     }
+
     Ok(modules)
 }
 
-fn parse(
-    script_path: &str,
-    dialect: &dyn Dialect,
-    sender: &str,
-) -> Result<Vec<Definition>, Error> {
+type ParseFile = (Vec<Definition>, MatchedFileCommentMap);
+
+fn parse(script_path: &str, dialect: &dyn Dialect, sender: &str) -> Result<ParseFile, Error> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
     let mut files: FilesSourceText = HashMap::new();
-    let (defs, _, errors) = parse_file(&mut files, leak_str(script_path), &mut preprocessor)?;
+    let (defs, doc, errors) = parse_file(&mut files, leak_str(script_path), &mut preprocessor)?;
+
     if errors.is_empty() {
-        Ok(defs)
+        Ok((defs, doc))
     } else {
         let errors = preprocessor.transform(errors);
         let mut writer = StandardStream::stderr(ColorChoice::Auto);
@@ -111,8 +171,9 @@ fn parse(
     }
 }
 
-fn make_script_meta(script: Script) -> Result<FuncMeta, Error> {
+fn make_script_meta(script: Script, docs: &MatchedFileCommentMap) -> Result<FuncMeta, Error> {
     let func = script.function;
+
     let type_parameters = func
         .signature
         .type_parameters
@@ -125,12 +186,16 @@ fn make_script_meta(script: Script) -> Result<FuncMeta, Error> {
         .into_iter()
         .map(|(var, tp)| (var.0.value, extract_type_name(tp)))
         .collect();
-    Ok(FuncMeta {
-        name: Identifier::new(func.name.0.value)?,
-        visibility: Visibility::Script,
-        type_parameters,
-        parameters,
-    })
+    Ok(Spanned::new(
+        func.loc,
+        FuncMeta_ {
+            name: Identifier::new(func.name.0.value)?,
+            visibility: Visibility::Script,
+            type_parameters,
+            parameters,
+            doc: docs.get(&func.loc.span.start()).cloned(),
+        },
+    ))
 }
 
 fn extract_type_name(tp: Type) -> String {
@@ -193,6 +258,7 @@ fn extract_type_name(tp: Type) -> String {
 
 fn parse_module_definition(
     module: ModuleDefinition,
+    docs: &MatchedFileCommentMap,
     adds: Option<AccountAddress>,
 ) -> Result<ModuleMeta, Error> {
     let ModuleDefinition {
@@ -211,20 +277,20 @@ fn parse_module_definition(
         .ok_or_else(|| anyhow!("Failed to parse module definition. The module {} does not contain an address definition.", name.0.value))?;
 
     let funs = members
-        .into_iter()
+        .iter()
         .filter_map(|member| match member {
             ModuleMember::Function(func) => {
                 let type_parameters = func
                     .signature
                     .type_parameters
-                    .into_iter()
-                    .map(|tp| tp.0.value)
+                    .iter()
+                    .map(|tp| tp.0.value.to_owned())
                     .collect();
                 let parameters = func
                     .signature
                     .parameters
-                    .into_iter()
-                    .map(|(var, tp)| (var.0.value, extract_type_name(tp)))
+                    .iter()
+                    .map(|(var, tp)| (var.0.value.to_owned(), extract_type_name(tp.to_owned())))
                     .collect();
 
                 let visibility = match func.visibility {
@@ -234,63 +300,174 @@ fn parse_module_definition(
                     AstVisibility::Internal => Visibility::Internal,
                 };
 
-                Some(FuncMeta {
-                    name: Identifier::new(func.name.0.value).expect("Valid identifier"),
-                    visibility,
-                    type_parameters,
-                    parameters,
-                })
+                Some(Spanned::new(
+                    func.loc,
+                    FuncMeta_ {
+                        name: Identifier::new(func.name.0.value.to_owned())
+                            .expect("Valid identifier"),
+                        visibility,
+                        type_parameters,
+                        parameters,
+                        doc: docs.get(&func.loc.span.start()).cloned(),
+                    },
+                ))
             }
             _ => None,
         })
         .collect();
 
-    Ok(ModuleMeta {
-        address,
-        name: Identifier::new(name.0.value)?,
-        funs,
-    })
+    let structs = members
+        .into_iter()
+        .filter_map(|member| match member {
+            ModuleMember::Struct(struc) => {
+                let abilities = struc
+                    .abilities
+                    .iter()
+                    .map(|ab| ab.value.to_string())
+                    .collect();
+                let fields = match struc.fields {
+                    StructFields::Defined(fields) => fields
+                        .iter()
+                        .map(|(name, tp)| {
+                            Spanned::new(
+                                name.loc(),
+                                StructMetaField_ {
+                                    name: Identifier::new(name.to_string())
+                                        .expect("Valid identifier"),
+                                    type_field: extract_type_name(tp.clone()),
+                                    doc: docs.get(&name.loc().span.start()).cloned(),
+                                },
+                            )
+                        })
+                        .collect(),
+                    _ => Vec::new(),
+                };
+                let type_parameters = struc
+                    .type_parameters
+                    .iter()
+                    .map(|(name, ab)| {
+                        let ab = ab.iter().map(|ab| ab.to_string()).collect();
+                        (name.to_string(), ab)
+                    })
+                    .collect();
+                Some(Spanned::new(
+                    struc.loc,
+                    StructMeta_ {
+                        name: Identifier::new(struc.name.0.value).expect("Valid identifier"),
+                        abilities,
+                        type_parameters,
+                        fields,
+                        doc: docs.get(&struc.loc.span.start()).cloned(),
+                    },
+                ))
+            }
+            _ => None,
+        })
+        .collect();
+
+    Ok(Spanned::new(
+        module.loc,
+        ModuleMeta_ {
+            address,
+            name: Identifier::new(name.0.value)?,
+            funs,
+            structs,
+            doc: docs.get(&module.loc.span.start()).cloned(),
+        },
+    ))
 }
 
 #[cfg(test)]
 mod metadata_tests {
-    use crate::compiler::metadata::{module_meta, ModuleMeta, FuncMeta, Visibility, script_meta};
+    use crate::compiler::metadata::{
+        module_meta, ModuleMeta_, FuncMeta_, Visibility, script_meta, StructMeta_,
+        StructMetaField_, StructMetaField,
+    };
     use crate::compiler::dialects::DialectName;
     use tempfile::NamedTempFile;
     use std::io::Write;
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_core_types::identifier::Identifier;
     use move_core_types::account_address::AccountAddress;
+    use move_ir_types::location::{Spanned, Loc};
+    use codespan::Span;
+
+    fn spanned_wrap<T>(value: T) -> Spanned<T> {
+        Spanned::new(Loc::new("none", Span::new(0, 0)), value)
+    }
+    fn create_field(name: &str, tp: &str, doc: Option<&str>) -> StructMetaField {
+        spanned_wrap(StructMetaField_ {
+            name: Identifier::new(name).unwrap(),
+            type_field: tp.to_string(),
+            doc: doc.map(|d| d.to_string()),
+        })
+    }
+
+    trait ToSpannded {
+        fn to_spanned(self) -> Spanned<Self>
+        where
+            Self: Sized,
+        {
+            spanned_wrap(self)
+        }
+    }
+
+    impl ToSpannded for FuncMeta_ {}
+    impl ToSpannded for ModuleMeta_ {}
+    impl ToSpannded for StructMeta_ {}
 
     #[test]
     fn test_module_meta() {
         let source = r"
-address 0x1 {
-module Empty {}
+            address 0x1 {
+                module Empty {}
 
-module FuncsVisability {
-    fun f1() {}
+                /// doc for module
+                module StructsModule{
+                    struct Empty {}
+                    /// doc for stucture
+                    struct Example {
+                        /// doc for field
+                        field1: u8,
+                        field2: u64,
+                        field3: address,
+                        field4: bool,
+                        field5: Empty
+                    }
+                    struct Example2<T: copy + drop> has copy, drop {
+                        field1: bool,
+                        field2: T
+                    }
+                }
+                module FuncsVisability {
 
-    public fun f2() {}
+                    struct MyStruct {
+                        field1: bool,
+                    }
+                    /// doc for function
+                    fun f1() {}
+                    /*
+                    not doc type comment
+                    */
+                    public fun f2() {}
+                    // not doc type comment
+                    public(script) fun f3() {}
 
-    public(script) fun f3() {}
+                    public(friend) fun f4() {}
+                    native fun f5();
+                    native public fun f6();
+                }
+            }
 
-    public(friend) fun f4() {}
-    native fun f5();
-    native public fun f6();
-}
-}
+            module 0x2::FuncsTp {
+                public(script) fun f1<T, D>() {}
+                public(script) fun f2() {}
+            }
 
-module 0x2::FuncsTp {
-    public(script) fun f1<T, D>() {}
-    public(script) fun f2() {}
-}
-
-module 0x3::FuncsArgs {
-    public(script) fun f1() {}
-    public(script) fun f2(_d: signer, d: u8) {}
-}
-        ";
+            module 0x3::FuncsArgs {
+                public(script) fun f1() {}
+                public(script) fun f2(_d: signer, d: u8) {}
+            }";
         let mut module = NamedTempFile::new().unwrap();
         module.write_all(source.as_bytes()).unwrap();
 
@@ -306,82 +483,161 @@ module 0x3::FuncsArgs {
         assert_eq!(
             defs,
             vec![
-                ModuleMeta {
+                ModuleMeta_ {
                     address: CORE_CODE_ADDRESS,
                     name: Identifier::new("Empty").unwrap(),
                     funs: vec![],
-                },
-                ModuleMeta {
+                    structs: vec![],
+                    doc: None
+                }
+                .to_spanned(),
+                ModuleMeta_ {
+                    address: CORE_CODE_ADDRESS,
+                    name: Identifier::new("StructsModule").unwrap(),
+                    funs: vec![],
+                    structs: vec![
+                        StructMeta_ {
+                            name: Identifier::new("Empty").unwrap(),
+                            abilities: vec![],
+                            type_parameters: vec![],
+                            fields: vec![],
+                            doc: None
+                        }
+                        .to_spanned(),
+                        StructMeta_ {
+                            name: Identifier::new("Example").unwrap(),
+                            abilities: vec![],
+                            type_parameters: vec![],
+                            fields: vec![
+                                create_field("field1", "u8", Some("doc for field")),
+                                create_field("field2", "u64", None),
+                                create_field("field3", "address", None),
+                                create_field("field4", "bool", None),
+                                create_field("field5", "Empty", None)
+                            ],
+                            doc: Some("doc for stucture".to_string())
+                        }
+                        .to_spanned(),
+                        StructMeta_ {
+                            name: Identifier::new("Example2").unwrap(),
+                            abilities: vec!["copy".to_string(), "drop".to_string()],
+                            type_parameters: vec![(
+                                "T".to_string(),
+                                vec!["copy".to_string(), "drop".to_string()]
+                            )],
+                            fields: vec![
+                                create_field("field1", "bool", None),
+                                create_field("field2", "T", None),
+                            ],
+                            doc: None
+                        }
+                        .to_spanned()
+                    ],
+                    doc: Some("doc for module".to_string())
+                }
+                .to_spanned(),
+                ModuleMeta_ {
                     address: CORE_CODE_ADDRESS,
                     name: Identifier::new("FuncsVisability").unwrap(),
                     funs: vec![
-                        FuncMeta {
+                        FuncMeta_ {
                             name: Identifier::new("f1").unwrap(),
                             visibility: Visibility::Internal,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
-                        FuncMeta {
+                            doc: Some("doc for function".to_string())
+                        }
+                        .to_spanned(),
+                        FuncMeta_ {
                             name: Identifier::new("f2").unwrap(),
                             visibility: Visibility::Public,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
-                        FuncMeta {
+                            doc: None
+                        }
+                        .to_spanned(),
+                        FuncMeta_ {
                             name: Identifier::new("f3").unwrap(),
                             visibility: Visibility::Script,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
-                        FuncMeta {
+                            doc: None
+                        }
+                        .to_spanned(),
+                        FuncMeta_ {
                             name: Identifier::new("f4").unwrap(),
                             visibility: Visibility::Friend,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
-                        FuncMeta {
+                            doc: None
+                        }
+                        .to_spanned(),
+                        FuncMeta_ {
                             name: Identifier::new("f5").unwrap(),
                             visibility: Visibility::Internal,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
-                        FuncMeta {
+                            doc: None
+                        }
+                        .to_spanned(),
+                        FuncMeta_ {
                             name: Identifier::new("f6").unwrap(),
                             visibility: Visibility::Public,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
+                            doc: None
+                        }
+                        .to_spanned(),
                     ],
-                },
-                ModuleMeta {
+                    structs: vec![StructMeta_ {
+                        name: Identifier::new("MyStruct").unwrap(),
+                        abilities: vec![],
+                        type_parameters: vec![],
+                        fields: vec![create_field("field1", "bool", None)],
+                        doc: None
+                    }
+                    .to_spanned()],
+                    doc: None
+                }
+                .to_spanned(),
+                ModuleMeta_ {
                     address: AccountAddress::from_hex_literal("0x2").unwrap(),
                     name: Identifier::new("FuncsTp").unwrap(),
                     funs: vec![
-                        FuncMeta {
+                        FuncMeta_ {
                             name: Identifier::new("f1").unwrap(),
                             visibility: Visibility::Script,
                             type_parameters: vec!["T".to_string(), "D".to_string()],
                             parameters: vec![],
-                        },
-                        FuncMeta {
+                            doc: None
+                        }
+                        .to_spanned(),
+                        FuncMeta_ {
                             name: Identifier::new("f2").unwrap(),
                             visibility: Visibility::Script,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
+                            doc: None
+                        }
+                        .to_spanned(),
                     ],
-                },
-                ModuleMeta {
+                    structs: vec![],
+                    doc: None
+                }
+                .to_spanned(),
+                ModuleMeta_ {
                     address: AccountAddress::from_hex_literal("0x3").unwrap(),
                     name: Identifier::new("FuncsArgs").unwrap(),
                     funs: vec![
-                        FuncMeta {
+                        FuncMeta_ {
                             name: Identifier::new("f1").unwrap(),
                             visibility: Visibility::Script,
                             type_parameters: vec![],
                             parameters: vec![],
-                        },
-                        FuncMeta {
+                            doc: None
+                        }
+                        .to_spanned(),
+                        FuncMeta_ {
                             name: Identifier::new("f2").unwrap(),
                             visibility: Visibility::Script,
                             type_parameters: vec![],
@@ -389,9 +645,14 @@ module 0x3::FuncsArgs {
                                 ("_d".to_string(), "signer".to_string(),),
                                 ("d".to_string(), "u8".to_string(),),
                             ],
-                        },
+                            doc: None
+                        }
+                        .to_spanned(),
                     ],
-                },
+                    structs: vec![],
+                    doc: None
+                }
+                .to_spanned(),
             ]
         );
     }
@@ -400,14 +661,19 @@ module 0x3::FuncsArgs {
     fn test_script_meta() {
         let source = r"
             script {
+                /// doc for function
                 fun main() {
                 }
             }
             script {
+                // not doc type comment
                 fun main_1(_d: signer) {
                 }
             }
             script {
+                /*
+                not doc type comment
+                */
                 fun main_2<T>(_d: signer) {
                 }
             }
@@ -427,24 +693,30 @@ module 0x3::FuncsArgs {
         assert_eq!(
             defs,
             vec![
-                FuncMeta {
+                FuncMeta_ {
                     name: Identifier::new("main").unwrap(),
                     visibility: Visibility::Script,
                     type_parameters: vec![],
                     parameters: vec![],
-                },
-                FuncMeta {
+                    doc: Some("doc for function".to_string())
+                }
+                .to_spanned(),
+                FuncMeta_ {
                     name: Identifier::new("main_1").unwrap(),
                     visibility: Visibility::Script,
                     type_parameters: vec![],
                     parameters: vec![("_d".to_string(), "signer".to_string(),)],
-                },
-                FuncMeta {
+                    doc: None
+                }
+                .to_spanned(),
+                FuncMeta_ {
                     name: Identifier::new("main_2").unwrap(),
                     visibility: Visibility::Script,
                     type_parameters: vec!["T".to_string()],
                     parameters: vec![("_d".to_string(), "signer".to_string(),)],
-                },
+                    doc: None
+                }
+                .to_spanned(),
             ]
         );
     }
