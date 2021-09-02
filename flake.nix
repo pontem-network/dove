@@ -25,7 +25,7 @@
       in {
 
         defaultPackage = naersk-lib.buildPackage (with pkgs; {
-
+          name = "move-tools";
           src = ./.;
 	        targets = [ "dove" ];
 	        buildInputs = [ pkg-config openssl ];
