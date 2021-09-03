@@ -1,0 +1,73 @@
+body {
+    background: #616161;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+    font-weight: normal;
+    font-size: 12px;
+    font-feature-settings: "liga" 0, "calt" 0;
+    line-height: 18px;
+    letter-spacing: 0px;
+}
+
+#container {
+    background: #f0f0f0;
+    height: 100%;
+    width: 100%;
+}
+
+#navigation {
+    display: block;
+    width: 15%;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    background-color: #616161;
+    position: absolute;
+}
+
+#code-space {
+    display: block;
+    width: 70%;
+    top: 0px;
+    left: 15%;
+    height: 100%;
+    background: #f0f0f0;
+    position: absolute;
+}
+
+#projects-container {
+    display: block;
+    width: 15%;
+    top: 0px;
+    left: 85%;
+    height: 100%;
+    background-color: #616161;
+    position: absolute;
+}
+
+h2.title {
+    color: rgb(181, 181, 181);
+    padding: 10px;
+    background: rgb(59, 63, 65);
+    margin: auto;
+    text-align: center;
+    cursor: pointer;
+}
+
+.project-title {
+    background: rgb(70, 74, 76);
+}
+
+.project-title:hover {
+    background: rgb(66, 70, 72);
+    box-shadow: 0 0 1px 1px rgba(40, 36, 36, 0.66);
+}
+
+
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

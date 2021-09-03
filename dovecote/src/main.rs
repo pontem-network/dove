@@ -1,9 +1,5 @@
-use std::time::{Duration, Instant};
-
-use actix::prelude::*;
 use actix_files as fs;
-use actix_web::{middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer};
-use actix_web_actors::ws;
+use actix_web::{middleware, web, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
 use dovecote::State;
 use proto::OnRequest;

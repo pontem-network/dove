@@ -2,7 +2,6 @@ mod project;
 
 use proto::{OnRequest, Empty};
 use proto::project::{ProjectList, ID, ProjectInfo, ProjectShortInfo};
-use std::path::PathBuf;
 use dove::home::Home;
 use anyhow::Error;
 

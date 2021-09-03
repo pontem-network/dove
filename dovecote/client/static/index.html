@@ -1,18 +1,33 @@
 <html>
 <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <link href="style/main.css" rel="stylesheet">
 </head>
 <body>
-<script type="module">
-    import init, { project_list } from './pkg/client.js';
+<div id="container">
+    <div id="navigation">
+        <div>
+            <h2 id="explorer-title" class="title noselect">Explorer</h2>
+        </div>
+        <div id="explorer"></div>
+    </div>
 
-    async function run() {
-        await init();
+    <div id="code-space">
+        <div></div>
+    </div>
 
-       let res = await project_list();
-       console.log(res);
-    }
+    <div id="projects-container">
+        <div>
+            <h2 id="projects-title" class="title noselect">Projects</h2>
+        </div>
+        <div id="projects">
+        </div>
+    </div>
+</div>
+<script async type="module">
+    import run, * as index from './js/index.js';
 
+    window.index = index;
     run();
 </script>
 </body>
