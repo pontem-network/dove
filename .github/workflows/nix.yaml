@@ -14,7 +14,7 @@ jobs:
 
       - uses: cachix/cachix-action@v10
         with:
-          name: mycache
+          name: pontem
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - uses: actions/checkout@v2.3.4
