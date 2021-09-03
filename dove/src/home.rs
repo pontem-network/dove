@@ -4,7 +4,8 @@ use std::fs;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use serde::{Serialize, Deserialize};
-use crate::manifest::{MANIFEST, read_manifest};
+use crate::manifest::{MANIFEST, read_manifest, DoveToml};
+use std::sync::Arc;
 
 const PROJECTS: &str = "projects";
 
@@ -30,7 +31,7 @@ impl Home {
         if !projects_dir.exists() {
             fs::create_dir_all(&projects_dir)?;
         }
-        let id = project_id(path);
+        let id = path_id(path);
         let rf = bcs::to_bytes(&Ref {
             path: path.to_string_lossy().to_string(),
         })?;
@@ -57,12 +58,38 @@ impl Home {
             })
             .collect())
     }
+
+    ///Returns project path by id.
+    pub fn get_project_path(&self, id: &str) -> Result<Option<PathBuf>, Error> {
+        let projects_dir = self.path.join(PROJECTS);
+        if !projects_dir.exists() {
+            fs::create_dir_all(&projects_dir)?;
+        }
+
+        let ref_path = projects_dir.join(id);
+        if !ref_path.exists() {
+            Ok(None)
+        } else if ref_path.is_dir() {
+            Ok(Some(ref_path))
+        } else {
+            let rf = read_ref(&ref_path)?;
+            let project_path = rf.as_ref();
+            if !project_path.exists() {
+                fs::remove_file(ref_path)?;
+                Ok(None)
+            } else {
+                Ok(Some(project_path.to_path_buf()))
+            }
+        }
+    }
 }
 
-fn project_id(path: &Path) -> u64 {
+/// Make path id.
+pub fn path_id(path: &Path) -> String {
     let mut s = DefaultHasher::new();
     path.hash(&mut s);
-    s.finish()
+    let id = s.finish();
+    hex::encode(&id.to_le_bytes())
 }
 
 #[derive(Serialize, Deserialize)]
@@ -70,20 +97,33 @@ struct Ref {
     path: String,
 }
 
+impl AsRef<Path> for Ref {
+    fn as_ref(&self) -> &Path {
+        self.path.as_ref()
+    }
+}
+
 /// Project short info.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Project {
     /// Project id.
-    pub id: u64,
+    pub id: Arc<String>,
+
+    /// Dove toml.
+    pub toml: DoveToml,
     /// Project name.
-    pub name: String,
+    pub name: Arc<String>,
     /// Project path.
     pub path: String,
 }
 
+fn read_ref<P: AsRef<Path>>(path: P) -> Result<Ref, Error> {
+    Ok(bcs::from_bytes::<Ref>(&fs::read(&path)?)?)
+}
+
 fn load_project_by_ref<P: AsRef<Path>>(path: P) -> Result<Project, Error> {
-    let rf = bcs::from_bytes::<Ref>(&fs::read(&path)?)?;
-    match load_project(rf.path) {
+    let rf = read_ref(&path)?;
+    match load_project(rf) {
         Ok(project) => Ok(project),
         Err(err) => {
             fs::remove_file(path)?;
@@ -92,7 +132,8 @@ fn load_project_by_ref<P: AsRef<Path>>(path: P) -> Result<Project, Error> {
     }
 }
 
-fn load_project<P: AsRef<Path>>(path: P) -> Result<Project, Error> {
+/// Load project.
+pub fn load_project<P: AsRef<Path>>(path: P) -> Result<Project, Error> {
     let project_path = path.as_ref();
 
     let manifest = project_path.join(MANIFEST);
@@ -105,6 +146,7 @@ fn load_project<P: AsRef<Path>>(path: P) -> Result<Project, Error> {
     let name = manifest
         .package
         .name
+        .clone()
         .or_else(|| {
             project_path
                 .file_name()
@@ -113,8 +155,9 @@ fn load_project<P: AsRef<Path>>(path: P) -> Result<Project, Error> {
         .unwrap_or_else(|| "untitled".to_string());
 
     Ok(Project {
-        id: project_id(project_path),
-        name,
+        id: Arc::new(path_id(project_path)),
+        name: Arc::new(name),
+        toml: manifest,
         path: project_path.to_string_lossy().to_string(),
     })
 }

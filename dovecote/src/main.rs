@@ -1,5 +1,5 @@
 use actix_files as fs;
-use actix_web::{middleware, web, App, Error, HttpResponse, HttpServer};
+use actix_web::{web, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
 use dovecote::State;
 use proto::OnRequest;
@@ -24,7 +24,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let state = state.clone();
         App::new()
-            .wrap(middleware::Logger::default())
+            //.wrap(middleware::Logger::default())
             .data(state)
             .service(web::resource("/api/rpc").route(web::post().to(rpc)))
             .service(fs::Files::new("/", "dovecote/client/static/").index_file("index.html"))

@@ -1,12 +1,17 @@
 import init, * as wasm from '../pkg/client.js';
 
+let project_id;
+
 export default async function run() {
     await init();
     await load_projects();
+    // TODO Remove id. This is bug demo.
+    console.log("3000490687877993158 is expected. Actual is " + wasm.there_be_a_bug().id);
 }
 
 export async function load_projects() {
     let list = await wasm.project_list();
+    console.log(`${list.projects[0].id}`);
     let projects_parent = document.getElementById("projects");
     projects_parent.innerHTML = "";
     list.projects.forEach(function (item) {
@@ -20,5 +25,9 @@ export async function load_projects() {
 }
 
 export async function select_project(id) {
-    alert("id:" + id)
+    project_id = id;
+    let projects_parent = document.getElementById("projects");
+    projects_parent.innerHTML = "";
+    let info = await wasm.project_info(id.toString());
+    console.log(`${info}`);
 }

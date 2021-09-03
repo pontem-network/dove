@@ -1,40 +1,29 @@
 mod project;
 
 use proto::{OnRequest, Empty};
-use proto::project::{ProjectList, ID, ProjectInfo, ProjectShortInfo};
-use dove::home::Home;
+use proto::project::{ProjectList, ID, ProjectInfo};
 use anyhow::Error;
+use crate::rpc::project::Projects;
 
 #[derive(Debug)]
 pub struct Rpc {
-    pub dove_home: Home,
+    pub projects: Projects,
 }
 
 impl Rpc {
     pub fn new() -> Result<Rpc, Error> {
         Ok(Rpc {
-            dove_home: Home::get()?,
+            projects: Projects::new()?,
         })
     }
 }
 
 impl OnRequest for Rpc {
     fn project_list(&self, _: Empty) -> Result<ProjectList, anyhow::Error> {
-        let projects = self
-            .dove_home
-            .load_project_list()?
-            .into_iter()
-            .map(|p| ProjectShortInfo {
-                id: p.id,
-                name: p.name,
-                path: p.path,
-            })
-            .collect();
-
-        Ok(ProjectList { projects })
+        dbg!(self.projects.list())
     }
 
-    fn project_info(&self, req: ID) -> Result<ProjectInfo, anyhow::Error> {
-        todo!()
+    fn project_info(&self, id: ID) -> Result<ProjectInfo, anyhow::Error> {
+        dbg!(self.projects.by_id(id))
     }
 }
