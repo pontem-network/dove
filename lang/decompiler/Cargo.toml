@@ -35,6 +35,10 @@ tempfile = "3.2.0"
 
 [features]
 cffi = []
+default = ["openssl/vendored"]
+
+[target.x86_64-pc-windows-gnu.dependencies]
+openssl = { version = "*", optional = true }
 
 # cli:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

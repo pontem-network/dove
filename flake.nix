@@ -16,11 +16,12 @@
 
         rustToolchain = fenixArch.latest;
         rustToolchainWasm = rustTargets.wasm32-unknown-unknown.stable;
-        rustToolchainWin = rustTargets.x86_64-pc-windows-msvc.latest;
+        rustToolchainWin = rustTargets.x86_64-pc-windows-gnu.latest;
 
         completeRustToolchain = (fenixArch.combine [
           rustToolchain.toolchain
           rustToolchainWasm.toolchain
+          rustToolchainWin.toolchain
         ]);
 
         naersk-lib = naersk.lib.${system}.override {
@@ -49,7 +50,8 @@
 
         devShell = with pkgs; mkShell {
           buildInputs = [
-            openssl pre-commit pkg-config
+            # openssl
+            pre-commit pkg-config
             completeRustToolchain
 
           ];
