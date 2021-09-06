@@ -1,8 +1,7 @@
 use move_lang::shared::Flags;
 
 use lang::compiler::{check, file};
-use lang::compiler::file::MoveFile;
-
+use std::path::PathBuf;
 use crate::inner::db::{FileDiagnostic, RootDatabase};
 
 #[derive(Debug)]
@@ -19,24 +18,24 @@ impl Analysis {
         &self.db
     }
 
-    pub fn check_file(&self, file: MoveFile) -> Option<FileDiagnostic> {
+    pub fn check_file(&self, file: String) -> Option<FileDiagnostic> {
         match self.check_file_inner(file) {
             Ok(_) => None,
             Err(mut ds) => Some(ds.remove(0)),
         }
     }
 
-    fn check_file_inner(&self, current_file: MoveFile) -> Result<(), Vec<FileDiagnostic>> {
+    fn check_file_inner(&self, current_file: String) -> Result<(), Vec<FileDiagnostic>> {
         let deps = self
             .read_stdlib_files()
             .into_iter()
-            .map(|mf| mf.into().0)
-            .chain(self.db.module_files().into_iter().map(|(name, _)| name))
-            .filter(|file| file != current_file.name())
+            .map(|path| path.to_string_lossy().to_string())
+            .chain(self.db.module_files().into_iter())
+            .filter(|file| file != &current_file)
             .collect::<Vec<String>>();
 
         check(
-            &[current_file.into().0],
+            &[current_file],
             &deps,
             self.db.config.dialect().as_ref(),
             self.db.config.sender(),
@@ -58,12 +57,12 @@ impl Analysis {
         })
     }
 
-    fn read_stdlib_files(&self) -> Vec<MoveFile<'static, 'static>> {
+    fn read_stdlib_files(&self) -> Vec<PathBuf> {
         self.db
             .config
             .stdlib_folder
             .as_ref()
-            .map(|folder| file::load_move_files(&[folder]).unwrap_or_default())
+            .map(|folder| file::find_move_files(&[folder]).collect())
             .unwrap_or_default()
     }
 }

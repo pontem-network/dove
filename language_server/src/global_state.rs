@@ -36,16 +36,14 @@ impl GlobalState {
         let mut change = AnalysisChange::new();
         for fs_event in fs_events {
             match fs_event {
-                FileSystemEvent::AddFile(file) => {
-                    let (fpath, text) = file.into();
-                    change.add_file(fpath, text);
+                FileSystemEvent::AddFile(fpath) => {
+                    change.add_file(fpath.to_string_lossy().to_string());
                 }
-                FileSystemEvent::ChangeFile(file) => {
-                    let (fpath, text) = file.into();
-                    change.update_file(fpath, text);
+                FileSystemEvent::ChangeFile(fpath) => {
+                    change.update_file(fpath.to_string_lossy().to_string());
                 }
                 FileSystemEvent::RemoveFile(fpath) => {
-                    change.remove_file(fpath);
+                    change.remove_file(fpath.to_string_lossy().to_string());
                 }
             }
         }
@@ -69,13 +67,13 @@ pub fn initialize_new_global_state(config: Config) -> GlobalState {
     let mut initial_fs_events = vec![];
     match &config.stdlib_folder {
         Some(folder) => {
-            for file in file::load_move_files(&[folder]).unwrap() {
+            for file in file::find_move_files(&[folder]) {
                 initial_fs_events.push(FileSystemEvent::AddFile(file));
             }
         }
         None => {}
     }
-    for file in file::load_move_files(&config.modules_folders).unwrap() {
+    for file in file::find_move_files(&config.modules_folders) {
         initial_fs_events.push(FileSystemEvent::AddFile(file));
     }
     GlobalState::new(config, initial_fs_events)

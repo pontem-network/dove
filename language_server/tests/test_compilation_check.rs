@@ -12,6 +12,7 @@ use lang::compiler::file::*;
 use move_language_server::inner::change::AnalysisChange;
 use tempfile::NamedTempFile;
 use std::io::Write;
+use std::path::PathBuf;
 
 macro_rules! config {
     () => {{
@@ -39,18 +40,13 @@ fn diagnostics_with_config(source: &str, config: Config) -> Vec<Diagnostic> {
 }
 
 fn diagnostics_with_config_and_filename(source: &str, config: Config) -> Vec<FileDiagnostic> {
-    let mut f = NamedTempFile::new().unwrap();
-    f.write_all(source.as_bytes()).unwrap();
-    let fpath = f.path().to_string_lossy().to_string();
+    let mut temp_file = NamedTempFile::new().unwrap();
+    temp_file.write_all(source.as_bytes()).unwrap();
+    let file_path_string = temp_file.path().to_string_lossy().to_string();
 
-    let state_snapshot = global_state_snapshot(
-        MoveFile::with_content(fpath.clone(), source.to_owned()),
-        config,
-        vec![],
-    );
+    let state_snapshot = global_state_snapshot(file_path_string.clone(), config, vec![]);
     let (task_sender, task_receiver) = unbounded::<ResponseEvent>();
-
-    compute_file_diagnostics(state_snapshot.analysis, task_sender, vec![fpath]);
+    compute_file_diagnostics(state_snapshot.analysis, task_sender, vec![file_path_string]);
 
     let task = task_receiver.try_recv().unwrap();
     let mut ds = match task {
@@ -63,8 +59,8 @@ fn diagnostics_with_config_and_filename(source: &str, config: Config) -> Vec<Fil
 }
 
 fn diagnostics_with_deps(
-    script_file: MoveFile<'static, 'static>,
-    deps: Vec<MoveFile<'static, 'static>>,
+    script_file: PathBuf,
+    deps: Vec<PathBuf>,
     config: Config,
 ) -> Option<FileDiagnostic> {
     let mut config = config;
@@ -74,31 +70,30 @@ fn diagnostics_with_deps(
     fs_events.push(FileSystemEvent::AddFile(script_file.clone()));
 
     let global_state = GlobalState::new(config, fs_events);
-    global_state.analysis().check_file(script_file)
+    global_state
+        .analysis()
+        .check_file(script_file.to_string_lossy().to_string())
 }
 
 pub fn global_state_snapshot(
-    file: MoveFile,
+    file: String,
     config: Config,
-    additional_files: Vec<MoveFile>,
+    additional_files: Vec<String>,
 ) -> GlobalStateSnapshot {
     let mut global_state = initialize_new_global_state(config);
     let mut change = AnalysisChange::new();
 
     for folder in &global_state.config().modules_folders {
-        for file in load_move_files(&[folder]).unwrap() {
-            let (fpath, text) = file.into();
-            change.add_file(fpath, text);
+        for fpath in find_move_files(&[folder]) {
+            change.add_file(fpath.to_string_lossy().to_string());
         }
     }
 
     for file in additional_files {
-        let (fpath, text) = file.into();
-        change.add_file(fpath, text);
+        change.add_file(file);
     }
 
-    let (fpath, text) = file.into();
-    change.update_file(fpath, text);
+    change.update_file(file);
 
     global_state.apply_change(change);
     global_state.snapshot()
@@ -546,11 +541,8 @@ script {
         });
 
         let error = diagnostics_with_deps(
-            MoveFile::load(script.path()).unwrap(),
-            vec![MoveFile::load(move_lang::leak_str(
-                modules_path().join("debug.move").to_str().unwrap(),
-            ))
-            .unwrap()],
+            script.path().to_path_buf(),
+            vec![modules_path().join("debug.move")],
             config,
         );
         assert!(error.is_none(), "{:#?}", error);
