@@ -67,7 +67,7 @@ jobs:
           vcpkgArguments: openssl
           vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
           vcpkgTriplet: ${{ matrix.triplet }}
-          vcpkgGitCommitId: de623488c7d9ab90328ec447f241dfff172b1c45
+          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
