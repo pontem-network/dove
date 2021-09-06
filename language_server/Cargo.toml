@@ -25,9 +25,9 @@ hex = "0.4.2"
 resources = { path = "../resources" }
 lang = { path = "../lang" }
 
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
-move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
+move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
+move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 
 [dev-dependencies]
 tempfile = "3.2.0"
