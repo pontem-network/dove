@@ -71,3 +71,9 @@ h2.title {
     -ms-user-select: none;
     user-select: none;
 }
+
+
+
+.monaco-workbench {
+    color: #cccccc;
+}

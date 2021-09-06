@@ -20,10 +20,10 @@ impl Rpc {
 
 impl OnRequest for Rpc {
     fn project_list(&self, _: Empty) -> Result<ProjectList, anyhow::Error> {
-        dbg!(self.projects.list())
+        self.projects.list()
     }
 
     fn project_info(&self, id: ID) -> Result<ProjectInfo, anyhow::Error> {
-        dbg!(self.projects.by_id(id))
+        self.projects.by_id(id)
     }
 }
