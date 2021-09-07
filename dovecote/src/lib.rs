@@ -7,8 +7,8 @@ use crate::rpc::Rpc;
 use anyhow::Error;
 use std::sync::Arc;
 
-pub mod rpc;
 pub mod bg;
+pub mod rpc;
 
 #[derive(Debug, Clone)]
 pub struct State {

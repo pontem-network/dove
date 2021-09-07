@@ -13,6 +13,8 @@ pub async fn clean_project(state: State) {
         web::block::<_, _, Error>(move || {
             state.rpc.projects.clean_up();
             Ok(())
-        }).await.expect("Unreachable.");
+        })
+        .await
+        .expect("Unreachable.");
     }
 }

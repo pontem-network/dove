@@ -1,6 +1,6 @@
-mod projects;
-mod project;
 mod m_file;
+mod project;
+mod projects;
 
 use proto::{OnRequest, Empty};
 use proto::project::{ProjectList, ID, ProjectInfo};
@@ -31,7 +31,11 @@ impl OnRequest for Rpc {
     }
 
     fn get_file(&self, req: GetFile) -> Result<File, Error> {
-        let GetFile { project_id, file_id } = req;
-        self.projects.on_project_mut(project_id, |p| p.load_file(file_id))
+        let GetFile {
+            project_id,
+            file_id,
+        } = req;
+        self.projects
+            .on_project_mut(project_id, |p| p.load_file(file_id))
     }
 }

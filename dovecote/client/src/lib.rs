@@ -8,6 +8,7 @@ use serde::Serialize;
 
 mod context;
 mod project;
+mod file;
 
 #[macro_export]
 macro_rules! console_log {

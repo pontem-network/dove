@@ -5,650 +5,425 @@
 </head>
 <body>
 <div id="container">
-    <div id="navigation">
+    <div id="navigation" style="position: absolute; left: 0; top: 0; width: 15%; height: 80%">
         <div>
             <h2 id="explorer-title" class="title noselect">Explorer</h2>
         </div>
         <div id="explorer">
-            <div class="explorer-folders-view file-icon-themable-tree show-file-icons align-icons-and-twisties">
-                <style type="text/css"
-                       media="screen">.explorer-viewlet .explorer-item .monaco-icon-name-container.multiple > .label-name.drop-target > .monaco-highlighted-label {
-                    background-color: #383b3d;
-                }</style>
-                <div class="monaco-list list_id_1 mouse-support element-focused selection-single" tabindex="0"
-                     role="tree" aria-label="Files Explorer" aria-multiselectable="true" data-keybinding-context="7"
-                     aria-activedescendant="list_id_1_10">
-                    <div class="monaco-scrollable-element  mac" role="presentation"
-                         style="position: relative; overflow: hidden;">
-                        <div class="monaco-list-rows" style="height: 924px; left: 0px; top: 0px;">
-                            <div class="monaco-list-row" role="treeitem" data-index="8" data-last-element="false"
-                                 aria-setsize="2" aria-posinset="1" id="list_id_1_8" aria-selected="false"
-                                 aria-label="src" aria-level="3" draggable="true"
-                                 style="top: 176px; height: 22px; line-height: 22px;" aria-expanded="true">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 16px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible"
-                                         style="padding-left: 24px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon src-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>src</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="5" data-last-element="false"
-                                 aria-setsize="20" aria-posinset="4" id="list_id_1_5" aria-selected="false"
-                                 aria-label="lang" aria-level="1" draggable="true"
-                                 style="top: 110px; height: 22px; line-height: 22px;" aria-expanded="true">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 0px;"></div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible"
-                                         style="padding-left: 8px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon lang-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>lang</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="2" data-last-element="false"
-                                 aria-setsize="2" aria-posinset="1" id="list_id_1_2" aria-selected="false"
-                                 aria-level="3" draggable="true" style="top: 44px; height: 22px; line-height: 22px;"
-                                 aria-label="src" aria-expanded="false">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 8px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible collapsed"
-                                         style="padding-left: 16px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon src-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/common/git-hash/src"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>src</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="21" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="12" id="list_id_1_21" aria-selected="false"
-                                 aria-label="types.rs" aria-level="4" draggable="true"
-                                 style="top: 462px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon types.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/types.rs"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>types.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="7" data-last-element="false"
-                                 aria-setsize="4" aria-posinset="2" id="list_id_1_7" aria-selected="false"
-                                 aria-label="decompiler" aria-level="2" draggable="true"
-                                 style="top: 154px; height: 22px; line-height: 22px;" aria-expanded="true">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 8px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie collapsible codicon codicon-tree-item-expanded"
-                                         style="padding-left: 16px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon decompiler-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>decompiler</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="6" data-last-element="false"
-                                 aria-setsize="4" aria-posinset="1" id="list_id_1_6" aria-selected="false"
-                                 aria-label="compat" aria-level="2" draggable="true"
-                                 style="top: 132px; height: 22px; line-height: 22px;" aria-expanded="false">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 8px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible collapsed"
-                                         style="padding-left: 16px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon compat-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/compat"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>compat</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="3" data-last-element="false"
-                                 aria-setsize="2" aria-posinset="2" id="list_id_1_3" aria-selected="false"
-                                 aria-label="Cargo.toml" aria-level="3" draggable="true"
-                                 style="top: 66px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 8px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 16px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon cargo.toml-name-file-icon toml-ext-file-icon ext-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/common/git-hash/Cargo.toml"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>Cargo.toml</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="4" data-last-element="false"
-                                 aria-setsize="20" aria-posinset="3" id="list_id_1_4" aria-selected="false"
-                                 aria-label="dove" aria-level="1" draggable="true"
-                                 style="top: 88px; height: 22px; line-height: 22px;" aria-expanded="false">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 0px;"></div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible collapsed"
-                                         style="padding-left: 8px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon dove-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/dove"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>dove</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="1" data-last-element="false"
-                                 aria-setsize="20" aria-posinset="2" id="list_id_1_1" aria-selected="false"
-                                 aria-label="git-hash" aria-level="2" draggable="true"
-                                 style="top: 22px; height: 22px; line-height: 22px;" aria-expanded="true">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 0px;"></div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible"
-                                         style="padding-left: 8px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon git-hash-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/common/git-hash"><span
-                                                    class="monaco-icon-name-container multiple"><a class="label-name"
-                                                                                                   id="compressed-explorer_5_0"
-                                                                                                   data-icon-label-count="2"
-                                                                                                   data-icon-label-index="0"
-                                                                                                   role="treeitem"
-                                                                                                   aria-label="common"
-                                                                                                   aria-level="1"
-                                                                                                   aria-expanded="true"><span
-                                                    class="monaco-highlighted-label"><span>common</span></span><span
-                                                    class="label-separator">/</span></a><a class="label-name active"
-                                                                                           id="compressed-explorer_5_1"
-                                                                                           data-icon-label-count="2"
-                                                                                           data-icon-label-index="1"
-                                                                                           role="treeitem"
-                                                                                           aria-label="git-hash, compact, common"
-                                                                                           aria-level="2"
-                                                                                           aria-expanded="true"><span
-                                                    class="monaco-highlighted-label"><span>git-hash</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="20" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="11" id="list_id_1_20" aria-selected="false"
-                                 aria-label="structs.rs" aria-level="4" draggable="true"
-                                 style="top: 440px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon structs.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/structs.rs"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>structs.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="19" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="10" id="list_id_1_19" aria-selected="false"
-                                 aria-label="script.rs" aria-level="4" draggable="true"
-                                 style="top: 418px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon script.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/script.rs"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>script.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="18" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="9" id="list_id_1_18" aria-selected="false"
-                                 aria-label="module.rs" aria-level="4" draggable="true"
-                                 style="top: 396px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon module.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/module.rs"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>module.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="17" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="8" id="list_id_1_17" aria-selected="false"
-                                 aria-label="lib.rs" aria-level="4" draggable="true"
-                                 style="top: 374px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon lib.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/lib.rs"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>lib.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="16" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="7" id="list_id_1_16" aria-selected="false"
-                                 aria-label="imports.rs" aria-level="4" draggable="true"
-                                 style="top: 352px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon imports.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/imports.rs"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>imports.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="15" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="6" id="list_id_1_15" aria-selected="false"
-                                 aria-label="generics.rs" aria-level="4" draggable="true"
-                                 style="top: 330px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon generics.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/generics.rs"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>generics.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="14" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="5" id="list_id_1_14" aria-selected="false"
-                                 aria-label="functions.rs" aria-level="4" draggable="true"
-                                 style="top: 308px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon functions.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/functions.rs">
-                                                <span class="monaco-icon-name-container"><a class="label-name"><span
-                                                        class="monaco-highlighted-label"><span>functions.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="13" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="4" id="list_id_1_13" aria-selected="false"
-                                 aria-label="ext" aria-level="4" draggable="true"
-                                 style="top: 286px; height: 22px; line-height: 22px;" aria-expanded="false">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible collapsed"
-                                         style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon ext-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/ext"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>ext</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="12" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="3" id="list_id_1_12" aria-selected="false"
-                                 aria-level="4" draggable="true" style="top: 264px; height: 22px; line-height: 22px;"
-                                 aria-label="code" aria-expanded="false">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible collapsed"
-                                         style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon code-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/code"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>code</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="11" data-last-element="false"
-                                 aria-setsize="1" aria-posinset="1" id="list_id_1_11" aria-selected="false"
-                                 aria-label="decompiler.rs" aria-level="5" draggable="true"
-                                 style="top: 242px; height: 22px; line-height: 22px;">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 32px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide active" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie" style="padding-left: 40px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label file-icon decompiler.rs-name-file-icon rs-ext-file-icon ext-file-icon rust-lang-file-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/bin/decompiler.rs">
-                                                <span class="monaco-icon-name-container"><a class="label-name"><span
-                                                        class="monaco-highlighted-label"><span>decompiler.rs</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row focused selected" role="treeitem" data-index="10"
-                                 data-last-element="false" aria-setsize="13" aria-posinset="2" id="list_id_1_10"
-                                 aria-selected="true" aria-label="bin" aria-level="4" draggable="true"
-                                 style="top: 220px; height: 22px; line-height: 22px;" aria-expanded="true">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible"
-                                         style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon bin-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/bin"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>bin</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="9" data-last-element="false"
-                                 aria-setsize="13" aria-posinset="1" id="list_id_1_9" aria-selected="false"
-                                 aria-label="assets" aria-level="4" draggable="true"
-                                 style="top: 198px; height: 22px; line-height: 22px;" aria-expanded="false">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 24px;">
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                        <div class="indent-guide" style="width: 8px"></div>
-                                    </div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible collapsed"
-                                         style="padding-left: 32px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon assets-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/lang/decompiler/src/assets"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>assets</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="monaco-list-row" role="treeitem" data-index="0" data-last-element="false"
-                                 aria-setsize="20" aria-posinset="1" id="list_id_1_0" aria-selected="false"
-                                 aria-label=".github" aria-level="1" draggable="true"
-                                 style="top: 0px; height: 22px; line-height: 22px;" aria-expanded="false">
-                                <div class="monaco-tl-row">
-                                    <div class="monaco-tl-indent" style="width: 0px;"></div>
-                                    <div class="monaco-tl-twistie codicon codicon-tree-item-expanded collapsible collapsed"
-                                         style="padding-left: 8px;"></div>
-                                    <div class="monaco-tl-contents">
-                                        <div class="monaco-icon-label folder-icon .github-name-folder-icon explorer-item"
-                                             style="display: flex;">
-                                            <div class="monaco-icon-label-container"
-                                                 title="pontem-network/move-tools/.github"><span
-                                                    class="monaco-icon-name-container"><a class="label-name"><span
-                                                    class="monaco-highlighted-label"><span>.github</span></span></a></span><span
-                                                    class="monaco-icon-description-container"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div role="presentation" aria-hidden="true" class="invisible scrollbar horizontal"
-                             style="position: absolute; width: 0px; height: 10px; left: 0px; bottom: 0px;">
-                            <div class="slider"
-                                 style="position: absolute; top: 0px; left: 0px; height: 10px; transform: translate3d(0px, 0px, 0px); width: 0px;"></div>
-                        </div>
-                        <div role="presentation" aria-hidden="true" class="invisible scrollbar vertical fade"
-                             style="position: absolute; width: 10px; height: 470px; right: 0px; top: 0px;">
-                            <div class="slider"
-                                 style="position: absolute; top: 0px; left: 0px; width: 10px; transform: translate3d(0px, 0px, 0px); height: 233px;"></div>
-                        </div>
-                        <div class="shadow"></div>
-                        <div class="shadow"></div>
-                        <div class="shadow"></div>
-                    </div>
-                    <style type="text/css" media="screen">.monaco-list.list_id_1 .monaco-list-rows {
-                        background: #252526;
-                    }
-
-                    .monaco-list.list_id_1:focus .monaco-list-row.selected {
-                        background-color: #094771;
-                    }
-
-                    .monaco-list.list_id_1:focus .monaco-list-row.selected:hover {
-                        background-color: #094771;
-                    }
-
-                    .monaco-list.list_id_1:focus .monaco-list-row.selected {
-                        color: #ffffff;
-                    }
-
-                    .monaco-list.list_id_1:focus .monaco-list-row.selected .codicon {
-                        color: #ffffff;
-                    }
-
-                    .monaco-drag-image,
-                    .monaco-list.list_id_1:focus .monaco-list-row.selected.focused {
-                        background-color: #094771;
-                    }
-
-
-                    .monaco-drag-image,
-                    .monaco-list.list_id_1:focus .monaco-list-row.selected.focused {
-                        color: #ffffff;
-                    }
-
-                    .monaco-list.list_id_1 .monaco-list-row.selected {
-                        background-color: #37373d;
-                    }
-
-                    .monaco-list.list_id_1 .monaco-list-row.selected:hover {
-                        background-color: #37373d;
-                    }
-
-                    .monaco-list.list_id_1:not(.drop-target) .monaco-list-row:hover:not(.selected):not(.focused) {
-                        background-color: #2a2d2e;
-                    }
-
-                    .monaco-drag-image,
-                    .monaco-list.list_id_1:focus .monaco-list-row.focused {
-                        outline: 1px solid #007fd4;
-                        outline-offset: -1px;
-                    }
-
-
-                    .monaco-list.list_id_1.drop-target,
-                    .monaco-list.list_id_1 .monaco-list-rows.drop-target,
-                    .monaco-list.list_id_1 .monaco-list-row.drop-target {
-                        background-color: #383b3d !important;
-                        color: inherit !important;
-                    }
-
-                    .monaco-list-type-filter {
-                        background-color: #653723
-                    }
-
-                    .monaco-list-type-filter {
-                        border: 1px solid rgba(0, 0, 0, 0);
-                    }
-
-                    .monaco-list-type-filter.no-matches {
-                        border: 1px solid #be1100;
-                    }
-
-                    .monaco-list-type-filter {
-                        box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.36);
-                    }
-
-                    .monaco-table:hover > .monaco-split-view2,
-                    .monaco-table:hover > .monaco-split-view2 .monaco-sash.vertical::before {
-                        border-color: rgba(204, 204, 204, 0.13);
-                    }</style>
-                    <div class="monaco-list-type-filter-message"></div>
-                    <style type="text/css"
-                           media="screen">.monaco-list.list_id_1:hover .monaco-tl-indent > .indent-guide, .monaco-list.list_id_1.always .monaco-tl-indent > .indent-guide {
-                        border-color: rgba(88, 88, 88, 0.4);
-                    }
-
-                    .monaco-list.list_id_1 .monaco-tl-indent > .indent-guide.active {
-                        border-color: #585858;
-                    }</style>
-                </div>
-            </div>
         </div>
     </div>
 
-    <div id="code-space">
-        <div></div>
+    <div id="code-space" style="position: absolute; left: 15%; top: 0; width: 70%; height: 80%">
+        <div class="editor-container" style="background-color: rgb(30, 30, 30); height: 100%;">
+<!--            <div class="editor-instance" data-keybinding-context="12" aria-label="adapt.rs, preview"-->
+<!--                 style="&#45;&#45;codelens-font-features_ee1f61: &quot;liga&quot; off, &quot;calt&quot; off; &#45;&#45;testMessageDecorationFontFamily: Menlo, Monaco, &quot;Courier New&quot;, monospace;"-->
+<!--                 data-mode-id="rust">-->
+<!--                <div class="monaco-editor no-minimap-shadow mac  showUnused showDeprecated vs-dark" role="code"-->
+<!--                     data-uri="vscode-vfs://github/pontem-network/move-tools/lang/compat/src/adapt.rs"-->
+<!--                     style="width: 1591px; height: 514px;">-->
+<!--                    <div data-mprt="3" class="overflow-guard" style="width: 1591px; height: 514px;">-->
+<!--                        <div class="margin" role="presentation" aria-hidden="true"-->
+<!--                             style="position: absolute; transform: translate3d(0px, 0px, 0px); top: -163px; height: 4024px; width: 66px;">-->
+<!--                            <div class="glyph-margin" style="left: 0px; width: 18px; height: 4024px;"></div>-->
+<!--                            <div class="margin-view-zones" role="presentation" aria-hidden="true"-->
+<!--                                 style="position: absolute;"></div>-->
+<!--                            <div class="margin-view-overlays" role="presentation" aria-hidden="true"-->
+<!--                                 style="position: absolute; width: 66px; font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; height: 4024px;">-->
+<!--                                <div style="position:absolute;top:576px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">33</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:594px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">34</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:612px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">35</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:630px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">36</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:648px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">37</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:666px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">38</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:468px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">27</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:486px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">28</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:504px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">29</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:522px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">30</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:540px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">31</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:558px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">32</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:306px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">18</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:324px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">19</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:342px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">20</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:360px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">21</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:378px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">22</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:396px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">23</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:414px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">24</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:432px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">25</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:450px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">26</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:162px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">10</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:180px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">11</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:198px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">12</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:216px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">13</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:234px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">14</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:252px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">15</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:270px;width:100%;height:18px;">-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">16</div>-->
+<!--                                </div>-->
+<!--                                <div style="position:absolute;top:288px;width:100%;height:18px;">-->
+<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
+<!--                                         style="left:40px;width:26px;"></div>-->
+<!--                                    <div class="line-numbers" style="left:18px;width:22px;">17</div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="monaco-scrollable-element editor-scrollable vs-dark mac" role="presentation"-->
+<!--                             data-mprt="5"-->
+<!--                             style="position: absolute; overflow: hidden; left: 66px; width: 1525px; height: 514px;">-->
+<!--                            <div class="lines-content monaco-editor-background"-->
+<!--                                 style="position: absolute; overflow: hidden; width: 1000000px; height: 1000000px; transform: translate3d(0px, 0px, 0px); top: -163px; left: 0px;">-->
+<!--                                <div class="view-overlays" role="presentation" aria-hidden="true"-->
+<!--                                     style="position: absolute; height: 0px; width: 1405px;">-->
+<!--                                    <div style="position:absolute;top:576px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:594px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:612px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:630px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:648px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:666px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:468px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:486px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:504px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:522px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:540px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:558px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:306px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:324px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:342px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:360px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:378px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:396px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:414px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:432px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:450px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:162px;width:100%;height:18px;"></div>-->
+<!--                                    <div style="position:absolute;top:180px;width:100%;height:18px;"></div>-->
+<!--                                    <div style="position:absolute;top:198px;width:100%;height:18px;"></div>-->
+<!--                                    <div style="position:absolute;top:216px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:234px;width:100%;height:18px;">-->
+<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
+<!--                                    </div>-->
+<!--                                    <div style="position:absolute;top:252px;width:100%;height:18px;"></div>-->
+<!--                                    <div style="position:absolute;top:270px;width:100%;height:18px;"></div>-->
+<!--                                    <div style="position:absolute;top:288px;width:100%;height:18px;"></div>-->
+<!--                                </div>-->
+<!--                                <div role="presentation" aria-hidden="true" class="view-rulers"></div>-->
+<!--                                <div class="view-zones" role="presentation" aria-hidden="true"-->
+<!--                                     style="position: absolute;"></div>-->
+<!--                                <div class="view-lines monaco-mouse-cursor-text" role="presentation" aria-hidden="true"-->
+<!--                                     data-mprt="7"-->
+<!--                                     style="position: absolute; font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; width: 1405px; height: 4024px;">-->
+<!--                                    <div style="top:576px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk5">self</span><span-->
+<!--                                            class="mtk1">.source_len&nbsp;-&nbsp;</span><span-->
+<!--                                            class="mtk5">self</span><span class="mtk1">.target_len</span></span></div>-->
+<!--                                    <div style="top:594px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;</span><span-->
+<!--                                            class="mtk17">else</span><span class="mtk1">&nbsp;{</span></span></div>-->
+<!--                                    <div style="top:612px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk5">self</span><span-->
+<!--                                            class="mtk1">.target_len&nbsp;-&nbsp;</span><span-->
+<!--                                            class="mtk5">self</span><span class="mtk1">.source_len</span></span></div>-->
+<!--                                    <div style="top:630px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:648px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:666px;height:18px;" class="view-line"><span><span></span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:468px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk5">self</span><span-->
+<!--                                            class="mtk1">.source_len&nbsp;&gt;&nbsp;</span><span-->
+<!--                                            class="mtk5">self</span><span class="mtk1">.target_len</span></span></div>-->
+<!--                                    <div style="top:486px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:504px;height:18px;" class="view-line"><span><span></span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:522px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;#[inline]</span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:540px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk5">fn</span><span class="mtk1">&nbsp;</span><span class="mtk15">len_diff</span><span-->
+<!--                                            class="mtk1">(&amp;</span><span class="mtk5">self</span><span class="mtk1">)&nbsp;-&gt;&nbsp;</span><span-->
+<!--                                            class="mtk16">usize</span><span class="mtk1">&nbsp;{</span></span></div>-->
+<!--                                    <div style="top:558px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk17">if</span><span class="mtk1">&nbsp;</span><span class="mtk5">self</span><span-->
+<!--                                            class="mtk1">.</span><span class="mtk15">is_source_bigger</span><span-->
+<!--                                            class="mtk1">()&nbsp;{</span></span></div>-->
+<!--                                    <div style="top:306px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk5">pub</span><span class="mtk1">&nbsp;</span><span-->
+<!--                                            class="mtk5">fn</span><span class="mtk1">&nbsp;</span><span class="mtk15">new</span><span-->
+<!--                                            class="mtk1">(</span><span class="mtk9">source_len</span><span class="mtk1">:&nbsp;</span><span-->
+<!--                                            class="mtk16">usize</span><span class="mtk1">,&nbsp;</span><span-->
+<!--                                            class="mtk9">target_len</span><span class="mtk1">:&nbsp;</span><span-->
+<!--                                            class="mtk16">usize</span><span class="mtk1">)&nbsp;-&gt;&nbsp;</span><span-->
+<!--                                            class="mtk16">AddressAdaptation</span><span-->
+<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
+<!--                                    <div style="top:324px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk16">AddressAdaptation</span><span-->
+<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
+<!--                                    <div style="top:342px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk9">source_len</span><span class="mtk1">,</span></span></div>-->
+<!--                                    <div style="top:360px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk9">target_len</span><span class="mtk1">,</span></span></div>-->
+<!--                                    <div style="top:378px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:396px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:414px;height:18px;" class="view-line"><span><span></span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:432px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;#[inline]</span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:450px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk5">fn</span><span class="mtk1">&nbsp;</span><span class="mtk15">is_source_bigger</span><span-->
+<!--                                            class="mtk1">(&amp;</span><span class="mtk5">self</span><span class="mtk1">)&nbsp;-&gt;&nbsp;</span><span-->
+<!--                                            class="mtk16">bool</span><span class="mtk1">&nbsp;{</span></span></div>-->
+<!--                                    <div style="top:162px;height:18px;" class="view-line"><span><span></span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:180px;height:18px;" class="view-line"><span><span class="mtk1">#[derive(</span><span-->
+<!--                                            class="mtk16">Debug</span><span class="mtk1">)]</span></span></div>-->
+<!--                                    <div style="top:198px;height:18px;" class="view-line"><span><span-->
+<!--                                            class="mtk5">pub</span><span class="mtk1">&nbsp;</span><span class="mtk5">struct</span><span-->
+<!--                                            class="mtk1">&nbsp;</span><span class="mtk16">AddressAdaptation</span><span-->
+<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
+<!--                                    <div style="top:216px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk9">source_len</span><span class="mtk1">:&nbsp;</span><span-->
+<!--                                            class="mtk16">usize</span><span class="mtk1">,</span></span></div>-->
+<!--                                    <div style="top:234px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
+<!--                                            class="mtk9">target_len</span><span class="mtk1">:&nbsp;</span><span-->
+<!--                                            class="mtk16">usize</span><span class="mtk1">,</span></span></div>-->
+<!--                                    <div style="top:252px;height:18px;" class="view-line"><span><span-->
+<!--                                            class="mtk1">}</span></span></div>-->
+<!--                                    <div style="top:270px;height:18px;" class="view-line"><span><span></span></span>-->
+<!--                                    </div>-->
+<!--                                    <div style="top:288px;height:18px;" class="view-line"><span><span-->
+<!--                                            class="mtk5">impl</span><span class="mtk1">&nbsp;</span><span class="mtk16">AddressAdaptation</span><span-->
+<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
+<!--                                </div>-->
+<!--                                <div data-mprt="1" class="contentWidgets" style="position: absolute; top: 0px;">-->
+<!--                                    <div class="codicon-light-bulb codicon" widgetid="LightBulbWidget"-->
+<!--                                         title="Show Code Actions (⌘.)"-->
+<!--                                         style="position: absolute; visibility: hidden; max-width: 1405px;"></div>-->
+<!--                                </div>-->
+<!--                                <div role="presentation" aria-hidden="true"-->
+<!--                                     class="cursors-layer cursor-line-style cursor-solid">-->
+<!--                                    <div class="cursor monaco-mouse-cursor-text "-->
+<!--                                         style="height: 18px; top: 0px; left: 0px; font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; display: none; visibility: hidden; width: 2px;"></div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div role="presentation" aria-hidden="true" class="invisible scrollbar horizontal"-->
+<!--                                 style="position: absolute; width: 1391px; height: 12px; left: 0px; bottom: 0px;">-->
+<!--                                <div class="slider"-->
+<!--                                     style="position: absolute; top: 0px; left: 0px; height: 12px; transform: translate3d(0px, 0px, 0px); width: 1391px;"></div>-->
+<!--                            </div>-->
+<!--                            <canvas class="decorationsOverviewRuler" aria-hidden="true" width="28" height="1028"-->
+<!--                                    style="position: absolute; transform: translate3d(0px, 0px, 0px); top: 0px; right: 0px; width: 14px; height: 514px;"></canvas>-->
+<!--                            <div role="presentation" aria-hidden="true" class="invisible scrollbar vertical fade"-->
+<!--                                 style="position: absolute; width: 14px; height: 514px; right: 0px; top: 0px;">-->
+<!--                                <div class="slider"-->
+<!--                                     style="position: absolute; top: 21px; left: 0px; width: 14px; transform: translate3d(0px, 0px, 0px); height: 65px;"></div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div role="presentation" aria-hidden="true" style="width: 1457px;"-->
+<!--                             class="scroll-decoration"></div>-->
+<!--                        <textarea data-mprt="6" class="inputarea monaco-mouse-cursor-text" wrap="off" autocorrect="off"-->
+<!--                                  autocapitalize="off" autocomplete="off" spellcheck="false"-->
+<!--                                  aria-label="adapt.rs, preview" tabindex="0" role="textbox"-->
+<!--                                  aria-roledescription="editor" aria-multiline="true" aria-haspopup="false"-->
+<!--                                  aria-autocomplete="both"-->
+<!--                                  style="font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; top: 0px; left: 0px; width: 1px; height: 1px;"></textarea>-->
+<!--                        <div style="position: absolute; top: 0px; left: 0px; width: 1px; height: 1px;"-->
+<!--                             class="monaco-editor-background textAreaCover margin"></div>-->
+<!--                        <div data-mprt="4" class="overlayWidgets" style="width: 1591px;">-->
+<!--                            <div class="accessibilityHelpWidget" role="dialog" aria-hidden="true"-->
+<!--                                 widgetid="editor.contrib.accessibilityHelpWidget"-->
+<!--                                 style="width: 500px; height: 300px; display: none; position: absolute;">-->
+<!--                                <div role="document"></div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div data-mprt="8" class="minimap slider-mouseover" role="presentation" aria-hidden="true"-->
+<!--                             style="position: absolute; left: 1457px; width: 120px; height: 514px;">-->
+<!--                            <div class="minimap-shadow-hidden" style="height: 514px;"></div>-->
+<!--                            <canvas width="240" height="1028"-->
+<!--                                    style="position: absolute; left: 0px; width: 120px; height: 514px;"></canvas>-->
+<!--                            <canvas class="minimap-decorations-layer" width="240" height="1028"-->
+<!--                                    style="position: absolute; left: 0px; width: 120px; height: 514px;"></canvas>-->
+<!--                            <div class="minimap-slider"-->
+<!--                                 style="position: absolute; transform: translate3d(0px, 0px, 0px); width: 120px; display: block; top: 18.11111111111111px; height: 57px;">-->
+<!--                                <div class="minimap-slider-horizontal"-->
+<!--                                     style="position: absolute; left: 0px; width: 120px; top: 0px; height: 57px;"></div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div data-mprt="2" class="overflowingContentWidgets">-->
+<!--                        <div class="monaco-editor rename-box" widgetid="__renameInputWidget"-->
+<!--                             style="background-color: rgb(37, 37, 38); box-shadow: rgba(0, 0, 0, 0.36) 0px 0px 8px 2px; color: rgb(204, 204, 204); position: fixed; visibility: hidden; max-width: 1920px;">-->
+<!--                            <input class="rename-input" type="text"-->
+<!--                                   aria-label="Rename input. Type new name and press Enter to commit."-->
+<!--                                   style="font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; background-color: rgb(60, 60, 60); border-width: 0px; border-style: none;">-->
+<!--                            <div class="rename-label" style="font-size: 9.600000000000001px;">Enter to Rename, ⇧Enter to-->
+<!--                                Preview-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="monaco-hover" tabindex="0" role="tooltip"-->
+<!--                             widgetid="editor.contrib.modesContentHoverWidget"-->
+<!--                             style="position: fixed; visibility: hidden; max-width: 1920px;">-->
+<!--                            <div class="monaco-scrollable-element  mac" role="presentation"-->
+<!--                                 style="position: relative; overflow: hidden;">-->
+<!--                                <div class="monaco-hover-content"-->
+<!--                                     style="overflow: hidden; font-size: 12px; line-height: 18px; max-height: 250px; max-width: 1050.06px;"></div>-->
+<!--                                <div role="presentation" aria-hidden="true" class="invisible scrollbar horizontal"-->
+<!--                                     style="position: absolute;">-->
+<!--                                    <div class="slider"-->
+<!--                                         style="position: absolute; top: 0px; left: 0px; height: 10px; transform: translate3d(0px, 0px, 0px);"></div>-->
+<!--                                </div>-->
+<!--                                <div role="presentation" aria-hidden="true" class="invisible scrollbar vertical"-->
+<!--                                     style="position: absolute;">-->
+<!--                                    <div class="slider"-->
+<!--                                         style="position: absolute; top: 0px; left: 0px; width: 10px; transform: translate3d(0px, 0px, 0px);"></div>-->
+<!--                                </div>-->
+<!--                                <div class="shadow"></div>-->
+<!--                                <div class="shadow"></div>-->
+<!--                                <div class="shadow"></div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+        </div>
     </div>
-
-    <div id="projects-container">
+    <div id="projects-container" style="position: absolute; left: 85%; top: 0; width: 15%; height: 80%">
         <div>
             <h2 id="projects-title" class="title noselect">Projects</h2>
         </div>
         <div id="projects">
         </div>
     </div>
+    <div id="footer" style="position: absolute; background-color: rgb(59,63,65); left: 0; top: 80%; width: 100%; height: 30%">
+    </div>
 </div>
+
 <script async type="module">
     import run, * as index from './js/index.js';
 

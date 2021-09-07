@@ -42,8 +42,10 @@ impl Projects {
         Ok(ProjectList { projects })
     }
 
-    pub fn on_project<F, T>(&self, id:ID, on_proj: F) -> Result<T, Error>
-        where F: FnOnce(&Project) -> Result<T, Error> {
+    pub fn on_project<F, T>(&self, id: ID, on_proj: F) -> Result<T, Error>
+    where
+        F: FnOnce(&Project) -> Result<T, Error>,
+    {
         let current_time = get_unix_timestamp();
         {
             let map = self.map.read();
@@ -69,8 +71,10 @@ impl Projects {
         res
     }
 
-    pub fn on_project_mut<F, T>(&self, id:ID, on_proj: F) -> Result<T, Error>
-        where F: FnOnce(&mut Project) -> Result<T, Error> {
+    pub fn on_project_mut<F, T>(&self, id: ID, on_proj: F) -> Result<T, Error>
+    where
+        F: FnOnce(&mut Project) -> Result<T, Error>,
+    {
         let current_time = get_unix_timestamp();
         let mut map = self.map.write();
         if let Some((project, last_read)) = map.get_mut(&id) {

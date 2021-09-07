@@ -16,7 +16,10 @@ pub struct MFile {
 impl MFile {
     pub fn load(path: Arc<PathBuf>) -> Result<MFile, Error> {
         let content = Arc::new(fs::read_to_string(path.as_ref())?);
-        let last_access = fs::metadata(path.as_ref())?.accessed()?.elapsed()?.as_secs();
+        let last_access = fs::metadata(path.as_ref())?
+            .accessed()?
+            .elapsed()?
+            .as_secs();
         let hash = Arc::new(hash(content.as_str()));
 
         Ok(MFile {
@@ -27,7 +30,6 @@ impl MFile {
         })
     }
 }
-
 
 fn hash(content: &str) -> String {
     let mut s = DefaultHasher::new();

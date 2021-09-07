@@ -16,30 +16,18 @@ body {
 
 #navigation {
     display: block;
-    width: 15%;
-    top: 0px;
-    left: 0px;
-    height: 100%;
     background-color: #616161;
     position: absolute;
 }
 
 #code-space {
     display: block;
-    width: 70%;
-    top: 0px;
-    left: 15%;
-    height: 100%;
     background: #f0f0f0;
     position: absolute;
 }
 
 #projects-container {
     display: block;
-    width: 15%;
-    top: 0px;
-    left: 85%;
-    height: 100%;
     background-color: #616161;
     position: absolute;
 }

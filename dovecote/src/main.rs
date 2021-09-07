@@ -23,9 +23,7 @@ async fn main() -> std::io::Result<()> {
     let state = State::new().unwrap();
 
     let bg_state = state.clone();
-    actix_web::rt::spawn(async move {
-        clean_project(bg_state).await
-    });
+    actix_web::rt::spawn(async move { clean_project(bg_state).await });
 
     HttpServer::new(move || {
         let state = state.clone();
@@ -35,7 +33,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/api/rpc").route(web::post().to(rpc)))
             .service(fs::Files::new("/", "dovecote/client/static/").index_file("index.html"))
     })
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }

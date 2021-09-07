@@ -7,8 +7,8 @@ use crate::project::*;
 use crate::file::*;
 use std::fmt::{Display, Formatter};
 
-pub mod project;
 pub mod file;
+pub mod project;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Empty;
