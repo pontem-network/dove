@@ -6,15 +6,19 @@ use crate::{api, js_err};
 use proto::project::ID;
 use proto::Request;
 use proto::file::GetFile;
+use crate::console_log;
 
 #[wasm_bindgen]
-pub async fn open_file( project_id: ID, file_id: ID, container_id: String, config: JsValue) -> Result<(), JsValue> {
+pub async fn open_file(project_id: ID, file_id: ID, container_id: String, config: JsValue) -> Result<(), JsValue> {
+    let config = config.into_serde().map_err(js_err)?;
+    console_log!("open_file:{}-{}=>{} cfg:{:?}", project_id, file_id, container_id, config);
     let get_file = GetFile {
         project_id,
         file_id,
     };
-    let config = config.into_serde().map_err(js_err)?;
+
     let file = proto::get_file(&api_url(), get_file).await.map_err(js_err)?;
+    console_log!("open_file:{:?}", file);
 
     Ok(())
 }
@@ -40,7 +44,7 @@ pub async fn open_file( project_id: ID, file_id: ID, container_id: String, confi
 //     Ok(JsValue::NULL)
 // }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RenderConfig {
     pub line_height: Option<u32>,
 }
