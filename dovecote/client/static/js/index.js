@@ -28,5 +28,6 @@ export async function select_project(id) {
     let projects_parent = document.getElementById("explorer");
     projects_parent.innerHTML = "";
     let info = await wasm.project_info(id);
+    await wasm.open_file(id, "a6ee3f32e51a5a81", "code-space", {line_height: 18});
     console.log("{}", info);
 }

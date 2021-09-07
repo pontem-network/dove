@@ -14,403 +14,130 @@
     </div>
 
     <div id="code-space" style="position: absolute; left: 15%; top: 0; width: 70%; height: 80%">
-        <div class="editor-container" style="background-color: rgb(30, 30, 30); height: 100%;">
-<!--            <div class="editor-instance" data-keybinding-context="12" aria-label="adapt.rs, preview"-->
-<!--                 style="&#45;&#45;codelens-font-features_ee1f61: &quot;liga&quot; off, &quot;calt&quot; off; &#45;&#45;testMessageDecorationFontFamily: Menlo, Monaco, &quot;Courier New&quot;, monospace;"-->
-<!--                 data-mode-id="rust">-->
-<!--                <div class="monaco-editor no-minimap-shadow mac  showUnused showDeprecated vs-dark" role="code"-->
-<!--                     data-uri="vscode-vfs://github/pontem-network/move-tools/lang/compat/src/adapt.rs"-->
-<!--                     style="width: 1591px; height: 514px;">-->
-<!--                    <div data-mprt="3" class="overflow-guard" style="width: 1591px; height: 514px;">-->
-<!--                        <div class="margin" role="presentation" aria-hidden="true"-->
-<!--                             style="position: absolute; transform: translate3d(0px, 0px, 0px); top: -163px; height: 4024px; width: 66px;">-->
-<!--                            <div class="glyph-margin" style="left: 0px; width: 18px; height: 4024px;"></div>-->
-<!--                            <div class="margin-view-zones" role="presentation" aria-hidden="true"-->
-<!--                                 style="position: absolute;"></div>-->
-<!--                            <div class="margin-view-overlays" role="presentation" aria-hidden="true"-->
-<!--                                 style="position: absolute; width: 66px; font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; height: 4024px;">-->
-<!--                                <div style="position:absolute;top:576px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">33</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:594px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">34</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:612px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">35</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:630px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">36</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:648px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">37</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:666px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">38</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:468px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">27</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:486px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">28</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:504px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">29</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:522px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">30</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:540px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">31</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:558px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">32</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:306px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">18</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:324px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">19</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:342px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">20</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:360px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">21</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:378px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">22</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:396px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">23</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:414px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">24</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:432px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">25</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:450px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">26</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:162px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">10</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:180px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">11</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:198px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">12</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:216px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">13</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:234px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">14</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:252px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">15</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:270px;width:100%;height:18px;">-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">16</div>-->
-<!--                                </div>-->
-<!--                                <div style="position:absolute;top:288px;width:100%;height:18px;">-->
-<!--                                    <div class="cldr codicon codicon-folding-expanded"-->
-<!--                                         style="left:40px;width:26px;"></div>-->
-<!--                                    <div class="line-numbers" style="left:18px;width:22px;">17</div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div class="monaco-scrollable-element editor-scrollable vs-dark mac" role="presentation"-->
-<!--                             data-mprt="5"-->
-<!--                             style="position: absolute; overflow: hidden; left: 66px; width: 1525px; height: 514px;">-->
-<!--                            <div class="lines-content monaco-editor-background"-->
-<!--                                 style="position: absolute; overflow: hidden; width: 1000000px; height: 1000000px; transform: translate3d(0px, 0px, 0px); top: -163px; left: 0px;">-->
-<!--                                <div class="view-overlays" role="presentation" aria-hidden="true"-->
-<!--                                     style="position: absolute; height: 0px; width: 1405px;">-->
-<!--                                    <div style="position:absolute;top:576px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:594px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:612px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:630px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:648px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:666px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:468px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:486px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:504px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:522px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:540px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:558px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:306px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:324px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:342px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:360px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:57.8125px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:378px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                        <div class="cigr" style="left:28.90625px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:396px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:414px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:432px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:450px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:162px;width:100%;height:18px;"></div>-->
-<!--                                    <div style="position:absolute;top:180px;width:100%;height:18px;"></div>-->
-<!--                                    <div style="position:absolute;top:198px;width:100%;height:18px;"></div>-->
-<!--                                    <div style="position:absolute;top:216px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:234px;width:100%;height:18px;">-->
-<!--                                        <div class="cigr" style="left:0px;height:18px;width:28.90625px"></div>-->
-<!--                                    </div>-->
-<!--                                    <div style="position:absolute;top:252px;width:100%;height:18px;"></div>-->
-<!--                                    <div style="position:absolute;top:270px;width:100%;height:18px;"></div>-->
-<!--                                    <div style="position:absolute;top:288px;width:100%;height:18px;"></div>-->
-<!--                                </div>-->
-<!--                                <div role="presentation" aria-hidden="true" class="view-rulers"></div>-->
-<!--                                <div class="view-zones" role="presentation" aria-hidden="true"-->
-<!--                                     style="position: absolute;"></div>-->
-<!--                                <div class="view-lines monaco-mouse-cursor-text" role="presentation" aria-hidden="true"-->
-<!--                                     data-mprt="7"-->
-<!--                                     style="position: absolute; font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; width: 1405px; height: 4024px;">-->
-<!--                                    <div style="top:576px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk5">self</span><span-->
-<!--                                            class="mtk1">.source_len&nbsp;-&nbsp;</span><span-->
-<!--                                            class="mtk5">self</span><span class="mtk1">.target_len</span></span></div>-->
-<!--                                    <div style="top:594px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;</span><span-->
-<!--                                            class="mtk17">else</span><span class="mtk1">&nbsp;{</span></span></div>-->
-<!--                                    <div style="top:612px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk5">self</span><span-->
-<!--                                            class="mtk1">.target_len&nbsp;-&nbsp;</span><span-->
-<!--                                            class="mtk5">self</span><span class="mtk1">.source_len</span></span></div>-->
-<!--                                    <div style="top:630px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:648px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:666px;height:18px;" class="view-line"><span><span></span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:468px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk5">self</span><span-->
-<!--                                            class="mtk1">.source_len&nbsp;&gt;&nbsp;</span><span-->
-<!--                                            class="mtk5">self</span><span class="mtk1">.target_len</span></span></div>-->
-<!--                                    <div style="top:486px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:504px;height:18px;" class="view-line"><span><span></span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:522px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;#[inline]</span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:540px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk5">fn</span><span class="mtk1">&nbsp;</span><span class="mtk15">len_diff</span><span-->
-<!--                                            class="mtk1">(&amp;</span><span class="mtk5">self</span><span class="mtk1">)&nbsp;-&gt;&nbsp;</span><span-->
-<!--                                            class="mtk16">usize</span><span class="mtk1">&nbsp;{</span></span></div>-->
-<!--                                    <div style="top:558px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk17">if</span><span class="mtk1">&nbsp;</span><span class="mtk5">self</span><span-->
-<!--                                            class="mtk1">.</span><span class="mtk15">is_source_bigger</span><span-->
-<!--                                            class="mtk1">()&nbsp;{</span></span></div>-->
-<!--                                    <div style="top:306px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk5">pub</span><span class="mtk1">&nbsp;</span><span-->
-<!--                                            class="mtk5">fn</span><span class="mtk1">&nbsp;</span><span class="mtk15">new</span><span-->
-<!--                                            class="mtk1">(</span><span class="mtk9">source_len</span><span class="mtk1">:&nbsp;</span><span-->
-<!--                                            class="mtk16">usize</span><span class="mtk1">,&nbsp;</span><span-->
-<!--                                            class="mtk9">target_len</span><span class="mtk1">:&nbsp;</span><span-->
-<!--                                            class="mtk16">usize</span><span class="mtk1">)&nbsp;-&gt;&nbsp;</span><span-->
-<!--                                            class="mtk16">AddressAdaptation</span><span-->
-<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
-<!--                                    <div style="top:324px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk16">AddressAdaptation</span><span-->
-<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
-<!--                                    <div style="top:342px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk9">source_len</span><span class="mtk1">,</span></span></div>-->
-<!--                                    <div style="top:360px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk9">target_len</span><span class="mtk1">,</span></span></div>-->
-<!--                                    <div style="top:378px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:396px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;}</span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:414px;height:18px;" class="view-line"><span><span></span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:432px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;#[inline]</span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:450px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk5">fn</span><span class="mtk1">&nbsp;</span><span class="mtk15">is_source_bigger</span><span-->
-<!--                                            class="mtk1">(&amp;</span><span class="mtk5">self</span><span class="mtk1">)&nbsp;-&gt;&nbsp;</span><span-->
-<!--                                            class="mtk16">bool</span><span class="mtk1">&nbsp;{</span></span></div>-->
-<!--                                    <div style="top:162px;height:18px;" class="view-line"><span><span></span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:180px;height:18px;" class="view-line"><span><span class="mtk1">#[derive(</span><span-->
-<!--                                            class="mtk16">Debug</span><span class="mtk1">)]</span></span></div>-->
-<!--                                    <div style="top:198px;height:18px;" class="view-line"><span><span-->
-<!--                                            class="mtk5">pub</span><span class="mtk1">&nbsp;</span><span class="mtk5">struct</span><span-->
-<!--                                            class="mtk1">&nbsp;</span><span class="mtk16">AddressAdaptation</span><span-->
-<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
-<!--                                    <div style="top:216px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk9">source_len</span><span class="mtk1">:&nbsp;</span><span-->
-<!--                                            class="mtk16">usize</span><span class="mtk1">,</span></span></div>-->
-<!--                                    <div style="top:234px;height:18px;" class="view-line"><span><span class="mtk1">&nbsp;&nbsp;&nbsp;&nbsp;</span><span-->
-<!--                                            class="mtk9">target_len</span><span class="mtk1">:&nbsp;</span><span-->
-<!--                                            class="mtk16">usize</span><span class="mtk1">,</span></span></div>-->
-<!--                                    <div style="top:252px;height:18px;" class="view-line"><span><span-->
-<!--                                            class="mtk1">}</span></span></div>-->
-<!--                                    <div style="top:270px;height:18px;" class="view-line"><span><span></span></span>-->
-<!--                                    </div>-->
-<!--                                    <div style="top:288px;height:18px;" class="view-line"><span><span-->
-<!--                                            class="mtk5">impl</span><span class="mtk1">&nbsp;</span><span class="mtk16">AddressAdaptation</span><span-->
-<!--                                            class="mtk1">&nbsp;{</span></span></div>-->
-<!--                                </div>-->
-<!--                                <div data-mprt="1" class="contentWidgets" style="position: absolute; top: 0px;">-->
-<!--                                    <div class="codicon-light-bulb codicon" widgetid="LightBulbWidget"-->
-<!--                                         title="Show Code Actions (⌘.)"-->
-<!--                                         style="position: absolute; visibility: hidden; max-width: 1405px;"></div>-->
-<!--                                </div>-->
-<!--                                <div role="presentation" aria-hidden="true"-->
-<!--                                     class="cursors-layer cursor-line-style cursor-solid">-->
-<!--                                    <div class="cursor monaco-mouse-cursor-text "-->
-<!--                                         style="height: 18px; top: 0px; left: 0px; font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; display: none; visibility: hidden; width: 2px;"></div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div role="presentation" aria-hidden="true" class="invisible scrollbar horizontal"-->
-<!--                                 style="position: absolute; width: 1391px; height: 12px; left: 0px; bottom: 0px;">-->
-<!--                                <div class="slider"-->
-<!--                                     style="position: absolute; top: 0px; left: 0px; height: 12px; transform: translate3d(0px, 0px, 0px); width: 1391px;"></div>-->
-<!--                            </div>-->
-<!--                            <canvas class="decorationsOverviewRuler" aria-hidden="true" width="28" height="1028"-->
-<!--                                    style="position: absolute; transform: translate3d(0px, 0px, 0px); top: 0px; right: 0px; width: 14px; height: 514px;"></canvas>-->
-<!--                            <div role="presentation" aria-hidden="true" class="invisible scrollbar vertical fade"-->
-<!--                                 style="position: absolute; width: 14px; height: 514px; right: 0px; top: 0px;">-->
-<!--                                <div class="slider"-->
-<!--                                     style="position: absolute; top: 21px; left: 0px; width: 14px; transform: translate3d(0px, 0px, 0px); height: 65px;"></div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div role="presentation" aria-hidden="true" style="width: 1457px;"-->
-<!--                             class="scroll-decoration"></div>-->
-<!--                        <textarea data-mprt="6" class="inputarea monaco-mouse-cursor-text" wrap="off" autocorrect="off"-->
-<!--                                  autocapitalize="off" autocomplete="off" spellcheck="false"-->
-<!--                                  aria-label="adapt.rs, preview" tabindex="0" role="textbox"-->
-<!--                                  aria-roledescription="editor" aria-multiline="true" aria-haspopup="false"-->
-<!--                                  aria-autocomplete="both"-->
-<!--                                  style="font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; top: 0px; left: 0px; width: 1px; height: 1px;"></textarea>-->
-<!--                        <div style="position: absolute; top: 0px; left: 0px; width: 1px; height: 1px;"-->
-<!--                             class="monaco-editor-background textAreaCover margin"></div>-->
-<!--                        <div data-mprt="4" class="overlayWidgets" style="width: 1591px;">-->
-<!--                            <div class="accessibilityHelpWidget" role="dialog" aria-hidden="true"-->
-<!--                                 widgetid="editor.contrib.accessibilityHelpWidget"-->
-<!--                                 style="width: 500px; height: 300px; display: none; position: absolute;">-->
-<!--                                <div role="document"></div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div data-mprt="8" class="minimap slider-mouseover" role="presentation" aria-hidden="true"-->
-<!--                             style="position: absolute; left: 1457px; width: 120px; height: 514px;">-->
-<!--                            <div class="minimap-shadow-hidden" style="height: 514px;"></div>-->
-<!--                            <canvas width="240" height="1028"-->
-<!--                                    style="position: absolute; left: 0px; width: 120px; height: 514px;"></canvas>-->
-<!--                            <canvas class="minimap-decorations-layer" width="240" height="1028"-->
-<!--                                    style="position: absolute; left: 0px; width: 120px; height: 514px;"></canvas>-->
-<!--                            <div class="minimap-slider"-->
-<!--                                 style="position: absolute; transform: translate3d(0px, 0px, 0px); width: 120px; display: block; top: 18.11111111111111px; height: 57px;">-->
-<!--                                <div class="minimap-slider-horizontal"-->
-<!--                                     style="position: absolute; left: 0px; width: 120px; top: 0px; height: 57px;"></div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    <div data-mprt="2" class="overflowingContentWidgets">-->
-<!--                        <div class="monaco-editor rename-box" widgetid="__renameInputWidget"-->
-<!--                             style="background-color: rgb(37, 37, 38); box-shadow: rgba(0, 0, 0, 0.36) 0px 0px 8px 2px; color: rgb(204, 204, 204); position: fixed; visibility: hidden; max-width: 1920px;">-->
-<!--                            <input class="rename-input" type="text"-->
-<!--                                   aria-label="Rename input. Type new name and press Enter to commit."-->
-<!--                                   style="font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; background-color: rgb(60, 60, 60); border-width: 0px; border-style: none;">-->
-<!--                            <div class="rename-label" style="font-size: 9.600000000000001px;">Enter to Rename, ⇧Enter to-->
-<!--                                Preview-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div class="monaco-hover" tabindex="0" role="tooltip"-->
-<!--                             widgetid="editor.contrib.modesContentHoverWidget"-->
-<!--                             style="position: fixed; visibility: hidden; max-width: 1920px;">-->
-<!--                            <div class="monaco-scrollable-element  mac" role="presentation"-->
-<!--                                 style="position: relative; overflow: hidden;">-->
-<!--                                <div class="monaco-hover-content"-->
-<!--                                     style="overflow: hidden; font-size: 12px; line-height: 18px; max-height: 250px; max-width: 1050.06px;"></div>-->
-<!--                                <div role="presentation" aria-hidden="true" class="invisible scrollbar horizontal"-->
-<!--                                     style="position: absolute;">-->
-<!--                                    <div class="slider"-->
-<!--                                         style="position: absolute; top: 0px; left: 0px; height: 10px; transform: translate3d(0px, 0px, 0px);"></div>-->
-<!--                                </div>-->
-<!--                                <div role="presentation" aria-hidden="true" class="invisible scrollbar vertical"-->
-<!--                                     style="position: absolute;">-->
-<!--                                    <div class="slider"-->
-<!--                                         style="position: absolute; top: 0px; left: 0px; width: 10px; transform: translate3d(0px, 0px, 0px);"></div>-->
-<!--                                </div>-->
-<!--                                <div class="shadow"></div>-->
-<!--                                <div class="shadow"></div>-->
-<!--                                <div class="shadow"></div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
+        <div id="editor-container" style="background-color: rgb(30, 30, 30); height: 100%;">
+            <div style="position: absolute; transform: translate3d(0px, 0px, 0px); top: 0; height: 100%; width: 66px;">
+                <div style="position:absolute;top:0px;width:100%;height:18px;">
+                    <div class="line-numbers" style="left:18px;width:22px;">1</div>
+                </div>
+                <div style="position:absolute;top:0px;width:100%;height:18px;">
+                    <div class="line-numbers" style="left:18px;width:22px;">2</div>
+                </div>
+                <div style="position:absolute;top:0px;width:100%;height:18px;">
+                    <div class="line-numbers" style="left:18px;width:22px;">3</div>
+                </div>
+                <div style="position:absolute;top:0px;width:100%;height:18px;">
+                    <div class="line-numbers" style="left:18px;width:22px;">4</div>
+                </div>
+                <div style="position:absolute;top:0px;width:100%;height:18px;">
+                    <div class="line-numbers" style="left:18px;width:22px;">5</div>
+                </div>
+                <div style="position:absolute;top:0px;width:100%;height:18px;">
+                    <div class="line-numbers" style="left:18px;width:22px;">5</div>
+                </div>
+            </div>
+            <!--            <div class="margin" role="presentation" aria-hidden="true"-->
+            <!--                 style="position: absolute; transform: translate3d(0px, 0px, 0px); top: -182px; height: 4222px; width: 66px;">-->
+            <!--                <div class="glyph-margin" style="left: 0px; width: 18px; height: 4222px;"></div>-->
+            <!--                <div class="margin-view-zones" role="presentation" aria-hidden="true" style="position: absolute;"></div>-->
+            <!--                <div class="margin-view-overlays" role="presentation" aria-hidden="true"-->
+            <!--                     style="position: absolute; width: 66px; font-family: Menlo, Monaco, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 12px; font-feature-settings: &quot;liga&quot; 0, &quot;calt&quot; 0; line-height: 18px; letter-spacing: 0px; height: 4222px;">-->
+            <!--                    <div style="position:absolute;top:180px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">11</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:198px;width:100%;height:18px;">-->
+            <!--                        <div class="cldr codicon codicon-folding-expanded" style="left:40px;width:26px;"></div>-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">12</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:216px;width:100%;height:18px;">-->
+            <!--                        <div class="cldr codicon codicon-folding-expanded" style="left:40px;width:26px;"></div>-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">13</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:234px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">14</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:252px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">15</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:270px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">16</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:288px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">17</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:306px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">18</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:324px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">19</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:342px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">20</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:360px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">21</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:378px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">22</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:396px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">23</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:414px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">24</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:432px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">25</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:450px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">26</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:468px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">27</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:486px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">28</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:504px;width:100%;height:18px;">-->
+            <!--                        <div class="cldr codicon codicon-folding-expanded" style="left:40px;width:26px;"></div>-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">29</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:522px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">30</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:540px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">31</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:558px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">32</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:576px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">33</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:594px;width:100%;height:18px;">-->
+            <!--                        <div class="cldr codicon codicon-folding-expanded" style="left:40px;width:26px;"></div>-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">34</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:612px;width:100%;height:18px;">-->
+            <!--                        <div class="cldr codicon codicon-folding-expanded" style="left:40px;width:26px;"></div>-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">35</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:630px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">36</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:648px;width:100%;height:18px;">-->
+            <!--                        <div class="cldr codicon codicon-folding-expanded" style="left:40px;width:26px;"></div>-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">37</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:666px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">38</div>-->
+            <!--                    </div>-->
+            <!--                    <div style="position:absolute;top:684px;width:100%;height:18px;">-->
+            <!--                        <div class="line-numbers" style="left:18px;width:22px;">39</div>-->
+            <!--                    </div>-->
+            <!--                </div>-->
+            <!--            </div>-->
+
+
         </div>
     </div>
     <div id="projects-container" style="position: absolute; left: 85%; top: 0; width: 15%; height: 80%">
@@ -420,7 +147,8 @@
         <div id="projects">
         </div>
     </div>
-    <div id="footer" style="position: absolute; background-color: rgb(59,63,65); left: 0; top: 80%; width: 100%; height: 30%">
+    <div id="footer"
+         style="position: absolute; background-color: rgb(59,63,65); left: 0; top: 80%; width: 100%; height: 30%">
     </div>
 </div>
 
