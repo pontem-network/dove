@@ -15,3 +15,9 @@ pub async fn project_list() -> Result<JsValue, JsValue> {
 pub async fn project_info(id: String) -> Result<JsValue, JsValue> {
     api(proto::project_info(&api_url(), id).await)
 }
+
+#[wasm_bindgen]
+pub async fn get_file(id: String) -> Result<JsValue, JsValue> {
+    api(proto::get_file(&api_url(), id).await)
+}
+

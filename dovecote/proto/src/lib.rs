@@ -3,10 +3,12 @@ extern crate serde;
 #[macro_use]
 extern crate wasm_bindgen;
 
-use crate::project::{ID, ProjectInfo, ProjectList};
+use crate::project::*;
+use crate::file::*;
 use std::fmt::{Display, Formatter};
 
 pub mod project;
+pub mod file;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Empty;
@@ -14,6 +16,7 @@ pub struct Empty;
 transport! {
     ProjectList|project_list: Empty => ProjectList;
     ProjectInfo|project_info: ID => ProjectInfo;
+    GetFile|get_file: GetFile => File;
 }
 
 #[macro_export]
@@ -48,7 +51,7 @@ macro_rules! transport {
 
             fn try_from(value: Response) -> Result<Self, Self::Error> {
                 match value {
-                    Response::$resp(val) => Ok(val),
+                    Response::$name(val) => Ok(val),
                     _ => anyhow::bail!("Type mismatch."),
                 }
             }
