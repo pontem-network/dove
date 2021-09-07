@@ -60,8 +60,20 @@ h2.title {
     user-select: none;
 }
 
-
-
-.monaco-workbench {
-    color: #cccccc;
+.line-numbers {
+    color: #858585;
+    font-variant-numeric: tabular-nums;
+    position: absolute;
+    text-align: right;
+    display: inline-block;
+    vertical-align: middle;
+    box-sizing: border-box;
+    cursor: default;
+    height: 100%;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+    font-weight: normal;
+    font-size: 12px;
+    font-feature-settings: "liga" 0, "calt" 0;
+    line-height: 18px;
+    letter-spacing: 0px;
 }

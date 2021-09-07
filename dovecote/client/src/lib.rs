@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate serde;
-
 use wasm_bindgen::prelude::*;
 
 use proto;
@@ -8,8 +7,9 @@ use std::fmt::Display;
 use serde::Serialize;
 
 mod context;
-mod project;
 mod file;
+mod html;
+mod project;
 
 #[macro_export]
 macro_rules! console_log {
@@ -30,12 +30,8 @@ pub fn main() -> Result<(), JsValue> {
 
 pub fn api<T: Serialize, E: Display>(result: Result<T, E>) -> Result<JsValue, JsValue> {
     match result {
-        Ok(val) => {
-            JsValue::from_serde(&val).map_err(js_err)
-        }
-        Err(err) => {
-            Err(js_err(err))
-        }
+        Ok(val) => JsValue::from_serde(&val).map_err(js_err),
+        Err(err) => Err(js_err(err)),
     }
 }
 
@@ -47,8 +43,9 @@ pub fn js_err<E: Display>(err: E) -> JsValue {
 #[wasm_bindgen]
 pub fn there_be_a_bug() -> Result<JsValue, JsValue> {
     let res = JsValue::from_serde(&Id {
-        id: 3000490687877993158
-    }).map_err(js_err);
+        id: 3000490687877993158,
+    })
+    .map_err(js_err);
     console_log!("{:?}", res);
     res
 }

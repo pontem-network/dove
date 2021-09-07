@@ -36,5 +36,7 @@ features = [
     "RequestMode",
     "Response",
     "Storage",
-    "Location"
+    "Location",
+    "CssStyleDeclaration",
+    "DomTokenList",
 ]
