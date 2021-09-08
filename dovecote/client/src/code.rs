@@ -27,7 +27,6 @@ pub fn to_html(
         let mut is_empty = true;
         let mut is_first = true;
         for item in line.split(' ') {
-            is_first = false;
             is_empty = false;
 
             let sp = element(
@@ -42,6 +41,7 @@ pub fn to_html(
                 sp.set_text_content(Some(" "));
             } else {
                 if is_first {
+                    is_first = false;
                     sp.set_text_content(Some(item));
                 } else {
                     sp.set_text_content(Some(&format!(" {}", item)));
