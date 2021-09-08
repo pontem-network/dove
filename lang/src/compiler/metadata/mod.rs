@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-
+use serde::{Deserialize, Serialize};
 use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
 use move_lang::{leak_str, parse_file, MatchedFileCommentMap};
@@ -13,16 +13,33 @@ use crate::compiler::dialects::Dialect;
 use crate::compiler::preprocessor::BuilderPreprocessor;
 use codespan_reporting::term::termcolor::{StandardStream, ColorChoice};
 use move_core_types::identifier::Identifier;
-use move_ir_types::location::Spanned;
 use move_lang::shared::Identifier as Iden;
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub mod spanned;
+use spanned::Spanned;
+
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Unit {
     Module(ModuleMeta),
     Script(FuncMeta),
 }
-
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+impl Unit {
+    /// Converts from Unit to Option<ModuleMeta>.
+    pub fn module(&self) -> Option<&ModuleMeta> {
+        match self {
+            Unit::Module(module) => Some(module),
+            _ => None,
+        }
+    }
+    /// Converts from Unit to Option<FuncMeta>.
+    pub fn script(&self) -> Option<&FuncMeta> {
+        match self {
+            Unit::Script(script) => Some(script),
+            _ => None,
+        }
+    }
+}
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct FuncMeta_ {
     pub name: Identifier,
     pub visibility: Visibility,
@@ -33,7 +50,7 @@ pub struct FuncMeta_ {
 
 pub type FuncMeta = Spanned<FuncMeta_>;
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct StructMeta_ {
     /// struct Name { ... }
     pub name: Identifier,
@@ -58,7 +75,7 @@ pub struct StructMeta_ {
 
 pub type StructMeta = Spanned<StructMeta_>;
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct StructMetaField_ {
     pub name: Identifier,
     pub type_field: String,
@@ -78,22 +95,15 @@ pub fn script_meta(
     dialect: &dyn Dialect,
     sender: &str,
 ) -> Result<Vec<FuncMeta>, Error> {
-    let (def, mut docs) = parse(script_path, dialect, sender)?;
-    processing_docs(&mut docs);
-
-    Ok(def
-        .into_iter()
-        .filter_map(|def| {
-            if let Definition::Script(script) = def {
-                make_script_meta(script, &docs).ok()
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>())
+    parse(script_path, dialect, sender).map(|list| {
+        list.iter()
+            .filter_map(|unit| unit.script())
+            .cloned()
+            .collect::<Vec<FuncMeta>>()
+    })
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Visibility {
     Public,
     Script,
@@ -107,7 +117,7 @@ impl Visibility {
     }
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ModuleMeta_ {
     pub address: AccountAddress,
     pub name: Identifier,
@@ -123,14 +133,35 @@ pub fn module_meta(
     dialect: &dyn Dialect,
     sender: &str,
 ) -> Result<Vec<ModuleMeta>, Error> {
-    let mut modules = Vec::new();
-    let (defs, mut docs) = parse(module_path, dialect, sender)?;
+    parse(module_path, dialect, sender).map(|list| {
+        list.iter()
+            .filter_map(|unit| unit.module())
+            .cloned()
+            .collect()
+    })
+}
+
+/// Get metadata from move file
+pub fn parse(script_path: &str, dialect: &dyn Dialect, sender: &str) -> Result<Vec<Unit>, Error> {
+    let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
+    let mut files: FilesSourceText = HashMap::new();
+    let (defs, mut docs, errors) =
+        parse_file(&mut files, leak_str(script_path), &mut preprocessor)?;
+
+    if !errors.is_empty() {
+        let errors = preprocessor.transform(errors);
+        let mut writer = StandardStream::stderr(ColorChoice::Auto);
+        output_errors(&mut writer, files, errors);
+        anyhow::bail!("Could not compile scripts '{}'.", script_path);
+    }
+
+    let mut list_unit = Vec::new();
     processing_docs(&mut docs);
 
     for def in defs {
         match def {
             Definition::Module(module) => {
-                modules.push(parse_module_definition(module, &docs, None)?);
+                list_unit.push(Unit::Module(parse_module_definition(module, &docs, None)?));
             }
             Definition::Address(def) => {
                 let addr = match def.addr.value {
@@ -142,33 +173,16 @@ pub fn module_meta(
                         .map(|addr| AccountAddress::new(addr.value.into_bytes())),
                 };
                 for def in def.modules {
-                    modules.push(parse_module_definition(def, &docs, addr)?);
+                    list_unit.push(Unit::Module(parse_module_definition(def, &docs, addr)?));
                 }
             }
-            Definition::Script(_) => {
-                // no-op
+            Definition::Script(script) => {
+                list_unit.push(Unit::Script(make_script_meta(script, &docs)?))
             }
         }
     }
 
-    Ok(modules)
-}
-
-type ParseFile = (Vec<Definition>, MatchedFileCommentMap);
-
-fn parse(script_path: &str, dialect: &dyn Dialect, sender: &str) -> Result<ParseFile, Error> {
-    let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
-    let mut files: FilesSourceText = HashMap::new();
-    let (defs, doc, errors) = parse_file(&mut files, leak_str(script_path), &mut preprocessor)?;
-
-    if errors.is_empty() {
-        Ok((defs, doc))
-    } else {
-        let errors = preprocessor.transform(errors);
-        let mut writer = StandardStream::stderr(ColorChoice::Auto);
-        output_errors(&mut writer, files, errors);
-        Err(anyhow!("Could not compile scripts '{}'.", script_path))
-    }
+    Ok(list_unit)
 }
 
 fn make_script_meta(script: Script, docs: &MatchedFileCommentMap) -> Result<FuncMeta, Error> {
@@ -187,7 +201,7 @@ fn make_script_meta(script: Script, docs: &MatchedFileCommentMap) -> Result<Func
         .map(|(var, tp)| (var.0.value, extract_type_name(tp)))
         .collect();
     Ok(Spanned::new(
-        func.loc,
+        func.loc.into(),
         FuncMeta_ {
             name: Identifier::new(func.name.0.value)?,
             visibility: Visibility::Script,
@@ -301,7 +315,7 @@ fn parse_module_definition(
                 };
 
                 Some(Spanned::new(
-                    func.loc,
+                    func.loc.into(),
                     FuncMeta_ {
                         name: Identifier::new(func.name.0.value.to_owned())
                             .expect("Valid identifier"),
@@ -330,7 +344,7 @@ fn parse_module_definition(
                         .iter()
                         .map(|(name, tp)| {
                             Spanned::new(
-                                name.loc(),
+                                name.loc().into(),
                                 StructMetaField_ {
                                     name: Identifier::new(name.to_string())
                                         .expect("Valid identifier"),
@@ -351,7 +365,7 @@ fn parse_module_definition(
                     })
                     .collect();
                 Some(Spanned::new(
-                    struc.loc,
+                    struc.loc.into(),
                     StructMeta_ {
                         name: Identifier::new(struc.name.0.value).expect("Valid identifier"),
                         abilities,
@@ -366,7 +380,7 @@ fn parse_module_definition(
         .collect();
 
     Ok(Spanned::new(
-        module.loc,
+        module.loc.into(),
         ModuleMeta_ {
             address,
             name: Identifier::new(name.0.value)?,
@@ -381,7 +395,7 @@ fn parse_module_definition(
 mod metadata_tests {
     use crate::compiler::metadata::{
         module_meta, ModuleMeta_, FuncMeta_, Visibility, script_meta, StructMeta_,
-        StructMetaField_, StructMetaField,
+        StructMetaField_, StructMetaField, Spanned,
     };
     use crate::compiler::dialects::DialectName;
     use tempfile::NamedTempFile;
@@ -389,11 +403,11 @@ mod metadata_tests {
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_core_types::identifier::Identifier;
     use move_core_types::account_address::AccountAddress;
-    use move_ir_types::location::{Spanned, Loc};
     use codespan::Span;
+    use crate::compiler::metadata::spanned::Loc;
 
     fn spanned_wrap<T>(value: T) -> Spanned<T> {
-        Spanned::new(Loc::new("none", Span::new(0, 0)), value)
+        Spanned::new(Loc::new("none".to_string(), Span::new(0, 0)), value)
     }
     fn create_field(name: &str, tp: &str, doc: Option<&str>) -> StructMetaField {
         spanned_wrap(StructMetaField_ {

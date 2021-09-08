@@ -10,6 +10,7 @@ use crate::index::Index;
 use crate::manifest::{default_dialect, DoveToml, MANIFEST, read_manifest};
 use diem_crypto::hash::CryptoHash;
 use crate::index::interface::{InterfaceBuilder, Interface};
+use crate::metadata::MapDependencies;
 
 /// Project context.
 pub struct Context {
@@ -63,6 +64,7 @@ impl Context {
             new_index.store(&index_path)?;
             new_index.remove_unused(old_index.diff(&new_index))?;
             new_index.remove_unnecessary_elements_in_dependencies();
+            MapDependencies::create_and_save(self)?;
             new_index
         };
         let builder = InterfaceBuilder::new(self, &index);
@@ -102,18 +104,19 @@ impl Context {
 
     /// Returns interface files dir.
     pub fn interface_files_dir(&self) -> PathBuf {
-        self.path_for(&self.manifest.layout.artifacts)
+        self.path_for(&self.manifest.layout.system_folder)
             .join("interface_files_dir")
     }
 
     /// Returns directory for dependency bytecode.
     pub fn deps_mv_dir(&self) -> PathBuf {
-        self.path_for(&self.manifest.layout.artifacts).join("depmv")
+        self.path_for(&self.manifest.layout.system_folder)
+            .join("depmv")
     }
 
     /// Interface files lock.
     pub fn interface_files_lock(&self) -> PathBuf {
-        self.path_for(&self.manifest.layout.artifacts)
+        self.path_for(&self.manifest.layout.system_folder)
             .join("interface.lock")
     }
 }

@@ -1,12 +1,12 @@
+use std::fs;
+use std::path::PathBuf;
+use anyhow::Error;
+use regex::Regex;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
-use crate::context::Context;
-use anyhow::Error;
 use lang::compiler::file::find_move_files;
-use std::fs;
-use regex::Regex;
 use lang::compiler::metadata::{module_meta, script_meta, FuncMeta};
-use std::path::PathBuf;
+use crate::context::Context;
 
 pub(crate) fn find_module_function(
     ctx: &Context,
