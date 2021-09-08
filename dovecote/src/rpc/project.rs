@@ -47,6 +47,7 @@ impl Project {
         if let Some(file) = self.file_map.get(&id) {
             Ok(File {
                 content: file.content.clone(),
+                tp: file.tp(),
                 hash: file.hash.clone(),
             })
         } else {
@@ -54,6 +55,7 @@ impl Project {
                 let m_file = MFile::load(path.clone())?;
                 let file = File {
                     content: m_file.content.clone(),
+                    tp: m_file.tp(),
                     hash: m_file.hash.clone(),
                 };
                 self.file_map.insert(id, m_file);

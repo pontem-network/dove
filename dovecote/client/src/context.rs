@@ -1,6 +1,4 @@
-use wasm_bindgen::JsValue;
 use anyhow::{Error, anyhow};
-use wasm_bindgen::prelude::*;
 use web_sys::{Window, Document};
 
 pub fn api_url() -> String {

@@ -2,7 +2,6 @@
 extern crate serde;
 use wasm_bindgen::prelude::*;
 
-use proto;
 use std::fmt::Display;
 use serde::Serialize;
 
@@ -11,6 +10,7 @@ mod context;
 mod file;
 mod html;
 mod project;
+pub mod sources;
 
 #[macro_export]
 macro_rules! console_log {

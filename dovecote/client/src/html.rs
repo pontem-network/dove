@@ -1,6 +1,5 @@
 use wasm_bindgen::JsValue;
 use web_sys::{Document, Element};
-use std::convert::TryInto;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
 use crate::js_err;

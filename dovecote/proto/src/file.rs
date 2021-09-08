@@ -10,5 +10,13 @@ pub struct GetFile {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct File {
     pub content: Arc<String>,
+    pub tp: FileType,
     pub hash: Arc<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub enum FileType {
+    Move,
+    Toml,
+    Uncnown,
 }

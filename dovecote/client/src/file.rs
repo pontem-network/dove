@@ -2,17 +2,12 @@ use wasm_bindgen::prelude::*;
 
 use wasm_bindgen::JsValue;
 use crate::context::*;
-use crate::{api, js_err};
+use crate::js_err;
 use proto::project::ID;
-use proto::Request;
 use proto::file::{GetFile, File};
 use crate::console_log;
-use anyhow::Error;
 use anyhow::anyhow;
 use web_sys::{Document, Element};
-use std::convert::TryInto;
-use wasm_bindgen::JsCast;
-use web_sys::HtmlElement;
 use crate::html::element;
 use crate::code::to_html;
 
@@ -58,7 +53,7 @@ fn render(
         .map_err(js_err)?;
     container.set_text_content(None);
 
-    let (code_lines, element) = render_code(&doc, &config, file_id, file.content.as_ref())?;
+    let (code_lines, element) = render_code(&doc, &config, file_id, &file)?;
     container.append_child(element.as_ref())?;
     container.append_child(render_lines(&doc, &config, file_id, code_lines)?.as_ref())?;
     Ok(())
@@ -68,7 +63,7 @@ fn render_code(
     doc: &Document,
     config: &RenderConfig,
     file_id: &str,
-    code: &str,
+    file: &File,
 ) -> Result<(u32, Element), JsValue> {
     let view_lines = element(
         doc,
@@ -82,7 +77,7 @@ fn render_code(
             ("line-height", &format!("{}px", config.line_height)),
         ],
     )?;
-    let lines = to_html(doc, code, config)?;
+    let lines = to_html(doc, file_id, file, config)?;
     let count = lines.len() as u32;
     for line in lines {
         view_lines.append_child(line.as_ref())?;
