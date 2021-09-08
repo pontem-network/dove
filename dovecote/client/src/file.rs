@@ -14,6 +14,7 @@ use std::convert::TryInto;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
 use crate::html::element;
+use crate::code::to_html;
 
 #[wasm_bindgen]
 pub async fn open_file(
@@ -30,6 +31,8 @@ pub async fn open_file(
         container_id,
         config
     );
+
+    let f_id = file_id.clone();
     let get_file = GetFile {
         project_id,
         file_id,
@@ -38,10 +41,15 @@ pub async fn open_file(
     let file = proto::get_file(&api_url(), get_file)
         .await
         .map_err(js_err)?;
-    render(&container_id, config, file)
+    render(&container_id, &f_id, config, file)
 }
 
-fn render(container_id: &str, config: RenderConfig, file: File) -> Result<(), JsValue> {
+fn render(
+    container_id: &str,
+    file_id: &str,
+    config: RenderConfig,
+    file: File,
+) -> Result<(), JsValue> {
     let win = window().map_err(js_err)?;
     let doc = document(&win).map_err(js_err)?;
     let container = doc
@@ -50,17 +58,49 @@ fn render(container_id: &str, config: RenderConfig, file: File) -> Result<(), Js
         .map_err(js_err)?;
     container.set_text_content(None);
 
-    container.append_child(render_lines(&doc, &config, 10)?.as_ref())?;
-    console_log!("{:?}", container);
-    console_log!("open_file:{:?}", file);
+    let (code_lines, element) = render_code(&doc, &config, file_id, file.content.as_ref())?;
+    container.append_child(element.as_ref())?;
+    container.append_child(render_lines(&doc, &config, file_id, code_lines)?.as_ref())?;
     Ok(())
 }
 
-fn render_lines(doc: &Document, config: &RenderConfig, count: u32) -> Result<Element, JsValue> {
+fn render_code(
+    doc: &Document,
+    config: &RenderConfig,
+    file_id: &str,
+    code: &str,
+) -> Result<(u32, Element), JsValue> {
+    let view_lines = element(
+        doc,
+        "div",
+        Some(&format!("view-lines-{}", file_id)),
+        &["view-lines", "mouse-cursor-text"],
+        &[
+            ("position", "absolute"),
+            ("overflow", "hidden"),
+            ("left", "66px"),
+            ("line-height", &format!("{}px", config.line_height)),
+        ],
+    )?;
+    let lines = to_html(doc, code, config)?;
+    let count = lines.len() as u32;
+    for line in lines {
+        view_lines.append_child(line.as_ref())?;
+    }
+
+    Ok((count, view_lines))
+}
+
+fn render_lines(
+    doc: &Document,
+    config: &RenderConfig,
+    file_id: &str,
+    count: u32,
+) -> Result<Element, JsValue> {
     let container = element(
         doc,
         "div",
-        Some("line-numbers-container"),
+        Some(&format!("line-numbers-container-{}", file_id)),
         &[],
         &[
             ("position", "absolute"),
@@ -74,18 +114,15 @@ fn render_lines(doc: &Document, config: &RenderConfig, count: u32) -> Result<Ele
         let line = element(
             doc,
             "div",
-            Some(&format!("line-numbers_{}", i)),
+            Some(&format!("line-numbers-{}-{}", i, file_id)),
             &["line-numbers"],
-            &[
-                ("left", "18px"),
-                ("width", "22px"),
-            ],
+            &[("left", "18px"), ("width", "22px")],
         )?;
         line.set_text_content(Some(&(i + 1).to_string()));
         let line_container = element(
             doc,
             "div",
-            Some(&format!("line-numbers-container_{}", i)),
+            Some(&format!("line-numbers-container-{}-{}", i, file_id)),
             &["line-numbers-container"],
             &[
                 ("position", "absolute"),
@@ -98,32 +135,6 @@ fn render_lines(doc: &Document, config: &RenderConfig, count: u32) -> Result<Ele
         line_container.append_child(line.as_ref())?;
         container.append_child(line_container.as_ref())?;
     }
-
-    // return Ok(Node::from_html(r#"<div style="position: absolute; transform: translate3d(0px, 0px, 0px); top: 0; height: 100%; width: 66px;">
-    //             <div style="position:absolute;top:0px;width:100%;height:18px;">
-    //                 <div class="line-numbers" style="left:18px;width:22px;">1</div>
-    //             </div>
-    //             <div style="position:absolute;top:18px;width:100%;height:18px;">
-    //                 <div class="line-numbers" style="left:18px;width:22px;">2</div>
-    //             </div>
-    //             <div style="position:absolute;top:36px;width:100%;height:18px;">
-    //                 <div class="line-numbers" style="left:18px;width:22px;">3</div>
-    //             </div>
-    //         </div>"#).unwrap());
-
-    /*
-    <div style="position: absolute; transform: translate3d(0px, 0px, 0px); top: 0; height: 100%; width: 66px;">
-               <div style="position:absolute;top:0px;width:100%;height:18px;">
-                   <div class="line-numbers" style="left:18px;width:22px;">1</div>
-               </div>
-               <div style="position:absolute;top:18px;width:100%;height:18px;">
-                   <div class="line-numbers" style="left:18px;width:22px;">2</div>
-               </div>
-               <div style="position:absolute;top:36px;width:100%;height:18px;">
-                   <div class="line-numbers" style="left:18px;width:22px;">3</div>
-               </div>
-           </div>
-    */
     Ok(container)
 }
 

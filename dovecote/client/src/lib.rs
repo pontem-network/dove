@@ -6,6 +6,7 @@ use proto;
 use std::fmt::Display;
 use serde::Serialize;
 
+mod code;
 mod context;
 mod file;
 mod html;
