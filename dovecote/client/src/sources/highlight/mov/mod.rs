@@ -2,6 +2,7 @@ use crate::sources::highlight::{Marker, Line, StyleType};
 use crate::sources::Error;
 use crate::sources::highlight::mov::lexer::{Lexer, Tok};
 use crate::sources::highlight::mov::parser::parse_num_value;
+use crate::console_log;
 
 pub mod lexer;
 pub mod parser;
@@ -16,21 +17,35 @@ impl Marker for Move {
         self.ctx = Context::None;
     }
 
-    fn mark_line<'input>(&mut self, line: &'input str) -> Result<Line<'input>, Error> {
+    fn mark_line<'input>(&mut self, mut line: &'input str) -> Result<Line<'input>, Error> {
         let mut items = vec![];
+
+        if self.ctx == Context::MultiLineComment {
+            if let Some(index) = line.find("*/") {
+                items.push((StyleType::Comment, &line[..index + 2]));
+                line = &line[index + 2..];
+            }
+        }
 
         let mut lexer = Lexer::new(line);
         loop {
             lexer.advance()?;
+            if lexer.peek() == Tok::EOF {
+                break;
+            }
+
             let element = &line[lexer.start_loc()..lexer.start_loc() + lexer.content().len()];
 
             if lexer.start_loc() - lexer.previous_end_loc() > 0 {
-                items.push((StyleType::Space, &line[lexer.previous_end_loc()..lexer.start_loc()]));
-            }
-            match lexer.peek() {
-                Tok::EOF => {
-                    break;
+                if self.ctx == Context::MultiLineComment {
+                    items.push((StyleType::Comment, &line[lexer.previous_end_loc()..lexer.start_loc()]));
+                } else {
+                    items.push((StyleType::Space, &line[lexer.previous_end_loc()..lexer.start_loc()]));
                 }
+            }
+
+            match lexer.peek() {
+                Tok::EOF => {}
                 Tok::NumValue => {
                     match self.ctx {
                         Context::Address => {
@@ -87,7 +102,16 @@ impl Marker for Move {
                 Tok::LBracket => {}
                 Tok::RBracket => {}
                 Tok::Star => {
-                    items.push((StyleType::Normal, element));
+                    if self.ctx == Context::MultiLineComment {
+                        items.push((StyleType::Comment, element));
+                        if Ok(Tok::Slash) == lexer.lookahead() {
+                            lexer.advance()?;
+                            items.push((StyleType::Comment, "/"));
+                            self.ctx = Context::None;
+                        }
+                    } else {
+                        items.push((StyleType::Normal, element));
+                    }
                 }
                 Tok::Plus => {
                     items.push((StyleType::Normal, element));
@@ -105,7 +129,21 @@ impl Marker for Move {
                     items.push((StyleType::Normal, element));
                 }
                 Tok::Slash => {
-                    //
+                    let next = lexer.lookahead()?;
+                    match next {
+                        Tok::Slash => {
+                            items.push((StyleType::Comment, &line[lexer.start_loc()..]));
+                            break;
+                        }
+                        Tok::Star => {
+                            self.ctx = Context::MultiLineComment;
+                            items.push((StyleType::Comment, &line[lexer.start_loc()..]));
+                            break;
+                        }
+                        _ => {
+                            items.push((StyleType::Normal, element));
+                        }
+                    }
                 }
                 Tok::Colon => {
                     items.push((StyleType::Normal, element));
@@ -128,15 +166,15 @@ impl Marker for Move {
                 Tok::Equal => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::EqualEqual => { items.push((StyleType::Normal, element));}
+                Tok::EqualEqual => { items.push((StyleType::Normal, element)); }
                 Tok::EqualEqualGreater => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::Greater => { items.push((StyleType::Normal, element));}
+                Tok::Greater => { items.push((StyleType::Normal, element)); }
                 Tok::GreaterEqual => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::GreaterGreater => { items.push((StyleType::Normal, element));}
+                Tok::GreaterGreater => { items.push((StyleType::Normal, element)); }
                 Tok::Caret => {
                     items.push((StyleType::Normal, element));
                 }
@@ -197,7 +235,6 @@ impl Marker for Move {
                 }
                 Tok::Struct => {
                     items.push((StyleType::KeyWords, element));
-
                 }
                 Tok::True => {
                     items.push((StyleType::KeyWords, element));
@@ -249,9 +286,12 @@ impl Marker for Move {
     }
 }
 
+#[derive(PartialEq, Debug)]
 enum Context {
     None,
     Address,
+    Derive,
+    MultiLineComment,
 }
 
 impl Default for Context {
@@ -288,6 +328,13 @@ module 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::T {
 
     }
 }
+
+/*
+    multiline
+
+
+   */
+   /* dfdfdf8*/
         "#;
 
         let marked_code = mark_code::<Move>(&"D.move".to_string(), &source);
@@ -312,9 +359,7 @@ module 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::T {
             Line { items: vec![] },
             Line { items: vec![(Space, "    "), (Normal, "}")] },
             Line { items: vec![(Normal, "}")] },
-            Line { items: vec![(Space, "        ")] }
-
-
+            Line { items: vec![(Space, "        ")] },
         ]);
     }
 }
