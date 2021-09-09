@@ -72,7 +72,6 @@ fn render_code(
         &["view-lines", "mouse-cursor-text"],
         &[
             ("position", "absolute"),
-            ("overflow", "hidden"),
             ("left", "66px"),
             ("line-height", &format!("{}px", config.line_height)),
         ],
@@ -96,7 +95,7 @@ fn render_lines(
         doc,
         "div",
         Some(&format!("line-numbers-container-{}", file_id)),
-        &[],
+        &["line-numbers-container"],
         &[
             ("position", "absolute"),
             ("transform", "translate3d(0px, 0px, 0px)"),

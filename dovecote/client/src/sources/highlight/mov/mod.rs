@@ -37,7 +37,9 @@ impl Marker for Move {
                             self.ctx = Context::None;
                             items.push((StyleType::Normal, parse_num_value(&mut lexer, line)?));
                         }
-                        _ => {}
+                        _ => {
+                            items.push((StyleType::Number, parse_num_value(&mut lexer, line)?));
+                        }
                     }
                 }
                 Tok::NumTypedValue => {}
@@ -62,88 +64,182 @@ impl Marker for Move {
                         }
                     }
                 }
-                Tok::Exclaim => {}
-                Tok::ExclaimEqual => {}
-                Tok::Percent => {}
-                Tok::Amp => {}
-                Tok::AmpAmp => {}
-                Tok::AmpMut => {}
+                Tok::Exclaim => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::ExclaimEqual => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Percent => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Amp => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::AmpAmp => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::AmpMut => {
+                    //& mut
+                }
                 Tok::LParen => {}
                 Tok::RParen => {}
                 Tok::LBracket => {}
                 Tok::RBracket => {}
-                Tok::Star => {}
-                Tok::Plus => {}
+                Tok::Star => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Plus => {
+                    items.push((StyleType::Normal, element));
+                }
                 Tok::Comma => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::Minus => {}
-                Tok::Period => {}
-                Tok::PeriodPeriod => {}
-                Tok::Slash => {}
-                Tok::Colon => {}
+                Tok::Minus => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Period => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::PeriodPeriod => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Slash => {
+                    //
+                }
+                Tok::Colon => {
+                    items.push((StyleType::Normal, element));
+                }
                 Tok::ColonColon => {
                     items.push((StyleType::Normal, element));
                 }
                 Tok::Semicolon => {
                     items.push((StyleType::KeyWords, element));
                 }
-                Tok::Less => {}
-                Tok::LessEqual => {}
-                Tok::LessLess => {}
-                Tok::Equal => {}
-                Tok::EqualEqual => {}
-                Tok::EqualEqualGreater => {}
-                Tok::Greater => {}
-                Tok::GreaterEqual => {}
-                Tok::GreaterGreater => {}
-                Tok::Caret => {}
-                Tok::Abort => {}
-                Tok::Acquires => {}
-                Tok::As => {}
-                Tok::Break => {}
-                Tok::Continue => {}
-                Tok::Copy => {}
-                Tok::Else => {}
-                Tok::False => {}
-                Tok::If => {}
-                Tok::Invariant => {}
-                Tok::Let => {}
-                Tok::Loop => {}
-                Tok::Module => {
-                    let (first, second, third) = lexer.lookahead3()?;
-                    if first == Tok::ColonColon || second == Tok::ColonColon || third == Tok::ColonColon {
-                        self.ctx = Context::Address;
-                    }
-
+                Tok::Less => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::LessEqual => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::LessLess => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Equal => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::EqualEqual => { items.push((StyleType::Normal, element));}
+                Tok::EqualEqualGreater => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Greater => { items.push((StyleType::Normal, element));}
+                Tok::GreaterEqual => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::GreaterGreater => { items.push((StyleType::Normal, element));}
+                Tok::Caret => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::Abort => {
                     items.push((StyleType::KeyWords, element));
                 }
-                Tok::Move => {}
-                Tok::Native => {}
-                Tok::Public => {}
-                Tok::Return => {}
-                Tok::Spec => {}
-                Tok::Struct => {}
-                Tok::True => {}
+                Tok::Acquires => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::As => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Break => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Continue => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Copy => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Else => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::False => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::If => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Invariant => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Let => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Loop => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Module => {
+                    self.ctx = Context::Address;
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Move => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Native => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Public => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Return => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Spec => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Struct => {
+                    items.push((StyleType::KeyWords, element));
+
+                }
+                Tok::True => {
+                    items.push((StyleType::KeyWords, element));
+                }
                 Tok::Use => {
                     self.ctx = Context::Address;
                     items.push((StyleType::KeyWords, element));
                 }
-                Tok::While => {}
+                Tok::While => {
+                    items.push((StyleType::KeyWords, element));
+                }
                 Tok::LBrace => {
+                    self.ctx = Context::None;
                     items.push((StyleType::Normal, element));
                 }
-                Tok::Pipe => {}
-                Tok::PipePipe => {}
+                Tok::Pipe => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::PipePipe => {
+                    items.push((StyleType::Normal, element));
+                }
                 Tok::RBrace => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::Fun => {}
-                Tok::Script => {}
-                Tok::Const => {}
-                Tok::Friend => {}
-                Tok::NumSign => {}
-                Tok::AtSign => {}
+                Tok::Fun => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Script => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Const => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::Friend => {
+                    items.push((StyleType::KeyWords, element));
+                }
+                Tok::NumSign => {
+                    //#
+                }
+                Tok::AtSign => {
+                    items.push((StyleType::KeyWords, element));
+                }
             }
         }
 
@@ -183,6 +279,15 @@ module 0x1::T {
 }
 
 module T {}
+
+module 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::T {
+    struct D {
+
+    }
+    struct D1<T> {
+
+    }
+}
         "#;
 
         let marked_code = mark_code::<Move>(&"D.move".to_string(), &source);
@@ -198,7 +303,17 @@ module T {}
             Line { items: vec![(Normal, "}")] },
             Line { items: vec![] },
             Line { items: vec![(KeyWords, "module"), (Space, " "), (Normal, "T"), (Space, " "), (Normal, "{"), (Normal, "}")] },
+            Line { items: vec![(Space, "        ")] },
+            Line { items: vec![(KeyWords, "module"), (Space, " "), (Normal, "1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"), (Normal, "::"), (Normal, "T"), (Space, " "), (Normal, "{")] },
+            Line { items: vec![(Space, "    "), (Space, " "), (Normal, "D"), (Space, " "), (Normal, "{")] },
+            Line { items: vec![] },
+            Line { items: vec![(Space, "    "), (Normal, "}")] },
+            Line { items: vec![(Space, "    "), (Space, " "), (Normal, "D1"), (Normal, "T"), (Space, " "), (Normal, "{")] },
+            Line { items: vec![] },
+            Line { items: vec![(Space, "    "), (Normal, "}")] },
+            Line { items: vec![(Normal, "}")] },
             Line { items: vec![(Space, "        ")] }
+
 
         ]);
     }
