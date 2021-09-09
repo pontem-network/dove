@@ -29,6 +29,6 @@ export async function select_project(id) {
     projects_parent.innerHTML = "";
     let info = await wasm.project_info(id);
     let config = {line_height: 18};
-    await wasm.open_file(id, "a6ee3f32e51a5a81", "editor-container", config);
+    await wasm.open_file(id, "ebb52879bc3756b9", "editor-container", config);
     console.log("{}", info);
 }

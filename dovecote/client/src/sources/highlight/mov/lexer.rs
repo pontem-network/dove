@@ -207,6 +207,21 @@ impl<'input> Lexer<'input> {
         Ok((first, second))
     }
 
+    pub fn lookahead3(&self) -> Result<(Tok, Tok, Tok), Error> {
+        let text = self.text[self.cur_end..].trim_start();
+        let offset = self.text.len() - text.len();
+        let (first, length) = find_token(text, offset)?;
+
+        let text2 = self.text[offset + length..].trim_start();
+        let offset2 = self.text.len() - text2.len();
+        let (second, length2) = find_token(text2, offset2)?;
+
+        let text3 = self.text[offset2 + length2..].trim_start();
+        let offset3 = self.text.len() - text3.len();
+        let (third, _) = find_token(text3, offset3)?;
+        Ok((first, second, third))
+    }
+
     pub fn advance(&mut self) -> Result<(), Error> {
         self.prev_end = self.cur_end;
         let text = self.text[self.cur_end..].trim_start();
@@ -257,7 +272,7 @@ fn find_token(text: &str, start_offset: usize) -> Result<(Tok, usize), Error> {
                         return Err(vec![(
                             make_loc(start_offset, start_offset + line.len() + 2),
                             "Missing closing quote (\") after byte string".to_string(),
-                        )])
+                        )]);
                     }
                 }
             } else {

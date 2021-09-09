@@ -1,8 +1,8 @@
-use super::Error;
 #[cfg(target_arch = "wasm32")]
 use crate::console_log;
 
-pub mod lexer;
+use super::Error;
+
 pub mod mov;
 pub mod toml;
 
