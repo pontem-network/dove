@@ -7,9 +7,9 @@ use crate::console_log;
 pub mod lexer;
 pub mod parser;
 
-#[derive(Default)]
 pub struct Move {
     ctx: Context,
+    last: Tok,
 }
 
 impl Marker for Move {
@@ -38,47 +38,49 @@ impl Marker for Move {
 
             if lexer.start_loc() - lexer.previous_end_loc() > 0 {
                 if self.ctx == Context::MultiLineComment {
-                    items.push((StyleType::Comment, &line[lexer.previous_end_loc()..lexer.start_loc()]));
+                    items.push((
+                        StyleType::Comment,
+                        &line[lexer.previous_end_loc()..lexer.start_loc()],
+                    ));
                 } else {
-                    items.push((StyleType::Space, &line[lexer.previous_end_loc()..lexer.start_loc()]));
+                    items.push((
+                        StyleType::Space,
+                        &line[lexer.previous_end_loc()..lexer.start_loc()],
+                    ));
                 }
             }
 
             match lexer.peek() {
                 Tok::EOF => {}
-                Tok::NumValue => {
-                    match self.ctx {
-                        Context::Address => {
-                            self.ctx = Context::None;
-                            items.push((StyleType::Normal, parse_num_value(&mut lexer, line)?));
-                        }
-                        _ => {
-                            items.push((StyleType::Number, parse_num_value(&mut lexer, line)?));
-                        }
+                Tok::NumValue => match self.ctx {
+                    Context::Address => {
+                        self.ctx = Context::None;
+                        items.push((StyleType::Normal, parse_num_value(&mut lexer, line)?));
                     }
-                }
+                    _ => {
+                        items.push((StyleType::Number, parse_num_value(&mut lexer, line)?));
+                    }
+                },
                 Tok::NumTypedValue => {}
-                Tok::ByteStringValue => {}
-                Tok::IdentifierValue => {
-                    match self.ctx {
-                        Context::Address => {
-                            self.ctx = Context::None;
+                Tok::ByteStringValue => {
+                    items.push((StyleType::String, element));
+                }
+                Tok::IdentifierValue => match self.ctx {
+                    Context::Address => {
+                        self.ctx = Context::None;
+                        items.push((StyleType::Normal, element));
+                    }
+                    _ => match element {
+                        "address" => {
+                            self.ctx = Context::Address;
+                            items.push((StyleType::KeyWords, element))
+                        }
+
+                        &_ => {
                             items.push((StyleType::Normal, element));
                         }
-                        _ => {
-                            match element {
-                                "address" => {
-                                    self.ctx = Context::Address;
-                                    items.push((StyleType::KeyWords, element))
-                                }
-
-                                &_ => {
-                                    items.push((StyleType::Normal, element));
-                                }
-                            }
-                        }
-                    }
-                }
+                    },
+                },
                 Tok::Exclaim => {
                     items.push((StyleType::Normal, element));
                 }
@@ -95,12 +97,21 @@ impl Marker for Move {
                     items.push((StyleType::Normal, element));
                 }
                 Tok::AmpMut => {
-                    //& mut
+                    items.push((StyleType::Normal, "&"));
+                    items.push((StyleType::KeyWords, "mut"));
                 }
-                Tok::LParen => {}
-                Tok::RParen => {}
-                Tok::LBracket => {}
-                Tok::RBracket => {}
+                Tok::LParen => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::RParen => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::LBracket => {
+                    items.push((StyleType::Normal, element));
+                }
+                Tok::RBracket => {
+                    items.push((StyleType::Normal, element));
+                }
                 Tok::Star => {
                     if self.ctx == Context::MultiLineComment {
                         items.push((StyleType::Comment, element));
@@ -133,11 +144,13 @@ impl Marker for Move {
                     match next {
                         Tok::Slash => {
                             items.push((StyleType::Comment, &line[lexer.start_loc()..]));
+                            self.last = lexer.peek();
                             break;
                         }
                         Tok::Star => {
                             self.ctx = Context::MultiLineComment;
                             items.push((StyleType::Comment, &line[lexer.start_loc()..]));
+                            self.last = lexer.peek();
                             break;
                         }
                         _ => {
@@ -152,7 +165,7 @@ impl Marker for Move {
                     items.push((StyleType::Normal, element));
                 }
                 Tok::Semicolon => {
-                    items.push((StyleType::KeyWords, element));
+                    items.push((StyleType::Normal, element));
                 }
                 Tok::Less => {
                     items.push((StyleType::Normal, element));
@@ -166,15 +179,21 @@ impl Marker for Move {
                 Tok::Equal => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::EqualEqual => { items.push((StyleType::Normal, element)); }
+                Tok::EqualEqual => {
+                    items.push((StyleType::Normal, element));
+                }
                 Tok::EqualEqualGreater => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::Greater => { items.push((StyleType::Normal, element)); }
+                Tok::Greater => {
+                    items.push((StyleType::Normal, element));
+                }
                 Tok::GreaterEqual => {
                     items.push((StyleType::Normal, element));
                 }
-                Tok::GreaterGreater => { items.push((StyleType::Normal, element)); }
+                Tok::GreaterGreater => {
+                    items.push((StyleType::Normal, element));
+                }
                 Tok::Caret => {
                     items.push((StyleType::Normal, element));
                 }
@@ -272,17 +291,25 @@ impl Marker for Move {
                     items.push((StyleType::KeyWords, element));
                 }
                 Tok::NumSign => {
-                    //#
+                    items.push((StyleType::Normal, element));
                 }
                 Tok::AtSign => {
                     items.push((StyleType::KeyWords, element));
                 }
             }
+            self.last = lexer.peek();
         }
 
-        Ok(Line {
-            items
-        })
+        Ok(Line { items })
+    }
+}
+
+impl Default for Move {
+    fn default() -> Self {
+        Move {
+            ctx: Default::default(),
+            last: Tok::EOF,
+        }
     }
 }
 
@@ -338,28 +365,139 @@ module 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE::T {
         "#;
 
         let marked_code = mark_code::<Move>(&"D.move".to_string(), &source);
-        assert_eq!(marked_code, vec![
-            Line { items: vec![] },
-            Line { items: vec![(KeyWords, "address"), (Space, " "), (Normal, "0x1"), (Space, " "), (Normal, "{")] },
-            Line { items: vec![(Space, "    "), (KeyWords, "use"), (Space, " "), (Normal, "0x1"), (Normal, "::"), (Normal, "Diem"), (Normal, "::"), (Normal, "{"), (Normal, "Self"), (Normal, ","), (Space, " "), (Normal, "Diem"), (Normal, ","), (Space, " "), (Normal, "Preburn"), (Normal, "}"), (KeyWords, ";")] },
-            Line { items: vec![(Space, "    "), (KeyWords, "use"), (Space, " "), (Normal, "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"), (Normal, "::"), (Normal, "Roles"), (KeyWords, ";")] },
-            Line { items: vec![(Space, "    "), (KeyWords, "use"), (Space, " "), (Normal, "1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"), (Normal, "::"), (Normal, "Roles"), (KeyWords, ";")] },
-            Line { items: vec![(Normal, "}")] },
-            Line { items: vec![] },
-            Line { items: vec![(KeyWords, "module"), (Space, " "), (Normal, "0x1"), (Normal, "::"), (Normal, "T"), (Space, " "), (Normal, "{")] },
-            Line { items: vec![(Normal, "}")] },
-            Line { items: vec![] },
-            Line { items: vec![(KeyWords, "module"), (Space, " "), (Normal, "T"), (Space, " "), (Normal, "{"), (Normal, "}")] },
-            Line { items: vec![(Space, "        ")] },
-            Line { items: vec![(KeyWords, "module"), (Space, " "), (Normal, "1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"), (Normal, "::"), (Normal, "T"), (Space, " "), (Normal, "{")] },
-            Line { items: vec![(Space, "    "), (Space, " "), (Normal, "D"), (Space, " "), (Normal, "{")] },
-            Line { items: vec![] },
-            Line { items: vec![(Space, "    "), (Normal, "}")] },
-            Line { items: vec![(Space, "    "), (Space, " "), (Normal, "D1"), (Normal, "T"), (Space, " "), (Normal, "{")] },
-            Line { items: vec![] },
-            Line { items: vec![(Space, "    "), (Normal, "}")] },
-            Line { items: vec![(Normal, "}")] },
-            Line { items: vec![(Space, "        ")] },
-        ]);
+        assert_eq!(
+            marked_code,
+            vec![
+                Line { items: vec![] },
+                Line {
+                    items: vec![
+                        (KeyWords, "address"),
+                        (Space, " "),
+                        (Normal, "0x1"),
+                        (Space, " "),
+                        (Normal, "{")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (KeyWords, "use"),
+                        (Space, " "),
+                        (Normal, "0x1"),
+                        (Normal, "::"),
+                        (Normal, "Diem"),
+                        (Normal, "::"),
+                        (Normal, "{"),
+                        (Normal, "Self"),
+                        (Normal, ","),
+                        (Space, " "),
+                        (Normal, "Diem"),
+                        (Normal, ","),
+                        (Space, " "),
+                        (Normal, "Preburn"),
+                        (Normal, "}"),
+                        (KeyWords, ";")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (KeyWords, "use"),
+                        (Space, " "),
+                        (Normal, "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"),
+                        (Normal, "::"),
+                        (Normal, "Roles"),
+                        (KeyWords, ";")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (KeyWords, "use"),
+                        (Space, " "),
+                        (Normal, "1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"),
+                        (Normal, "::"),
+                        (Normal, "Roles"),
+                        (KeyWords, ";")
+                    ]
+                },
+                Line {
+                    items: vec![(Normal, "}")]
+                },
+                Line { items: vec![] },
+                Line {
+                    items: vec![
+                        (KeyWords, "module"),
+                        (Space, " "),
+                        (Normal, "0x1"),
+                        (Normal, "::"),
+                        (Normal, "T"),
+                        (Space, " "),
+                        (Normal, "{")
+                    ]
+                },
+                Line {
+                    items: vec![(Normal, "}")]
+                },
+                Line { items: vec![] },
+                Line {
+                    items: vec![
+                        (KeyWords, "module"),
+                        (Space, " "),
+                        (Normal, "T"),
+                        (Space, " "),
+                        (Normal, "{"),
+                        (Normal, "}")
+                    ]
+                },
+                Line {
+                    items: vec![(Space, "        ")]
+                },
+                Line {
+                    items: vec![
+                        (KeyWords, "module"),
+                        (Space, " "),
+                        (Normal, "1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE"),
+                        (Normal, "::"),
+                        (Normal, "T"),
+                        (Space, " "),
+                        (Normal, "{")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (Space, " "),
+                        (Normal, "D"),
+                        (Space, " "),
+                        (Normal, "{")
+                    ]
+                },
+                Line { items: vec![] },
+                Line {
+                    items: vec![(Space, "    "), (Normal, "}")]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (Space, " "),
+                        (Normal, "D1"),
+                        (Normal, "T"),
+                        (Space, " "),
+                        (Normal, "{")
+                    ]
+                },
+                Line { items: vec![] },
+                Line {
+                    items: vec![(Space, "    "), (Normal, "}")]
+                },
+                Line {
+                    items: vec![(Normal, "}")]
+                },
+                Line {
+                    items: vec![(Space, "        ")]
+                },
+            ]
+        );
     }
 }

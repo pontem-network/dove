@@ -38,13 +38,7 @@ pub fn to_html(
                 for item in line.split(' ') {
                     is_empty = false;
 
-                    let sp = element(
-                        doc,
-                        "span",
-                        None,
-                        &["cs1"],
-                        &[],
-                    )?;
+                    let sp = element(doc, "span", None, &["cs1"], &[])?;
 
                     if item == "" {
                         sp.set_text_content(Some(" "));
@@ -71,10 +65,18 @@ pub fn to_html(
     }
 }
 
-fn make_element<M: Marker + Default>(doc: &Document, file_id: &str, code: &File, config: &RenderConfig,) -> Result<Vec<Element>, JsValue> {
+fn make_element<M: Marker + Default>(
+    doc: &Document,
+    file_id: &str,
+    code: &File,
+    config: &RenderConfig,
+) -> Result<Vec<Element>, JsValue> {
     let mut lines = vec![];
 
-    for (i, line) in mark_code::<M>(file_id, code.content.as_str()).into_iter().enumerate() {
+    for (i, line) in mark_code::<M>(file_id, code.content.as_str())
+        .into_iter()
+        .enumerate()
+    {
         let view_line = element(
             doc,
             "div",
@@ -88,13 +90,7 @@ fn make_element<M: Marker + Default>(doc: &Document, file_id: &str, code: &File,
         let span = element(doc, "span", None, &[], &[])?;
 
         for (style, content) in line.items {
-            let sp = element(
-                doc,
-                "span",
-                None,
-                &[style.as_style_name()],
-                &[],
-            )?;
+            let sp = element(doc, "span", None, &[style.as_style_name()], &[])?;
             sp.set_text_content(Some(content));
             span.append_child(sp.as_ref())?;
         }

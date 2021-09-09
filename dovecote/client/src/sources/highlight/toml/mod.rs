@@ -17,7 +17,10 @@ impl Marker for Toml {
             let element = &line[lexer.start_loc()..lexer.start_loc() + lexer.content().len()];
 
             if lexer.start_loc() - lexer.previous_end_loc() > 0 {
-                items.push((StyleType::Space, &line[lexer.previous_end_loc()..lexer.start_loc()]));
+                items.push((
+                    StyleType::Space,
+                    &line[lexer.previous_end_loc()..lexer.start_loc()],
+                ));
             }
 
             match lexer.peek() {
@@ -40,18 +43,21 @@ impl Marker for Toml {
                 Tok::True | Tok::False => {
                     items.push((StyleType::KeyWords, element));
                 }
-                Tok::Period | Tok::LBracket | Tok::RBracket | Tok::Comma | Tok::Equal | Tok::LBrace | Tok::RBrace => {
+                Tok::Period
+                | Tok::LBracket
+                | Tok::RBracket
+                | Tok::Comma
+                | Tok::Equal
+                | Tok::LBrace
+                | Tok::RBrace => {
                     items.push((StyleType::Normal, element));
                 }
             }
         }
 
-        Ok(Line {
-            items
-        })
+        Ok(Line { items })
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -89,34 +95,232 @@ default = []
 "#;
 
         let marked_code = mark_code::<Toml>(&"D.toml".to_string(), &source);
-        assert_eq!(marked_code, vec![
-            Line { items: vec![] },
-            Line { items: vec![(Normal, "["), (Var, "package"), (Normal, "]")] },
-            Line { items: vec![(Var, "name"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"dove\"")] },
-            Line { items: vec![(Var, "version"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"1.3.2\"")] },
-            Line { items: vec![(Var, "authors"), (Space, " "), (Normal, "="), (Space, " "), (Normal, "[")] },
-            Line { items: vec![(Space, "    "), (String, "\"Alex Koz. <alexanderkozlovskii@wings.ai>\""), (Normal, ",")] },
-            Line { items: vec![(Space, "    "), (String, "\"Maxim Kurnikov <maximkurnikov@wings.ai>\"")] },
-            Line { items: vec![(Normal, "]")] },
-            Line { items: vec![(Var, "edition"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"2018\"")] },
-            Line { items: vec![(Var, "build"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"build.rs\"")] },
-            Line { items: vec![(Var, "exclude"), (Space, " "), (Normal, "="), (Space, " "), (Normal, "[")] },
-            Line { items: vec![(Space, "    "), (String, "\"dovecote/client\""), (Normal, ",")] },
-            Line { items: vec![(Normal, "]")] },
-            Line { items: vec![(Var, "int"), (Space, " "), (Normal, "="), (Space, " "), (Number, "-42")] },
-            Line { items: vec![(Number, "11"), (Space, " "), (Normal, "="), (Space, " "), (Var, "ff")] },
-            Line { items: vec![(Var, "bool"), (Space, " "), (Normal, "="), (Space, " "), (KeyWords, "false")] },
-            Line { items: vec![(Var, "bool_1"), (Space, " "), (Normal, "="), (Space, " "), (KeyWords, "true")] },
-            Line { items: vec![(Normal, "["), (Var, "dependencies"), (Normal, "]")] },
-            Line { items: vec![(Var, "fs_extra"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"1.2.0\"")] },
-            Line { items: vec![(Var, "tiny-keccak"), (Space, " "), (Normal, "="), (Space, " "), (Normal, "{"), (Space, " "), (Var, "version"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"2.0.2\""), (Normal, ","), (Space, " "), (Var, "default-features"), (Space, " "), (Normal, "="), (Space, " "), (KeyWords, "false"), (Normal, ","), (Space, " "), (Var, "features"), (Space, " "), (Normal, "="), (Space, " "), (Normal, "["), (String, "\"sha3\""), (Normal, "]"), (Space, " "), (Normal, "}")] },
-            Line { items: vec![(Var, "lang"), (Space, " "), (Normal, "="), (Space, " "), (Normal, "{"), (Space, " "), (Var, "path"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"../lang\""), (Space, " "), (Normal, "}")] },
-            Line { items: vec![(Var, "move-cli"), (Space, " "), (Normal, "="), (Space, " "), (Normal, "{"), (Space, " "),  (Var, "git"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"https://github.com/pontem-network/diem.git\""), (Normal, ","), (Space, " "), (Var, "branch"), (Space, " "), (Normal, "="), (Space, " "), (String, "\"v1.3-r1\""), (Space, " "), (Normal, "}")] },
-            Line { items: vec![(Comment, "# move-prover deps")] },
-            Line { items: vec![(Normal, "["), (Var, "features"), (Normal, "]")] },
-            Line {
-                items: vec![(Var, "default"), (Space, " "), (Normal, "="), (Space, " "), (Normal, "["), (Normal, "]")]
-            }]);
+        assert_eq!(
+            marked_code,
+            vec![
+                Line { items: vec![] },
+                Line {
+                    items: vec![(Normal, "["), (Var, "package"), (Normal, "]")]
+                },
+                Line {
+                    items: vec![
+                        (Var, "name"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"dove\"")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "version"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"1.3.2\"")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "authors"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Normal, "[")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (String, "\"Alex Koz. <alexanderkozlovskii@wings.ai>\""),
+                        (Normal, ",")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (String, "\"Maxim Kurnikov <maximkurnikov@wings.ai>\"")
+                    ]
+                },
+                Line {
+                    items: vec![(Normal, "]")]
+                },
+                Line {
+                    items: vec![
+                        (Var, "edition"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"2018\"")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "build"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"build.rs\"")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "exclude"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Normal, "[")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Space, "    "),
+                        (String, "\"dovecote/client\""),
+                        (Normal, ",")
+                    ]
+                },
+                Line {
+                    items: vec![(Normal, "]")]
+                },
+                Line {
+                    items: vec![
+                        (Var, "int"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Number, "-42")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Number, "11"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Var, "ff")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "bool"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (KeyWords, "false")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "bool_1"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (KeyWords, "true")
+                    ]
+                },
+                Line {
+                    items: vec![(Normal, "["), (Var, "dependencies"), (Normal, "]")]
+                },
+                Line {
+                    items: vec![
+                        (Var, "fs_extra"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"1.2.0\"")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "tiny-keccak"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Normal, "{"),
+                        (Space, " "),
+                        (Var, "version"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"2.0.2\""),
+                        (Normal, ","),
+                        (Space, " "),
+                        (Var, "default-features"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (KeyWords, "false"),
+                        (Normal, ","),
+                        (Space, " "),
+                        (Var, "features"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Normal, "["),
+                        (String, "\"sha3\""),
+                        (Normal, "]"),
+                        (Space, " "),
+                        (Normal, "}")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "lang"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Normal, "{"),
+                        (Space, " "),
+                        (Var, "path"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"../lang\""),
+                        (Space, " "),
+                        (Normal, "}")
+                    ]
+                },
+                Line {
+                    items: vec![
+                        (Var, "move-cli"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Normal, "{"),
+                        (Space, " "),
+                        (Var, "git"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"https://github.com/pontem-network/diem.git\""),
+                        (Normal, ","),
+                        (Space, " "),
+                        (Var, "branch"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (String, "\"v1.3-r1\""),
+                        (Space, " "),
+                        (Normal, "}")
+                    ]
+                },
+                Line {
+                    items: vec![(Comment, "# move-prover deps")]
+                },
+                Line {
+                    items: vec![(Normal, "["), (Var, "features"), (Normal, "]")]
+                },
+                Line {
+                    items: vec![
+                        (Var, "default"),
+                        (Space, " "),
+                        (Normal, "="),
+                        (Space, " "),
+                        (Normal, "["),
+                        (Normal, "]")
+                    ]
+                }
+            ]
+        );
     }
 }
-

@@ -18,12 +18,22 @@ pub fn mark_code<'input, M: Marker + Default>(id: &str, code: &'input str) -> Ve
             Err(err) => {
                 marcker.reset();
                 lines.push(Line {
-                    items: vec![(StyleType::Normal, line)]
+                    items: vec![(StyleType::Normal, line)],
                 });
                 #[cfg(target_arch = "wasm32")]
-                console_log!("Highlighting error: line:{}:{:?}. File id:{}", i + 1, err, id);
+                console_log!(
+                    "Highlighting error: line:{}:{:?}. File id:{}",
+                    i + 1,
+                    err,
+                    id
+                );
                 #[cfg(not(target_arch = "wasm32"))]
-                println!("Highlighting error: line:{}:{:?}. File id:{}", i + 1, err, id);
+                println!(
+                    "Highlighting error: line:{}:{:?}. File id:{}",
+                    i + 1,
+                    err,
+                    id
+                );
             }
         }
     }
