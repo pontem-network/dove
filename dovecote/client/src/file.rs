@@ -11,6 +11,31 @@ use web_sys::{Document, Element};
 use crate::html::element;
 use crate::code::to_html;
 
+
+#[wasm_bindgen]
+pub async fn get_file(
+    project_id: ID,
+    file_id: ID,
+) -> Result<JsValue, JsValue> {
+    console_log!(
+        "get_file:{}-{}",
+        project_id,
+        file_id,
+    );
+
+    let f_id = file_id.clone();
+    let get_file = GetFile {
+        project_id,
+        file_id,
+    };
+
+    let file = proto::get_file(&api_url(), get_file)
+        .await
+        .map_err(js_err)?;
+
+    Ok(wasm_bindgen::JsValue::from_str(&file.content))
+}
+
 #[wasm_bindgen]
 pub async fn open_file(
     project_id: ID,
@@ -36,6 +61,7 @@ pub async fn open_file(
     let file = proto::get_file(&api_url(), get_file)
         .await
         .map_err(js_err)?;
+
     render(&container_id, &f_id, config, file)
 }
 

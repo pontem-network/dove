@@ -172,65 +172,18 @@ body{
  ***************************************************/
 #code-space{
     position: relative;
+    overflow-x: hidden;
     flex: 1;
-    height: 100%;
-    padding: 10px 10px 10px 0;
+    height: 100%; width: 100%;
     background-color: var(--color-0);
 }
 #editor-container{
     position: relative;
     width: 100%;
     height: 100%;
-    overflow: hidden auto;
-}
-#editor-container .view-lines{
-    position: relative; z-index: 2;
-    display: block;
-    padding-left: 66px;
-}
-.line-numbers {
-    color: #858585;
-    font-variant-numeric: tabular-nums;
-    position: absolute;
-    text-align: right;
-    display: inline-block;
-    vertical-align: middle;
-    box-sizing: border-box;
-    cursor: default;
-    height: 100%;
-    font-family: Menlo, Monaco, "Courier New", monospace;
-    font-weight: normal;
-    font-size: 12px;
-    font-feature-settings: "liga" 0, "calt" 0;
-    line-height: 18px;
-    letter-spacing: 0px;
+    /* overflow: hidden auto; */
 }
 
-.view-lines {
-    font-family: Menlo, Monaco, "Courier New", monospace;
-    font-weight: normal;
-    font-size: 12px;
-    font-feature-settings: "liga" 0, "calt" 0;
-    letter-spacing: 0px;
-    width: 100%;
-    height: 100%;
-}
-
-.view-line {
-    display: block;
-    position: absolute;
-    font-family: Menlo, Monaco, "Courier New", monospace;
-    font-weight: normal;
-    font-size: 12px;
-    font-feature-settings: "liga" 0, "calt" 0;
-    line-height: 18px;
-    letter-spacing: 0px;
-
-    unicode-bidi: isolate;
-    font-variant-numeric: tabular-nums;
-    white-space: pre;
-    text-transform: none;
-}
 /***************************************************
  *
  ***************************************************/

@@ -30,6 +30,7 @@ export async function init(){
     // open projects list
     on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[0]);
 }
+/// Set status text in footer
 function footer_status(text){
     document.querySelector("#footer .status").innerHTML = text;
 }
@@ -122,7 +123,6 @@ function on_click_project(){
         console.warn('data-id is undefined');
         return false;
     }
-    window.id_open_project = id;
     explorer_load(id);
 }
 // ===============================================================
@@ -130,13 +130,19 @@ function on_click_project(){
 // ===============================================================
 /// Upload a file tree
 export async function explorer_load(id) {
+    if (window.editor_open_file){
+        window.editor_open_file.editor.dispose();
+        window.editor_open_file = null;
+    }
+
     let explorer = document.querySelector("#explorer .cont");
     if ( explorer === undefined ){ return ; }
     explorer.addClass('load');
     footer_status("Loading tree")
-
+    
     explorer.innerHTML = "";
     let info = await wasm.project_info(id);
+    window.id_open_project = id;
 
     explorer_add(explorer, [info.tree]);
 
@@ -166,15 +172,15 @@ function on_click_explorer_dir(e){
     this.toggleClass("open");
     return false;
 }
+
 function on_click_explorer_file(e){
     e.stopPropagation();
 
-    footer_status("Loding file...");
+    editor_open_file(
+        this.attr("data-id"),
+        this.attr("data-name")
+    );
 
-    let config = {line_height: 18};
-    wasm.open_file(window.id_open_project, this.attr("data-id"), "editor-container", config);
-
-    footer_status("Done");
     return false;
 }
 
@@ -215,9 +221,64 @@ function explorer_add_file(parent, id, name){
     let block = document
         .createElement("li")
         .addClass("file")
-        .attr("data-id", id);
+        .attr("data-id", id)
+        .attr("data-name", name);
     block.innerHTML = TEMPLATE_EXPLORER_FILE
         .replaceAll("{{name}}", name)
         .replaceAll("{{id}}", id);
     parent.append(block);
+}
+// ===============================================================
+//  Editor
+// ===============================================================
+async function editor_open_file(file_id, file_name){
+    footer_status("Loding file...");
+
+    let language = 'palaintext';
+    let content = await wasm.get_file(window.id_open_project, file_id);
+
+    if ( !window.editor_open_file ){
+        window.editor_open_file = {
+            id: file_id,
+            name: file_name,
+            editor: monaco.editor.create(document.getElementById('editor-container'), {
+                value: content,
+                language: language,
+                theme: "vs-dark",
+                automaticLayout: true 
+            })
+        };
+        window.editor_open_file.editor.addAction({
+                id: 'dove-build',
+                label: 'Build project',
+                keybindings: [
+                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
+                    monaco.KeyMod.chord(
+                        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K, 
+                        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_M
+                    )
+                ],
+                precondition: null,
+                keybindingContext: null,
+                contextMenuGroupId: 'navigation',
+                contextMenuOrder: 1.5,
+                run: function(ed) {
+                    // @todo dove build
+                    return null;
+                }
+            }
+        );
+        window.editor_open_file.editor
+            .getModel()
+            .onDidChangeContent((event) => {
+                // code changed
+                // @todo update on the server
+            })
+    }else{
+        window.editor_open_file.id = file_id;
+        window.editor_open_file.name = file_name;
+        window.editor_open_file.editor.setValue(content);
+    }
+
+    footer_status("Done");
 }

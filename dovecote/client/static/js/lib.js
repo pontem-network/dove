@@ -19,3 +19,7 @@ HTMLElement.prototype.attr=function(attr_name,attr_value){
     this.setAttribute(attr_name,attr_value);
     return this;
 }
+HTMLElement.prototype.event_run_name=function(name){this.dispatchEvent((new Event(name,{bubbles:true,cancelable:true})));return this;}
+HTMLElement.prototype.change=function(){this.event_run_name('change'); return this.event_run_name("onchange");}
+HTMLElement.prototype.click=function(){this.event_run_name("onclick"); return this.event_run_name("click"); }
+HTMLElement.prototype.submit=function(){this.event_run_name("onsubmit"); return this.event_run_name("submit"); }
