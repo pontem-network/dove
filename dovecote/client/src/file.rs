@@ -70,11 +70,7 @@ fn render_code(
         "div",
         Some(&format!("view-lines-{}", file_id)),
         &["view-lines", "mouse-cursor-text"],
-        &[
-            ("position", "absolute"),
-            ("left", "66px"),
-            ("line-height", &format!("{}px", config.line_height)),
-        ],
+        &[],
     )?;
     let lines = to_html(doc, file_id, file, config)?;
     let count = lines.len() as u32;
@@ -96,12 +92,7 @@ fn render_lines(
         "div",
         Some(&format!("line-numbers-container-{}", file_id)),
         &["line-numbers-container"],
-        &[
-            ("position", "absolute"),
-            ("transform", "translate3d(0px, 0px, 0px)"),
-            ("height", "100%"),
-            ("width", "66px"),
-        ],
+        &[],
     )?;
 
     for i in 0..count {
