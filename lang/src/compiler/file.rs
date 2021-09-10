@@ -34,7 +34,7 @@ impl<'a, P: AsRef<Path>> Iterator for Files<'a, P> {
         loop {
             if let Some(entry) = self.next_entry() {
                 if let Ok(entry) = entry {
-                    if is_move_file(&entry) {
+                    if is_move_file(entry.path()) {
                         return Some(entry.into_path());
                     }
                 }
@@ -44,19 +44,15 @@ impl<'a, P: AsRef<Path>> Iterator for Files<'a, P> {
         }
     }
 }
-
-fn is_move_file(entry: &DirEntry) -> bool {
-    entry.file_type().is_file()
+/// Check whether the file is a move
+pub fn is_move_file(entry: &Path) -> bool {
+    entry.is_file()
         && !entry
             .file_name()
-            .to_str()
+            .and_then(|name| name.to_str())
             .map(|name| name.starts_with('.'))
             .unwrap_or(true)
-        && entry
-            .path()
-            .extension()
-            .map(|ext| ext.eq("move"))
-            .unwrap_or(false)
+        && entry.extension().map(|ext| ext.eq("move")).unwrap_or(false)
 }
 
 pub fn find_move_files<P>(paths: &[P]) -> Files<P>
@@ -78,7 +74,7 @@ where
         .into_iter()
         .filter_map(|entry| match entry {
             Ok(entry) => {
-                if is_move_file(&entry) {
+                if is_move_file(entry.path()) {
                     let path = entry.into_path();
                     if filter(&path) {
                         Some(Ok(path))

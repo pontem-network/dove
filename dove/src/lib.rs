@@ -36,6 +36,8 @@ pub mod executor;
 pub mod index;
 /// Dove configuration.
 pub mod manifest;
+/// Metadata from project
+pub mod metadata;
 /// StdOut stream
 pub mod stdout;
 #[doc(hidden)]
