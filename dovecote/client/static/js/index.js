@@ -1,8 +1,6 @@
 import init, * as wasm from '../pkg/client.js';
 import * as sidebar from './sidebar.js';
 
-let project_id;
-
 export default async function run() {
     await init();
     sidebar.init();

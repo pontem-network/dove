@@ -4,7 +4,6 @@ use anyhow::Error;
 use std::fs;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use proto::file::FileType;
 
 #[derive(Debug)]
 pub struct MFile {
@@ -31,15 +30,11 @@ impl MFile {
         })
     }
 
-    pub fn tp(&self) -> FileType {
+    pub fn tp(&self) -> String {
         if let Some(ext) = self.path.extension() {
-            match ext.to_string_lossy().as_ref() {
-                "move" => FileType::Move,
-                "toml" => FileType::Toml,
-                _ => FileType::Uncnown,
-            }
+            ext.to_string_lossy().to_string()
         } else {
-            FileType::Uncnown
+            "palaintext".to_string()
         }
     }
 }

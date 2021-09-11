@@ -4,13 +4,8 @@ use wasm_bindgen::JsValue;
 use crate::context::*;
 use crate::js_err;
 use proto::project::ID;
-use proto::file::{GetFile, File};
+use proto::file::GetFile;
 use crate::console_log;
-use anyhow::anyhow;
-use web_sys::{Document, Element};
-use crate::html::element;
-use crate::code::to_html;
-
 
 #[wasm_bindgen]
 pub async fn get_file(
@@ -22,8 +17,6 @@ pub async fn get_file(
         project_id,
         file_id,
     );
-
-    let f_id = file_id.clone();
     let get_file = GetFile {
         project_id,
         file_id,
@@ -33,128 +26,69 @@ pub async fn get_file(
         .await
         .map_err(js_err)?;
 
-    Ok(wasm_bindgen::JsValue::from_str(&file.content))
+    wasm_bindgen::JsValue::from_serde(&file).map_err(js_err)
 }
 
 #[wasm_bindgen]
-pub async fn open_file(
-    project_id: ID,
-    file_id: ID,
-    container_id: String,
-    config: JsValue,
-) -> Result<(), JsValue> {
-    let config: RenderConfig = config.into_serde().map_err(js_err)?;
-    console_log!(
-        "open_file:{}-{}=>{} cfg:{:?}",
-        project_id,
-        file_id,
-        container_id,
-        config
-    );
-
-    let f_id = file_id.clone();
-    let get_file = GetFile {
-        project_id,
-        file_id,
-    };
-
-    let file = proto::get_file(&api_url(), get_file)
-        .await
-        .map_err(js_err)?;
-
-    render(&container_id, &f_id, config, file)
+pub async fn on_file_change(project_id: ID, file_id: ID, event: JsValue) {
+    console_log!("on_file_change:{}-{};{:?}",project_id,file_id, event);
+    let event = event.into_serde::<ModelContentChangedEvent>();
+    console_log!("{:?}", event);
 }
 
-fn render(
-    container_id: &str,
-    file_id: &str,
-    config: RenderConfig,
-    file: File,
-) -> Result<(), JsValue> {
-    let win = window().map_err(js_err)?;
-    let doc = document(&win).map_err(js_err)?;
-    let container = doc
-        .get_element_by_id(&container_id)
-        .ok_or_else(|| anyhow!("Element with id '{}' was not fount", container_id))
-        .map_err(js_err)?;
-    container.set_text_content(None);
+#[wasm_bindgen]
+pub async fn flush() {}
 
-    let (code_lines, element) = render_code(&doc, &config, file_id, &file)?;
-    container.append_child(element.as_ref())?;
-    container.append_child(render_lines(&doc, &config, file_id, code_lines)?.as_ref())?;
-    Ok(())
-}
-
-fn render_code(
-    doc: &Document,
-    config: &RenderConfig,
-    file_id: &str,
-    file: &File,
-) -> Result<(u32, Element), JsValue> {
-    let view_lines = element(
-        doc,
-        "div",
-        Some(&format!("view-lines-{}", file_id)),
-        &["view-lines", "mouse-cursor-text"],
-        &[],
-    )?;
-    let lines = to_html(doc, file_id, file, config)?;
-    let count = lines.len() as u32;
-    for line in lines {
-        view_lines.append_child(line.as_ref())?;
-    }
-
-    Ok((count, view_lines))
-}
-
-fn render_lines(
-    doc: &Document,
-    config: &RenderConfig,
-    file_id: &str,
-    count: u32,
-) -> Result<Element, JsValue> {
-    let container = element(
-        doc,
-        "div",
-        Some(&format!("line-numbers-container-{}", file_id)),
-        &["line-numbers-container"],
-        &[],
-    )?;
-
-    for i in 0..count {
-        let line = element(
-            doc,
-            "div",
-            Some(&format!("line-numbers-{}-{}", i, file_id)),
-            &["line-numbers"],
-            &[("left", "18px"), ("width", "22px")],
-        )?;
-        line.set_text_content(Some(&(i + 1).to_string()));
-        let line_container = element(
-            doc,
-            "div",
-            Some(&format!("line-numbers-container-{}-{}", i, file_id)),
-            &["line-numbers-container"],
-            &[
-                ("position", "absolute"),
-                ("top", &format!("{}px", config.line_height * i)),
-                ("width", "100%"),
-                ("height", &format!("{}px", config.line_height)),
-            ],
-        )?;
-
-        line_container.append_child(line.as_ref())?;
-        container.append_child(line_container.as_ref())?;
-    }
-    Ok(container)
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ModelContentChangedEvent {
+    pub changes: Vec<ModelContentChange>,
+    ///The (new) end-of-line character.
+    pub eol: String,
+    /// The new version id the model has transitioned to.
+    #[serde(alias = "versionId")]
+    pub version_id: u64,
+    /// Flag that indicates that this event was generated while undoing.
+    #[serde(alias = "isUndoing")]
+    pub is_undoing: bool,
+    /// Flag that indicates that this event was generated while redoing.
+    #[serde(alias = "isRedoing")]
+    pub is_redoing: bool,
+    /// Flag that indicates that all decorations were lost with this edit.
+    /// The model has been reset to a new value.
+    #[serde(alias = "isFlush")]
+    pub is_flush: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RenderConfig {
-    #[serde(default = "line_height")]
-    pub line_height: u32,
+pub struct ModelContentChange {
+    /// The range that got replaced.
+    pub range: Range,
+    /// The offset of the range that got replaced.
+    #[serde(alias = "rangeOffset")]
+    pub range_offset: u64,
+    /// The length of the range that got replaced.
+    #[serde(alias = "rangeLength")]
+    pub range_length: u64,
+    /// The new text for the range.
+    pub text: String,
 }
 
-fn line_height() -> u32 {
-    18
+///A range in the editor. This interface is suitable for serialization.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Range {
+    /// Line number on which the range starts (starts at 1).
+    #[serde(alias = "startLineNumber")]
+    pub start_line_number: u64,
+
+    /// Column on which the range starts in line `startLineNumber` (starts at 1).
+    #[serde(alias = "startColumn")]
+    pub start_column: u64,
+
+    /// Line number on which the range ends.
+    #[serde(alias = "endLineNumber")]
+    pub end_line_number: u64,
+
+    /// Column on which the range ends in line `endLineNumber`.
+    #[serde(alias = "endColumn")]
+    pub end_column: u64,
 }

@@ -5,12 +5,9 @@ use wasm_bindgen::prelude::*;
 use std::fmt::Display;
 use serde::Serialize;
 
-mod code;
 mod context;
 mod file;
-mod html;
 mod project;
-pub mod sources;
 
 #[macro_export]
 macro_rules! console_log {
