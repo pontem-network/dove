@@ -4,8 +4,12 @@ use wasm_bindgen::JsValue;
 use crate::context::*;
 use crate::js_err;
 use proto::project::ID;
-use proto::file::GetFile;
+use proto::file::{GetFile, Flush, Diff};
 use crate::console_log;
+use once_cell::sync::Lazy;
+use parking_lot::Mutex;
+
+const PROJECT_DIFF: Lazy<Mutex<Flush>> = Lazy::new(|| Mutex::new(Default::default()));
 
 #[wasm_bindgen]
 pub async fn get_file(
@@ -30,14 +34,28 @@ pub async fn get_file(
 }
 
 #[wasm_bindgen]
-pub async fn on_file_change(project_id: ID, file_id: ID, event: JsValue) {
-    console_log!("on_file_change:{}-{};{:?}",project_id,file_id, event);
-    let event = event.into_serde::<ModelContentChangedEvent>();
-    console_log!("{:?}", event);
+pub fn on_file_change(project_id: ID, file_id: ID, event: JsValue) -> Result<(), JsValue> {
+    let event = event.into_serde::<ModelContentChangedEvent>().map_err(js_err)?;
+    let diff_vec = event.changes.into_iter()
+        .map(|change| {
+            Diff {
+                range_offset: change.range_offset,
+                range_length: change.range_length,
+                text: change.text
+            }
+        });
+
+    let mut project_diff = PROJECT_DIFF.lock();
+    let mut project = project_diff.project_map.entry(project_id);
+    project.or_default().entry(file_id).or_default().extend(diff_vec);
+    console_log!("{:?}", project_diff);
+    Ok(())
 }
 
 #[wasm_bindgen]
-pub async fn flush() {}
+pub async fn flush() {
+
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ModelContentChangedEvent {
@@ -65,10 +83,10 @@ pub struct ModelContentChange {
     pub range: Range,
     /// The offset of the range that got replaced.
     #[serde(alias = "rangeOffset")]
-    pub range_offset: u64,
+    pub range_offset: u32,
     /// The length of the range that got replaced.
     #[serde(alias = "rangeLength")]
-    pub range_length: u64,
+    pub range_length: u32,
     /// The new text for the range.
     pub text: String,
 }
@@ -78,17 +96,17 @@ pub struct ModelContentChange {
 pub struct Range {
     /// Line number on which the range starts (starts at 1).
     #[serde(alias = "startLineNumber")]
-    pub start_line_number: u64,
+    pub start_line_number: u32,
 
     /// Column on which the range starts in line `startLineNumber` (starts at 1).
     #[serde(alias = "startColumn")]
-    pub start_column: u64,
+    pub start_column: u32,
 
     /// Line number on which the range ends.
     #[serde(alias = "endLineNumber")]
-    pub end_line_number: u64,
+    pub end_line_number: u32,
 
     /// Column on which the range ends in line `endLineNumber`.
     #[serde(alias = "endColumn")]
-    pub end_column: u64,
+    pub end_column: u32,
 }

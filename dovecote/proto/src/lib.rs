@@ -17,6 +17,7 @@ transport! {
     ProjectList|project_list: Empty => ProjectList;
     ProjectInfo|project_info: ID => ProjectInfo;
     GetFile|get_file: GetFile => File;
+    Flush|flush: Flush => Empty;
 }
 
 #[macro_export]
