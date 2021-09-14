@@ -1,81 +1,109 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
-        <title>Dovecote</title>
 
-        <!-- Monaco editor -->
-        <link href="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.css" rel="stylesheet" />
-        <script>
-			var require = { paths: { vs: '/monaco-editor-0.27.0/package/min/vs/' } };
-		</script>
-        <script src="/monaco-editor-0.27.0/package/min/vs/loader.js"></script>
-		<script src="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.nls.js"></script>
-		<script src="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.js"></script>
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <title>Dovecote</title>
 
-        <!-- web dove -->
-        <link href="/style/main.css" rel="stylesheet" />
-        <link href="/style/code.css" rel="stylesheet" />
-        <script async type="module">
-            import run, * as index from '/js/index.js';
-            window.index = index;
-            run();
-        </script>
-    </head>
-    <body>
-        <div id="container">
-            <div class="header"></div>
-            <div class="middle">
-                <div id="navigation" >
-                    <ul class="ico-panel">
-                        <li class="projects">
-                            <button type="button" class="icon-svg" title="List of projects" child-panel="projects-container">
-                                <svg ><use xlink:href="#icon-projects"></use></svg>
-                            </button>
-                        </li>
-                        <li class="explorer">
-                            <button type="button" class="icon-svg hide" title="File Tree" child-panel="explorer-container" >
-                                <svg ><use xlink:href="#icon-tree"></use></svg>
-                            </button>
-                        </li>
-                    </ul>
-                    <div class="list-panel">
-                        <div id="projects-container" class="container hide" >
-                            <h2 class="head">Projects</h2>
-                            <div id="projects" class="list-block scroll" >
-                                <div class="in">
-                                    <div class="cont"></div>
-                                </div>
+    <!-- Monaco editor -->
+    <link href="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.css" rel="stylesheet" />
+    <script>
+        var require = {
+            paths: {
+                vs: '/monaco-editor-0.27.0/package/min/vs/'
+            }
+        };
+    </script>
+    <script src="/monaco-editor-0.27.0/package/min/vs/loader.js"></script>
+    <script src="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.nls.js"></script>
+    <script src="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.js"></script>
+
+    <!-- web dove -->
+    <link href="/style/main.css" rel="stylesheet" />
+    <link href="/style/code.css" rel="stylesheet" />
+    <script async type="module">
+        import run, * as index from '/js/index.js'; window.index = index; run();
+    </script>
+</head>
+
+<body>
+    <div id="container">
+        <div class="header"></div>
+        <div class="middle">
+            <div id="navigation">
+                <ul class="ico-panel">
+                    <li class="projects">
+                        <button type="button" class="icon-svg" title="List of projects" child-panel="projects-container">
+                            <svg>
+                                <use xlink:href="#icon-projects"></use>
+                            </svg>
+                        </button>
+                    </li>
+                    <li class="explorer">
+                        <button type="button" class="icon-svg hide" title="File Tree" child-panel="explorer-container">
+                            <svg>
+                                <use xlink:href="#icon-tree"></use>
+                            </svg>
+                        </button>
+                    </li>
+                </ul>
+                <div class="list-panel">
+                    <div id="projects-container" class="container hide">
+                        <h2 class="head">Projects</h2>
+                        <div id="projects" class="list-block scroll">
+                            <div class="in">
+                                <div class="cont"></div>
                             </div>
                         </div>
-                        <div id="explorer-container" class="container hide" >
-                            <h2 class="head">Explorer</h2>
-                            <div id="explorer" class="list-block scroll" >
-                                <div class="in">
-                                    <ul class="cont"></ul>
-                                </div>
+                    </div>
+                    <div id="explorer-container" class="container hide">
+                        <h2 class="head">Explorer</h2>
+                        <div id="explorer" class="list-block scroll">
+                            <div class="in">
+                                <ul class="cont"></ul>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div id="code-space" >
-                    <div class="tabs-head"></div>
-                    <div class="tabs-body"></div>
-                </div>
+            </div>
+            <div id="code-space">
+                <div class="tabs-head"></div>
+                <div class="tabs-body"></div>
             </div>
         </div>
-        <div id="footer">
-            <div class="status">Loading...</div>
-        </div>
+    </div>
+    <div id="footer">
+        <div class="status">Loading...</div>
+    </div>
 
-        <div class="icons hide">
-            <?xml version="1.0" encoding="iso-8859-1"?>
-            <svg xmlns="http://www.w3.org/2000/svg" class="hidden" version="1.1" x="0px" y="0px">
-                <symbol id="icon-projects" viewBox="0 0 511 511.99775"><path d="m501.425781 238.109375-82.222656-41.109375 82.222656-41.113281c14.707031-7.351563 14.722657-28.414063 0-35.777344l-236-118c-5.632812-2.8125-12.257812-2.8125-17.890625 0l-236 118c-14.707031 7.355469-14.722656 28.417969 0 35.777344l82.222656 41.113281-82.222656 41.109375c-14.707031 7.355469-14.722656 28.414063 0 35.777344l82.222656 41.113281-82.222656 41.109375c-14.707031 7.355469-14.722656 28.414063 0 35.777344l236 118c5.621094 2.808593 12.246094 2.820312 17.890625 0l236-118c14.707031-7.355469 14.722657-28.414063 0-35.777344l-82.222656-41.109375 82.222656-41.113281c14.707031-7.351563 14.722657-28.414063 0-35.777344zm-244.945312-195.75 191.277343 95.640625-191.277343 95.636719-191.277344-95.636719zm191.277343 331.640625-191.277343 95.636719-191.277344-95.636719 73.277344-36.640625 109.054687 54.527344c5.625 2.808593 12.246094 2.820312 17.890625 0l109.054688-54.527344zm-191.277343-22.363281-191.277344-95.636719 73.277344-36.640625 109.054687 54.527344c5.625 2.808593 12.246094 2.820312 17.890625 0l109.054688-54.527344 73.277343 36.640625zm0 0"/></symbol>
-                <symbol id="icon-tree" viewBox="0 0 16 16"><path d="M16 10v-4h-11v1h-2v-3h9v-4h-12v4h2v10h3v2h11v-4h-11v1h-2v-5h2v2z"></path></symbol>
-                <symbol id="icon-arrow-bottom" viewBox="0 0 612.004 612.004"><path d="M499.147,160.094L330.222,329.019c-6.472,6.472-15.075,10.035-24.223,10.035c-9.146,0-17.749-3.561-24.218-10.035 L112.854,160.094c-25.822-25.817-67.674-25.817-93.491,0c-25.817,25.819-25.817,67.674,0,93.491L188.29,422.508 c31.443,31.445,73.245,48.764,117.712,48.764s86.269-17.319,117.714-48.761l168.925-168.925c25.817-25.817,25.817-67.674,0-93.491 C566.822,134.277,524.962,134.277,499.147,160.094z"/></symbol>
-                <symbol id="icon-file" viewBox="0 0 512 512"><path d="m446.605 124.392-119.997-119.997c-2.801-2.802-6.624-4.395-10.608-4.395h-210c-24.813 0-45 20.187-45 45v422c0 24.813 20.187 45 45 45h300c24.813 0 45-20.187 45-45v-332c0-4.09-1.717-7.931-4.395-10.608zm-115.605-73.179 68.787 68.787h-53.787c-8.271 0-15-6.729-15-15zm75 430.787h-300c-8.271 0-15-6.729-15-15v-422c0-8.271 6.729-15 15-15h195v75c0 24.813 20.187 45 45 45h75v317c0 8.271-6.729 15-15 15z"/><path d="m346 212h-180c-8.284 0-15 6.716-15 15s6.716 15 15 15h180c8.284 0 15-6.716 15-15s-6.716-15-15-15z"/><path d="m346 272h-180c-8.284 0-15 6.716-15 15s6.716 15 15 15h180c8.284 0 15-6.716 15-15s-6.716-15-15-15z"/><path d="m346 332h-180c-8.284 0-15 6.716-15 15s6.716 15 15 15h180c8.284 0 15-6.716 15-15s-6.716-15-15-15z"/><path d="m286 392h-120c-8.284 0-15 6.716-15 15s6.716 15 15 15h120c8.284 0 15-6.716 15-15s-6.716-15-15-15z"/></symbol>
-            </svg>
-        </div>
-    </body>
+    <div class="icons hide">
+        <?xml version="1.0" encoding="iso-8859-1"?>
+        <svg xmlns="http://www.w3.org/2000/svg" class="hidden" version="1.1" x="0px" y="0px">
+            <symbol id="icon-projects" viewBox="0 0 511 511.99775">
+                <path
+                    d="m501.425781 238.109375-82.222656-41.109375 82.222656-41.113281c14.707031-7.351563 14.722657-28.414063 0-35.777344l-236-118c-5.632812-2.8125-12.257812-2.8125-17.890625 0l-236 118c-14.707031 7.355469-14.722656 28.417969 0 35.777344l82.222656 41.113281-82.222656 41.109375c-14.707031 7.355469-14.722656 28.414063 0 35.777344l82.222656 41.113281-82.222656 41.109375c-14.707031 7.355469-14.722656 28.414063 0 35.777344l236 118c5.621094 2.808593 12.246094 2.820312 17.890625 0l236-118c14.707031-7.355469 14.722657-28.414063 0-35.777344l-82.222656-41.109375 82.222656-41.113281c14.707031-7.351563 14.722657-28.414063 0-35.777344zm-244.945312-195.75 191.277343 95.640625-191.277343 95.636719-191.277344-95.636719zm191.277343 331.640625-191.277343 95.636719-191.277344-95.636719 73.277344-36.640625 109.054687 54.527344c5.625 2.808593 12.246094 2.820312 17.890625 0l109.054688-54.527344zm-191.277343-22.363281-191.277344-95.636719 73.277344-36.640625 109.054687 54.527344c5.625 2.808593 12.246094 2.820312 17.890625 0l109.054688-54.527344 73.277343 36.640625zm0 0" />
+            </symbol>
+            <symbol id="icon-tree" viewBox="0 0 16 16">
+                <path d="M16 10v-4h-11v1h-2v-3h9v-4h-12v4h2v10h3v2h11v-4h-11v1h-2v-5h2v2z"></path>
+            </symbol>
+            <symbol id="icon-arrow-bottom" viewBox="0 0 612.004 612.004">
+                <path
+                    d="M499.147,160.094L330.222,329.019c-6.472,6.472-15.075,10.035-24.223,10.035c-9.146,0-17.749-3.561-24.218-10.035 L112.854,160.094c-25.822-25.817-67.674-25.817-93.491,0c-25.817,25.819-25.817,67.674,0,93.491L188.29,422.508 c31.443,31.445,73.245,48.764,117.712,48.764s86.269-17.319,117.714-48.761l168.925-168.925c25.817-25.817,25.817-67.674,0-93.491 C566.822,134.277,524.962,134.277,499.147,160.094z" />
+            </symbol>
+            <symbol id="icon-file" viewBox="0 0 512 512">
+                <path
+                    d="m446.605 124.392-119.997-119.997c-2.801-2.802-6.624-4.395-10.608-4.395h-210c-24.813 0-45 20.187-45 45v422c0 24.813 20.187 45 45 45h300c24.813 0 45-20.187 45-45v-332c0-4.09-1.717-7.931-4.395-10.608zm-115.605-73.179 68.787 68.787h-53.787c-8.271 0-15-6.729-15-15zm75 430.787h-300c-8.271 0-15-6.729-15-15v-422c0-8.271 6.729-15 15-15h195v75c0 24.813 20.187 45 45 45h75v317c0 8.271-6.729 15-15 15z" />
+                <path
+                    d="m346 212h-180c-8.284 0-15 6.716-15 15s6.716 15 15 15h180c8.284 0 15-6.716 15-15s-6.716-15-15-15z" />
+                <path
+                    d="m346 272h-180c-8.284 0-15 6.716-15 15s6.716 15 15 15h180c8.284 0 15-6.716 15-15s-6.716-15-15-15z" />
+                <path
+                    d="m346 332h-180c-8.284 0-15 6.716-15 15s6.716 15 15 15h180c8.284 0 15-6.716 15-15s-6.716-15-15-15z" />
+                <path
+                    d="m286 392h-120c-8.284 0-15 6.716-15 15s6.716 15 15 15h120c8.284 0 15-6.716 15-15s-6.716-15-15-15z" />
+            </symbol>
+        </svg>
+    </div>
+</body>
+
 </html>

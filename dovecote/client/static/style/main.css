@@ -1,4 +1,4 @@
-:root{
+:root {
     --color-0: #212529;
     --color-1: #343A40;
     --color-2: #495057;
@@ -8,21 +8,29 @@
     --color-6: #DEE2E6;
     --color-7: #E9ECEF;
     --color-8: #F8F9FA;
-
     --header-height: 7px;
     --footer-height: 20px;
     --icon-panel: 50px;
     --list-panel: 250px;
-    --tabs-head-height:30px;
-    --tab-head-height:30px;
+    --tabs-head-height: 30px;
+    --tab-head-height: 30px;
 }
-*{ box-sizing: border-box; }
-html, body{ height: 100%; width: 100%; }
-body{
-    min-height: 100%;
-    padding: 0; margin: 0;
-    background: var(--color-2);
 
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    min-height: 100%;
+    padding: 0;
+    margin: 0;
+    background: var(--color-2);
     font-family: Menlo, Monaco, "Courier New", monospace;
     font-weight: normal;
     font-size: 12px;
@@ -31,222 +39,320 @@ body{
     color: var(--color-8);
     position: relative;
 }
-.hide{ display: none; }
-.icon-svg svg{
-    width: 100%; height: 100%;
-    fill:var(--color-8);
+
+.hide {
+    display: none;
 }
-.scroll::-webkit-scrollbar { width: 3px; height: 3px;}
-.scroll::-webkit-scrollbar-button { background-color: transparent; }
-.scroll::-webkit-scrollbar-track { background-color: transparent;}
-.scroll::-webkit-scrollbar-track-piece { background-color: transparent;}
-.scroll::-webkit-scrollbar-thumb { height: 50px; background-color: var(--color-3); border-radius: 3px; cursor: pointer;}
-.scroll::-webkit-scrollbar-corner { background-color: transparent;}
+
+.icon-svg svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--color-8);
+}
+
+.scroll::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+}
+
+.scroll::-webkit-scrollbar-button {
+    background-color: transparent;
+}
+
+.scroll::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.scroll::-webkit-scrollbar-track-piece {
+    background-color: transparent;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+    height: 50px;
+    background-color: var(--color-3);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.scroll::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
+
 /***************************************************
  *
  ***************************************************/
+
 #container {
     width: 100%;
     min-height: 100%;
     padding-bottom: var(--footer-height);
 }
-#container .header{
+
+#container .header {
     height: var(--header-height);
 }
-#container .middle{
+
+#container .middle {
     display: flex;
     justify-content: space-between;
     align-items: stretch;
     align-content: stretch;
     height: calc(100vh - var(--header-height) - var(--footer-height));
 }
+
+
 /***************************************************
  *
  ***************************************************/
-#navigation{
+
+#navigation {
     flex: 0 auto;
     display: flex;
-
 }
-#navigation .ico-panel{
-    display: block; clear: both; float: none;
+
+#navigation .ico-panel {
+    display: block;
+    clear: both;
+    float: none;
     flex: none;
     width: var(--icon-panel);
     list-style: none;
-    padding: 0; margin: 0;
+    padding: 0;
+    margin: 0;
 }
-#navigation .ico-panel button{
-    width: var(--icon-panel); height: var(--icon-panel);
-    margin: 0; padding: 0;
+
+#navigation .ico-panel button {
+    width: var(--icon-panel);
+    height: var(--icon-panel);
+    margin: 0;
+    padding: 0;
     border-width: 0;
     padding: 10px;
     background-color: transparent;
     transition: background .2s;
 }
+
 #navigation .ico-panel button.open,
-#navigation .ico-panel button:hover{
+#navigation .ico-panel button:hover {
     background-color: var(--color-1);
     cursor: pointer;
 }
-#navigation .list-panel{
+
+#navigation .list-panel {
     background-color: var(--color-1);
 }
-#navigation .list-panel h2{
+
+#navigation .list-panel h2 {
     display: block;
     padding: 5px 0 14px;
-    font-size: 12px; font-weight: normal; text-transform: uppercase;
-
+    font-size: 12px;
+    font-weight: normal;
+    text-transform: uppercase;
     border-bottom: 1px solid var(--color-2);
 }
-#navigation .list-panel .container{
+
+#navigation .list-panel .container {
     height: 100%;
     padding: 5px 15px;
     width: var(--list-panel);
 }
-#navigation .container .list-block{
+
+#navigation .container .list-block {
     height: calc(100% - 60px);
     overflow: hidden auto;
 }
+
+
 /***************************************************
  *
  ***************************************************/
-#projects button{
+
+#projects button {
     display: block;
     width: 100%;
     margin: 5px 0px 5px 5px;
     padding: 5px 5px 5px 10px;
     border-width: 0 0 0 2px;
-    color: var(--color-8); text-align: left;
+    color: var(--color-8);
+    text-align: left;
     background-color: transparent;
     cursor: pointer;
     transition: background .1s;
 }
+
 #projects button:hover,
-#projects button.active{
+#projects button.active {
     background-color: var(--color-3);
 }
+
+
 /***************************************************
  *
  ***************************************************/
-#explorer{
+
+#explorer {
     margin-left: -15px;
 }
-#explorer ul{
+
+#explorer ul {
     display: block;
     list-style: none;
     padding: 0 0 0 10px;
 }
-#explorer ul li{
+
+#explorer ul li {
     display: block;
 }
-#explorer ul li .name{
+
+#explorer ul li .name {
     display: block;
     cursor: pointer;
     padding: 3px 5px;
 }
-#explorer ul li .name:hover{
+
+#explorer ul li .name:hover {
     background-color: var(--color-0);
 }
-#explorer ul span.name *{ vertical-align: middle; }
-#explorer ul span.name svg{
-    width: 10px; height: 10px;
+
+#explorer ul span.name * {
+    vertical-align: middle;
+}
+
+#explorer ul span.name svg {
+    width: 10px;
+    height: 10px;
     fill: var(--color-8);
 }
-#explorer ul li.dir > .parent{
+
+#explorer ul li.dir>.parent {
     display: none;
 }
-#explorer ul li.dir.open > .parent{
+
+#explorer ul li.dir.open>.parent {
     display: block;
 }
-#explorer ul li.dir > .name svg{
+
+#explorer ul li.dir>.name svg {
     transform: rotate(-90deg);
 }
-#explorer ul li.dir.open > .name svg{
+
+#explorer ul li.dir.open>.name svg {
     transform: rotate(0deg);
 }
-#explorer .parent .empty{
+
+#explorer .parent .empty {
     padding: 3px 0 5px 10px;
     color: var(--color-3);
     text-shadow: 0 0 1px rgba(0, 0, 0, .5);
 }
+
+
 /***************************************************
  *
  ***************************************************/
-#code-space{
+
+#code-space {
     position: relative;
     overflow-x: hidden;
     flex: 1;
-    height: 100%; width: 100%;
+    height: 100%;
+    width: 100%;
 }
+
 #code-space .tabs-head,
-#code-space .tabs-body{
-    display: block; clear: both; float: none;
+#code-space .tabs-body {
+    display: block;
+    clear: both;
+    float: none;
 }
-#code-space .tabs-head{
+
+#code-space .tabs-head {
     height: 30px;
     padding-left: 10px;
     overflow: hidden;
 }
-#code-space .tabs-head .item{
+
+#code-space .tabs-head .item {
     position: relative;
-    display: block; float: left; overflow: hidden;
-    width: auto; height: 30px;
-    padding: 7px 30px 5px 15px; margin: 0 1px;
-    line-height: 20px; white-space: nowrap;
+    display: block;
+    float: left;
+    overflow: hidden;
+    width: auto;
+    height: 30px;
+    padding: 7px 30px 5px 15px;
+    margin: 0 1px;
+    line-height: 20px;
+    white-space: nowrap;
     background: var(--color-1);
     cursor: pointer;
 }
-#code-space .tabs-head .item.active{
+
+#code-space .tabs-head .item.active {
     background-color: var(--color-0);
 }
-#code-space .tabs-head .item .close{
-    position: absolute; right: 8px; top: 4px;
-    padding: 0; margin: 0;
+
+#code-space .tabs-head .item .close {
+    position: absolute;
+    right: 8px;
+    top: 4px;
+    padding: 0;
+    margin: 0;
     background: transparent;
     border-width: 0;
     color: var(--color-3);
-    font-size: 20px; font-weight: bold;
+    font-size: 20px;
+    font-weight: bold;
     transform: rotate(-45deg);
     transition: color .1s linear;
     cursor: pointer;
 }
-#code-space .tabs-head .item .close:hover{
-    color: #dc3545; 
+
+#code-space .tabs-head .item .close:hover {
+    color: #dc3545;
 }
 
-#code-space .tabs-body{
+#code-space .tabs-body {
     width: 100%;
     height: calc(100% - 30px);
     background-color: var(--color-0);
 }
-#code-space .tabs-body .item{
+
+#code-space .tabs-body .item {
     display: none;
     position: relative;
-    width: 100%; height: 100%;
-    overflow: hidden auto;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
-#code-space .tabs-body .item.active{
+
+#code-space .tabs-body .item.active {
     display: block;
 }
 
-#editor-container{
+#editor-container {
     position: relative;
     width: 100%;
     height: 100%;
     /* overflow: hidden auto; */
 }
 
+
 /***************************************************
  *
  ***************************************************/
-#footer{
-    display: block;
-    position: fixed; left: 0; bottom: 0; z-index: 2;
 
-    height: 20px; width: 100%;
+#footer {
+    display: block;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    z-index: 2;
+    height: 20px;
+    width: 100%;
     background-color: var(--color-3);
 }
-#footer .status{
+
+#footer .status {
     padding: 4px 5px;
 }
-

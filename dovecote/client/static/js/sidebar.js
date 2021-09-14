@@ -49,7 +49,7 @@ function init_menu() {
         .forEach(button => {
             button
                 .addClass('i')
-                .addEventListener('click', function (e) {
+                .addEventListener('click', function(e) {
                     e.stopPropagation();
                     on_click_icon_panel(this);
                     return false;
@@ -149,7 +149,7 @@ export async function explorer_load(id) {
 
     explorer.innerHTML = "";
     let info = await wasm.project_info(id);
-    if(window.open_project.destroy) {
+    if (window.open_project.destroy) {
         window.open_project.destroy();
     }
     window.open_project.set_project_id(id);
@@ -186,7 +186,9 @@ function on_click_explorer_dir(e) {
 function on_click_explorer_file(e) {
     e.stopPropagation();
 
-    window.open_project.open_file(this.attr("data-id"), this.attr("data-name"));
+    window
+        .open_project
+        .open_file(this.attr("data-id"), this.attr("data-name"));
 
     return false;
 }
