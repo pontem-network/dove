@@ -13,6 +13,8 @@
     --footer-height: 20px;
     --icon-panel: 50px;
     --list-panel: 250px;
+    --tabs-head-height:30px;
+    --tab-head-height:30px;
 }
 *{ box-sizing: border-box; }
 html, body{ height: 100%; width: 100%; }
@@ -175,8 +177,58 @@ body{
     overflow-x: hidden;
     flex: 1;
     height: 100%; width: 100%;
+}
+#code-space .tabs-head,
+#code-space .tabs-body{
+    display: block; clear: both; float: none;
+}
+#code-space .tabs-head{
+    height: 30px;
+    padding-left: 10px;
+    overflow: hidden;
+}
+#code-space .tabs-head .item{
+    position: relative;
+    display: block; float: left; overflow: hidden;
+    width: auto; height: 30px;
+    padding: 7px 30px 5px 15px; margin: 0 1px;
+    line-height: 20px; white-space: nowrap;
+    background: var(--color-1);
+    cursor: pointer;
+}
+#code-space .tabs-head .item.active{
     background-color: var(--color-0);
 }
+#code-space .tabs-head .item .close{
+    position: absolute; right: 8px; top: 4px;
+    padding: 0; margin: 0;
+    background: transparent;
+    border-width: 0;
+    color: var(--color-3);
+    font-size: 20px; font-weight: bold;
+    transform: rotate(-45deg);
+    transition: color .1s linear;
+    cursor: pointer;
+}
+#code-space .tabs-head .item .close:hover{
+    color: #dc3545; 
+}
+
+#code-space .tabs-body{
+    width: 100%;
+    height: calc(100% - 30px);
+    background-color: var(--color-0);
+}
+#code-space .tabs-body .item{
+    display: none;
+    position: relative;
+    width: 100%; height: 100%;
+    overflow: hidden auto;
+}
+#code-space .tabs-body .item.active{
+    display: block;
+}
+
 #editor-container{
     position: relative;
     width: 100%;

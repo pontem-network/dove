@@ -1,5 +1,9 @@
 import './lib.js';
 import * as wasm from '../pkg/client.js';
+import * as project from './project.js';
+
+/// ID of the Open project
+window.open_project = await project.create();
 
 const TEMPLATE_PROJECT_ELEMENT = `
     <div class="project noselect" data-id="{{id}}">
@@ -136,11 +140,6 @@ function on_click_project() {
 // ===============================================================
 /// Upload a file tree
 export async function explorer_load(id) {
-    if (window.editor_open_file) {
-        window.editor_open_file.editor.dispose();
-        window.editor_open_file = null;
-    }
-
     let explorer = document.querySelector("#explorer .cont");
     if (explorer === undefined) {
         return;
@@ -150,7 +149,10 @@ export async function explorer_load(id) {
 
     explorer.innerHTML = "";
     let info = await wasm.project_info(id);
-    window.id_open_project = id;
+    if(window.open_project.destroy) {
+        window.open_project.destroy();
+    }
+    window.open_project.set_project_id(id);
 
     explorer_add(explorer, [info.tree]);
 
@@ -184,14 +186,10 @@ function on_click_explorer_dir(e) {
 function on_click_explorer_file(e) {
     e.stopPropagation();
 
-    editor_open_file(
-        this.attr("data-id"),
-        this.attr("data-name")
-    );
+    window.open_project.open_file(this.attr("data-id"), this.attr("data-name"));
 
     return false;
 }
-
 
 function explorer_add(parent, data) {
     if (!data || !data.length) {
@@ -237,56 +235,4 @@ function explorer_add_file(parent, id, name) {
         .replaceAll("{{name}}", name)
         .replaceAll("{{id}}", id);
     parent.append(block);
-}
-
-// ===============================================================
-//  Editor
-// ===============================================================
-async function editor_open_file(file_id, file_name) {
-    footer_status("Loading file...");
-
-    let file = await wasm.get_file(window.id_open_project, file_id);
-    if (!window.editor_open_file) {
-        window.editor_open_file = {
-            id: file_id,
-            name: file_name,
-            editor: monaco.editor.create(document.getElementById('editor-container'), {
-                value: file.content,
-                language: file.tp,
-                theme: "vs-dark",
-                automaticLayout: true
-            })
-        };
-        window.editor_open_file.editor.addAction({
-                id: 'dove-build',
-                label: 'Build project',
-                keybindings: [
-                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
-                    monaco.KeyMod.chord(
-                        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K,
-                        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_M
-                    )
-                ],
-                precondition: null,
-                keybindingContext: null,
-                contextMenuGroupId: 'navigation',
-                contextMenuOrder: 1.5,
-                run: function (ed) {
-                    // @todo dove build
-                    return null;
-                }
-            }
-        );
-        window.editor_open_file.editor
-            .getModel()
-            .onDidChangeContent(async (event) => {
-                await wasm.on_file_change(window.id_open_project, window.editor_open_file.id, event);
-            })
-    } else {
-        window.editor_open_file.id = file_id;
-        window.editor_open_file.name = file_name;
-        window.editor_open_file.editor.setValue(file.content);
-    }
-
-    footer_status("Done");
 }
