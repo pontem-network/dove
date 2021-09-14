@@ -17,27 +17,26 @@ transport! {
     ProjectList|project_list: Empty => ProjectList;
     ProjectInfo|project_info: ID => ProjectInfo;
     GetFile|get_file: GetFile => File;
-    Flush|flush: Flush => Empty;
+    Flush|flush: Flush => FlushResult;
 }
 
 #[macro_export]
 macro_rules! transport {
     ($($name:ident|$fun_name:ident : $req:ident => $resp:ident;)*) => {
 
-        #[derive(Debug, Deserialize, Serialize)]
-        pub enum Request {
+        #[derive(Debug, Serialize)]
+        pub enum SentRequest<'a> {
+             $(
+                $name(&'a $req),
+             )*
+        }
+
+        #[derive(Debug, Deserialize)]
+        pub enum ReceivedRequest {
              $(
                 $name($req),
              )*
         }
-
-        $(
-        impl From<$req> for Request {
-            fn from(val: $req) -> Self {
-                Self::$name(val)
-            }
-        }
-        )*
 
         #[derive(Debug, Deserialize, Serialize)]
         pub enum Response {
@@ -45,6 +44,14 @@ macro_rules! transport {
                 $name($resp),
              )*
         }
+
+        $(
+        impl<'a> From<&'a $req> for SentRequest<'a> {
+            fn from(val: &'a $req) -> Self {
+                Self::$name(val)
+            }
+        }
+        )*
 
         $(
         impl std::convert::TryFrom<Response> for $resp {
@@ -65,12 +72,12 @@ macro_rules! transport {
              )*
 
              fn handle(&self, buff: &[u8]) -> Result<Vec<u8>, anyhow::Error> {
-                let resp = bcs::from_bytes::<Request>(buff)
+                let resp = bcs::from_bytes::<ReceivedRequest>(buff)
                     .map_err(|err| err.into())
                     .and_then(|req| {
                         match req {
                         $(
-                            Request::$name(req) => self.$fun_name(req)
+                            ReceivedRequest::$name(req) => self.$fun_name(req)
                             .map(|resp| Response::$name(resp)),
                         )*
                         }
@@ -81,7 +88,7 @@ macro_rules! transport {
             }
         }
 
-        pub async fn perform(url: &str, req: &Request) -> Result<Response, anyhow::Error> {
+        pub async fn perform(url: &str, req: &SentRequest<'_>) -> Result<Response, anyhow::Error> {
             let resp = reqwest::Client::builder().build()?
                 .post(url)
                 .body(bcs::to_bytes(req)?)
@@ -95,9 +102,10 @@ macro_rules! transport {
         }
 
         $(
-            pub async fn $fun_name(url: &str, req: $req) -> Result<$resp, anyhow::Error> {
+            pub async fn $fun_name(url: &str, req: &$req) -> Result<$resp, anyhow::Error> {
                 use std::convert::TryInto;
-                perform(url, &Request::from(req)).await?.try_into()
+                let req = SentRequest::from(req);
+                perform(url, &req).await?.try_into()
             }
         )*
     }

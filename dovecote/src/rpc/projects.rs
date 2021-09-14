@@ -1,10 +1,14 @@
-use dove::home::Home;
-use anyhow::Error;
-use proto::project::{ProjectList, ProjectShortInfo, ID};
 use std::collections::HashMap;
-use parking_lot::RwLock;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
+
+use anyhow::Error;
 use chrono::Utc;
+use parking_lot::RwLock;
+
+use dove::home::Home;
+use proto::project::{ID, ProjectList, ProjectShortInfo};
+
 use crate::rpc::project::Project;
 
 const PROJECT_LIFETIME: i64 = 60 * 10;
@@ -12,14 +16,14 @@ const PROJECT_LIFETIME: i64 = 60 * 10;
 #[derive(Debug)]
 pub struct Projects {
     dove_home: Home,
-    map: RwLock<HashMap<ID, (Project, AtomicI64)>>,
+    map: RwLock<HashMap<ID, (AtomicI64, Arc<RwLock<Project>>)>>,
 }
 
 impl Projects {
     pub fn new() -> Result<Projects, Error> {
         Ok(Projects {
             dove_home: Home::get()?,
-            map: RwLock::new(Default::default()),
+            map: RwLock::new(HashMap::new()),
         })
     }
 
@@ -42,91 +46,58 @@ impl Projects {
         Ok(ProjectList { projects })
     }
 
-    pub fn on_project<F, T>(&self, id: ID, on_proj: F) -> Result<T, Error>
-    where
-        F: FnOnce(&Project) -> Result<T, Error>,
-    {
+    fn get_project(&self, id: &ID) -> Result<Arc<RwLock<Project>>, Error> {
         let current_time = get_unix_timestamp();
         {
             let map = self.map.read();
-            if let Some((project, last_read)) = map.get(&id) {
+            if let Some((last_read, project)) = map.get(id) {
                 last_read.store(current_time, Ordering::Relaxed);
-                return on_proj(project);
+                return Ok(project.clone());
             }
         }
+
         let mut map = self.map.write();
-        if let Some((project, last_read)) = map.get(&id) {
+        if let Some((last_read, project)) = map.get(id) {
             last_read.store(current_time, Ordering::Relaxed);
-            return on_proj(project);
+            return Ok(project.clone());
         }
 
         let path = self
             .dove_home
-            .get_project_path(&id)?
+            .get_project_path(id)?
             .ok_or_else(|| anyhow::anyhow!("Project with id :'{}' was not found.", id))?;
-        let project = Project::load(&path)?;
 
-        let res = on_proj(&project);
-        map.insert(id, (project, AtomicI64::new(current_time)));
-        res
+        let project = Arc::new(RwLock::new(Project::load(&path)?));
+        map.insert(id.to_owned(), (AtomicI64::new(current_time), project.clone()));
+        Ok(project)
     }
 
-    pub fn on_project_mut<F, T>(&self, id: ID, on_proj: F) -> Result<T, Error>
-    where
-        F: FnOnce(&mut Project) -> Result<T, Error>,
+    pub fn on_project<F, T>(&self, id: &ID, on_proj: F) -> Result<T, Error>
+        where
+            F: FnOnce(&Project) -> Result<T, Error>,
     {
-        let current_time = get_unix_timestamp();
-        let mut map = self.map.write();
-        if let Some((project, last_read)) = map.get_mut(&id) {
-            last_read.store(current_time, Ordering::Relaxed);
-            return on_proj(project);
-        }
-
-        let path = self
-            .dove_home
-            .get_project_path(&id)?
-            .ok_or_else(|| anyhow::anyhow!("Project with id :'{}' was not found.", id))?;
-        let mut project = Project::load(&path)?;
-
-        let res = on_proj(&mut project);
-        map.insert(id, (project, AtomicI64::new(current_time)));
-        res
+        let projects = self.get_project(id)?;
+        let project = projects.read();
+        on_proj(&project)
     }
 
-    // pub fn project_info_by_id(&self, id: ID) -> Result<ProjectInfo, Error> {
-    //     let current_time = get_unix_timestamp();
-    //
-    //     {
-    //         let map = self.map.read();
-    //         if let Some((project, last_read)) = map.get(&id) {
-    //             last_read.store(current_time, Ordering::Relaxed);
-    //             return Ok(project.info());
-    //         }
-    //     }
-    //     let mut map = self.map.write();
-    //     if let Some((project, last_read)) = map.get(&id) {
-    //         last_read.store(current_time, Ordering::Relaxed);
-    //         return Ok(project.info());
-    //     }
-    //
-    //     let path = self
-    //         .dove_home
-    //         .get_project_path(&id)?
-    //         .ok_or_else(|| anyhow::anyhow!("Project with id :'{}' was not found.", id))?;
-    //     let project = Project::load(&path)?;
-    //     let info = project.info();
-    //     map.insert(id, (project, AtomicI64::new(current_time)));
-    //     Ok(info)
-    // }
+    pub fn on_project_mut<F, T>(&self, id: &ID, on_proj: F) -> Result<T, Error>
+        where
+            F: FnOnce(&mut Project) -> Result<T, Error>,
+    {
+        let projects = self.get_project(id)?;
+        let mut project = projects.write();
+        on_proj(&mut project)
+    }
 
     pub fn clean_up(&self) {
         let mut map = self.map.write();
         let current_timestamp = get_unix_timestamp();
-        map.retain(|_, (project, last_read)| {
+        map.retain(|_, (last_read, project)| {
             let last_read = last_read.load(Ordering::Relaxed);
             let must_live = PROJECT_LIFETIME > current_timestamp - last_read;
             if !must_live {
-                debug!("Remove project from cache:'{}'", project.info.path);
+                debug!("Remove project from cache:'{}'", project.read().info.path);
             }
             must_live
         });
@@ -137,3 +108,7 @@ pub fn get_unix_timestamp() -> i64 {
     let now = Utc::now();
     now.timestamp()
 }
+
+unsafe impl Send for Projects {}
+
+unsafe impl Sync for Projects {}

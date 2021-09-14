@@ -1,32 +1,26 @@
-use std::sync::Arc;
-use std::path::PathBuf;
-use anyhow::Error;
 use std::fs;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use anyhow::Error;
+use strings::rope::Rope;
+
+use proto::file::{Diff, File as FileModel};
+use std::fs::File;
+use std::io::Write;
 
 #[derive(Debug)]
 pub struct MFile {
     pub path: Arc<PathBuf>,
-    pub content: Arc<String>,
-    pub last_access: u64,
-    pub hash: Arc<String>,
+    pub content: Rope,
 }
 
 impl MFile {
     pub fn load(path: Arc<PathBuf>) -> Result<MFile, Error> {
-        let content = Arc::new(fs::read_to_string(path.as_ref())?);
-        let last_access = fs::metadata(path.as_ref())?
-            .accessed()?
-            .elapsed()?
-            .as_secs();
-        let hash = Arc::new(hash(content.as_str()));
-
+        let content = Rope::from_string(fs::read_to_string(path.as_ref())?);
         Ok(MFile {
             path,
             content,
-            last_access,
-            hash,
         })
     }
 
@@ -37,11 +31,25 @@ impl MFile {
             "palaintext".to_string()
         }
     }
-}
 
-fn hash(content: &str) -> String {
-    let mut s = DefaultHasher::new();
-    content.hash(&mut s);
-    let id = s.finish();
-    hex::encode(&id.to_le_bytes())
+    pub fn update_file(&mut self, diff: Vec<Diff>) -> Result<(), Error> {
+        for diff in diff {
+            if diff.text.is_empty() {
+                self.content.remove(diff.range_offset as usize, (diff.range_offset + diff.range_length) as usize);
+            } else {
+                self.content.insert(diff.range_offset as usize, diff.text);
+            }
+        }
+        let mut f = File::open(self.path.as_ref())?;
+        f.set_len(0)?;
+        write!(f, "{}", &self.content)?;
+        Ok(())
+    }
+
+    pub fn make_model(&self) -> FileModel {
+        FileModel {
+            content: self.content.to_string(),
+            tp: self.tp(),
+        }
+    }
 }

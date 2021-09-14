@@ -36,19 +36,3 @@ pub fn api<T: Serialize, E: Display>(result: Result<T, E>) -> Result<JsValue, Js
 pub fn js_err<E: Display>(err: E) -> JsValue {
     JsValue::from_str(&err.to_string())
 }
-
-// TODO Remove id. This is bug demo.
-#[wasm_bindgen]
-pub fn there_be_a_bug() -> Result<JsValue, JsValue> {
-    let res = JsValue::from_serde(&Id {
-        id: 3000490687877993158,
-    })
-    .map_err(js_err);
-    console_log!("{:?}", res);
-    res
-}
-
-#[derive(Serialize)]
-pub struct Id {
-    id: u64,
-}

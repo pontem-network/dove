@@ -1,11 +1,13 @@
-use proto::project::{Tree, ProjectInfo, ProjectShortInfo, ID};
-use std::sync::Arc;
 use std::collections::HashMap;
-use std::path::{PathBuf, Path};
-use anyhow::Error;
-use proto::file::File;
 use std::fs;
-use dove::home::{load_project, Project as DoveProject, path_id};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+use anyhow::Error;
+
+use dove::home::{load_project, path_id, Project as DoveProject};
+use proto::project::{ID, ProjectInfo, ProjectShortInfo, Tree};
+
 use crate::rpc::m_file::MFile;
 
 #[derive(Debug)]
@@ -43,26 +45,20 @@ impl Project {
         }
     }
 
-    pub fn load_file(&mut self, id: ID) -> Result<File, Error> {
-        if let Some(file) = self.file_map.get(&id) {
-            Ok(File {
-                content: file.content.clone(),
-                tp: file.tp(),
-                hash: file.hash.clone(),
-            })
-        } else {
-            if let Some(path) = self.file_paths.get(&id) {
+    pub fn load_file(&mut self, id: &ID) -> Result<&mut MFile, Error> {
+        if !self.file_map.contains_key(id) {
+            if let Some(path) = self.file_paths.get(id) {
                 let m_file = MFile::load(path.clone())?;
-                let file = File {
-                    content: m_file.content.clone(),
-                    tp: m_file.tp(),
-                    hash: m_file.hash.clone(),
-                };
-                self.file_map.insert(id, m_file);
-                Ok(file)
+                self.file_map.insert(id.to_owned(), m_file);
             } else {
                 bail!("File with id:{} was not found.", id)
             }
+        }
+
+        if let Some(file) = self.file_map.get_mut(id) {
+            return Ok(file);
+        } else {
+            bail!("File with id:{} was not found.", id)
         }
     }
 }

@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use std::collections::HashMap;
 use crate::ID;
 
@@ -10,9 +9,8 @@ pub struct GetFile {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct File {
-    pub content: Arc<String>,
+    pub content: String,
     pub tp: String,
-    pub hash: Arc<String>,
 }
 
 pub type ProjectId = ID;
@@ -33,4 +31,9 @@ pub struct Diff {
     pub range_length: u32,
     /// The new text for the range.
     pub text: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct FlushResult {
+    pub errors: HashMap<ProjectId, HashMap<FileId, String>>,
 }
