@@ -3,14 +3,14 @@ use std::collections::HashMap;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 
-use proto::file::{Diff, FileId, Flush, GetFile, ProjectId};
+use proto::file::{Diff, FId, Flush, FileIdentifier, ProjectId};
 use proto::project::Id;
 use crate::context::*;
 use crate::js_err;
 
 #[wasm_bindgen]
 pub async fn get_file(project_id: Id, file_id: Id) -> Result<JsValue, JsValue> {
-    let get_file = GetFile {
+    let get_file = FileIdentifier {
         project_id,
         file_id,
     };
@@ -55,7 +55,7 @@ pub async fn flush(events: JsValue) -> JsValue {
 pub enum FlushResult {
     Ok,
     Error(String),
-    Errors(HashMap<ProjectId, HashMap<FileId, String>>),
+    Errors(HashMap<ProjectId, HashMap<FId, String>>),
 }
 
 #[derive(Serialize, Deserialize, Debug)]

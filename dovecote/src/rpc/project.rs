@@ -1,12 +1,15 @@
+use core::mem;
 use std::collections::HashMap;
 use std::fs;
+use std::fs::File;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Error;
 
 use dove::home::{load_project, path_id, Project as DoveProject};
-use proto::project::{Id, ProjectInfo, ProjectShortInfo, Tree, IdRef};
+use proto::project::{Id, IdRef, ProjectInfo, ProjectShortInfo, Tree};
 
 use crate::rpc::m_file::MFile;
 
@@ -60,6 +63,85 @@ impl Project {
         } else {
             bail!("File with id:{} was not found.", id)
         }
+    }
+
+    pub fn remove_file(&mut self, id: IdRef) -> Result<(), Error> {
+        self.file_map.remove(id);
+        if let Some(path) = self.file_paths.remove(id) {
+            fs::remove_file(path.as_ref())?;
+        }
+        Ok(())
+    }
+
+    pub fn create_file(&mut self, path: String, name: String) -> Result<Id, Error> {
+        let project_path = PathBuf::from_str(&self.info.path)?;
+        let dir = project_path.join(path);
+        fs::canonicalize(&dir)?;
+        if !dir.starts_with(&self.info.path) {
+            bail!("Invalid file path. The path must be located in the project.");
+        }
+        let new_file_path = dir.join(&name);
+        File::create(&new_file_path)?;
+        mem::swap(self, &mut Self::load(&project_path)?);
+        Ok(path_id(&new_file_path))
+    }
+
+    pub fn create_dir(&mut self, path: String, name: String) -> Result<(), Error> {
+        let project_path = PathBuf::from_str(&self.info.path)?;
+        let dir = project_path.join(path);
+        fs::canonicalize(&dir)?;
+        if !dir.starts_with(&self.info.path) {
+            bail!("Invalid file path. The path must be located in the project.");
+        }
+        let new_dir_path = dir.join(&name);
+        fs::create_dir_all(&new_dir_path)?;
+        mem::swap(self, &mut Self::load(&project_path)?);
+        Ok(())
+    }
+
+    pub fn rename_file(&mut self, file_id: Id, new_name: String) -> Result<Id, Error> {
+        let project_path = PathBuf::from_str(&self.info.path)?;
+
+        let file_path = self
+            .file_paths
+            .get(&file_id)
+            .ok_or_else(|| anyhow!("File with id {} was not found", file_id))?;
+
+        let file_dir = file_path
+            .parent()
+            .ok_or_else(|| anyhow!("Failed to get file {} directory.", file_id))?
+            .to_path_buf();
+
+        let new_name = file_dir.join(new_name);
+        fs::rename(file_path.as_ref(), &new_name)?;
+        mem::swap(self, &mut Self::load(&project_path)?);
+        Ok(path_id(&new_name))
+    }
+
+    pub fn rename_directory(
+        &mut self,
+        path: String,
+        old_name: String,
+        new_name: String,
+    ) -> Result<(), Error> {
+        let project_path = PathBuf::from_str(&self.info.path)?;
+        let dir = project_path.join(path);
+
+        let old_dir = dir.join(old_name);
+        fs::canonicalize(&old_dir)?;
+        if !old_dir.starts_with(&self.info.path) {
+            bail!("Invalid file path. The path must be located in the project.");
+        }
+
+        let new_dir = dir.join(new_name);
+        fs::canonicalize(&new_dir)?;
+        if !new_dir.starts_with(&self.info.path) {
+            bail!("Invalid file path. The path must be located in the project.");
+        }
+
+        fs::rename(old_dir, new_dir)?;
+        mem::swap(self, &mut Self::load(&project_path)?);
+        Ok(())
     }
 }
 

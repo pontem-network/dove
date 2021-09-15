@@ -3,9 +3,10 @@ extern crate serde;
 #[macro_use]
 extern crate wasm_bindgen;
 
-use crate::project::*;
-use crate::file::*;
 use std::fmt::{Display, Formatter};
+
+use crate::file::*;
+use crate::project::*;
 
 pub mod file;
 pub mod project;
@@ -14,10 +15,27 @@ pub mod project;
 pub struct Empty;
 
 transport! {
+    // Returns projects list.
     ProjectList|project_list: Empty => ProjectList;
+    // Returns project info by its id.
     ProjectInfo|project_info: Id => ProjectInfo;
-    GetFile|get_file: GetFile => File;
+
+    // Returns file by file id.
+    GetFile|get_file: FileIdentifier => File;
+    // Remove file by file id.
+    RemoveFile|remove_file: FileIdentifier => Empty;
+    // Create a new file.
+    CreateFile|create_file: CreateFsEntry => CreateFileResult;
+
+    // Create a new directory.
+    CreateDirectory|create_directory: CreateFsEntry => ProjectInfo;
+    // Rename file and return new file id. Flush before rename;
+    RenameFile|rename_file: RenameFile => FId;
+    // Rename directory. Flush before rename;
+    RenameDirectory|rename_directory: RenameDirectory => ProjectInfo;
+    // Flush changes.
     Flush|flush: Flush => FlushResult;
+    // Reload project from disk.
     Sync|sync_project: Id => ProjectInfo;
 }
 
@@ -91,7 +109,7 @@ macro_rules! transport {
                 }
             }
         )*
-    }
+    };
 }
 
 #[derive(Debug, Deserialize, Serialize)]

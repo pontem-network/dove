@@ -108,7 +108,6 @@ impl AsRef<Path> for Ref {
 pub struct Project {
     /// Project id.
     pub id: Arc<String>,
-
     /// Dove toml.
     pub toml: DoveToml,
     /// Project name.

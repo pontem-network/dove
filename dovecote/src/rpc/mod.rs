@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use anyhow::Error;
 
 use proto::{Empty, OnRequest};
-use proto::file::{File, Flush, FlushResult, GetFile};
+use proto::file::{
+    CreateFileResult, CreateFsEntry, FId, File, FileIdentifier, Flush, FlushResult,
+    RenameDirectory, RenameFile,
+};
 use proto::project::{Id, ProjectInfo, ProjectList};
 
 use crate::rpc::projects::Projects;
@@ -34,13 +37,79 @@ impl OnRequest for Rpc {
         self.projects.on_project(&id, |p| Ok(p.info()))
     }
 
-    fn get_file(&self, req: GetFile) -> Result<File, Error> {
-        let GetFile {
+    fn get_file(&self, req: FileIdentifier) -> Result<File, Error> {
+        let FileIdentifier {
             project_id,
             file_id,
         } = req;
         self.projects.on_project_mut(&project_id, |p| {
             p.load_file(file_id.as_ref()).map(|f| f.make_model())
+        })
+    }
+
+    fn remove_file(&self, req: FileIdentifier) -> Result<Empty, Error> {
+        let FileIdentifier {
+            project_id,
+            file_id,
+        } = req;
+        self.projects.on_project_mut(&project_id, |p| {
+            p.remove_file(file_id.as_ref())?;
+            Ok(Empty)
+        })
+    }
+
+    fn create_file(&self, req: CreateFsEntry) -> Result<CreateFileResult, Error> {
+        let CreateFsEntry {
+            project_id,
+            path,
+            name,
+        } = req;
+        self.projects.on_project_mut(&project_id, |p| {
+            let id = p.create_file(path, name)?;
+            let file = p.load_file(id.as_ref()).map(|f| f.make_model())?;
+
+            Ok(CreateFileResult {
+                project_info: p.info(),
+                file_id: id,
+                file,
+            })
+        })
+    }
+
+    fn create_directory(&self, req: CreateFsEntry) -> Result<ProjectInfo, Error> {
+        let CreateFsEntry {
+            project_id,
+            path,
+            name,
+        } = req;
+        self.projects.on_project_mut(&project_id, |p| {
+            p.create_dir(path, name)?;
+            Ok(p.info())
+        })
+    }
+
+    fn rename_file(&self, req: RenameFile) -> Result<FId, Error> {
+        let RenameFile {
+            project_id,
+            file_id,
+            new_name,
+        } = req;
+        self.projects.on_project_mut(&project_id, |p| {
+            let id = p.rename_file(file_id, new_name)?;
+            Ok(id)
+        })
+    }
+
+    fn rename_directory(&self, req: RenameDirectory) -> Result<ProjectInfo, Error> {
+        let RenameDirectory {
+            project_id,
+            path,
+            old_name,
+            new_name,
+        } = req;
+        self.projects.on_project_mut(&project_id, |p| {
+            p.rename_directory(path, old_name, new_name)?;
+            Ok(p.info())
         })
     }
 
@@ -55,7 +124,10 @@ impl OnRequest for Rpc {
                             Ok(files
                                 .into_iter()
                                 .map(|(f_id, diff)| {
-                                    (p.load_file(f_id.as_ref()).map(|f| f.update_file(diff)), f_id)
+                                    (
+                                        p.load_file(f_id.as_ref()).map(|f| f.update_file(diff)),
+                                        f_id,
+                                    )
                                 })
                                 .filter_map(|(res, f_id)| {
                                     if let Err(err) = res {
