@@ -39,33 +39,41 @@ impl OnRequest for Rpc {
             project_id,
             file_id,
         } = req;
-        self.projects
-            .on_project_mut(&project_id, |p| p.load_file(&file_id).map(|f| f.make_model()))
+        self.projects.on_project_mut(&project_id, |p| {
+            p.load_file(&file_id).map(|f| f.make_model())
+        })
     }
 
     fn flush(&self, req: Flush) -> Result<FlushResult, Error> {
-        let errors = req.project_map.into_iter()
+        let errors = req
+            .project_map
+            .into_iter()
             .map(|(p_id, files)| {
-                (self.projects.on_project_mut(&p_id, |p| {
-                    Ok(files.into_iter()
-                        .map(|(f_id, diff)| {
-                            (p.load_file(&f_id)
-                                 .map(|f| f.update_file(diff)), f_id)
-                        }).filter_map(|(res, f_id)| {
-                        if let Err(err) = res {
-                            Some((f_id, err.to_string()))
-                        } else {
-                            None
-                        }
-                    }).collect::<HashMap<_, _>>())
-                }).unwrap_or_default(), p_id)
+                (
+                    self.projects
+                        .on_project_mut(&p_id, |p| {
+                            Ok(files
+                                .into_iter()
+                                .map(|(f_id, diff)| {
+                                    (p.load_file(&f_id).map(|f| f.update_file(diff)), f_id)
+                                })
+                                .filter_map(|(res, f_id)| {
+                                    if let Err(err) = res {
+                                        Some((f_id, err.to_string()))
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect::<HashMap<_, _>>())
+                        })
+                        .unwrap_or_default(),
+                    p_id,
+                )
             })
             .map(|(errors, id)| (id, errors))
             .filter(|(_, errors)| !errors.is_empty())
             .collect();
-        Ok(FlushResult {
-            errors
-        })
+        Ok(FlushResult { errors })
     }
 
     fn sync_project(&self, id: ID) -> Result<ProjectInfo, Error> {

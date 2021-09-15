@@ -68,13 +68,16 @@ impl Projects {
             .ok_or_else(|| anyhow::anyhow!("Project with id :'{}' was not found.", id))?;
 
         let project = Arc::new(RwLock::new(Project::load(&path)?));
-        map.insert(id.to_owned(), (AtomicI64::new(current_time), project.clone()));
+        map.insert(
+            id.to_owned(),
+            (AtomicI64::new(current_time), project.clone()),
+        );
         Ok(project)
     }
 
     pub fn on_project<F, T>(&self, id: &ID, on_proj: F) -> Result<T, Error>
-        where
-            F: FnOnce(&Project) -> Result<T, Error>,
+    where
+        F: FnOnce(&Project) -> Result<T, Error>,
     {
         let projects = self.get_project(id)?;
         let project = projects.read();
@@ -82,8 +85,8 @@ impl Projects {
     }
 
     pub fn on_project_mut<F, T>(&self, id: &ID, on_proj: F) -> Result<T, Error>
-        where
-            F: FnOnce(&mut Project) -> Result<T, Error>,
+    where
+        F: FnOnce(&mut Project) -> Result<T, Error>,
     {
         let projects = self.get_project(id)?;
         let mut project = projects.write();

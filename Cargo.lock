@@ -23,7 +23,7 @@ dependencies = [
  "diem-types",
  "diem-workspace-hack",
  "heck",
- "log 0.4.14",
+ "log",
  "move-core-types",
  "move-model",
  "serde",
@@ -43,7 +43,7 @@ dependencies = [
  "derive_more",
  "futures-channel",
  "futures-util",
- "log 0.4.14",
+ "log",
  "once_cell",
  "parking_lot 0.11.2",
  "pin-project 0.4.28",
@@ -64,7 +64,7 @@ dependencies = [
  "bytes 0.5.6",
  "futures-core",
  "futures-sink",
- "log 0.4.14",
+ "log",
  "pin-project 0.4.28",
  "tokio 0.2.25",
  "tokio-util 0.3.1",
@@ -84,7 +84,7 @@ dependencies = [
  "either",
  "futures-util",
  "http",
- "log 0.4.14",
+ "log",
  "trust-dns-proto",
  "trust-dns-resolver",
 ]
@@ -103,7 +103,7 @@ dependencies = [
  "derive_more",
  "futures-core",
  "futures-util",
- "log 0.4.14",
+ "log",
  "mime",
  "mime_guess",
  "percent-encoding 2.1.0",
@@ -143,7 +143,7 @@ dependencies = [
  "itoa",
  "language-tags",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "mime",
  "percent-encoding 2.1.0",
  "pin-project 1.0.8",
@@ -175,7 +175,7 @@ checksum = "2ad299af73649e1fc893e333ccf86f377751eb95ff875d095131574c6f43452c"
 dependencies = [
  "bytestring",
  "http",
- "log 0.4.14",
+ "log",
  "regex",
  "serde",
 ]
@@ -207,7 +207,7 @@ dependencies = [
  "actix-utils",
  "futures-channel",
  "futures-util",
- "log 0.4.14",
+ "log",
  "mio 0.6.23",
  "mio-uds",
  "num_cpus",
@@ -235,7 +235,7 @@ dependencies = [
  "actix-rt",
  "actix-server",
  "actix-service",
- "log 0.4.14",
+ "log",
  "socket2 0.3.19",
 ]
 
@@ -248,7 +248,7 @@ dependencies = [
  "derive_more",
  "futures-channel",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "num_cpus",
  "parking_lot 0.11.2",
  "threadpool",
@@ -281,7 +281,7 @@ dependencies = [
  "futures-channel",
  "futures-sink",
  "futures-util",
- "log 0.4.14",
+ "log",
  "pin-project 0.4.28",
  "slab",
 ]
@@ -312,7 +312,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "fxhash",
- "log 0.4.14",
+ "log",
  "mime",
  "pin-project 1.0.8",
  "regex",
@@ -613,7 +613,7 @@ dependencies = [
  "concurrent-queue",
  "futures-lite",
  "libc",
- "log 0.4.14",
+ "log",
  "once_cell",
  "parking",
  "polling",
@@ -676,7 +676,7 @@ dependencies = [
  "futures-lite",
  "gloo-timers",
  "kv-log-macro",
- "log 0.4.14",
+ "log",
  "memchr",
  "num_cpus",
  "once_cell",
@@ -753,7 +753,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "derive_more",
  "futures-core",
- "log 0.4.14",
+ "log",
  "mime",
  "percent-encoding 2.1.0",
  "rand 0.7.3",
@@ -939,7 +939,7 @@ dependencies = [
  "diem-workspace-hack",
  "futures 0.3.17",
  "itertools 0.10.1",
- "log 0.4.14",
+ "log",
  "move-binary-format",
  "move-core-types",
  "move-model",
@@ -1057,7 +1057,7 @@ dependencies = [
  "im",
  "ir-to-bytecode",
  "itertools 0.10.1",
- "log 0.4.14",
+ "log",
  "move-binary-format",
  "move-core-types",
  "move-model",
@@ -1116,6 +1116,12 @@ dependencies = [
  "move-core-types",
  "petgraph",
 ]
+
+[[package]]
+name = "bytecount"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72feb31ffc86498dacdbd0fcebb56138e7177a8cc5cea4516031d15ae85a742e"
 
 [[package]]
 name = "byteorder"
@@ -1807,7 +1813,7 @@ dependencies = [
  "itertools 0.10.1",
  "itoa",
  "libc",
- "log 0.4.14",
+ "log",
  "memchr",
  "num-integer",
  "num-traits",
@@ -1896,7 +1902,7 @@ dependencies = [
  "codespan-reporting 0.8.0",
  "diem-workspace-hack",
  "itertools 0.10.1",
- "log 0.4.14",
+ "log",
  "move-model",
  "num",
  "once_cell",
@@ -1929,7 +1935,7 @@ dependencies = [
  "itertools 0.9.0",
  "lang",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "maplit",
  "move-binary-format",
  "move-cli",
@@ -1975,11 +1981,11 @@ dependencies = [
  "env_logger 0.8.4",
  "futures 0.3.17",
  "hex",
- "log 0.4.14",
+ "log",
  "once_cell",
  "parking_lot 0.11.2",
  "proto",
- "strings",
+ "xi-rope",
 ]
 
 [[package]]
@@ -2109,7 +2115,7 @@ checksum = "44533bbbb3bb3c1fa17d9f2e4e38bbbaf8396ba82193c4cb1b6445d711445d36"
 dependencies = [
  "atty",
  "humantime 1.3.0",
- "log 0.4.14",
+ "log",
  "regex",
  "termcolor",
 ]
@@ -2122,7 +2128,7 @@ checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
 dependencies = [
  "atty",
  "humantime 2.1.0",
- "log 0.4.14",
+ "log",
  "regex",
  "termcolor",
 ]
@@ -2150,7 +2156,7 @@ dependencies = [
  "anyhow",
  "bcs",
  "diem-workspace-hack",
- "log 0.4.14",
+ "log",
  "move-core-types",
  "move-model",
  "serde",
@@ -2169,7 +2175,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3be3c61c59fdc91f5dbc3ea31ee8623122ce80057058be560654c5d410d181a6"
 dependencies = [
  "lazy_static",
- "log 0.4.14",
+ "log",
  "rand 0.7.3",
 ]
 
@@ -2330,7 +2336,7 @@ dependencies = [
  "frame-metadata",
  "frame-support-procedural",
  "impl-trait-for-tuples",
- "log 0.4.14",
+ "log",
  "once_cell",
  "parity-scale-codec",
  "paste",
@@ -2631,7 +2637,7 @@ dependencies = [
  "bitflags",
  "libc",
  "libgit2-sys",
- "log 0.4.14",
+ "log",
  "openssl-probe",
  "openssl-sys",
  "url 2.2.2",
@@ -2652,7 +2658,7 @@ dependencies = [
  "aho-corasick",
  "bstr",
  "fnv",
- "log 0.4.14",
+ "log",
  "regex",
 ]
 
@@ -3059,7 +3065,7 @@ dependencies = [
  "crossbeam-utils 0.8.5",
  "globset",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "memchr",
  "regex",
  "same-file",
@@ -3224,7 +3230,7 @@ dependencies = [
  "codespan-reporting 0.8.0",
  "diem-workspace-hack",
  "ir-to-bytecode-syntax",
- "log 0.4.14",
+ "log",
  "move-binary-format",
  "move-core-types",
  "move-ir-types",
@@ -3306,7 +3312,7 @@ dependencies = [
  "futures 0.1.31",
  "jsonrpc-core",
  "jsonrpc-pubsub",
- "log 0.4.14",
+ "log",
  "serde",
  "serde_json",
  "url 1.7.2",
@@ -3319,7 +3325,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0745a6379e3edc893c84ec203589790774e4247420033e71a76d3ab4687991fa"
 dependencies = [
  "futures 0.1.31",
- "log 0.4.14",
+ "log",
  "serde",
  "serde_derive",
  "serde_json",
@@ -3353,7 +3359,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "639558e0604013be9787ae52f798506ae42bf4220fe587bdc5625871cc8b9c77"
 dependencies = [
  "jsonrpc-core",
- "log 0.4.14",
+ "log",
  "parking_lot 0.10.2",
  "rand 0.7.3",
  "serde",
@@ -3381,7 +3387,7 @@ version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0de8b303297635ad57c9f5059fd9cee7a47f8e8daa09df0fcd07dd39fb22977f"
 dependencies = [
- "log 0.4.14",
+ "log",
 ]
 
 [[package]]
@@ -3411,7 +3417,7 @@ dependencies = [
  "ir-to-bytecode-syntax",
  "itertools 0.9.0",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "lsp-types",
  "move-binary-format",
  "move-compat",
@@ -3511,7 +3517,7 @@ dependencies = [
  "futures-timer",
  "lazy_static",
  "libsecp256k1",
- "log 0.4.14",
+ "log",
  "multihash",
  "multistream-select",
  "parity-multiaddr",
@@ -3549,7 +3555,7 @@ dependencies = [
  "either",
  "futures 0.3.17",
  "libp2p-core",
- "log 0.4.14",
+ "log",
  "rand 0.7.3",
  "smallvec",
  "void",
@@ -3635,15 +3641,6 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e19e8d5c34a3e0e2223db8e060f9e8264aeeb5c5fc64a4ee9965c062211c024b"
-dependencies = [
- "log 0.4.14",
-]
-
-[[package]]
-name = "log"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
@@ -3678,7 +3675,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c351c75989da23b355226dc188dc2b52538a7f4f218d70fd7393c6b62b110444"
 dependencies = [
  "crossbeam-channel 0.5.1",
- "log 0.4.14",
+ "log",
  "serde",
  "serde_json",
 ]
@@ -3820,7 +3817,7 @@ dependencies = [
  "iovec",
  "kernel32-sys",
  "libc",
- "log 0.4.14",
+ "log",
  "miow 0.2.2",
  "net2",
  "slab",
@@ -3834,7 +3831,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c2bdb6314ec10835cd3293dd268473a835c02b7b352e788be788b3c6ca6bb16"
 dependencies = [
  "libc",
- "log 0.4.14",
+ "log",
  "miow 0.3.7",
  "ntapi",
  "winapi 0.3.9",
@@ -3847,7 +3844,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52403fe290012ce777c4626790c8951324a2b9e3316b3143779c72b029742f19"
 dependencies = [
  "lazycell",
- "log 0.4.14",
+ "log",
  "mio 0.6.23",
  "slab",
 ]
@@ -4034,7 +4031,7 @@ dependencies = [
  "env_logger 0.7.1",
  "hex",
  "lang",
- "log 0.4.14",
+ "log",
  "lsp-server",
  "lsp-types",
  "move-core-types",
@@ -4062,7 +4059,7 @@ dependencies = [
  "disassembler",
  "internment",
  "itertools 0.10.1",
- "log 0.4.14",
+ "log",
  "move-binary-format",
  "move-core-types",
  "move-ir-types",
@@ -4094,7 +4091,7 @@ dependencies = [
  "futures 0.3.17",
  "hex",
  "itertools 0.10.1",
- "log 0.4.14",
+ "log",
  "move-binary-format",
  "move-ir-types",
  "move-lang",
@@ -4121,7 +4118,7 @@ dependencies = [
  "hex",
  "http",
  "lang",
- "log 0.4.14",
+ "log",
  "move-binary-format",
  "move-compat",
  "move-core-types",
@@ -4142,7 +4139,7 @@ source = "git+https://github.com/pontem-network/diem.git?branch=release-v1.3#d24
 dependencies = [
  "diem-workspace-hack",
  "docgen",
- "log 0.4.14",
+ "log",
  "move-prover",
  "walkdir",
 ]
@@ -4264,7 +4261,7 @@ checksum = "d050aeedc89243f5347c3e237e3e13dc76fbe4ae3742a57b94dc14f69acf76d4"
 dependencies = [
  "buf_redux",
  "httparse",
- "log 0.4.14",
+ "log",
  "mime",
  "mime_guess",
  "quick-error",
@@ -4282,7 +4279,7 @@ checksum = "93faf2e41f9ee62fb01680ed48f3cc26652352327aa2e59869070358f6b7dd75"
 dependencies = [
  "bytes 0.5.6",
  "futures 0.3.17",
- "log 0.4.14",
+ "log",
  "pin-project 1.0.8",
  "smallvec",
  "unsigned-varint 0.5.1",
@@ -4313,7 +4310,7 @@ checksum = "48ba9f7719b5a0f42f338907614285fb5fd70e53858141f69898a1fb7203b24d"
 dependencies = [
  "lazy_static",
  "libc",
- "log 0.4.14",
+ "log",
  "openssl",
  "openssl-probe",
  "openssl-sys",
@@ -4332,7 +4329,7 @@ dependencies = [
  "hex",
  "http",
  "lang",
- "log 0.4.14",
+ "log",
  "move-binary-format",
  "move-core-types",
  "move-vm-runtime",
@@ -4957,7 +4954,7 @@ checksum = "92341d779fa34ea8437ef4d82d440d5e1ce3f3ff7f824aa64424cd481f9a1f25"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
- "log 0.4.14",
+ "log",
  "wepoll-ffi",
  "winapi 0.3.9",
 ]
@@ -5132,7 +5129,7 @@ dependencies = [
  "bytes 0.5.6",
  "heck",
  "itertools 0.8.2",
- "log 0.4.14",
+ "log",
  "multimap",
  "petgraph",
  "prost 0.6.1",
@@ -5594,7 +5591,7 @@ dependencies = [
  "ipnet",
  "js-sys",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "mime",
  "mime_guess",
  "native-tls",
@@ -5630,7 +5627,7 @@ dependencies = [
  "ipnet",
  "js-sys",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "mime",
  "native-tls",
  "percent-encoding 2.1.0",
@@ -5752,7 +5749,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
 dependencies = [
  "base64",
- "log 0.4.14",
+ "log",
  "ring",
  "sct",
  "webpki",
@@ -5814,7 +5811,7 @@ dependencies = [
  "jsonrpc-core-client",
  "jsonrpc-derive",
  "jsonrpc-pubsub",
- "log 0.4.14",
+ "log",
  "parity-scale-codec",
  "parking_lot 0.10.2",
  "serde",
@@ -6167,7 +6164,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4bc0ffd69814a9b251d43afcabf96dad1b29f5028378056257be9e3fecc9f720"
 dependencies = [
  "chrono",
- "log 0.4.14",
+ "log",
  "termcolor",
 ]
 
@@ -6299,7 +6296,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ba612ede91aa09d602a5f7df18630728a81991fa6b5a13a0071ea00799fb509"
 dependencies = [
  "derive_more",
- "log 0.4.14",
+ "log",
  "lru",
  "parity-scale-codec",
  "parking_lot 0.10.2",
@@ -6330,7 +6327,7 @@ dependencies = [
  "futures 0.3.17",
  "futures-timer",
  "libp2p",
- "log 0.4.14",
+ "log",
  "parity-scale-codec",
  "parking_lot 0.10.2",
  "serde",
@@ -6366,7 +6363,7 @@ dependencies = [
  "impl-serde",
  "lazy_static",
  "libsecp256k1",
- "log 0.4.14",
+ "log",
  "merlin",
  "num-traits",
  "parity-scale-codec",
@@ -6447,7 +6444,7 @@ dependencies = [
  "futures 0.3.17",
  "hash-db",
  "libsecp256k1",
- "log 0.4.14",
+ "log",
  "parity-scale-codec",
  "parking_lot 0.10.2",
  "sp-core",
@@ -6481,7 +6478,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1055031d4994705cd9eca38602fea1ed88f6916c0979f85352c3d540baedb2e8"
 dependencies = [
  "backtrace",
- "log 0.4.14",
+ "log",
 ]
 
 [[package]]
@@ -6503,7 +6500,7 @@ dependencies = [
  "either",
  "hash256-std-hasher",
  "impl-trait-for-tuples",
- "log 0.4.14",
+ "log",
  "parity-scale-codec",
  "parity-util-mem",
  "paste",
@@ -6554,7 +6551,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "095a8c33f70151e561c53fdaca23ad19cc059088807a25be0d60d04fb2ededea"
 dependencies = [
  "hash-db",
- "log 0.4.14",
+ "log",
  "num-traits",
  "parity-scale-codec",
  "parking_lot 0.10.2",
@@ -6595,7 +6592,7 @@ version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c574a06ac032f3c6fc29ae61ae1292546499342219c256098914f6110312f6f4"
 dependencies = [
- "log 0.4.14",
+ "log",
  "parity-scale-codec",
  "sp-std",
  "tracing",
@@ -6611,7 +6608,7 @@ checksum = "429125cf86f74715559d9fc1e27ed8f69d6a857c30db4ca4957e05c4549ecf1b"
 dependencies = [
  "derive_more",
  "futures 0.3.17",
- "log 0.4.14",
+ "log",
  "parity-scale-codec",
  "serde",
  "sp-api",
@@ -6758,15 +6755,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 
 [[package]]
-name = "strings"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa481ee1bc42fc3df8195f91f7cb43cf8f2b71b48bac40bf5381cfaf7e481f3c"
-dependencies = [
- "log 0.3.9",
-]
-
-[[package]]
 name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6833,7 +6821,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "hex",
- "log 0.4.14",
+ "log",
  "pallet-balances",
  "parity-scale-codec",
  "primitive-types 0.6.2",
@@ -6872,7 +6860,7 @@ dependencies = [
  "derive_more",
  "futures-util",
  "hyper 0.13.10",
- "log 0.4.14",
+ "log",
  "prometheus 0.10.0",
  "tokio 0.2.25",
 ]
@@ -7215,7 +7203,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1a5f475f1b9d077ea1017ecbc60890fda8e54942d680ca0b1d2b47cfa2d861b"
 dependencies = [
  "futures-util",
- "log 0.4.14",
+ "log",
  "pin-project 1.0.8",
  "tokio 1.10.1",
  "tungstenite",
@@ -7231,7 +7219,7 @@ dependencies = [
  "futures-core",
  "futures-io",
  "futures-sink",
- "log 0.4.14",
+ "log",
  "pin-project-lite 0.1.12",
  "tokio 0.2.25",
 ]
@@ -7246,7 +7234,7 @@ dependencies = [
  "futures-core",
  "futures-io",
  "futures-sink",
- "log 0.4.14",
+ "log",
  "pin-project-lite 0.2.7",
  "tokio 1.10.1",
 ]
@@ -7273,7 +7261,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09adeb8c97449311ccd28a427f96fb563e7fd31aabf994189879d9da2394b89d"
 dependencies = [
  "cfg-if 1.0.0",
- "log 0.4.14",
+ "log",
  "pin-project-lite 0.2.7",
  "tracing-attributes",
  "tracing-core",
@@ -7316,7 +7304,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6923477a48e41c1951f1999ef8bb5a3023eb723ceadafe78ffb65dc366761e3"
 dependencies = [
  "lazy_static",
- "log 0.4.14",
+ "log",
  "tracing-core",
 ]
 
@@ -7360,7 +7348,7 @@ checksum = "9eac131e334e81b6b3be07399482042838adcd7957aa0010231d0813e39e02fa"
 dependencies = [
  "hash-db",
  "hashbrown 0.11.2",
- "log 0.4.14",
+ "log",
  "rustc-hex",
  "smallvec",
 ]
@@ -7386,7 +7374,7 @@ dependencies = [
  "futures 0.3.17",
  "idna 0.2.3",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "rand 0.7.3",
  "smallvec",
  "thiserror",
@@ -7404,7 +7392,7 @@ dependencies = [
  "futures 0.3.17",
  "ipconfig",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "lru-cache",
  "resolv-conf",
  "smallvec",
@@ -7431,7 +7419,7 @@ dependencies = [
  "http",
  "httparse",
  "input_buffer",
- "log 0.4.14",
+ "log",
  "rand 0.8.4",
  "sha-1 0.9.8",
  "url 2.2.2",
@@ -7748,7 +7736,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ce8a968cb1cd110d136ff8b819a556d6fb6d919363c61534f6860c7eb172ba0"
 dependencies = [
- "log 0.4.14",
+ "log",
  "try-lock",
 ]
 
@@ -7763,7 +7751,7 @@ dependencies = [
  "headers",
  "http",
  "hyper 0.14.12",
- "log 0.4.14",
+ "log",
  "mime",
  "mime_guess",
  "multipart",
@@ -7814,7 +7802,7 @@ checksum = "cfe8dc78e2326ba5f845f4b5bf548401604fa20b1dd1d365fb73b6c1d6364041"
 dependencies = [
  "bumpalo",
  "lazy_static",
- "log 0.4.14",
+ "log",
  "proc-macro2 1.0.28",
  "quote 1.0.9",
  "syn 1.0.75",
@@ -8014,7 +8002,7 @@ dependencies = [
  "byteorder",
  "bytes 0.4.12",
  "httparse",
- "log 0.4.14",
+ "log",
  "mio 0.6.23",
  "mio-extras",
  "openssl",
@@ -8043,6 +8031,17 @@ dependencies = [
  "curve25519-dalek-fiat",
  "rand_core 0.6.3",
  "zeroize",
+]
+
+[[package]]
+name = "xi-rope"
+version = "0.3.0"
+source = "git+https://github.com/google/xi-editor?tag=xi-unicode-v0.2.1#9743487c92ceea53771fba9435f4274d29e0d457"
+dependencies = [
+ "bytecount",
+ "memchr",
+ "regex",
+ "unicode-segmentation",
 ]
 
 [[package]]
