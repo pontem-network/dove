@@ -6,7 +6,7 @@ use anyhow::Error;
 use strings::rope::Rope;
 
 use proto::file::{Diff, File as FileModel};
-use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::Write;
 
 #[derive(Debug)]
@@ -33,14 +33,25 @@ impl MFile {
     }
 
     pub fn update_file(&mut self, diff: Vec<Diff>) -> Result<(), Error> {
+        println!("\"\n{}\n\"", self.content);
+        println!("diff:{:?}", diff);
         for diff in diff {
             if diff.text.is_empty() {
                 self.content.remove(diff.range_offset as usize, (diff.range_offset + diff.range_length) as usize);
             } else {
+                if diff.range_length != 0 {
+                    self.content.remove(diff.range_offset as usize, (diff.range_offset + diff.range_length) as usize);
+                }
+
                 self.content.insert(diff.range_offset as usize, diff.text);
             }
         }
-        let mut f = File::open(self.path.as_ref())?;
+        println!("\'\n{}\n\'", self.content);
+
+        let mut f = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(self.path.as_ref())?;
         f.set_len(0)?;
         write!(f, "{}", &self.content)?;
         Ok(())
@@ -52,4 +63,13 @@ impl MFile {
             tp: self.tp(),
         }
     }
+}
+
+#[test]
+fn test() {
+    let mut r = Rope::from_string(
+        "ww\nww".to_string()
+    );
+    r.remove(0, 2);
+    println!("\'\n{}\n\'", r);
 }

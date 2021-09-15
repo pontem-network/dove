@@ -18,6 +18,7 @@ transport! {
     ProjectInfo|project_info: ID => ProjectInfo;
     GetFile|get_file: GetFile => File;
     Flush|flush: Flush => FlushResult;
+    Sync|sync_project: ID => ProjectInfo;
 }
 
 #[macro_export]
@@ -44,27 +45,6 @@ macro_rules! transport {
                 $name($resp),
              )*
         }
-
-        $(
-        impl<'a> From<&'a $req> for SentRequest<'a> {
-            fn from(val: &'a $req) -> Self {
-                Self::$name(val)
-            }
-        }
-        )*
-
-        $(
-        impl std::convert::TryFrom<Response> for $resp {
-            type Error = anyhow::Error;
-
-            fn try_from(value: Response) -> Result<Self, Self::Error> {
-                match value {
-                    Response::$name(val) => Ok(val),
-                    _ => anyhow::bail!("Type mismatch."),
-                }
-            }
-        }
-        )*
 
         pub trait OnRequest {
             $(
@@ -103,9 +83,12 @@ macro_rules! transport {
 
         $(
             pub async fn $fun_name(url: &str, req: &$req) -> Result<$resp, anyhow::Error> {
-                use std::convert::TryInto;
-                let req = SentRequest::from(req);
-                perform(url, &req).await?.try_into()
+                let req = SentRequest::$name(req);
+                let resp = perform(url, &req).await?;
+                match resp {
+                    Response::$name(val) => Ok(val),
+                    _ => anyhow::bail!("Type mismatch."),
+                }
             }
         )*
     }

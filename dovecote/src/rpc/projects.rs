@@ -90,6 +90,14 @@ impl Projects {
         on_proj(&mut project)
     }
 
+    pub fn reload(&self, id: &ID) -> Result<Arc<RwLock<Project>>, Error> {
+        {
+            let mut map = self.map.write();
+            map.remove(id);
+        }
+        self.get_project(id)
+    }
+
     pub fn clean_up(&self) {
         let mut map = self.map.write();
         let current_timestamp = get_unix_timestamp();

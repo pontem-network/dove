@@ -67,4 +67,10 @@ impl OnRequest for Rpc {
             errors
         })
     }
+
+    fn sync_project(&self, id: ID) -> Result<ProjectInfo, Error> {
+        let project = self.projects.reload(&id)?;
+        let project = project.read();
+        Ok(project.info())
+    }
 }

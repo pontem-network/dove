@@ -16,7 +16,7 @@ export async function open_file(project_id, file_id, file_name) {
     }
 
     let object = create_empty();
-    object.projec_id = project_id;
+    object.project_id = project_id;
     object.file_id = file_id;
     object.file_name = file_name;
 
@@ -30,7 +30,7 @@ export async function open_file(project_id, file_id, file_name) {
 
 function create_empty() {
     return {
-        projec_id: null,
+        project_id: null,
         file_id: null,
         file_name: null,
         tab: null,
@@ -68,9 +68,13 @@ function create_empty() {
             this.onblur();
         },
         /// loss of focus
-        onblur: function() {
-            /// @todo onblur. Need to add autosave
-            console.log("onblur: project[" + this.projec_id + "], file[" + this.file_id + "]");
+        onblur: async function() {
+             if (window.editorEvents !== undefined && window.editorEvents !== null) {
+                let events = window.editorEvents;
+                window.editorEvents = null;
+                let errors = await wasm.flush(events);
+                console.log(errors);
+             }
         },
         /// close the tab
         destroy: function() {
@@ -142,19 +146,37 @@ function create_editor(object) {
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
             run: function(ed) {
-                // @todo dove build
+                // todo dove build
                 return null;
             }
         });
     // Changes in the text
     object.editor.monaco
         .getModel()
-        .onDidChangeContent(async(event) => {
-            await wasm.on_file_change(
-                object.projec_id,
-                object.file_id,
-                event
-            );
+        .onDidChangeContent((event) => {
+              if (!event.isFlush) {
+                  if (window.editorEvents === undefined || window.editorEvents === null) {
+                        window.editorEvents = new Map();
+                  }
+                  let project = window.editorEvents[object.project_id];
+                  if (project === undefined || project === null) {
+                        project = new Map();
+                        window.editorEvents[object.project_id] = project;
+                  }
+                  let fileDiff = project[object.file_id];
+                  if (fileDiff === undefined || fileDiff === null) {
+                        fileDiff = [];
+                        project[object.file_id] = fileDiff;
+                  }
+
+                  event.changes.forEach(function(item, index, array) {
+                        fileDiff.push({
+                            rangeOffset: item.rangeOffset,
+                            rangeLength: item.rangeLength,
+                            text: item.text,
+                        });
+                  });
+              }
         });
     // loss of editor focus
     object.editor.monaco
@@ -162,7 +184,7 @@ function create_editor(object) {
             object.onblur();
         });
     // load content and type
-    wasm.get_file(object.projec_id, object.file_id)
+    wasm.get_file(object.project_id, object.file_id)
         .then(file => {
             object.editor.monaco.setValue(file.content);
             monaco.editor.setModelLanguage(object.editor.monaco.getModel(), file.tp);
