@@ -6,7 +6,7 @@ use std::sync::Arc;
 use anyhow::Error;
 
 use dove::home::{load_project, path_id, Project as DoveProject};
-use proto::project::{ID, ProjectInfo, ProjectShortInfo, Tree};
+use proto::project::{Id, ProjectInfo, ProjectShortInfo, Tree, IdRef};
 
 use crate::rpc::m_file::MFile;
 
@@ -14,8 +14,8 @@ use crate::rpc::m_file::MFile;
 pub struct Project {
     pub tree: Arc<Tree>,
     pub info: DoveProject,
-    pub file_paths: HashMap<ID, Arc<PathBuf>>,
-    pub file_map: HashMap<ID, MFile>,
+    pub file_paths: HashMap<Id, Arc<PathBuf>>,
+    pub file_map: HashMap<Id, MFile>,
 }
 
 impl Project {
@@ -45,18 +45,18 @@ impl Project {
         }
     }
 
-    pub fn load_file(&mut self, id: &ID) -> Result<&mut MFile, Error> {
+    pub fn load_file(&mut self, id: IdRef) -> Result<&mut MFile, Error> {
         if !self.file_map.contains_key(id) {
             if let Some(path) = self.file_paths.get(id) {
                 let m_file = MFile::load(path.clone())?;
-                self.file_map.insert(id.to_owned(), m_file);
+                self.file_map.insert(id.to_string(), m_file);
             } else {
                 bail!("File with id:{} was not found.", id)
             }
         }
 
         if let Some(file) = self.file_map.get_mut(id) {
-            return Ok(file);
+            Ok(file)
         } else {
             bail!("File with id:{} was not found.", id)
         }
@@ -66,7 +66,7 @@ impl Project {
 fn load_tree(
     path: &Path,
     exclude_dir: &Path,
-    file_map: &mut HashMap<ID, Arc<PathBuf>>,
+    file_map: &mut HashMap<Id, Arc<PathBuf>>,
 ) -> Result<Vec<Tree>, Error> {
     let mut tree = vec![];
     for entry in fs::read_dir(path)? {

@@ -4,7 +4,7 @@ use anyhow::Error;
 
 use proto::{Empty, OnRequest};
 use proto::file::{File, Flush, FlushResult, GetFile};
-use proto::project::{ID, ProjectInfo, ProjectList};
+use proto::project::{Id, ProjectInfo, ProjectList};
 
 use crate::rpc::projects::Projects;
 
@@ -30,7 +30,7 @@ impl OnRequest for Rpc {
         self.projects.list()
     }
 
-    fn project_info(&self, id: ID) -> Result<ProjectInfo, anyhow::Error> {
+    fn project_info(&self, id: Id) -> Result<ProjectInfo, anyhow::Error> {
         self.projects.on_project(&id, |p| Ok(p.info()))
     }
 
@@ -40,7 +40,7 @@ impl OnRequest for Rpc {
             file_id,
         } = req;
         self.projects.on_project_mut(&project_id, |p| {
-            p.load_file(&file_id).map(|f| f.make_model())
+            p.load_file(file_id.as_ref()).map(|f| f.make_model())
         })
     }
 
@@ -55,7 +55,7 @@ impl OnRequest for Rpc {
                             Ok(files
                                 .into_iter()
                                 .map(|(f_id, diff)| {
-                                    (p.load_file(&f_id).map(|f| f.update_file(diff)), f_id)
+                                    (p.load_file(f_id.as_ref()).map(|f| f.update_file(diff)), f_id)
                                 })
                                 .filter_map(|(res, f_id)| {
                                     if let Err(err) = res {
@@ -76,7 +76,7 @@ impl OnRequest for Rpc {
         Ok(FlushResult { errors })
     }
 
-    fn sync_project(&self, id: ID) -> Result<ProjectInfo, Error> {
+    fn sync_project(&self, id: Id) -> Result<ProjectInfo, Error> {
         let project = self.projects.reload(&id)?;
         let project = project.read();
         Ok(project.info())

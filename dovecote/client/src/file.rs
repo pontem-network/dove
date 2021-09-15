@@ -4,12 +4,12 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 
 use proto::file::{Diff, FileId, Flush, GetFile, ProjectId};
-use proto::project::ID;
+use proto::project::Id;
 use crate::context::*;
 use crate::js_err;
 
 #[wasm_bindgen]
-pub async fn get_file(project_id: ID, file_id: ID) -> Result<JsValue, JsValue> {
+pub async fn get_file(project_id: Id, file_id: Id) -> Result<JsValue, JsValue> {
     let get_file = GetFile {
         project_id,
         file_id,

@@ -15,10 +15,10 @@ pub struct Empty;
 
 transport! {
     ProjectList|project_list: Empty => ProjectList;
-    ProjectInfo|project_info: ID => ProjectInfo;
+    ProjectInfo|project_info: Id => ProjectInfo;
     GetFile|get_file: GetFile => File;
     Flush|flush: Flush => FlushResult;
-    Sync|sync_project: ID => ProjectInfo;
+    Sync|sync_project: Id => ProjectInfo;
 }
 
 #[macro_export]
@@ -58,7 +58,7 @@ macro_rules! transport {
                         match req {
                         $(
                             ReceivedRequest::$name(req) => self.$fun_name(req)
-                            .map(|resp| Response::$name(resp)),
+                            .map(Response::$name),
                         )*
                         }
                      })

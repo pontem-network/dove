@@ -7,16 +7,18 @@ use chrono::Utc;
 use parking_lot::RwLock;
 
 use dove::home::Home;
-use proto::project::{ID, ProjectList, ProjectShortInfo};
+use proto::project::{Id, ProjectList, ProjectShortInfo, IdRef};
 
 use crate::rpc::project::Project;
 
 const PROJECT_LIFETIME: i64 = 60 * 10;
 
+type ProjectMut = Arc<RwLock<Project>>;
+
 #[derive(Debug)]
 pub struct Projects {
     dove_home: Home,
-    map: RwLock<HashMap<ID, (AtomicI64, Arc<RwLock<Project>>)>>,
+    map: RwLock<HashMap<Id, (AtomicI64, ProjectMut)>>,
 }
 
 impl Projects {
@@ -27,7 +29,7 @@ impl Projects {
         })
     }
 
-    pub fn reset_project(&self, id: ID) {
+    pub fn reset_project(&self, id: Id) {
         let mut list = self.map.write();
         list.remove(&id);
     }
@@ -46,7 +48,7 @@ impl Projects {
         Ok(ProjectList { projects })
     }
 
-    fn get_project(&self, id: &ID) -> Result<Arc<RwLock<Project>>, Error> {
+    fn get_project(&self, id: IdRef) -> Result<ProjectMut, Error> {
         let current_time = get_unix_timestamp();
         {
             let map = self.map.read();
@@ -75,7 +77,7 @@ impl Projects {
         Ok(project)
     }
 
-    pub fn on_project<F, T>(&self, id: &ID, on_proj: F) -> Result<T, Error>
+    pub fn on_project<F, T>(&self, id: IdRef, on_proj: F) -> Result<T, Error>
     where
         F: FnOnce(&Project) -> Result<T, Error>,
     {
@@ -84,7 +86,7 @@ impl Projects {
         on_proj(&project)
     }
 
-    pub fn on_project_mut<F, T>(&self, id: &ID, on_proj: F) -> Result<T, Error>
+    pub fn on_project_mut<F, T>(&self, id: IdRef, on_proj: F) -> Result<T, Error>
     where
         F: FnOnce(&mut Project) -> Result<T, Error>,
     {
@@ -93,7 +95,7 @@ impl Projects {
         on_proj(&mut project)
     }
 
-    pub fn reload(&self, id: &ID) -> Result<Arc<RwLock<Project>>, Error> {
+    pub fn reload(&self, id: &Id) -> Result<Arc<RwLock<Project>>, Error> {
         {
             let mut map = self.map.write();
             map.remove(id);

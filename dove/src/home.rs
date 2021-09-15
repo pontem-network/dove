@@ -35,7 +35,7 @@ impl Home {
         let rf = bcs::to_bytes(&Ref {
             path: path.to_string_lossy().to_string(),
         })?;
-        fs::write(projects_dir.join(format!("{}", id)), rf)?;
+        fs::write(projects_dir.join(id), rf)?;
         Ok(())
     }
 

@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use crate::ID;
+use crate::Id;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GetFile {
-    pub project_id: ID,
-    pub file_id: ID,
+    pub project_id: Id,
+    pub file_id: Id,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -13,8 +13,8 @@ pub struct File {
     pub tp: String,
 }
 
-pub type ProjectId = ID;
-pub type FileId = ID;
+pub type ProjectId = Id;
+pub type FileId = Id;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct Flush {

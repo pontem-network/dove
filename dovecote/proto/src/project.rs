@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-pub type ID = String;
+pub type Id = String;
+pub type IdRef<'a> = &'a str;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ProjectList {
@@ -9,7 +10,7 @@ pub struct ProjectList {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ProjectShortInfo {
-    pub id: Arc<ID>,
+    pub id: Arc<Id>,
     pub name: Arc<String>,
 }
 
@@ -22,5 +23,5 @@ pub struct ProjectInfo {
 #[derive(Debug, Deserialize, Serialize)]
 pub enum Tree {
     Dir(Arc<String>, Vec<Tree>),
-    File(Arc<ID>, Arc<String>),
+    File(Arc<Id>, Arc<String>),
 }
