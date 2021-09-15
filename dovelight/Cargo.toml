@@ -1,0 +1,16 @@
+[package]
+name = "dovelight"
+version = "0.1.0"
+edition = "2018"
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.76"
+getrandom = {version = "0.2", features = ["js"]}
+#codespan = "0.8.0"
+#move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "release-v1.3" }
+#
