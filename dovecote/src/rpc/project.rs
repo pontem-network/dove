@@ -143,6 +143,18 @@ impl Project {
         mem::swap(self, &mut Self::load(&project_path)?);
         Ok(())
     }
+
+    pub fn remove_directory(&mut self, path: String) -> Result<(), Error> {
+        let project_path = PathBuf::from_str(&self.info.path)?;
+        let dir = project_path.join(path);
+        fs::canonicalize(&dir)?;
+        if !dir.starts_with(&self.info.path) {
+            bail!("Invalid file path. The path must be located in the project.");
+        }
+        fs::remove_dir_all(&dir)?;
+        mem::swap(self, &mut Self::load(&project_path)?);
+        Ok(())
+    }
 }
 
 fn load_tree(

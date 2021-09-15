@@ -39,6 +39,12 @@ pub struct RenameDirectory {
     pub new_name: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct RemoveDirectory {
+    pub project_id: Id,
+    pub path: String,
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct Flush {
     pub project_map: HashMap<ProjectId, HashMap<FId, Vec<Diff>>>,

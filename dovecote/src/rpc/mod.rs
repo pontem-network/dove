@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use anyhow::Error;
 
 use proto::{Empty, OnRequest};
-use proto::file::{
-    CreateFileResult, CreateFsEntry, FId, File, FileIdentifier, Flush, FlushResult,
-    RenameDirectory, RenameFile,
-};
+use proto::file::{CreateFileResult, CreateFsEntry, FId, File, FileIdentifier, Flush, FlushResult, RenameDirectory, RenameFile, RemoveDirectory};
 use proto::project::{Id, ProjectInfo, ProjectList};
 
 use crate::rpc::projects::Projects;
@@ -109,6 +106,14 @@ impl OnRequest for Rpc {
         } = req;
         self.projects.on_project_mut(&project_id, |p| {
             p.rename_directory(path, old_name, new_name)?;
+            Ok(p.info())
+        })
+    }
+
+    fn remove_directory(&self, req: RemoveDirectory) -> Result<ProjectInfo, Error> {
+        let RemoveDirectory { project_id, path } = req;
+        self.projects.on_project_mut(&project_id, |p| {
+            p.remove_directory(path)?;
             Ok(p.info())
         })
     }

@@ -26,13 +26,14 @@ transport! {
     RemoveFile|remove_file: FileIdentifier => Empty;
     // Create a new file.
     CreateFile|create_file: CreateFsEntry => CreateFileResult;
-
     // Create a new directory.
     CreateDirectory|create_directory: CreateFsEntry => ProjectInfo;
     // Rename file and return new file id. Flush before rename;
     RenameFile|rename_file: RenameFile => FId;
     // Rename directory. Flush before rename;
     RenameDirectory|rename_directory: RenameDirectory => ProjectInfo;
+    // Remove directory.
+    RemoveDirectory|remove_directory: RemoveDirectory => ProjectInfo;
     // Flush changes.
     Flush|flush: Flush => FlushResult;
     // Reload project from disk.
