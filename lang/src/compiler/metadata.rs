@@ -13,7 +13,7 @@ use crate::compiler::dialects::Dialect;
 use crate::compiler::preprocessor::BuilderPreprocessor;
 use codespan_reporting::term::termcolor::{StandardStream, ColorChoice};
 use move_core_types::identifier::Identifier;
-use move_lang::interact::Interact;
+use move_lang::callback::Interact;
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct FuncMeta {

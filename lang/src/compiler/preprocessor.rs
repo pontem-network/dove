@@ -3,7 +3,7 @@ use move_lang::errors::{Errors, FilesSourceText};
 use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::mut_string::{MutString, NewValue};
 use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
-use move_lang::interact::Interact;
+use move_lang::callback::Interact;
 
 pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
