@@ -3,8 +3,11 @@ use std::collections::HashMap;
 use anyhow::Error;
 
 use proto::{Empty, OnRequest};
-use proto::file::{CreateFileResult, CreateFsEntry, FId, File, FileIdentifier, Flush, FlushResult, RenameDirectory, RenameFile, RemoveDirectory};
-use proto::project::{Id, ProjectInfo, ProjectList};
+use proto::file::{
+    CreateFileResult, CreateFsEntry, FId, File, FileIdentifier, Flush, FlushResult,
+    RenameDirectory, RenameFile, RemoveDirectory,
+};
+use proto::project::{Id, ProjectInfo, ProjectList, ProjectActionRequest, ProjectActionResponse};
 
 use crate::rpc::projects::Projects;
 
@@ -157,5 +160,14 @@ impl OnRequest for Rpc {
         let project = self.projects.reload(&id)?;
         let project = project.read();
         Ok(project.info())
+    }
+
+    fn project_action(
+        &self,
+        req: ProjectActionRequest,
+    ) -> Result<ProjectActionResponse, anyhow::Error> {
+        let ProjectActionRequest { project_id, action } = req;
+        self.projects
+            .on_project_mut(&project_id, |project| project.action(action))
     }
 }

@@ -1,6 +1,7 @@
 import './lib.js';
 import * as wasm from '../pkg/client.js';
 import * as project from './project.js';
+import * as cons from './console.js';
 
 /// ID of the Open project
 window.open_project = await project.create();
@@ -30,16 +31,12 @@ const TEMPLATE_EXPLORER_FILE = `
 export async function init() {
     project_load();
     init_menu();
+    inic_header_buttons();
+    cons.inic_panel();
 
     // open projects list
     on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[0]);
 }
-
-/// Set status text in footer
-function footer_status(text) {
-    document.querySelector("#footer .status").innerHTML = text;
-}
-
 // ===============================================================
 //  Menu
 // ===============================================================
@@ -97,7 +94,7 @@ async function project_load() {
         .querySelector("#projects .cont")
         .addClass('load');
 
-    footer_status("Loading projects...");
+    cons.status("Loading projects...");
 
     let list = await wasm.project_list();
 
@@ -122,14 +119,14 @@ async function project_load() {
         });
 
     projects_element.removeClass('load');
-    footer_status("Done");
+    cons.status("Done");
 }
 
 /// Click on the project name in the sidebar
 function on_click_project() {
     let id = this.attr('data-id');
     if (!id) {
-        console.warn('data-id is undefined');
+        cons.warn('data-id is undefined');
         return false;
     }
     explorer_load(id);
@@ -145,7 +142,7 @@ export async function explorer_load(id) {
         return;
     }
     explorer.addClass('load');
-    footer_status("Loading tree")
+    cons.status("Loading tree")
 
     explorer.innerHTML = "";
     let info = await wasm.project_info(id);
@@ -173,7 +170,7 @@ export async function explorer_load(id) {
     on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[1]);
 
     explorer.removeClass('load');
-    footer_status("Done")
+    cons.status("Done")
 }
 
 function on_click_explorer_dir(e) {
@@ -209,8 +206,8 @@ function explorer_add(parent, data) {
                     explorer_add_file(parent, element[tp_element][0], element[tp_element][1]);
                     break;
                 default:
-                    console.warn("Unknown type: {" + tp_element + "}.");
-                    console.log(element);
+                    cons.warn("Unknown type: {" + tp_element + "}.");
+                    cons.log(element);
                     break;
             }
         });
@@ -237,4 +234,41 @@ function explorer_add_file(parent, id, name) {
         .replaceAll("{{name}}", name)
         .replaceAll("{{id}}", id);
     parent.append(block);
+}
+// ===============================================================
+//  header buttons
+// ===============================================================
+function inic_header_buttons() {
+    document
+        .querySelector("#container .header button.build")
+        .addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (window.open_project.build) {
+                window.open_project.build();
+            }
+        });
+    document
+        .querySelector("#container .header button.clean")
+        .addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (window.open_project.clean) {
+                window.open_project.clean();
+            }
+        });
+    document
+        .querySelector("#container .header button.test")
+        .addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (window.open_project.test) {
+                window.open_project.test();
+            }
+        });
+    document
+        .querySelector("#container .header button.check")
+        .addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (window.open_project.check) {
+                window.open_project.check();
+            }
+        });
 }

@@ -38,6 +38,8 @@ transport! {
     Flush|flush: Flush => FlushResult;
     // Reload project from disk.
     Sync|sync_project: Id => ProjectInfo;
+    // clean|build|test project
+    ProjectActionRequest|project_action: ProjectActionRequest => ProjectActionResponse;
 }
 
 #[macro_export]

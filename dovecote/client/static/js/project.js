@@ -1,4 +1,6 @@
 import * as editor from './editor.js';
+import * as cons from './console.js';
+import * as wasm from '../pkg/client.js';
 
 /// Create a project object. 
 /// It stores information about the project, id, open files
@@ -64,6 +66,104 @@ export async function create(id) {
             this.files = {};
             this.id = null;
             return this;
-        }
+        },
+        /// building a project
+        build: function() {
+            if (!this.id) {
+                cons.status("Warning: Select a project..");
+                return this;
+            }
+            cons.status("Building a project..");
+            wasm.project_build(this.id)
+                .then(response => {
+                    if (response.code == 0) {
+                        cons.status("Done")
+                        cons.output(response.content);
+                    } else {
+                        console.log("1");
+                        cons.status("error when building")
+                        cons.output(response.content);
+                    }
+                })
+                .catch(err => {
+                    console.log("2");
+                    cons.status("error when building");
+                    console.warn(err);
+                });
+            return this;
+        },
+        /// cleaning up the project
+        clean: function() {
+            if (!this.id) {
+                cons.status("Warning: Select a project..");
+                return this;
+            }
+            cons.status("Cleaning up the project..");
+            wasm.project_clean(this.id)
+                .then(response => {
+                    if (response.code == 0) {
+                        cons.status("Done")
+                        cons.output(response.content);
+                    } else {
+                        cons.status("error when cleaning")
+                        console.warn(response);
+                    }
+                })
+                .catch(err => {
+                    cons.status("error when cleaning");
+                    console.warn(err);
+                });
+            return this;
+        },
+        /// testing the project
+        test: function() {
+            if (!this.id) {
+                cons.status("Warning: Select a project..");
+                return this;
+            }
+            cons.status("Testing the project..");
+            wasm.project_test(this.id)
+                .then(response => {
+                    if (response.code == 0) {
+                        cons.status("Done")
+                        cons.output(response.content);
+                    } else {
+                        cons.status("error when testing")
+                        console.warn(response);
+                    }
+                })
+                .catch(err => {
+                    cons.status("error when testing");
+                    console.warn(err);
+                });
+            return this;
+        },
+        /// Checking the project
+        check: function() {
+            if (!this.id) {
+                cons.status("Warning: Select a project..");
+                return this;
+            }
+            cons.status("Checking the project..");
+            wasm.project_check(this.id)
+                .then(response => {
+                    if (response.code == 0) {
+                        cons.status("Done")
+                        cons.output(response.content);
+                    } else {
+                        cons.status("error when checking")
+                        cons.output(response.content);
+                    }
+                })
+                .catch(err => {
+                    cons.status("error when checking");
+                    if (err.content) {
+                        cons.output(response.content);
+                    } else {
+                        console.warn(err);
+                    }
+                });
+            return this;
+        },
     };
 }

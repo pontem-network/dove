@@ -9,7 +9,10 @@ use crate::context::Context;
 /// Check project.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-pub struct Check {}
+pub struct Check {
+    #[structopt(long, hidden = true)]
+    color: Option<String>,
+}
 
 impl Cmd for Check {
     fn apply(self, ctx: Context) -> Result<(), Error> {

@@ -1,5 +1,6 @@
 import './lib.js';
 import * as wasm from '../pkg/client.js';
+import * as cons from './console.js';
 
 const TEMPLATE_TAB = `
     <div class="item" data-id="{{id}}">
@@ -14,7 +15,7 @@ export async function open_file(project_id, file_id, file_name) {
         // the tab is already there
         return;
     }
-
+    cons.status("open file: " + file_name);
     let object = create_empty();
     object.project_id = project_id;
     object.file_id = file_id;
@@ -146,48 +147,51 @@ function create_editor(object) {
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
             run: function(ed) {
-                // todo dove build
+                window.open_project.build();
                 return null;
             }
-        });
-    // Changes in the text
-    object.editor.monaco
-        .getModel()
-        .onDidChangeContent((event) => {
-              if (!event.isFlush) {
-                  if (window.editorEvents === undefined || window.editorEvents === null) {
-                        window.editorEvents = new Map();
-                  }
-                  let project = window.editorEvents[object.project_id];
-                  if (project === undefined || project === null) {
-                        project = new Map();
-                        window.editorEvents[object.project_id] = project;
-                  }
-                  let fileDiff = project[object.file_id];
-                  if (fileDiff === undefined || fileDiff === null) {
-                        fileDiff = [];
-                        project[object.file_id] = fileDiff;
-                  }
-
-                  event.changes.forEach(function(item, index, array) {
-                        fileDiff.push({
-                            rangeOffset: item.rangeOffset,
-                            rangeLength: item.rangeLength,
-                            text: item.text,
-                        });
-                  });
-              }
         });
     // loss of editor focus
     object.editor.monaco
         .onDidBlurEditorText(_ => {
             object.onblur();
         });
+
     // load content and type
+    cons.status("loading a file: " + object.file_name);
     wasm.get_file(object.project_id, object.file_id)
         .then(file => {
             object.editor.monaco.setValue(file.content);
             monaco.editor.setModelLanguage(object.editor.monaco.getModel(), file.tp);
+            // Changes in the text
+            object.editor.monaco
+                .getModel()
+                .onDidChangeContent(async(event) => {
+                    if (!event.isFlush) {
+                      if (window.editorEvents === undefined || window.editorEvents === null) {
+                            window.editorEvents = new Map();
+                      }
+                      let project = window.editorEvents[object.project_id];
+                      if (project === undefined || project === null) {
+                            project = new Map();
+                            window.editorEvents[object.project_id] = project;
+                      }
+                      let fileDiff = project[object.file_id];
+                      if (fileDiff === undefined || fileDiff === null) {
+                            fileDiff = [];
+                            project[object.file_id] = fileDiff;
+                      }
+
+                      event.changes.forEach(function(item, index, array) {
+                            fileDiff.push({
+                                rangeOffset: item.rangeOffset,
+                                rangeLength: item.rangeLength,
+                                text: item.text,
+                            });
+                      });
+                  }
+                });
+            cons.status("Done");
         });
 
     return object;
