@@ -30,16 +30,12 @@ impl MFile {
     }
 
     pub fn update_file(&mut self, diff: Vec<Diff>) -> Result<(), Error> {
-        println!("\"\n{}\n\"", self.content);
-        println!("diff:{:?}", diff);
         for diff in diff {
             self.content.edit(
                 diff.range_offset as usize..(diff.range_offset + diff.range_length) as usize,
                 diff.text,
             );
         }
-        println!("\'\n{}\n\'", self.content);
-
         let mut f = OpenOptions::new()
             .read(true)
             .write(true)

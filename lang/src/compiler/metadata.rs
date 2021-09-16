@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
-use move_lang::{leak_str, parse_file};
+use move_lang::parse_file;
 use move_lang::errors::{FilesSourceText, output_errors};
 use move_lang::parser::ast::{
     Definition, Script, Type, Type_, NameAccessChain_, LeadingNameAccess_, ModuleDefinition,
@@ -13,6 +13,7 @@ use crate::compiler::dialects::Dialect;
 use crate::compiler::preprocessor::BuilderPreprocessor;
 use codespan_reporting::term::termcolor::{StandardStream, ColorChoice};
 use move_core_types::identifier::Identifier;
+use move_lang::interact::Interact;
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct FuncMeta {
@@ -100,7 +101,7 @@ fn parse(
 ) -> Result<Vec<Definition>, Error> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
     let mut files: FilesSourceText = HashMap::new();
-    let (defs, _, errors) = parse_file(&mut files, leak_str(script_path), &mut preprocessor)?;
+    let (defs, _, errors) = parse_file(&mut files,  preprocessor.static_str(script_path.to_string()), &mut preprocessor)?;
     if errors.is_empty() {
         Ok(defs)
     } else {

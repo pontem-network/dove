@@ -1,9 +1,9 @@
 use move_lang::errors::{Errors, FilesSourceText};
-use move_lang::preprocessor::SourceProcessor;
 
 use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::mut_string::{MutString, NewValue};
 use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
+use move_lang::interact::Interact;
 
 pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
@@ -31,8 +31,8 @@ impl<'a> BuilderPreprocessor<'a> {
     }
 }
 
-impl<'a> SourceProcessor for BuilderPreprocessor<'a> {
-    fn process(&mut self, name: &'static str, source: String) -> String {
+impl<'a> Interact for BuilderPreprocessor<'a> {
+    fn preprocess(&mut self, name: &'static str, source: String) -> String {
         let mut mut_source = MutString::new(&source);
         let file_source_map =
             normalize_source_text(self.dialect, (&source, &mut mut_source), self.sender);

@@ -547,10 +547,10 @@ script {
 
         let error = diagnostics_with_deps(
             MoveFile::load(script.path()).unwrap(),
-            vec![MoveFile::load(move_lang::leak_str(
+            vec![MoveFile::load(Box::leak(Box::new(
                 modules_path().join("debug.move").to_str().unwrap(),
-            ))
-            .unwrap()],
+            )))
+                .unwrap()],
             config,
         );
         assert!(error.is_none(), "{:#?}", error);
