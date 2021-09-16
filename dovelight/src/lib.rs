@@ -1,3 +1,6 @@
+mod interact;
+mod dependency;
+
 use wasm_bindgen::prelude::*;
 use move_lang::move_compile;
 use move_lang::shared::Flags;
