@@ -42,6 +42,8 @@ impl Analysis {
             None,
             Flags::empty(),
         )
+        .unwrap()
+        .1
         .map_err(|errors| {
             errors
                 .into_iter()

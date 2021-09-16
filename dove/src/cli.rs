@@ -19,6 +19,7 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 use crate::cmd::docgen::DocGen;
 use crate::{DOVE_VERSION, DOVE_HASH, PONT_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
+use crate::cmd::check::Check;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
@@ -82,6 +83,11 @@ enum Opt {
         #[structopt(flatten)]
         cmd: DocGen,
     },
+    #[structopt(about = "Check project")]
+    Check {
+        #[structopt(flatten)]
+        cmd: Check,
+    },
 }
 
 /// Public interface for the CLI (useful for testing).
@@ -104,6 +110,7 @@ where
         Opt::Tx { cmd } => cmd.execute(cwd),
         Opt::Prove { cmd } => cmd.execute(cwd),
         Opt::DocGen { cmd } => cmd.execute(cwd),
+        Opt::Check { cmd } => cmd.execute(cwd),
     }
 }
 

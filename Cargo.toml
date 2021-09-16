@@ -9,6 +9,12 @@ members = [
     "resource-viewer",
     "resources",
     "common/git-hash",
+    "dovecote",
+    "dovecote/proto",
+]
+
+exclude = [
+    "dovecote/client",
 ]
 
 [profile.release]

@@ -1,0 +1,11 @@
+[package]
+name = "proto"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+bcs = "0.1.3"
+serde = { version = "1.0.125", features = ["derive", "rc"] }
+anyhow = "1.0.43"
+wasm-bindgen = { version = "0.2.76", features = ["serde-serialize"] }
+reqwest = "0.11.4"

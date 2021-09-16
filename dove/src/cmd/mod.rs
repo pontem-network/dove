@@ -6,6 +6,8 @@ use crate::context::{Context, get_context, load_manifest};
 
 /// Project builder.
 pub mod build;
+/// Check project.
+pub mod check;
 /// Project dependencies loader.
 pub mod clean;
 /// Documentation generator.

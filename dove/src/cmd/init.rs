@@ -18,6 +18,7 @@ use regex::Regex;
 
 use crate::{stdoutln, PONT_STDLIB_URL, PONT_STDLIB_VERSION};
 use crate::stdout::colorize::good;
+use crate::home::Home;
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -150,6 +151,12 @@ dependencies = [
                 )
             )?;
         }
+
+        let res = Home::get().and_then(|home| home.reg_package(&ctx.project_dir));
+        if let Err(err) = res {
+            stdoutln!("failed to registr project. {}", err);
+        }
+
         stdoutln!(
             "Project {} initialized in {}",
             good("successfully"),
