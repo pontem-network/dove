@@ -1983,7 +1983,6 @@ dependencies = [
  "once_cell",
  "parking_lot 0.11.2",
  "proto",
- "regex",
  "xi-rope",
 ]
 
