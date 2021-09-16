@@ -80,13 +80,11 @@ export async function create(id) {
                         cons.status("Done")
                         cons.output(response.content);
                     } else {
-                        console.log("1");
                         cons.status("error when building")
                         cons.output(response.content);
                     }
                 })
                 .catch(err => {
-                    console.log("2");
                     cons.status("error when building");
                     console.warn(err);
                 });

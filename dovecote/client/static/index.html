@@ -6,23 +6,26 @@
     <title>Dovecote</title>
 
     <!-- Monaco editor -->
-    <link href="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.css" rel="stylesheet" />
+    <link href="/js/assets/monaco-editor-0.27.0/package/min/vs/editor/editor.main.css" rel="stylesheet" />
     <script>
         var require = {
             paths: {
-                vs: '/monaco-editor-0.27.0/package/min/vs/'
+                vs: '/js/assets/monaco-editor-0.27.0/package/min/vs/'
             }
         };
     </script>
-    <script src="/monaco-editor-0.27.0/package/min/vs/loader.js"></script>
-    <script src="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.nls.js"></script>
-    <script src="/monaco-editor-0.27.0/package/min/vs/editor/editor.main.js"></script>
+    <script src="/js/assets/monaco-editor-0.27.0/package/min/vs/loader.js"></script>
+    <script src="/js/assets/monaco-editor-0.27.0/package/min/vs/editor/editor.main.nls.js"></script>
+    <script src="/js/assets/monaco-editor-0.27.0/package/min/vs/editor/editor.main.js"></script>
+    <!-- Ansi to Html -->
+    <script src="/js/assets/ansiup/ansi_up.js"></script>
 
     <!-- web dove -->
     <link href="/style/main.css" rel="stylesheet" />
     <link href="/style/code.css" rel="stylesheet" />
     <script async type="module">
         import run, * as index from '/js/index.js'; window.index = index; run();
+
     </script>
 </head>
 

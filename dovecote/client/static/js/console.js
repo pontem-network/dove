@@ -20,5 +20,6 @@ export async function output(text) {
         console_block.addClass("active");
         document.querySelector("#footer .console").addClass("active");
     }
-    console_block.innerHTML = text;
+    let ansi_up = new window.AnsiUp;
+    console_block.innerHTML = ansi_up.ansi_to_html(text);
 }

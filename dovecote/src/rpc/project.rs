@@ -176,13 +176,11 @@ impl Project {
             .map_or_else(
                 |err| (1, err.to_string()),
                 |out| {
-                    let mut cont = if out.status.success() {
+                    let cont = if out.status.success() {
                         String::from_utf8(out.stdout).unwrap_or_default()
                     } else {
                         String::from_utf8(out.stderr).unwrap_or_default()
                     };
-                    let reg = regex::Regex::new(r"\u{1b}[^m]+m").unwrap();
-                    cont = reg.replace_all(&cont, "").to_string();
 
                     let duration = start.elapsed();
                     (
