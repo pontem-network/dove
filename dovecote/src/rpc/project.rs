@@ -167,21 +167,22 @@ impl Project {
             ActionType::Test => &["test"],
             ActionType::Check => &["check"],
         };
+        let dove_project_path = self.info.path.clone();
         let start = Instant::now();
         let (code, output) = Command::new("dove")
             .args(args)
             .arg("--color=always")
-            .current_dir(self.info.path.clone())
+            .current_dir(&dove_project_path)
             .output()
             .map_or_else(
                 |err| (1, err.to_string()),
                 |out| {
-                    let cont = if out.status.success() {
+                    let mut cont = if out.status.success() {
                         String::from_utf8(out.stdout).unwrap_or_default()
                     } else {
                         String::from_utf8(out.stderr).unwrap_or_default()
                     };
-
+                    cont = cont.replace(&dove_project_path, ".");
                     let duration = start.elapsed();
                     (
                         out.status.code().unwrap_or_default(),
