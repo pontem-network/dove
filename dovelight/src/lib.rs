@@ -1,5 +1,5 @@
-mod interact;
 mod dependency;
+mod interact;
 
 use wasm_bindgen::prelude::*;
 use move_lang::move_compile;
@@ -14,6 +14,12 @@ extern "C" {
 #[wasm_bindgen]
 pub fn greet(name: &str) {
     let path = fs::read_dir(".");
-    let res = move_compile(&["test.move".to_string()], &[], None, Flags::empty(), &mut ());
-    alert(&format!("Hello, {:?} {:?}!",path, res));
+    let res = move_compile(
+        &["test.move".to_string()],
+        &[],
+        None,
+        Flags::empty(),
+        &mut (),
+    );
+    alert(&format!("Hello, {:?} {:?}!", path, res));
 }

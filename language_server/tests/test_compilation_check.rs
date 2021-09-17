@@ -550,7 +550,7 @@ script {
             vec![MoveFile::load(Box::leak(Box::new(
                 modules_path().join("debug.move").to_str().unwrap(),
             )))
-                .unwrap()],
+            .unwrap()],
             config,
         );
         assert!(error.is_none(), "{:#?}", error);

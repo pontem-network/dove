@@ -101,7 +101,11 @@ fn parse(
 ) -> Result<Vec<Definition>, Error> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
     let mut files: FilesSourceText = HashMap::new();
-    let (defs, _, errors) = parse_file(&mut files,  preprocessor.static_str(script_path.to_string()), &mut preprocessor)?;
+    let (defs, _, errors) = parse_file(
+        &mut files,
+        preprocessor.static_str(script_path.to_string()),
+        &mut preprocessor,
+    )?;
     if errors.is_empty() {
         Ok(defs)
     } else {
