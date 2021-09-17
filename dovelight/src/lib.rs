@@ -1,10 +1,11 @@
 mod dependency;
 mod interact;
 
-use wasm_bindgen::prelude::*;
 use move_lang::move_compile;
 use move_lang::shared::Flags;
-use std::fs;
+use wasm_bindgen::prelude::*;
+
+mod compiler;
 
 #[wasm_bindgen]
 extern "C" {

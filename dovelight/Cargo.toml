@@ -9,7 +9,10 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
+anyhow = "1.0.44"
 wasm-bindgen = "0.2.74"
 wasm-bindgen-futures = "0.4.26"
-getrandom = {version = "0.2", features = ["js"]}
+getrandom = { version = "0.2", features = ["js"] }
+lang = { path = "../lang" }
 move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }

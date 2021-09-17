@@ -35,15 +35,15 @@ impl<'a> BuilderPreprocessor<'a> {
 impl<'a> Interact for BuilderPreprocessor<'a> {
     fn preprocess<'b>(&mut self, name: &'static str, source: Cow<'b, str>) -> Cow<'b, str> {
         let mut mut_source = MutString::new(&source);
-        let file_source_map =
-            normalize_source_text(self.dialect, (&source, &mut mut_source), self.sender);
-        let post_processed_source = mut_source.freeze();
-
+            let file_source_map =
+                normalize_source_text(self.dialect, (&source, &mut mut_source), self.sender);
+            let post_processed_source = mut_source.freeze();
         self.offsets_map.insert(name, file_source_map);
         self.files.insert(name, source.to_string());
 
         Cow::from(post_processed_source)
     }
+
 }
 
 pub fn normalize_source_text<'a, 'b>(
