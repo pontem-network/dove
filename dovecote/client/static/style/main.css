@@ -403,6 +403,11 @@ body {
     }
 }
 
+#console .open_file.click:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 
 /***************************************************
  *

@@ -182,7 +182,7 @@ impl Project {
                     } else {
                         String::from_utf8(out.stderr).unwrap_or_default()
                     };
-                    cont = cont.replace(&dove_project_path, ".");
+                    cont = output_processing_path(&cont, &dove_project_path);
                     let duration = start.elapsed();
                     (
                         out.status.code().unwrap_or_default(),
@@ -221,4 +221,139 @@ fn load_tree(
         }
     }
     Ok(tree)
+}
+
+fn output_processing_path(out: &str, project_path: &str) -> String {
+    let project_path = PathBuf::from(project_path).parent().map_or_else(
+        || project_path.to_string(),
+        |path| path.to_string_lossy().to_string(),
+    );
+    out.split(&project_path)
+        .enumerate()
+        .map(|(index, part)| {
+            if index == 0 || part.len() < 2 {
+                return part.to_string();
+            }
+
+            let (mut path, text) = if let Some(pos) = part
+                .chars()
+                .enumerate()
+                .find(|(_, char)| char.is_whitespace())
+                .map(|(pos, _)| pos)
+            {
+                (format!("{}", &part[1..pos]), &part[pos..])
+            } else {
+                (format!("{}", &part[1..]), "")
+            };
+
+            let positions = if let Some(pos) = path.find(':') {
+                let tmp = &path[pos..]
+                    .split(':')
+                    .map(|p| p.trim())
+                    .filter(|p| p.len() != 0)
+                    .filter_map(|p| p.parse::<u32>().ok())
+                    .collect::<Vec<u32>>();
+                path = { &path[..pos] }.to_string();
+                Some((
+                    tmp.get(0).cloned().unwrap_or_default(),
+                    tmp.get(1).cloned().unwrap_or_default(),
+                ))
+            } else {
+                None
+            };
+
+            if !path.ends_with(".toml") && !path.ends_with(".move") {
+                return path + text;
+            }
+
+            if let Some(pos) = positions {
+                format!(
+                    r#"[path path="{}" line="{}" char="{}"]{}:{1}:{2}[/path]{}"#,
+                    &path, pos.0, pos.1, path, text
+                )
+            } else {
+                format!(r#"[path path="{}"]{}[/path]{}"#, &path, path, text)
+            }
+        })
+        .collect::<Vec<String>>()
+        .join("")
+}
+
+#[test]
+fn test_output_processing_path() {
+    let project_path = "/home/user/dove-project";
+    assert_eq!(
+        "without extension: dove-project/empty text",
+        output_processing_path(
+            "without extension: /home/user/dove-project/empty text",
+            project_path
+        )
+    );
+    assert_eq!(
+        r#"File: [path path="dove-project/Dove.toml"]dove-project/Dove.toml[/path]"#,
+        output_processing_path("File: /home/user/dove-project/Dove.toml", project_path)
+    );
+    assert_eq!(
+        r#"File: [path path="dove-project/Dove.toml"]dove-project/Dove.toml[/path]
+text"#,
+        output_processing_path(
+            "File: /home/user/dove-project/Dove.toml\ntext",
+            project_path
+        )
+    );
+    assert_eq!(
+        r#"File: [path path="dove-project/scripts/main.move" line="5" char="49"]dove-project/scripts/main.move:5:49[/path]"#,
+        output_processing_path(
+            "File: /home/user/dove-project/scripts/main.move:5:49",
+            project_path
+        )
+    );
+    assert_eq!(
+        r#"File: [path path="dove-project/scripts/main.move" line="15" char="149"]dove-project/scripts/main.move:15:149[/path] text"#,
+        output_processing_path(
+            "File: /home/user/dove-project/scripts/main.move:15:149 text",
+            project_path
+        )
+    );
+    assert_eq!(
+        r#"error:
+
+    ┌── [path path="dove-project/scripts/main.move" line="2" char="9"]dove-project/scripts/main.move:2:9[/path] ───
+    │
+    2 │     use 0x1::Debug;
+    │         ^^^^^^^^^^ Invalid 'use'. Unbound module: '0x1::Debug'
+    │
+
+    error:
+
+    ┌── [path path="dove-project/scripts/main.move" line="4" char="9"]dove-project/scripts/main.move:4:9[/path] ───
+    │
+    4 │         Debug::print<u8>(&0);
+    │         ^^^^^ Unbound module alias 'Debug'
+    │
+
+
+    Finished targets in 0.018826656s"#,
+        output_processing_path(
+            "error:
+
+    ┌── /home/user/dove-project/scripts/main.move:2:9 ───
+    │
+    2 │     use 0x1::Debug;
+    │         ^^^^^^^^^^ Invalid 'use'. Unbound module: '0x1::Debug'
+    │
+
+    error:
+
+    ┌── /home/user/dove-project/scripts/main.move:4:9 ───
+    │
+    4 │         Debug::print<u8>(&0);
+    │         ^^^^^ Unbound module alias 'Debug'
+    │
+
+
+    Finished targets in 0.018826656s",
+            project_path
+        )
+    );
 }

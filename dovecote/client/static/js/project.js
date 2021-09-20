@@ -15,17 +15,21 @@ export async function create(id) {
             return this;
         },
         /// open file in tab
-        open_file: function(file_id, file_name) {
+        open_file: function(file_id, file_name, line, char) {
             if (this.files[file_id]) {
                 if (this.files[file_id].set_active) {
-                    this.files[file_id].set_active();
+                    this.files[file_id]
+                        .set_active()
+                        .set_position(line, char);
                 }
             } else {
                 this.files[file_id] = {};
                 editor.open_file(this.id, file_id, file_name)
                     .then(tab => {
                         this.files[file_id] = tab;
-                        this.files[file_id].set_active();
+                        this.files[file_id]
+                            .set_active()
+                            .set_position(line, char);
                     });
             }
 
@@ -80,7 +84,7 @@ export async function create(id) {
                         cons.status("Done")
                         cons.output(response.content);
                     } else {
-                        cons.status("error when building")
+                        cons.status("Error")
                         cons.output(response.content);
                     }
                 })
@@ -103,7 +107,7 @@ export async function create(id) {
                         cons.status("Done")
                         cons.output(response.content);
                     } else {
-                        cons.status("error when cleaning")
+                        cons.status("Error")
                         console.warn(response);
                     }
                 })
@@ -126,7 +130,7 @@ export async function create(id) {
                         cons.status("Done")
                         cons.output(response.content);
                     } else {
-                        cons.status("error when testing")
+                        cons.status("Error")
                         console.warn(response);
                     }
                 })
@@ -149,7 +153,7 @@ export async function create(id) {
                         cons.status("Done")
                         cons.output(response.content);
                     } else {
-                        cons.status("error when checking")
+                        cons.status("Error")
                         cons.output(response.content);
                     }
                 })

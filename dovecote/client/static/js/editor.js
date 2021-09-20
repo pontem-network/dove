@@ -25,8 +25,7 @@ export async function open_file(project_id, file_id, file_name) {
     create_in_doom_tab_and_editor(object);
     // Create an editor
     create_editor(object);
-    // set active tab
-    return object.set_active();
+    return object;
 }
 
 function create_empty() {
@@ -61,6 +60,21 @@ function create_empty() {
 
             return this;
         },
+        set_position: function(line, char) {
+            if (!line) { return this; }
+            line *= 1;
+            char *= 1;
+            this.editor.monaco.setPosition({
+                lineNumber: line,
+                column: char
+            });
+            this.editor.monaco.revealPositionInCenter({
+                lineNumber: line,
+                column: char
+            });
+            this.editor.monaco.focus();
+            return this;
+        },
         /// make the tab inactive
         inactive: function() {
             this.tab.removeClass('active');
@@ -70,12 +84,12 @@ function create_empty() {
         },
         /// loss of focus
         onblur: async function() {
-             if (window.editorEvents !== undefined && window.editorEvents !== null) {
+            if (window.editorEvents !== undefined && window.editorEvents !== null) {
                 let events = window.editorEvents;
                 window.editorEvents = null;
                 let errors = await wasm.flush(events);
                 console.log(errors);
-             }
+            }
         },
         /// close the tab
         destroy: function() {
@@ -168,28 +182,28 @@ function create_editor(object) {
                 .getModel()
                 .onDidChangeContent(async(event) => {
                     if (!event.isFlush) {
-                      if (window.editorEvents === undefined || window.editorEvents === null) {
+                        if (window.editorEvents === undefined || window.editorEvents === null) {
                             window.editorEvents = new Map();
-                      }
-                      let project = window.editorEvents[object.project_id];
-                      if (project === undefined || project === null) {
+                        }
+                        let project = window.editorEvents[object.project_id];
+                        if (project === undefined || project === null) {
                             project = new Map();
                             window.editorEvents[object.project_id] = project;
-                      }
-                      let fileDiff = project[object.file_id];
-                      if (fileDiff === undefined || fileDiff === null) {
+                        }
+                        let fileDiff = project[object.file_id];
+                        if (fileDiff === undefined || fileDiff === null) {
                             fileDiff = [];
                             project[object.file_id] = fileDiff;
-                      }
+                        }
 
-                      event.changes.forEach(function(item, index, array) {
+                        event.changes.forEach(function(item, index, array) {
                             fileDiff.push({
                                 rangeOffset: item.rangeOffset,
                                 rangeLength: item.rangeLength,
                                 text: item.text,
                             });
-                      });
-                  }
+                        });
+                    }
                 });
             cons.status("Done");
         });

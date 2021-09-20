@@ -135,7 +135,7 @@ function on_click_project() {
 // ===============================================================
 //  Explorer
 // ===============================================================
-/// Upload a file tree
+/// load a file tree
 export async function explorer_load(id) {
     let explorer = document.querySelector("#explorer .cont");
     if (explorer === undefined) {
@@ -151,7 +151,7 @@ export async function explorer_load(id) {
     }
     window.open_project.set_project_id(id);
 
-    explorer_add(explorer, [info.tree]);
+    explorer_add(explorer, "", [info.tree]);
 
     // dir click
     explorer
@@ -190,20 +190,20 @@ function on_click_explorer_file(e) {
     return false;
 }
 
-function explorer_add(parent, data) {
+function explorer_add(parent_element, path, data) {
     if (!data || !data.length) {
         return;
     }
-    parent.innerHTML = "";
+    parent_element.innerHTML = "";
 
     data.forEach(element => {
         Object.keys(element).forEach(tp_element => {
             switch (tp_element) {
                 case "Dir":
-                    explorer_add_dir(parent, element[tp_element][0], element[tp_element][1]);
+                    explorer_add_dir(parent_element, path, element[tp_element][0], element[tp_element][1]);
                     break;
                 case "File":
-                    explorer_add_file(parent, element[tp_element][0], element[tp_element][1]);
+                    explorer_add_file(parent_element, path, element[tp_element][0], element[tp_element][1]);
                     break;
                 default:
                     cons.warn("Unknown type: {" + tp_element + "}.");
@@ -214,22 +214,25 @@ function explorer_add(parent, data) {
     });
 }
 
-function explorer_add_dir(parent, name, data) {
-    let block = document.createElement("li").addClass("dir open"),
+function explorer_add_dir(parent, path, name, data) {
+    path += name;
+    let block = document.createElement("li").addClass("dir open").attr("path", path),
         chield_block;
     block.innerHTML = TEMPLATE_EXPLORER_DIR.replaceAll("{{name}}", name);
     chield_block = block.querySelector(".parent");
     parent.append(block);
 
-    explorer_add(chield_block, data)
+    explorer_add(chield_block, path + "/", data)
 }
 
-function explorer_add_file(parent, id, name) {
+function explorer_add_file(parent, path, id, name) {
+    path += name;
     let block = document
         .createElement("li")
         .addClass("file")
         .attr("data-id", id)
-        .attr("data-name", name);
+        .attr("data-name", name)
+        .attr("path", path);
     block.innerHTML = TEMPLATE_EXPLORER_FILE
         .replaceAll("{{name}}", name)
         .replaceAll("{{id}}", id);
