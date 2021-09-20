@@ -244,9 +244,10 @@ body {
 }
 
 #explorer ul li .name {
-    display: block;
+    display: flex;
     cursor: pointer;
     padding: 3px 5px;
+    position: relative;
 }
 
 #explorer ul li .name:hover {
@@ -257,25 +258,77 @@ body {
     vertical-align: middle;
 }
 
+#explorer ul li .name .new_name {
+    position: absolute;
+    z-index: 2;
+    top: -2px;
+    padding: 2px;
+    border: 1px solid var(--color-2);
+    background: var(--color-1);
+}
+
+#explorer ul li .name .new_name input {
+    width: 100%;
+    border-width: 0;
+    background-color: var(--color-0);
+    color: var(--color-8);
+    border-radius: 0;
+}
+
+#explorer ul .type-icon {
+    display: inline-block;
+    margin-right: 4px;
+}
+
 #explorer ul span.name svg {
     width: 10px;
     height: 10px;
     fill: var(--color-8);
 }
 
-#explorer ul li.dir > .parent {
+#explorer ul li .actions {
+    display: inline-block;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+#explorer ul li .actions button {
+    visibility: hidden;
+    background: transparent;
+    border-width: 0;
+    padding: 0;
+}
+
+#explorer ul li .name:hover .actions button {
+    visibility: visible;
+    cursor: pointer;
+}
+
+#explorer ul li .actions button.add:hover svg {
+    fill: #4c8754;
+}
+
+#explorer ul li .actions button.rename:hover svg {
+    fill: #63cbf0;
+}
+
+#explorer ul li .actions button.remove:hover svg {
+    fill: #de4e46;
+}
+
+#explorer ul li.dir>.parent {
     display: none;
 }
 
-#explorer ul li.dir.open > .parent {
+#explorer ul li.dir.open>.parent {
     display: block;
 }
 
-#explorer ul li.dir > .name svg {
+#explorer ul li.dir>.name svg {
     transform: rotate(-90deg);
 }
 
-#explorer ul li.dir.open > .name svg {
+#explorer ul li.dir.open>.name svg {
     transform: rotate(0deg);
 }
 
@@ -452,7 +505,7 @@ body {
     background-color: var(--color-0);
 }
 
-#footer button.console > * {
+#footer button.console>* {
     vertical-align: top;
 }
 

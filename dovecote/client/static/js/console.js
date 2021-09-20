@@ -38,7 +38,8 @@ function inic_output() {
             path.addClass("click")
                 .addEventListener("click", function (e) {
                     e.stopPropagation();
-                    document.getElementById("console").removeClass("active");
+                    document.querySelectorAll("#console, #footer .console")
+                        .forEach(el => { el.removeClass("active") });
                     let menu = document.querySelector('#explorer .file[path="' + path.attr("path") + '"]');
                     if (!menu || !window.open_project.open_file) {
                         return;

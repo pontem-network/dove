@@ -2,7 +2,7 @@ use wasm_bindgen::JsValue;
 use crate::context::api_url;
 use crate::api;
 use proto::Empty;
-use proto::project::{ActionType, ProjectActionRequest};
+use proto::project::{ActionType, ProjectActionRequest, CreateProject, Id};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -45,4 +45,15 @@ pub async fn project_check(project_id: String) -> Result<JsValue, JsValue> {
         action: ActionType::Check,
     };
     api(proto::project_action(&api_url(), &action).await)
+}
+
+#[wasm_bindgen]
+pub async fn create_project(name: String, dialect: String) -> Result<JsValue, JsValue> {
+    let req = CreateProject { name, dialect };
+    api(proto::create_project(&api_url(), &req).await)
+}
+
+#[wasm_bindgen]
+pub async fn remove_project(project_id: Id) -> Result<JsValue, JsValue> {
+    api(proto::remove_project(&api_url(), &project_id).await)
 }

@@ -10,8 +10,13 @@ const TEMPLATE_PROJECT_ELEMENT = `
     `;
 const TEMPLATE_EXPLORER_DIR = `
     <span class="dir-name name">
-        <i><svg ><use xlink:href="#icon-arrow-bottom"></use></svg></i>
+        <i class="type-icon"><svg ><use xlink:href="#icon-arrow-bottom"></use></svg></i>
         <span>{{name}}</span>
+        <div class="actions">
+            <button class="add" title="add a file"><svg ><use xlink:href="#icon-add"></use></svg></button>
+            <button class="rename" title="rename a file"><svg ><use xlink:href="#icon-rename"></use></svg></button>
+            <button class="remove" title="remove a file"><svg ><use xlink:href="#icon-trash"></use></svg></button>
+        </div>
     </span>
     <ul class="parent">
         <li class="empty">- empty -</li>
@@ -19,9 +24,18 @@ const TEMPLATE_EXPLORER_DIR = `
 `;
 const TEMPLATE_EXPLORER_FILE = `
     <span class="file-name name">
-        <i><svg ><use xlink:href="#icon-file"></use></svg></i>
+        <i class="type-icon"><svg ><use xlink:href="#icon-file"></use></svg></i>
         <span>{{name}}</span>
+        <div class="actions">
+        <button class="rename" title="rename a file"><svg ><use xlink:href="#icon-rename"></use></svg></button>
+        <button class="remove" title="remove a file"><svg ><use xlink:href="#icon-trash"></use></svg></button>
+        </div>
     </span>
+`;
+const TEMPLATE_EXPLORER_NAME_POPUP = `
+    <div class="new_name">
+        <input title="Enter name" placeholder="Enter name..."/>
+    </div>
 `;
 
 /// initializing the sidebar
@@ -29,9 +43,9 @@ export async function init() {
     /// ID of the Open project
     window.open_project = await project.create();
 
-    await project_load();
     init_menu();
     inic_header_buttons();
+    await project_load();
     await cons.inic_panel();
 
     // open projects list
@@ -47,7 +61,7 @@ function init_menu() {
         .forEach(button => {
             button
                 .addClass('i')
-                .addEventListener('click', function (e) {
+                .addEventListener('click', function(e) {
                     e.stopPropagation();
                     on_click_icon_panel(this);
                     return false;
@@ -91,37 +105,41 @@ function on_click_icon_panel(click_button) {
 // ===============================================================
 /// Display the found projects on the computer in the sidebar
 async function project_load() {
-    let projects_element = document
-        .querySelector("#projects .cont")
-        .addClass('load');
-
     cons.status("Loading projects...");
+    await wasm.project_list()
+        .then(
+            list => {
+                let projects_element = document
+                    .querySelector("#projects .cont");
 
-    let list = await wasm.project_list();
+                if (projects_element === undefined) {
+                    return;
+                }
+                projects_element.innerHTML = "";
 
-    if (projects_element === undefined) {
-        return;
-    }
-    projects_element.innerHTML = "";
+                list.projects.forEach(element => {
+                    let item = TEMPLATE_PROJECT_ELEMENT
+                        .replaceAll("{{id}}", element.id)
+                        .replaceAll("{{name}}", element.name);
+                    projects_element.insertAdjacentHTML('beforeend', item);
+                });
 
-    list.projects.forEach(element => {
-        let item = TEMPLATE_PROJECT_ELEMENT
-            .replaceAll("{{id}}", element.id)
-            .replaceAll("{{name}}", element.name);
-        projects_element.insertAdjacentHTML('beforeend', item);
-    });
-
-    projects_element
-        .querySelectorAll(".project:not(.i)")
-        .forEach(project => {
-            project
-                .addClass('i')
-                .addEventListener('click', on_click_project);
-        });
-
-    projects_element.removeClass('load');
-    cons.status("Done");
+                projects_element
+                    .querySelectorAll(".project:not(.i)")
+                    .forEach(project => {
+                        project
+                            .addClass('i')
+                            .addEventListener('click', on_click_project);
+                    });
+                cons.status("Done");
+            },
+            error => {
+                console.error(error);
+                cons.status("Error");
+            }
+        );
 }
+
 
 /// Click on the project name in the sidebar
 function on_click_project() {
@@ -137,58 +155,67 @@ function on_click_project() {
 //  Explorer
 // ===============================================================
 /// load a file tree
-export async function explorer_load(id) {
+export async function explorer_load(project_id) {
+    cons.status("Loading tree")
+    if (window.open_project.destroy) {
+        window.open_project.destroy();
+    }
+    window.open_project.set_project_id(project_id);
+
+    wasm.project_info(project_id)
+        .then(list => {
+            explorer_set(list);
+            cons.status("Done")
+        });
+}
+
+async function explorer_set(list) {
     let explorer = document.querySelector("#explorer .cont");
     if (explorer === undefined) {
         return;
     }
-    explorer.addClass('load');
-    cons.status("Loading tree")
-
     explorer.innerHTML = "";
-    let info = await wasm.project_info(id);
-    if (window.open_project.destroy) {
-        window.open_project.destroy();
-    }
-    window.open_project.set_project_id(id);
+    explorer_add(explorer, "", [list.tree]);
 
-    explorer_add(explorer, "", [info.tree]);
+    explorer.querySelector(".dir .actions")
+        .querySelectorAll("button.rename, button.remove")
+        .forEach(el => el.remove());
 
     // dir click
     explorer
         .querySelectorAll("li.dir:not(.i)")
         .forEach(dir => {
-            dir.addClass("i").addEventListener('click', on_click_explorer_dir);
+            dir.addClass("i")
+                .addEventListener('click', on_click_explorer_dir);
+            dir.querySelector(".dir-name .actions button.add:not(.i)")
+                .addEventListener("click", on_click_explorer_dir_add);
+            dir.querySelector(".dir-name .actions button.rename:not(.i)")
+                .addEventListener("click", on_click_explorer_dir_rename);
+            dir.querySelector(".dir-name .actions button.remove:not(.i)")
+                .addEventListener("click", on_click_explorer_dir_remove);
         });
     // file click
     explorer
         .querySelectorAll("li.file:not(.i)")
         .forEach(file => {
-            file.addClass("i").addEventListener('click', on_click_explorer_file);
+            file.addClass("i")
+                .addEventListener('click', on_click_explorer_file);
+            file.querySelector("button.rename:not(.i)")
+                .addEventListener("click", on_click_explorer_file_rename);
+            file.querySelector("button.remove:not(.i)")
+                .addEventListener("click", on_click_explorer_file_remove);
         });
 
     // open explorer panel
-    on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[1]);
+    if (!document.querySelector("#explorer-container").hasClass("open")) {
+        on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[1]);
+    }
 
-    explorer.removeClass('load');
-    cons.status("Done")
-}
-
-function on_click_explorer_dir(e) {
-    e.stopPropagation();
-
-    this.toggleClass("open");
-    return false;
-}
-
-function on_click_explorer_file(e) {
-    e.stopPropagation();
-
-    window
-        .open_project
-        .open_file(this.attr("data-id"), this.attr("data-name"));
-
-    return false;
+    for (let file_id in window.open_project.files) {
+        if (!explorer.querySelector('.file[data-id="' + file_id + '"]')) {
+            window.open_project.close_file(file_id);
+        }
+    }
 }
 
 function explorer_add(parent_element, path, data) {
@@ -240,13 +267,217 @@ function explorer_add_file(parent, path, id, name) {
     parent.append(block);
 }
 
+
+function on_click_explorer_dir(e) {
+    e.stopPropagation();
+
+    this.toggleClass("open");
+    return false;
+}
+
+function on_click_explorer_file(e) {
+    e.stopPropagation();
+
+    window
+        .open_project
+        .open_file(this.attr("data-id"), this.attr("data-name"));
+
+    return false;
+}
+
+function on_click_explorer_dir_add(e) {
+    e.stopPropagation();
+    let main_block = this.parentByClass("dir"),
+        id = window.open_project.id,
+        path = main_block.attr("path").split("/").slice(1).join("/");
+
+    cons.status("Please enter the name of the new folder|file");
+    explorer_entering_name(main_block)
+        .then(
+            name => {
+                if (name.match(/(\.move|\.toml)$/)) {
+                    cons.status("Creating a new file");
+                    return wasm.create_file(id, path, name);
+                } else {
+                    cons.status("Creating a new folder");
+                    return wasm.create_directory(id, path, name);
+                }
+            },
+            error => { cons.status(error); }
+        )
+        .then(
+            list => {
+                explorer_set(list.project_info ? list.project_info : list);
+                cons.status("Done");
+            },
+            error => {
+                cons.status("Error");
+                console.error(error);
+            }
+        );
+
+    return false;
+}
+
+function on_click_explorer_dir_rename(e) {
+    e.stopPropagation();
+    let main_block = this.parentByClass("dir"),
+        id = window.open_project.id,
+        path = main_block.attr("path").split("/").slice(1).slice(0, -1).join("/"),
+        old_name = main_block.attr("path").split("/").slice(-1).join("/");
+
+    cons.status("Please enter a new name for the folder");
+    explorer_entering_name(main_block)
+        .then(
+            new_name => {
+                cons.status("Changing the folder name");
+                return wasm.rename_directory(id, "./" + path, old_name, new_name);
+            },
+            error => { cons.status("Error: " + error); }
+        )
+        .then(
+            list => {
+                explorer_set(list);
+                cons.status("Done");
+            },
+            error => {
+                cons.status("Error: " + error);
+                console.error(error);
+            }
+        );
+
+    return false;
+}
+
+function on_click_explorer_dir_remove(e) {
+    e.stopPropagation();
+    let main_block = this.parentByClass("dir"),
+        project_id = window.open_project.id,
+        path = main_block.attr("path").split("/").slice(1).join("/");
+
+    if (confirm("Are you sure you want to delete the folder?")) {
+        cons.status("Deleting a directory");
+        wasm.remove_directory(project_id, path)
+            .then(
+                list => {
+                    explorer_set(list);
+                    cons.status("Done");
+                },
+                error => {
+                    cons.status("Error: " + error);
+                    console.error(error);
+                }
+            );
+    }
+
+    return false;
+}
+
+function on_click_explorer_file_rename(e) {
+    e.stopPropagation();
+    let main_block = this.parentByClass("file"),
+        project_id = window.open_project.id,
+        old_file_id = main_block.attr("data-id"),
+        new_name_file = "";
+
+    cons.status("Please enter a new name for the file");
+    explorer_entering_name(main_block)
+        .then(
+            new_name => {
+                new_name_file = new_name;
+                cons.status("Changing the file name");
+                return wasm.rename_file(project_id, old_file_id, new_name);
+            },
+            error => { cons.status("Error: " + error); }
+        )
+        .then(
+            new_file_id => {
+                if (window.open_project.files[old_file_id]) {
+                    window.open_project.close_file(old_file_id);
+                }
+                main_block
+                    .attr("data-id", new_file_id)
+                    .attr("data-name", new_name_file)
+                    .attr("path", main_block.attr("path").split("/").slice(0, -1).join("/") + "/" + new_name_file);
+                main_block.querySelector(".name span").innerHTML = new_name_file;
+
+                cons.status("Done");
+            },
+            error => {
+                cons.status("Error: " + error);
+                console.error(error);
+            }
+        );
+
+    return false;
+}
+
+function on_click_explorer_file_remove(e) {
+    e.stopPropagation();
+    let main_block = this.parentByClass("file"),
+        project_id = window.open_project.id,
+        file_id = main_block.attr("data-id");
+
+    if (confirm("Are you sure you want to delete the file?")) {
+        cons.status("Deleting a file");
+        wasm.remove_file(project_id, file_id)
+            .then(
+                _ => {
+                    if (window.open_project.files[file_id]) {
+                        window.open_project.close_file(file_id);
+                    }
+                    main_block.remove();
+                    cons.status("Done");
+                },
+                error => {
+                    cons.status("Error: " + error);
+                    console.error(error);
+                }
+            );
+    }
+
+    return false;
+}
+
+function explorer_entering_name(element) {
+    return new Promise((resolve, reject) => {
+        element.querySelector(".name")
+            .insertAdjacentHTML('beforeend', TEMPLATE_EXPLORER_NAME_POPUP);
+        let pop = element.querySelector(".name .new_name"),
+            pop_input = pop.getElementsByTagName("input")[0],
+            old_name = element.querySelector(".name span").innerHTML.trim();
+        pop_input.value = old_name;
+        pop_input.focus();
+        pop_input.select();
+
+        pop_input.addEventListener("blur", function() { this.parentNode.remove(); })
+        pop_input.addEventListener("keyup",
+            function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    let new_name = pop_input.value.trim();
+
+                    pop_input.remove();
+                    pop.remove();
+
+                    if (!new_name.length) {
+                        reject("name cannot be empty");
+                    } else if (new_name === old_name) {
+                        reject("No changes");
+                    } else {
+                        resolve(new_name);
+                    }
+                }
+            })
+    });
+}
+
 // ===============================================================
 //  header buttons
 // ===============================================================
 function inic_header_buttons() {
     document
         .querySelector("#container .header button.build")
-        .addEventListener("click", function (e) {
+        .addEventListener("click", function(e) {
             e.stopPropagation();
             if (window.open_project.build) {
                 window.open_project.build();
@@ -254,7 +485,7 @@ function inic_header_buttons() {
         });
     document
         .querySelector("#container .header button.clean")
-        .addEventListener("click", function (e) {
+        .addEventListener("click", function(e) {
             e.stopPropagation();
             if (window.open_project.clean) {
                 window.open_project.clean();
@@ -262,7 +493,7 @@ function inic_header_buttons() {
         });
     document
         .querySelector("#container .header button.test")
-        .addEventListener("click", function (e) {
+        .addEventListener("click", function(e) {
             e.stopPropagation();
             if (window.open_project.test) {
                 window.open_project.test();
@@ -270,10 +501,27 @@ function inic_header_buttons() {
         });
     document
         .querySelector("#container .header button.check")
-        .addEventListener("click", function (e) {
+        .addEventListener("click", function(e) {
             e.stopPropagation();
             if (window.open_project.check) {
                 window.open_project.check();
             }
         });
 }
+
+setTimeout(() => {
+    document.querySelectorAll("#projects .project")[1].click();
+    setTimeout(() => {
+        let list = document.querySelectorAll("#explorer li.file");
+        list[1].click();
+        list[2].click();
+        list[3].click();
+
+        // document.querySelectorAll("#explorer .dir button.add")[4].click();
+
+        // document.querySelector("#container .header button.check").click();
+        // setTimeout(() => {
+        //     document.querySelectorAll("#console .open_file.click")[1].click();
+        // }, 100);
+    }, 100);
+}, 200);

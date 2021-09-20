@@ -128,19 +128,20 @@ impl Project {
         old_name: String,
         new_name: String,
     ) -> Result<(), Error> {
-        let project_path = PathBuf::from_str(&self.info.path)?;
-        let dir = project_path.join(path);
+        let project_path = PathBuf::from_str(&self.info.path)?.canonicalize()?;
+        let dir = project_path.join(path).canonicalize()?;
 
-        let old_dir = dir.join(old_name);
-        fs::canonicalize(&old_dir)?;
+        let old_dir = dir.join(old_name).canonicalize()?;
         if !old_dir.starts_with(&self.info.path) {
             bail!("Invalid file path. The path must be located in the project.");
         }
 
         let new_dir = dir.join(new_name);
-        fs::canonicalize(&new_dir)?;
-        if !new_dir.starts_with(&self.info.path) {
+        if Some(dir.as_path()) != new_dir.parent() {
             bail!("Invalid file path. The path must be located in the project.");
+        }
+        if new_dir.exists() {
+            bail!("A directory with this name already exists.");
         }
 
         fs::rename(old_dir, new_dir)?;

@@ -3,10 +3,13 @@ use std::collections::HashMap;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 
-use proto::file::{Diff, FId, Flush, FileIdentifier, ProjectId};
+use proto::file::{
+    Diff, FId, Flush, FileIdentifier, ProjectId, CreateFsEntry, RenameFile, RenameDirectory,
+    RemoveDirectory,
+};
 use proto::project::Id;
 use crate::context::*;
-use crate::js_err;
+use crate::{js_err, api};
 
 #[wasm_bindgen]
 pub async fn get_file(project_id: Id, file_id: Id) -> Result<JsValue, JsValue> {
@@ -90,4 +93,73 @@ pub struct Range {
     /// Column on which the range ends in line `endLineNumber`.
     #[serde(alias = "endColumn")]
     pub end_column: u32,
+}
+
+#[wasm_bindgen]
+pub async fn create_directory(
+    project_id: Id,
+    path: String,
+    name: String,
+) -> Result<JsValue, JsValue> {
+    let req = CreateFsEntry {
+        project_id,
+        path,
+        name,
+    };
+    api(proto::create_directory(&api_url(), &req).await)
+}
+
+#[wasm_bindgen]
+pub async fn rename_directory(
+    project_id: Id,
+    path: String,
+    old_name: String,
+    new_name: String,
+) -> Result<JsValue, JsValue> {
+    let req = RenameDirectory {
+        project_id,
+        path,
+        old_name,
+        new_name,
+    };
+    api(proto::rename_directory(&api_url(), &req).await)
+}
+
+#[wasm_bindgen]
+pub async fn remove_directory(project_id: Id, path: String) -> Result<JsValue, JsValue> {
+    let req = RemoveDirectory { project_id, path };
+    api(proto::remove_directory(&api_url(), &req).await)
+}
+
+#[wasm_bindgen]
+pub async fn remove_file(project_id: Id, file_id: Id) -> Result<JsValue, JsValue> {
+    let req = FileIdentifier {
+        project_id,
+        file_id,
+    };
+    api(proto::remove_file(&api_url(), &req).await)
+}
+
+#[wasm_bindgen]
+pub async fn create_file(project_id: Id, path: String, name: String) -> Result<JsValue, JsValue> {
+    let req = CreateFsEntry {
+        project_id,
+        path,
+        name,
+    };
+    api(proto::create_file(&api_url(), &req).await)
+}
+
+#[wasm_bindgen]
+pub async fn rename_file(
+    project_id: Id,
+    file_id: Id,
+    new_name: String,
+) -> Result<JsValue, JsValue> {
+    let req = RenameFile {
+        project_id,
+        file_id,
+        new_name,
+    };
+    api(proto::rename_file(&api_url(), &req).await)
 }
