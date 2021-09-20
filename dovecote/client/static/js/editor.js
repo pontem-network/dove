@@ -10,7 +10,7 @@ const TEMPLATE_TAB = `
 
 
 /// Open the file in the tab
-export async function open_file(project_id, file_id, file_name) {
+export async function open_file(project_id, file_id, file_name, line, char) {
     if (window.open_project.files[file_id] && window.open_project.files[file_id].editor) {
         // the tab is already there
         return;
@@ -24,7 +24,7 @@ export async function open_file(project_id, file_id, file_name) {
     // Create a tab and a block for the editor
     create_in_doom_tab_and_editor(object);
     // Create an editor
-    create_editor(object);
+    create_editor(object, line, char);
     return object;
 }
 
@@ -64,6 +64,7 @@ function create_empty() {
             if (!line) { return this; }
             line *= 1;
             char *= 1;
+            this.editor.monaco.focus();
             this.editor.monaco.setPosition({
                 lineNumber: line,
                 column: char
@@ -72,7 +73,7 @@ function create_empty() {
                 lineNumber: line,
                 column: char
             });
-            this.editor.monaco.focus();
+
             return this;
         },
         /// make the tab inactive
@@ -88,7 +89,7 @@ function create_empty() {
                 let events = window.editorEvents;
                 window.editorEvents = null;
                 let errors = await wasm.flush(events);
-                console.log(errors);
+                console.warn(errors);
             }
         },
         /// close the tab
@@ -137,7 +138,7 @@ function create_in_doom_tab_and_editor(object) {
         });
 }
 
-function create_editor(object) {
+function create_editor(object, line, char) {
     object.editor.monaco = monaco.editor
         .create(object.editor.block, {
             value: null,
@@ -205,8 +206,9 @@ function create_editor(object) {
                         });
                     }
                 });
+            object.set_position(line, char);
             cons.status("Done");
         });
 
-    return object;
+    return object.set_active();
 }

@@ -24,12 +24,9 @@ export async function create(id) {
                 }
             } else {
                 this.files[file_id] = {};
-                editor.open_file(this.id, file_id, file_name)
+                editor.open_file(this.id, file_id, file_name, line, char)
                     .then(tab => {
                         this.files[file_id] = tab;
-                        this.files[file_id]
-                            .set_active()
-                            .set_position(line, char);
                     });
             }
 
