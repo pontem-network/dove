@@ -5,12 +5,13 @@ use std::mem::transmute;
 
 #[derive(Debug, Default)]
 pub struct InternTable {
-    table: HashMap<String, &'static str>
+    table: HashMap<String, &'static str>,
 }
 
 impl InternTable {
     pub fn push(&mut self, val: String) -> &'static str {
-        self.table.entry(val)
+        self.table
+            .entry(val)
             .or_insert_with_key(|key| unsafe { transmute(key.as_str()) })
     }
 }

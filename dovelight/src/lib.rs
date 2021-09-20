@@ -1,4 +1,3 @@
-
 use move_lang::move_compile;
 use move_lang::shared::Flags;
 use wasm_bindgen::prelude::*;
@@ -9,7 +8,7 @@ mod compiler;
 
 #[wasm_bindgen]
 extern "C" {
-   pub fn alert(s: &str);
+    pub fn alert(s: &str);
 }
 
 #[wasm_bindgen]

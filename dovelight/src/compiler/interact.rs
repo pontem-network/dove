@@ -16,7 +16,11 @@ pub struct CompilerInteract<'a> {
 }
 
 impl<'a> CompilerInteract<'a> {
-    pub fn new(dialect: &'a dyn Dialect, sender: &'a str, source_map: SourceMap) -> CompilerInteract<'a> {
+    pub fn new(
+        dialect: &'a dyn Dialect,
+        sender: &'a str,
+        source_map: SourceMap,
+    ) -> CompilerInteract<'a> {
         CompilerInteract {
             source_map,
             intern_table: Default::default(),
@@ -35,8 +39,14 @@ impl<'a> Interact for CompilerInteract<'a> {
     }
 
     fn file_access(&mut self, name: &'static str) -> Result<String, Error> {
-        let file = self.source_map.get(name).ok_or_else(|| anyhow::anyhow!("File {} not found", name))?;
-        Ok(self.preprocessor.preprocess(name, Cow::Borrowed(file)).into_owned())
+        let file = self
+            .source_map
+            .get(name)
+            .ok_or_else(|| anyhow::anyhow!("File {} not found", name))?;
+        Ok(self
+            .preprocessor
+            .preprocess(name, Cow::Borrowed(file))
+            .into_owned())
     }
 
     fn preprocess<'b>(&mut self, name: &'static str, source: Cow<'b, str>) -> Cow<'b, str> {

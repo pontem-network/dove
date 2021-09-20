@@ -15,8 +15,6 @@ impl SourceMap {
     }
 
     pub fn keys(&self) -> Vec<String> {
-        self.source_map.keys()
-            .map(|k| k.to_owned())
-            .collect()
+        self.source_map.keys().map(|k| k.to_owned()).collect()
     }
 }

@@ -1,6 +1,9 @@
 use move_core_types::language_storage::{ModuleId, CORE_CODE_ADDRESS};
 use std::collections::HashSet;
-use move_lang::parser::ast::{Definition, Script, ModuleDefinition, LeadingNameAccess, LeadingNameAccess_, ModuleMember, Function, StructDefinition, UseDecl, FriendDecl, Constant, SpecBlock};
+use move_lang::parser::ast::{
+    Definition, Script, ModuleDefinition, LeadingNameAccess, LeadingNameAccess_, ModuleMember,
+    Function, StructDefinition, UseDecl, FriendDecl, Constant, SpecBlock,
+};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::ident_str;
 use move_core_types::identifier::Identifier;
@@ -19,9 +22,13 @@ impl ImportsExtractor {
                     self.extract_module(None, module);
                 }
                 Definition::Address(address) => {
-                    let addr = address.addr_value.map(|a| AccountAddress::new(a.value.into_bytes()))
+                    let addr = address
+                        .addr_value
+                        .map(|a| AccountAddress::new(a.value.into_bytes()))
                         .unwrap_or_else(|| match &address.addr.value {
-                            LeadingNameAccess_::AnonymousAddress(a) => AccountAddress::new(a.into_bytes()),
+                            LeadingNameAccess_::AnonymousAddress(a) => {
+                                AccountAddress::new(a.into_bytes())
+                            }
                             LeadingNameAccess_::Name(_) => CORE_CODE_ADDRESS,
                         });
                     for module in &address.modules {
@@ -49,13 +56,22 @@ impl ImportsExtractor {
     }
 
     fn extract_module(&mut self, address: Option<AccountAddress>, module: &ModuleDefinition) {
-        let address = module.address.as_ref().and_then(|a| match a.value {
-            LeadingNameAccess_::AnonymousAddress(a) => Some(AccountAddress::new(a.into_bytes())),
-            LeadingNameAccess_::Name(_) => None,
-        }).or_else(|| address)
+        let address = module
+            .address
+            .as_ref()
+            .and_then(|a| match a.value {
+                LeadingNameAccess_::AnonymousAddress(a) => {
+                    Some(AccountAddress::new(a.into_bytes()))
+                }
+                LeadingNameAccess_::Name(_) => None,
+            })
+            .or_else(|| address)
             .unwrap_or_else(|| CORE_CODE_ADDRESS);
 
-        self.sources.insert(ModuleId::new(address, Identifier::new(module.name.0.value.as_str()).unwrap()));
+        self.sources.insert(ModuleId::new(
+            address,
+            Identifier::new(module.name.0.value.as_str()).unwrap(),
+        ));
 
         for member in &module.members {
             match member {

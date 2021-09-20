@@ -1,7 +1,7 @@
-pub mod interact;
 pub mod dependency;
-mod intern_table;
 mod extractor;
+pub mod interact;
+mod intern_table;
 pub mod source_map;
 
 use move_lang::shared::Flags;
@@ -18,9 +18,7 @@ pub fn build(source_map: SourceMap, dialect: &str, sender: &str) -> Result<(), E
     let dialect = DialectName::from_str(dialect)?.get_dialect();
     let mut interact = CompilerInteract::new(dialect.as_ref(), sender, source_map);
     let res = move_lang::move_compile(&ids, &[], None, Flags::empty(), &mut interact)
-        .map(|(st, m)| {
-            m.map(|mut m| m.remove(0).serialize() )
-        });
+        .map(|(st, m)| m.map(|mut m| m.remove(0).serialize()));
     alert(&format!("{:?}", res));
     Ok(())
 }
