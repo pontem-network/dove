@@ -26,13 +26,17 @@ impl<'a> CompilerInteract<'a> {
 }
 
 impl<'a> Interact for CompilerInteract<'a> {
+    fn is_native_fs(&self) -> bool {
+        false
+    }
+
     fn static_str(&mut self, val: String) -> &'static str {
         self.intern_table.push(val)
     }
 
     fn file_access(&mut self, name: &'static str) -> Result<String, Error> {
-        let file = self.source_map.get(name).ok_or_else(|| anyhow!("File {} not found", name))?;
-        todo!()
+        let file = self.source_map.get(name).ok_or_else(|| anyhow::anyhow!("File {} not found", name))?;
+        Ok(self.preprocessor.preprocess(name, Cow::Borrowed(file)).into_owned())
     }
 
     fn preprocess<'b>(&mut self, name: &'static str, source: Cow<'b, str>) -> Cow<'b, str> {

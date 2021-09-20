@@ -1,7 +1,3 @@
-pub struct DependencySource {
+pub struct DependencySource;
 
-}
-
-pub trait DependencyLoader {
-
-}
+pub trait DependencyLoader {}
