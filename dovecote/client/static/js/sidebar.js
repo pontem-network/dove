@@ -3,9 +3,6 @@ import * as wasm from '../pkg/client.js';
 import * as project from './project.js';
 import * as cons from './console.js';
 
-/// ID of the Open project
-window.open_project = await project.create();
-
 const TEMPLATE_PROJECT_ELEMENT = `
     <div class="project noselect" data-id="{{id}}">
         <button class="project-title title">{{name}}</button>
@@ -29,10 +26,13 @@ const TEMPLATE_EXPLORER_FILE = `
 
 /// initializing the sidebar
 export async function init() {
-    project_load();
+    /// ID of the Open project
+    window.open_project = await project.create();
+
+    await project_load();
     init_menu();
     inic_header_buttons();
-    cons.inic_panel();
+    await cons.inic_panel();
 
     // open projects list
     on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[0]);
