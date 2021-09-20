@@ -17,9 +17,12 @@ pub struct Empty;
 transport! {
     // Returns projects list.
     ProjectList|project_list: Empty => ProjectList;
+    // Create new project and returns project list.
+    CreateProject|create_project: CreateProject => ProjectInfo;
+    // Remove project by id.
+    RemoveProject|remove_project: Id => Empty;
     // Returns project info by its id.
     ProjectInfo|project_info: Id => ProjectInfo;
-
     // Returns file by file id.
     GetFile|get_file: FileIdentifier => File;
     // Remove file by file id.

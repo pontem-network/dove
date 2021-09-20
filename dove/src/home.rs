@@ -6,6 +6,9 @@ use std::hash::{Hash, Hasher};
 use serde::{Serialize, Deserialize};
 use crate::manifest::{MANIFEST, read_manifest, DoveToml};
 use std::sync::Arc;
+use crate::context::get_context;
+use crate::cmd::init::Init;
+use crate::cmd::Cmd;
 
 const PROJECTS: &str = "projects";
 
@@ -23,6 +26,41 @@ impl Home {
             fs::create_dir_all(&dove_home)?;
         }
         Ok(Home { path: dove_home })
+    }
+
+    /// Create a new dove project.
+    pub fn create(&self, name: String, dialect: String) -> Result<Project, Error> {
+        let projects_dir = self.path.join(PROJECTS);
+        if !projects_dir.exists() {
+            fs::create_dir_all(&projects_dir)?;
+        }
+        let mut project_path = projects_dir.join(path_id(&name));
+        if !project_path.exists() {
+            fs::create_dir_all(&project_path)?;
+        } else {
+            loop {
+                let seed: u64 = rand::random();
+                project_path = projects_dir.join(path_id(seed.to_string()));
+                if !project_path.exists() {
+                    fs::create_dir_all(&project_path)?;
+                    break;
+                }
+            }
+        }
+
+        if let Err(err) = Self::init_project(&project_path, name, dialect) {
+            fs::remove_dir_all(project_path)?;
+            Err(err)
+        } else {
+            load_project(project_path)
+        }
+    }
+
+    fn init_project(path: &Path, name: String, dialect: String) -> Result<(), Error> {
+        let manifest = DoveToml::default();
+        let ctx = get_context(path.to_path_buf(), manifest)?;
+        let init = Init::new(None, None, dialect, Some(name), false);
+        init.apply(ctx)
     }
 
     /// Reg dove project.
@@ -59,6 +97,20 @@ impl Home {
             .collect())
     }
 
+    /// Remove dove project by id.
+    pub fn remove_project(&self, id: &str) -> Result<(), Error> {
+        let projects_dir = self.path.join(PROJECTS);
+        if projects_dir.exists() {
+            let ref_path = projects_dir.join(id);
+            if ref_path.is_file() {
+                fs::remove_file(ref_path)?;
+            } else {
+                fs::remove_dir_all(ref_path)?;
+            }
+        }
+        Ok(())
+    }
+
     ///Returns project path by id.
     pub fn get_project_path(&self, id: &str) -> Result<Option<PathBuf>, Error> {
         let projects_dir = self.path.join(PROJECTS);
@@ -85,9 +137,9 @@ impl Home {
 }
 
 /// Make path id.
-pub fn path_id(path: &Path) -> String {
+pub fn path_id<P: AsRef<Path>>(path: P) -> String {
     let mut s = DefaultHasher::new();
-    path.hash(&mut s);
+    path.as_ref().hash(&mut s);
     let id = s.finish();
     hex::encode(&id.to_le_bytes())
 }

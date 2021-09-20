@@ -46,6 +46,8 @@ pub struct Init {
         short = "d"
     )]
     dialect: String,
+    #[structopt(help = "Project name.", long = "name", short = "n")]
+    project_name: Option<String>,
 
     #[structopt(
         help = "Creates only Dove.toml.",
@@ -64,12 +66,14 @@ impl Init {
         repository: Option<Uri>,
         address: Option<String>,
         dialect: String,
+        project_name: Option<String>,
         minimal: bool,
     ) -> Init {
         Init {
             repository,
             address,
             dialect,
+            project_name,
             minimal,
             color: None,
         }
@@ -89,13 +93,17 @@ impl Cmd for Init {
         }
         let dialect = DialectName::from_str(&self.dialect)?.get_dialect();
 
-        let name = ctx
-            .project_dir
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or_else(|| anyhow!("Failed to extract directory name."))?;
+        let name = if let Some(name) = self.project_name {
+            name
+        } else {
+            ctx.project_dir
+                .file_name()
+                .and_then(|name| name.to_str())
+                .ok_or_else(|| anyhow!("Failed to extract directory name."))?
+                .to_string()
+        };
 
-        if !is_valid_name(name) {
+        if !is_valid_name(&name) {
             return Err(anyhow!(
                 "Invalid project name. Allowed symbols a-z, A-Z, 0-9,_,-"
             ));

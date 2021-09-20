@@ -77,6 +77,23 @@ impl Projects {
         Ok(project)
     }
 
+    pub fn remove(&self, id: IdRef) -> Result<(), Error> {
+        self.dove_home.remove_project(id)?;
+        let mut map = self.map.write();
+        map.remove(id);
+        Ok(())
+    }
+
+    pub fn create<F, T>(&self, name: String, dialect: String, on_proj: F) -> Result<T, Error>
+    where
+        F: FnOnce(&mut Project) -> Result<T, Error>,
+    {
+        let project = self.dove_home.create(name, dialect)?;
+        let project = self.get_project(project.id.as_ref())?;
+        let mut project = project.write();
+        on_proj(&mut project)
+    }
+
     pub fn on_project<F, T>(&self, id: IdRef, on_proj: F) -> Result<T, Error>
     where
         F: FnOnce(&Project) -> Result<T, Error>,
@@ -95,7 +112,7 @@ impl Projects {
         on_proj(&mut project)
     }
 
-    pub fn reload(&self, id: &Id) -> Result<Arc<RwLock<Project>>, Error> {
+    pub fn reload(&self, id: IdRef) -> Result<Arc<RwLock<Project>>, Error> {
         {
             let mut map = self.map.write();
             map.remove(id);

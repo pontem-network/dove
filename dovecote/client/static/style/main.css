@@ -263,19 +263,19 @@ body {
     fill: var(--color-8);
 }
 
-#explorer ul li.dir>.parent {
+#explorer ul li.dir > .parent {
     display: none;
 }
 
-#explorer ul li.dir.open>.parent {
+#explorer ul li.dir.open > .parent {
     display: block;
 }
 
-#explorer ul li.dir>.name svg {
+#explorer ul li.dir > .name svg {
     transform: rotate(-90deg);
 }
 
-#explorer ul li.dir.open>.name svg {
+#explorer ul li.dir.open > .name svg {
     transform: rotate(0deg);
 }
 
@@ -397,7 +397,7 @@ body {
     display: block;
 }
 
-@media(max-height:500px) {
+@media (max-height: 500px) {
     #console {
         height: 100%;
     }
@@ -452,7 +452,7 @@ body {
     background-color: var(--color-0);
 }
 
-#footer button.console>* {
+#footer button.console > * {
     vertical-align: top;
 }
 

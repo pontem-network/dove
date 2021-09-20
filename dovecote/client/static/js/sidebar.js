@@ -37,6 +37,7 @@ export async function init() {
     // open projects list
     on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[0]);
 }
+
 // ===============================================================
 //  Menu
 // ===============================================================
@@ -46,7 +47,7 @@ function init_menu() {
         .forEach(button => {
             button
                 .addClass('i')
-                .addEventListener('click', function(e) {
+                .addEventListener('click', function (e) {
                     e.stopPropagation();
                     on_click_icon_panel(this);
                     return false;
@@ -238,13 +239,14 @@ function explorer_add_file(parent, path, id, name) {
         .replaceAll("{{id}}", id);
     parent.append(block);
 }
+
 // ===============================================================
 //  header buttons
 // ===============================================================
 function inic_header_buttons() {
     document
         .querySelector("#container .header button.build")
-        .addEventListener("click", function(e) {
+        .addEventListener("click", function (e) {
             e.stopPropagation();
             if (window.open_project.build) {
                 window.open_project.build();
@@ -252,7 +254,7 @@ function inic_header_buttons() {
         });
     document
         .querySelector("#container .header button.clean")
-        .addEventListener("click", function(e) {
+        .addEventListener("click", function (e) {
             e.stopPropagation();
             if (window.open_project.clean) {
                 window.open_project.clean();
@@ -260,7 +262,7 @@ function inic_header_buttons() {
         });
     document
         .querySelector("#container .header button.test")
-        .addEventListener("click", function(e) {
+        .addEventListener("click", function (e) {
             e.stopPropagation();
             if (window.open_project.test) {
                 window.open_project.test();
@@ -268,7 +270,7 @@ function inic_header_buttons() {
         });
     document
         .querySelector("#container .header button.check")
-        .addEventListener("click", function(e) {
+        .addEventListener("click", function (e) {
             e.stopPropagation();
             if (window.open_project.check) {
                 window.open_project.check();

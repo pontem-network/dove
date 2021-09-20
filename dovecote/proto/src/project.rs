@@ -31,6 +31,7 @@ pub struct ProjectActionRequest {
     pub project_id: Id,
     pub action: ActionType,
 }
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum ActionType {
     Build,
@@ -38,8 +39,15 @@ pub enum ActionType {
     Test,
     Check,
 }
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ProjectActionResponse {
     pub content: String,
     pub code: u8,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CreateProject {
+    pub name: String,
+    pub dialect: String,
 }

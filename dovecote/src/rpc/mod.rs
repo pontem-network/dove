@@ -7,7 +7,9 @@ use proto::file::{
     CreateFileResult, CreateFsEntry, FId, File, FileIdentifier, Flush, FlushResult,
     RenameDirectory, RenameFile, RemoveDirectory,
 };
-use proto::project::{Id, ProjectInfo, ProjectList, ProjectActionRequest, ProjectActionResponse};
+use proto::project::{
+    Id, ProjectInfo, ProjectList, ProjectActionRequest, ProjectActionResponse, CreateProject,
+};
 
 use crate::rpc::projects::Projects;
 
@@ -29,8 +31,18 @@ impl Rpc {
 }
 
 impl OnRequest for Rpc {
-    fn project_list(&self, _: Empty) -> Result<ProjectList, anyhow::Error> {
+    fn project_list(&self, _: Empty) -> Result<ProjectList, Error> {
         self.projects.list()
+    }
+
+    fn create_project(&self, req: CreateProject) -> Result<ProjectInfo, Error> {
+        self.projects
+            .create(req.name, req.dialect, |p| Ok(p.info()))
+    }
+
+    fn remove_project(&self, id: Id) -> Result<Empty, Error> {
+        self.projects.remove(&id)?;
+        Ok(Empty)
     }
 
     fn project_info(&self, id: Id) -> Result<ProjectInfo, anyhow::Error> {
