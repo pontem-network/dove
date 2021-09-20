@@ -9,6 +9,7 @@ use std::sync::Arc;
 use crate::context::get_context;
 use crate::cmd::init::Init;
 use crate::cmd::Cmd;
+use crate::stdout::set_print_to_stdout;
 
 const PROJECTS: &str = "projects";
 
@@ -57,6 +58,7 @@ impl Home {
     }
 
     fn init_project(path: &Path, name: String, dialect: String) -> Result<(), Error> {
+        set_print_to_stdout();
         let manifest = DoveToml::default();
         let ctx = get_context(path.to_path_buf(), manifest)?;
         let init = Init::new(None, None, dialect, Some(name), false);

@@ -18,7 +18,6 @@ macro_rules! console_log {
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     pub fn log(s: &str);
-    pub fn alert(s: &str);
 }
 
 #[wasm_bindgen(start)]

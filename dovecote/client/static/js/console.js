@@ -36,11 +36,13 @@ function inic_output() {
     document.querySelectorAll("#console .open_file[path]:not(.click)")
         .forEach(path => {
             path.addClass("click")
-                .addEventListener("click", function(e) {
+                .addEventListener("click", function (e) {
                     e.stopPropagation();
                     document.getElementById("console").removeClass("active");
                     let menu = document.querySelector('#explorer .file[path="' + path.attr("path") + '"]');
-                    if (!menu || !window.open_project.open_file) { return; }
+                    if (!menu || !window.open_project.open_file) {
+                        return;
+                    }
                     window.open_project.open_file(
                         menu.attr("data-id"),
                         menu.attr("data-name"),
