@@ -508,20 +508,3 @@ function inic_header_buttons() {
             }
         });
 }
-
-setTimeout(() => {
-    document.querySelectorAll("#projects .project")[1].click();
-    setTimeout(() => {
-        let list = document.querySelectorAll("#explorer li.file");
-        list[1].click();
-        list[2].click();
-        list[3].click();
-
-        // document.querySelectorAll("#explorer .dir button.add")[4].click();
-
-        // document.querySelector("#container .header button.check").click();
-        // setTimeout(() => {
-        //     document.querySelectorAll("#console .open_file.click")[1].click();
-        // }, 100);
-    }, 100);
-}, 200);
