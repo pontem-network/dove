@@ -5,7 +5,8 @@ import * as cons from './console.js';
 
 const TEMPLATE_PROJECT_ELEMENT = `
     <div class="project noselect" data-id="{{id}}">
-        <button class="project-title title">{{name}}</button>
+        <button type="button" class="project-title title">{{name}}</button>
+        <button type="button" class="project-remove" title="Delete a project">-</button>
     </div>
     `;
 const TEMPLATE_EXPLORER_DIR = `
@@ -13,7 +14,7 @@ const TEMPLATE_EXPLORER_DIR = `
         <i class="type-icon"><svg ><use xlink:href="#icon-arrow-bottom"></use></svg></i>
         <span>{{name}}</span>
         <div class="actions">
-            <button class="add" title="add a file"><svg ><use xlink:href="#icon-add"></use></svg></button>
+            <button class="add" title="Add a file"><svg ><use xlink:href="#icon-add"></use></svg></button>
             <button class="rename" title="rename a file"><svg ><use xlink:href="#icon-rename"></use></svg></button>
             <button class="remove" title="remove a file"><svg ><use xlink:href="#icon-trash"></use></svg></button>
         </div>
@@ -38,6 +39,17 @@ const TEMPLATE_EXPLORER_NAME_POPUP = `
     </div>
 `;
 
+const TEMPLATE_EXPLORER_CHOOSE_DIALECT_POPUP = `
+    <div class="new_name">
+        <select title="Choose a dialect" >
+            <option selected>Choose a dialect..</option>
+            <option>diem</option>
+            <option>dfinance</option>
+            <option>pont</option>
+        </select>
+    </div>
+`;
+
 /// initializing the sidebar
 export async function init() {
     /// ID of the Open project
@@ -48,6 +60,11 @@ export async function init() {
     await project_load();
     await cons.inic_panel();
 
+    // Add a project
+    document
+        .querySelector("#projects-container .head .add_project:not(.i)")
+        .addClass("i")
+        .addEventListener("click", on_add_project);
     // open projects list
     on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[0]);
 }
@@ -123,13 +140,21 @@ async function project_load() {
                         .replaceAll("{{name}}", element.name);
                     projects_element.insertAdjacentHTML('beforeend', item);
                 });
-
+                // open a project
                 projects_element
                     .querySelectorAll(".project:not(.i)")
                     .forEach(project => {
                         project
                             .addClass('i')
                             .addEventListener('click', on_click_project);
+                    });
+                // delete a project
+                projects_element
+                    .querySelectorAll(".project .project-remove:not(.i)")
+                    .forEach(project => {
+                        project
+                            .addClass('i')
+                            .addEventListener('click', on_click_project_remove);
                     });
                 cons.status("Done");
             },
@@ -142,13 +167,67 @@ async function project_load() {
 
 
 /// Click on the project name in the sidebar
-function on_click_project() {
+function on_click_project(e) {
+    e.stopPropagation();
     let id = this.attr('data-id');
     if (!id) {
         cons.warn('data-id is undefined');
         return false;
     }
     explorer_load(id);
+}
+
+function on_click_project_remove(e) {
+    e.stopPropagation();
+    cons.status("The project is being deleted");
+    wasm.remove_project(this.parentNode.attr("data-id"))
+        .then(_ => {
+            project_load();
+        }, error => {
+            cons.status("Error");
+            console.warn(error);
+        });
+}
+
+function on_add_project(e) {
+    e.stopPropagation();
+    let main_block = this.parentByClass("head"),
+        project_name = "";
+
+    cons.status("Please enter the project name");
+    entering_name(main_block, "")
+        .then(
+            name => {
+                cons.status("Choose a dialect");
+                project_name = name;
+                return select_dialect(main_block);
+            },
+            error => {
+                console.warn(error);
+                cons.status(error);
+            }
+        )
+        .then(
+            dialect => {
+                cons.status("Creating project");
+                return wasm.create_project(project_name, dialect);
+            },
+            error => {
+                console.warn(error);
+                cons.status(error);
+            }
+        )
+        .then(
+            _ => {
+                project_load();
+            },
+            error => {
+                cons.status("Error");
+                console.error(error);
+            }
+        );
+
+    return false;
 }
 
 // ===============================================================
@@ -440,13 +519,19 @@ function on_click_explorer_file_remove(e) {
 }
 
 function explorer_entering_name(element) {
+    return entering_name(
+        element.querySelector(".name"),
+        element.querySelector(".name span").innerHTML.trim()
+    );
+}
+
+function entering_name(parent, value) {
     return new Promise((resolve, reject) => {
-        element.querySelector(".name")
-            .insertAdjacentHTML('beforeend', TEMPLATE_EXPLORER_NAME_POPUP);
-        let pop = element.querySelector(".name .new_name"),
+        parent.insertAdjacentHTML('beforeend', TEMPLATE_EXPLORER_NAME_POPUP);
+        let pop = parent.querySelector(".new_name"),
             pop_input = pop.getElementsByTagName("input")[0],
-            old_name = element.querySelector(".name span").innerHTML.trim();
-        pop_input.value = old_name;
+            old_value = value.trim();
+        pop_input.value = old_value;
         pop_input.focus();
         pop_input.select();
 
@@ -454,18 +539,43 @@ function explorer_entering_name(element) {
         pop_input.addEventListener("keyup",
             function(e) {
                 if (e.key === 'Enter' || e.keyCode === 13) {
-                    let new_name = pop_input.value.trim();
+                    let new_value = pop_input.value.trim();
 
                     pop_input.remove();
                     pop.remove();
 
-                    if (!new_name.length) {
+                    if (!new_value.length) {
                         reject("name cannot be empty");
-                    } else if (new_name === old_name) {
+                    } else if (new_value === old_value) {
                         reject("No changes");
                     } else {
-                        resolve(new_name);
+                        resolve(new_value);
                     }
+                }
+            })
+    });
+}
+
+function select_dialect(parent) {
+    return new Promise((resolve, reject) => {
+        parent.insertAdjacentHTML('beforeend', TEMPLATE_EXPLORER_CHOOSE_DIALECT_POPUP);
+        let pop = parent.querySelector(".new_name"),
+            pop_select = pop.getElementsByTagName("select")[0];
+        pop_select.focus();
+
+        pop_select.addEventListener("blur", function() { this.parentNode.remove(); })
+        pop_select.addEventListener("change",
+            function(e) {
+                e.stopPropagation();
+                let value = pop_select.value.trim();
+
+                pop_select.remove();
+                pop.remove();
+
+                if (!value.length) {
+                    reject("name cannot be empty");
+                } else {
+                    resolve(value);
                 }
             })
     });

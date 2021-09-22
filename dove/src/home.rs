@@ -10,6 +10,7 @@ use crate::context::get_context;
 use crate::cmd::init::Init;
 use crate::cmd::Cmd;
 use crate::stdout::set_print_to_stdout;
+use std::collections::HashMap;
 
 const PROJECTS: &str = "projects";
 
@@ -71,6 +72,9 @@ impl Home {
         if !projects_dir.exists() {
             fs::create_dir_all(&projects_dir)?;
         }
+        if path.canonicalize()?.starts_with(&projects_dir) {
+            return Ok(());
+        }
         let id = path_id(path);
         let rf = bcs::to_bytes(&Ref {
             path: path.to_string_lossy().to_string(),
@@ -86,7 +90,7 @@ impl Home {
             fs::create_dir_all(&projects_dir)?;
         }
 
-        Ok(fs::read_dir(projects_dir)?
+        let mut projects = fs::read_dir(&projects_dir)?
             .into_iter()
             .filter_map(|path| path.map(|entry| entry.path()).ok())
             .filter_map(|path| {
@@ -96,20 +100,58 @@ impl Home {
                     load_project(path).ok()
                 }
             })
-            .collect())
+            // Getting rid of duplicates and non-existent projects
+            .filter_map(|project| {
+                PathBuf::from(&project.path)
+                    .canonicalize()
+                    .ok()
+                    .and_then(|path| {
+                        if path.exists() {
+                            Some((path, project))
+                        } else {
+                            None
+                        }
+                    })
+            })
+            .collect::<HashMap<PathBuf, Project>>()
+            .into_values()
+            .collect::<Vec<Project>>();
+        projects.sort_by(|a, b| a.name.cmp(&b.name));
+
+        Ok(projects)
     }
 
     /// Remove dove project by id.
     pub fn remove_project(&self, id: &str) -> Result<(), Error> {
-        let projects_dir = self.path.join(PROJECTS);
-        if projects_dir.exists() {
-            let ref_path = projects_dir.join(id);
-            if ref_path.is_file() {
-                fs::remove_file(ref_path)?;
-            } else {
-                fs::remove_dir_all(ref_path)?;
-            }
+        let mut projects_dir = self.path.join(PROJECTS);
+        if !projects_dir.exists() {
+            return Ok(());
         }
+        projects_dir = projects_dir.canonicalize()?;
+
+        if let Some(project) = self.get_project_by_id(id) {
+            let file_path = projects_dir.join(id);
+            if file_path.exists() {
+                fs::remove_file(file_path)?;
+            }
+
+            let project_path = PathBuf::from(&project.path).canonicalize()?;
+            if project_path.exists() && project_path.starts_with(&projects_dir) {
+                fs::remove_dir_all(&project_path)?;
+            }
+            return Ok(());
+        }
+
+        let path = projects_dir.join(id);
+        if !path.exists() {
+            return Ok(());
+        }
+        if path.is_file() {
+            fs::remove_file(path)?;
+        } else {
+            fs::remove_dir_all(path)?;
+        }
+
         Ok(())
     }
 
@@ -135,6 +177,33 @@ impl Home {
                 Ok(Some(project_path.to_path_buf()))
             }
         }
+    }
+
+    /// find the project by id
+    pub fn get_project_by_id(&self, id: &str) -> Option<Project> {
+        let projects_dir = self.path.join(PROJECTS);
+        if !projects_dir.exists() {
+            return None;
+        }
+
+        fs::read_dir(projects_dir)
+            .ok()?
+            .into_iter()
+            .filter_map(|path| path.map(|entry| entry.path()).ok())
+            .find_map(|path| {
+                let project = if path.is_file() {
+                    load_project_by_ref(path).ok()
+                } else {
+                    load_project(path).ok()
+                };
+                project.and_then(|project| {
+                    if project.id.as_str() == id {
+                        Some(project)
+                    } else {
+                        None
+                    }
+                })
+            })
     }
 }
 

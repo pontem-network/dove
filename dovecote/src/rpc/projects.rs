@@ -10,6 +10,7 @@ use dove::home::Home;
 use proto::project::{Id, ProjectList, ProjectShortInfo, IdRef};
 
 use crate::rpc::project::Project;
+use std::path::PathBuf;
 
 const PROJECT_LIFETIME: i64 = 60 * 10;
 
@@ -66,7 +67,8 @@ impl Projects {
 
         let path = self
             .dove_home
-            .get_project_path(id)?
+            .get_project_by_id(id)
+            .and_then(|project| PathBuf::from(project.path).canonicalize().ok())
             .ok_or_else(|| anyhow::anyhow!("Project with id :'{}' was not found.", id))?;
 
         let project = Arc::new(RwLock::new(Project::load(&path)?));

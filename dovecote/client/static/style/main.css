@@ -182,12 +182,37 @@ body {
 }
 
 #navigation .list-panel h2 {
+    position: relative;
     display: block;
-    padding: 5px 0 14px;
+    padding: 5px 30px 14px 0;
     font-size: 12px;
     font-weight: normal;
     text-transform: uppercase;
     border-bottom: 1px solid var(--color-2);
+}
+
+#navigation .list-panel h2 .add_project {
+    position: absolute;
+    right: 5px;
+    top: -2px;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 100%;
+    color: var(--color-8);
+    font-size: 20px;
+    line-height: 25px;
+    cursor: pointer;
+}
+
+#navigation .list-panel h2 .add_project:hover {
+    color: #4c8754;
+    border-color: #4c875422;
+    font-size: 23px;
+    line-height: 20px;
 }
 
 #navigation .list-panel .container {
@@ -206,11 +231,15 @@ body {
  *
  ***************************************************/
 
-#projects button {
+#projects .project {
+    position: relative;
+}
+
+#projects button.project-title {
     display: block;
     width: 100%;
     margin: 5px 0px 5px 5px;
-    padding: 5px 5px 5px 10px;
+    padding: 5px 30px 5px 10px;
     border-width: 0 0 0 2px;
     color: var(--color-8);
     text-align: left;
@@ -222,6 +251,30 @@ body {
 #projects button:hover,
 #projects button.active {
     background-color: var(--color-3);
+}
+
+#projects button.project-remove {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    height: 25px;
+    width: 25px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 100%;
+    color: var(--color-8);
+    font-size: 18px;
+    line-height: 25px;
+    cursor: pointer;
+}
+
+#projects button.project-remove:hover {
+    color: #dc3545;
+    font-size: 22px;
+    line-height: 22px;
+    border-color: #dc354633;
 }
 
 
@@ -258,7 +311,7 @@ body {
     vertical-align: middle;
 }
 
-#explorer ul li .name .new_name {
+.new_name {
     position: absolute;
     z-index: 2;
     top: -2px;
@@ -267,7 +320,7 @@ body {
     background: var(--color-1);
 }
 
-#explorer ul li .name .new_name input {
+.new_name input {
     width: 100%;
     border-width: 0;
     background-color: var(--color-0);
@@ -324,11 +377,11 @@ body {
     display: block;
 }
 
-#explorer ul li.dir>.name svg {
+#explorer ul li.dir>.name .type-icon svg {
     transform: rotate(-90deg);
 }
 
-#explorer ul li.dir.open>.name svg {
+#explorer ul li.dir.open>.name .type-icon svg {
     transform: rotate(0deg);
 }
 

@@ -2,12 +2,11 @@
 <html>
 
 <head>
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <title>Dovecote</title>
 
     <!-- Monaco editor -->
-    <link href="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.css"
-          rel="stylesheet"/>
+    <link href="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />
     <script>
         var require = {
             paths: {
@@ -22,13 +21,10 @@
     <script src="/js/assets/ansiup/ansi_up.js"></script>
 
     <!-- web dove -->
-    <link href="/style/main.css" rel="stylesheet"/>
-    <link href="/style/code.css" rel="stylesheet"/>
+    <link href="/style/main.css" rel="stylesheet" />
+    <link href="/style/code.css" rel="stylesheet" />
     <script async type="module">
-        import run, * as index from '/js/index.js';
-
-        window.index = index;
-        run();
+        import run, * as index from '/js/index.js'; window.index = index; run();
     </script>
 </head>
 
@@ -76,7 +72,10 @@
                 </ul>
                 <div class="list-panel">
                     <div id="projects-container" class="container hide">
-                        <h2 class="head">Projects</h2>
+                        <h2 class="head">
+                            Projects
+                            <button type="button" class="add_project" title="Create a project">+</button>
+                        </h2>
                         <div id="projects" class="list-block scroll">
                             <div class="in">
                                 <div class="cont"></div>
