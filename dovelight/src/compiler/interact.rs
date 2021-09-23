@@ -6,10 +6,11 @@ use lang::compiler::dialects::Dialect;
 use std::borrow::Cow;
 use anyhow::Error;
 use crate::compiler::source_map::SourceMap;
-use crate::compiler::deps::extractor::ImportsExtractor;
+use crate::deps::extractor::ImportsExtractor;
 use core::mem;
-use crate::compiler::deps::{DependencyLoader, Store};
-use crate::compiler::deps::resolver::DependencyResolver;
+use crate::deps::{DependencyLoader, Store};
+use crate::deps::resolver::DependencyResolver;
+use move_lang::errors::{Errors, FilesSourceText};
 
 const PREFIX: &str = "dep_";
 
@@ -18,7 +19,7 @@ pub struct CompilerInteract<'a, L: DependencyLoader, S: Store> {
     intern_table: InternTable,
     preprocessor: BuilderPreprocessor<'a>,
     dependency_extractor: ImportsExtractor,
-    dependence_resolver: DependencyResolver<L, S>,
+    dependence_resolver: DependencyResolver<'a, L, S>,
 }
 
 impl<'a, L: DependencyLoader, S: Store> CompilerInteract<'a, L, S> {
@@ -26,7 +27,7 @@ impl<'a, L: DependencyLoader, S: Store> CompilerInteract<'a, L, S> {
         dialect: &'a dyn Dialect,
         sender: &'a str,
         source_map: SourceMap,
-        dependence_resolver: DependencyResolver<L, S>,
+        dependence_resolver: DependencyResolver<'a, L, S>,
     ) -> CompilerInteract<'a, L, S> {
         CompilerInteract {
             source_map,
@@ -35,6 +36,14 @@ impl<'a, L: DependencyLoader, S: Store> CompilerInteract<'a, L, S> {
             dependency_extractor: Default::default(),
             dependence_resolver,
         }
+    }
+
+    pub fn sources(&mut self) -> FilesSourceText {
+        self.preprocessor.into_source()
+    }
+
+    pub fn transform(&self, errors: Errors) -> Errors {
+        self.preprocessor.transform(errors)
     }
 }
 

@@ -374,7 +374,7 @@ pub fn extract_source_deps(source: &str) -> Result<HashSet<ModuleId>, Error> {
 mod tests {
     use move_lang::parser::syntax::parse_file_string;
     use std::collections::{BTreeMap, HashSet};
-    use crate::compiler::deps::extractor::ImportsExtractor;
+    use crate::deps::extractor::ImportsExtractor;
     use move_core_types::language_storage::ModuleId;
     use move_core_types::account_address::AccountAddress;
     use move_core_types::identifier::Identifier;

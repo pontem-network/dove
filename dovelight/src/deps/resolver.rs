@@ -1,21 +1,23 @@
 use anyhow::Error;
 use move_core_types::language_storage::ModuleId;
 use std::collections::{HashSet};
-use crate::compiler::deps::{DependencyLoader, Store};
-use crate::compiler::deps::index::{Index, str_to_id};
+use crate::deps::{DependencyLoader, Store};
+use crate::deps::index::{Index, str_to_id};
 use move_lang::interface_generator::make_interface;
-use crate::compiler::deps::extractor::extract_source_deps;
+use crate::deps::extractor::extract_source_deps;
+use lang::compiler::dialects::Dialect;
 
 const INDEX_KEY: &str = "dependency_index";
 
-pub struct DependencyResolver<L: DependencyLoader, S: Store> {
+pub struct DependencyResolver<'a, L: DependencyLoader, S: Store> {
     loader: L,
     store: S,
+    dialect: &'a dyn Dialect,
 }
 
-impl<L: DependencyLoader, S: Store> DependencyResolver<L, S> {
-    pub fn new(loader: L, store: S) -> DependencyResolver<L, S> {
-        DependencyResolver { loader, store }
+impl<'a, L: DependencyLoader, S: Store> DependencyResolver<'a, L, S> {
+    pub fn new(dialect: &'a dyn Dialect, loader: L, store: S) -> DependencyResolver<L, S> {
+        DependencyResolver { loader, store, dialect }
     }
 
     pub fn load_interface(&self, name: &str) -> Result<(ModuleId, String), Error> {
@@ -23,7 +25,9 @@ impl<L: DependencyLoader, S: Store> DependencyResolver<L, S> {
         if let Some(interface) = self.store.get_string(name)? {
             return Ok((id, interface));
         }
-        let bytecode = self.loader.get_module(&id)?;
+        let mut bytecode = self.loader.get_module(&id)?;
+        self.dialect.adapt_to_basis(&mut bytecode)?;
+        self.store.set(&format!("bytecode_{}", name), &bytecode)?;
         let (_, interface) = make_interface(name, &bytecode)?;
         self.store.set_string(name, &interface)?;
         Ok((id, interface))

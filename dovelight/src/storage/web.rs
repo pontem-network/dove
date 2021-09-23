@@ -1,4 +1,4 @@
-use crate::compiler::deps::Store;
+use crate::deps::Store;
 use serde::Serialize;
 use anyhow::Error;
 use web_sys::{window, Storage};

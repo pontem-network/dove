@@ -5,6 +5,7 @@ use crate::compiler::mut_string::{MutString, NewValue};
 use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
 use move_lang::callback::Interact;
 use std::borrow::Cow;
+use std::mem;
 
 pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
@@ -23,8 +24,8 @@ impl<'a> BuilderPreprocessor<'a> {
         }
     }
 
-    pub fn into_source(self) -> FilesSourceText {
-        self.files
+    pub fn into_source(&mut self) -> FilesSourceText {
+        mem::take(&mut self.files)
     }
 
     pub fn transform(&self, errors: Errors) -> Errors {

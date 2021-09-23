@@ -553,6 +553,7 @@ dependencies = [
  "lang",
  "move-core-types",
  "move-lang",
+ "reqwest",
  "serde",
  "wasm-bindgen",
  "wasm-bindgen-futures",

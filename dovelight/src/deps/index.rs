@@ -21,9 +21,9 @@ impl Index {
 
     pub fn all_deps(&self) -> Vec<String> {
         let deps = self.deps.iter().fold(HashSet::new(), |mut acc, (k, v)| {
-            acc.insert(k.to_string());
+            acc.insert(id_to_str(k));
             for item in v {
-                acc.insert(item.to_string());
+                acc.insert(id_to_str(item));
             }
             acc
         });
@@ -53,7 +53,7 @@ mod tests {
     use move_core_types::language_storage::ModuleId;
     use move_core_types::account_address::AccountAddress;
     use move_core_types::identifier::Identifier;
-    use crate::compiler::deps::index::{id_to_str, str_to_id};
+    use crate::deps::index::{id_to_str, str_to_id};
 
     #[test]
     pub fn encode_decode() {
