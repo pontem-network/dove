@@ -1,5 +1,3 @@
-use move_lang::move_compile;
-use move_lang::shared::Flags;
 use wasm_bindgen::prelude::*;
 use crate::compiler::build;
 use crate::compiler::source_map::SourceMap;
