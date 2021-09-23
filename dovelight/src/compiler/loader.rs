@@ -1,8 +1,6 @@
 use crate::deps::DependencyLoader;
 use move_core_types::language_storage::ModuleId;
-use anyhow::{
-    Error, anyhow,
-};
+use anyhow::{Error, anyhow};
 use crate::console_log;
 use reqwest::Client;
 use serde::Serialize;
@@ -17,23 +15,34 @@ pub struct Loader {
 
 impl Loader {
     pub fn new(chain_api: String) -> Loader {
-        Loader { chain_api, client: Client::new() }
+        Loader {
+            chain_api,
+            client: Client::new(),
+        }
     }
 
     async fn get_module_async(&self, id: &ModuleId) -> Result<Vec<u8>, Error> {
-        let resp = self.client.post(&self.chain_api)
+        let resp = self
+            .client
+            .post(&self.chain_api)
             .header("Content-Type", "application/json")
             .json(&Request {
                 id: 1,
                 jsonrpc: "2.0",
                 method: "mvm_getModule",
                 params: vec![bcs::to_bytes(id)?],
-            }).send()
+            })
+            .send()
             .await?;
         if resp.status().is_success() {
             Ok(vec![])
         } else {
-            Err(anyhow!("Failed to get module :{}. Error:{}-{}", id, resp.status(), resp.text().await?))
+            Err(anyhow!(
+                "Failed to get module :{}. Error:{}-{}",
+                id,
+                resp.status(),
+                resp.text().await?
+            ))
         }
     }
 }

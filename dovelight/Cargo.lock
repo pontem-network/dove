@@ -551,6 +551,7 @@ dependencies = [
  "bcs",
  "getrandom 0.2.3",
  "lang",
+ "move-binary-format",
  "move-core-types",
  "move-lang",
  "reqwest",

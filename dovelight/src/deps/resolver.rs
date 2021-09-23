@@ -17,7 +17,11 @@ pub struct DependencyResolver<'a, L: DependencyLoader, S: Store> {
 
 impl<'a, L: DependencyLoader, S: Store> DependencyResolver<'a, L, S> {
     pub fn new(dialect: &'a dyn Dialect, loader: L, store: S) -> DependencyResolver<L, S> {
-        DependencyResolver { loader, store, dialect }
+        DependencyResolver {
+            loader,
+            store,
+            dialect,
+        }
     }
 
     pub fn load_interface(&self, name: &str) -> Result<(ModuleId, String), Error> {
@@ -25,12 +29,23 @@ impl<'a, L: DependencyLoader, S: Store> DependencyResolver<'a, L, S> {
         if let Some(interface) = self.store.get_string(name)? {
             return Ok((id, interface));
         }
-        let mut bytecode = self.loader.get_module(&id)?;
-        self.dialect.adapt_to_basis(&mut bytecode)?;
-        self.store.set(&format!("bytecode_{}", name), &bytecode)?;
+
+        let bytecode = self.load_bytecode(name)?;
         let (_, interface) = make_interface(name, &bytecode)?;
         self.store.set_string(name, &interface)?;
         Ok((id, interface))
+    }
+
+    pub fn load_bytecode(&self, name: &str) -> Result<Vec<u8>, Error> {
+        if let Some(bytecode) = self.store.get(&format!("bytecode_{}", name))? {
+            Ok(bytecode)
+        } else {
+            let id = str_to_id(name)?;
+            let mut bytecode = self.loader.get_module(&id)?;
+            self.dialect.adapt_to_basis(&mut bytecode)?;
+            self.store.set(&format!("bytecode_{}", name), &bytecode)?;
+            Ok(bytecode)
+        }
     }
 
     fn load(&self, index: &mut Index, id: &ModuleId) -> Result<(), Error> {

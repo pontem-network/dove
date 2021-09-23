@@ -44,9 +44,9 @@ pub fn build<L: DependencyLoader, S: Store>(
                 .into_iter()
                 .map(|unit| {
                     let mut bytecode = unit.serialize();
-                    dialect.adapt_to_target(&mut bytecode).map(|_| {
-                        (unit.name(), bytecode)
-                    })
+                    dialect
+                        .adapt_to_target(&mut bytecode)
+                        .map(|_| (unit.name(), bytecode))
                 })
                 .collect::<Result<Vec<_>, _>>()
         }

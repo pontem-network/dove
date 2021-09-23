@@ -6,7 +6,16 @@ use wasm_bindgen::prelude::*;
 use storage::web::WebStorage;
 
 use crate::compiler::loader::Loader;
+use lang::compiler::dialects::DialectName;
+use crate::deps::resolver::DependencyResolver;
+use std::str::FromStr;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::identifier::Identifier;
+use move_core_types::language_storage::ModuleId;
+use crate::deps::index::id_to_str;
+use crate::abi::make_module_abi;
 
+pub mod abi;
 mod compiler;
 pub mod deps;
 pub mod storage;
@@ -41,12 +50,61 @@ pub fn build(
     Ok(JsValue::from_serde(&Units { units }).map_err(js_err)?)
 }
 
-#[derive(Serialize, Deserialize)]
+#[wasm_bindgen]
+pub fn module_abi(
+    chain_api: String,
+    dialect: String,
+    address: String,
+    module_name: String,
+) -> Result<JsValue, JsValue> {
+    let store = WebStorage::new_in_family("dove_cache_").map_err(js_err)?;
+    let loader = Loader::new(chain_api);
+    let dialect = DialectName::from_str(&dialect)
+        .map_err(js_err)?
+        .get_dialect();
+    let resolver = DependencyResolver::new(dialect.as_ref(), loader, store);
+    let module_id = ModuleId::new(
+        AccountAddress::from_hex_literal(&address).map_err(js_err)?,
+        Identifier::new(module_name).map_err(js_err)?,
+    );
+    let bytecode = resolver
+        .load_bytecode(&id_to_str(&module_id))
+        .map_err(js_err)?;
+    make_module_abi(&bytecode)
+        .map_err(js_err)
+        .and_then(|abi| JsValue::from_serde(&abi).map_err(js_err))
+}
+
+#[wasm_bindgen]
+pub fn make_abi(
+    source_map: JsValue,
+    dialect: String,
+    address: String,
+) -> Result<JsValue, JsValue> {
+    let units: Units = build(
+        "http://localhost:9009".to_string(),
+        source_map,
+        dialect,
+        address,
+    )?
+        .into_serde()
+        .map_err(js_err)?;
+    JsValue::from_serde(
+        &units
+            .units
+            .into_iter()
+            .map(|u| make_module_abi(&u.bytecode))
+            .collect::<Result<Vec<_>, _>>().map_err(js_err)?,
+    )
+        .map_err(js_err)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Units {
     pub units: Vec<Unit>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Unit {
     pub name: String,
     pub bytecode: Vec<u8>,
