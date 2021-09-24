@@ -40,7 +40,7 @@ function create_empty() {
             monaco: null
         },
         /// make the tab active
-        set_active: function () {
+        set_active: function() {
             window
                 .open_project
                 .get_active_tabs()
@@ -60,7 +60,7 @@ function create_empty() {
 
             return this;
         },
-        set_position: function (line, char) {
+        set_position: function(line, char) {
             if (!line) {
                 return this;
             }
@@ -79,14 +79,14 @@ function create_empty() {
             return this;
         },
         /// make the tab inactive
-        inactive: function () {
+        inactive: function() {
             this.tab.removeClass('active');
             this.editor.block.removeClass('active');
             this.active = false;
             this.onblur();
         },
         /// loss of focus
-        onblur: async function () {
+        onblur: async function() {
             if (window.editorEvents !== undefined && window.editorEvents !== null) {
                 let events = window.editorEvents;
                 window.editorEvents = null;
@@ -95,7 +95,7 @@ function create_empty() {
             }
         },
         /// close the tab
-        destroy: function () {
+        destroy: function() {
             this.onblur();
             // distroy editor
             this.editor.monaco.dispose();
@@ -114,8 +114,8 @@ function create_in_doom_tab_and_editor(object) {
         .insertAdjacentHTML(
             'afterbegin',
             TEMPLATE_TAB
-                .replaceAll("{{name}}", object.file_name)
-                .replaceAll("{{id}}", tab_id)
+            .replaceAll("{{name}}", object.file_name)
+            .replaceAll("{{id}}", tab_id)
         );
     object.tab = document.querySelector("#code-space .tabs-head .item[data-id=\"" + tab_id + "\"]");
     // Block for the editor
@@ -128,7 +128,7 @@ function create_in_doom_tab_and_editor(object) {
         .append(object.editor.block);
 
     // event set active
-    object.tab.addEventListener("click", function (e) {
+    object.tab.addEventListener("click", function(e) {
         e.stopPropagation();
         if (this.hasClass('active')) {
             return;
@@ -137,7 +137,7 @@ function create_in_doom_tab_and_editor(object) {
     })
     object.tab
         .querySelector(".close")
-        .addEventListener('click', function (e) {
+        .addEventListener('click', function(e) {
             e.stopPropagation();
             window.open_project.close_file(object.file_id);
         });
@@ -166,7 +166,7 @@ function create_editor(object, line, char) {
             keybindingContext: null,
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
-            run: function (ed) {
+            run: function(ed) {
                 window.open_project.build();
                 return null;
             }
@@ -183,10 +183,13 @@ function create_editor(object, line, char) {
         .then(file => {
             object.editor.monaco.setValue(file.content);
             monaco.editor.setModelLanguage(object.editor.monaco.getModel(), file.tp);
+            monaco
+                .editor
+                .setTheme("vs-dark");
             // Changes in the text
             object.editor.monaco
                 .getModel()
-                .onDidChangeContent(async (event) => {
+                .onDidChangeContent(async(event) => {
                     if (!event.isFlush) {
                         if (window.editorEvents === undefined || window.editorEvents === null) {
                             window.editorEvents = new Map();
@@ -202,7 +205,7 @@ function create_editor(object, line, char) {
                             project[object.file_id] = fileDiff;
                         }
 
-                        event.changes.forEach(function (item, index, array) {
+                        event.changes.forEach(function(item, index, array) {
                             fileDiff.push({
                                 rangeOffset: item.rangeOffset,
                                 rangeLength: item.rangeLength,

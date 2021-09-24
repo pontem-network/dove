@@ -728,12 +728,3 @@ function inic_header_buttons() {
             }
         });
 }
-
-setTimeout(() => {
-    document.querySelectorAll("#projects .project")[1].click();
-
-    setTimeout(() => {
-        document.querySelectorAll("#explorer li.file")[0].click();
-        document.querySelectorAll("#navigation .ico-panel li button")[2].click();
-    }, 100);
-}, 200);
