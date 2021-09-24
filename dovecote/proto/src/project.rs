@@ -41,7 +41,7 @@ pub enum ActionType {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ProjectActionResponse {
+pub struct ProjectConsoleResponse {
     pub content: String,
     pub code: u8,
 }
@@ -50,4 +50,10 @@ pub struct ProjectActionResponse {
 pub struct CreateProject {
     pub name: String,
     pub dialect: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct ProjectRunRequest {
+    pub project_id: Id,
+    pub command: String,
 }

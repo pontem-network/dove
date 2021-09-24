@@ -48,6 +48,7 @@ body {
     width: 100%;
     height: 100%;
     fill: var(--color-8);
+    transition: fill .1s linear;
 }
 
 .scroll::-webkit-scrollbar {
@@ -117,6 +118,7 @@ body {
     border-radius: 100%;
     background-color: var(--color-1);
     cursor: pointer;
+    transition: background .1s linear, border .1s linear;
 }
 
 #container .header button:hover {
@@ -191,7 +193,7 @@ body {
     border-bottom: 1px solid var(--color-2);
 }
 
-#navigation .list-panel h2 .add_project {
+#navigation .list-panel h2 .add {
     position: absolute;
     right: 5px;
     top: -2px;
@@ -206,9 +208,10 @@ body {
     font-size: 20px;
     line-height: 25px;
     cursor: pointer;
+    transition: color .1s linear, border .1s linear;
 }
 
-#navigation .list-panel h2 .add_project:hover {
+#navigation .list-panel h2 .add:hover {
     color: #4c8754;
     border-color: #4c875422;
     font-size: 23px;
@@ -216,6 +219,7 @@ body {
 }
 
 #navigation .list-panel .container {
+    position: relative;
     height: 100%;
     padding: 5px 15px;
     width: var(--list-panel);
@@ -268,6 +272,7 @@ body {
     font-size: 18px;
     line-height: 25px;
     cursor: pointer;
+    transition: color .1s linear, border .1s linear;
 }
 
 #projects button.project-remove:hover {
@@ -301,6 +306,7 @@ body {
     cursor: pointer;
     padding: 3px 5px;
     position: relative;
+    transition: background .1s linear;
 }
 
 #explorer ul li .name:hover {
@@ -396,6 +402,91 @@ body {
  *
  ***************************************************/
 
+#navigation .container .run_comm {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 25px;
+    width: 100%;
+    padding: 2px 5px;
+    background: var(--color-0);
+    border-right: 1px solid var(--color-1);
+}
+
+#navigation .container .run_comm input {
+    width: 100%;
+    height: 20px;
+    padding: 2px 5px 2px 30px;
+    margin: 0 0 0 -25px;
+    border-width: 0;
+    background: transparent;
+    color: var(--color-8);
+    line-height: 14px;
+}
+
+#navigation .container .run_comm input:focus,
+#navigation .container .run_comm input:active {
+    outline: none;
+}
+
+#run_list .cont,
+#run_list .cont li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#run_list .cont li.item {
+    position: relative;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
+    border-bottom: 1px solid var(--color-2);
+    transition: background .1s linear;
+}
+
+#run_list .cont li.item button {
+    margin-top: 3px;
+    border-width: 0;
+    background: transparent;
+    color: var(--color-8);
+    font-size: 10px;
+    cursor: pointer;
+    transition: background .1s linear;
+}
+
+#run_list .cont li.item:hover {
+    background-color: var(--color-0);
+}
+
+#run_list .cont li.item button.run {
+    padding: 2px 30px 2px 5px;
+    border-left: 2px solid #4c875466;
+    width: 100%;
+    text-align: left;
+}
+
+#run_list .cont li.item button.remove {
+    position: absolute;
+    top: 1px;
+    right: 3px;
+    transition: color .1s linear;
+}
+
+#run_list .cont li.item button.remove:hover {
+    color: #dc3545;
+}
+
+#run_list .cont li.empty {
+    padding: 15px;
+    color: var(--color-3);
+    text-shadow: 0 0 1px rgba(0, 0, 0, .5);
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
 #code-space {
     position: relative;
     overflow-x: hidden;
@@ -450,6 +541,7 @@ body {
     transform: rotate(-45deg);
     transition: color .1s linear;
     cursor: pointer;
+    transition: color .1s linear;
 }
 
 #code-space .tabs-head .item .close:hover {
@@ -491,9 +583,10 @@ body {
     position: absolute;
     bottom: 0;
     left: 0;
+    overflow: hidden auto;
+    padding: 15px 15px 30px;
     width: 100%;
     height: 400px;
-    padding: 15px;
     background-color: var(--color-0);
     border-top: 5px solid var(--color-3);
     white-space: pre;
@@ -548,6 +641,7 @@ body {
     white-space: nowrap;
     color: var(--color-8);
     cursor: pointer;
+    transition: background .1s linear;
 }
 
 #footer button.console:hover {

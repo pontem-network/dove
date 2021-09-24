@@ -12,12 +12,12 @@ export async function create(id) {
         id: id,
         files: {},
         /// Set project id. All open tabs will be closed
-        set_project_id: function (project_id) {
+        set_project_id: function(project_id) {
             this.destroy().id = project_id;
             return this;
         },
         /// open file in tab
-        open_file: function (file_id, file_name, line, char) {
+        open_file: function(file_id, file_name, line, char) {
             if (this.files[file_id]) {
                 if (this.files[file_id].set_active) {
                     this.files[file_id]
@@ -35,7 +35,7 @@ export async function create(id) {
             return this;
         },
         /// closing a file and a tab
-        close_file: function (file_id) {
+        close_file: function(file_id) {
             if (this.files[file_id] && this.files[file_id].destroy) {
                 this.files[file_id].destroy();
             }
@@ -48,10 +48,10 @@ export async function create(id) {
 
             return this;
         },
-        get_last: function () {
+        get_last: function() {
             return Object.values(this.files).at(-1);
         },
-        get_active_tabs: function () {
+        get_active_tabs: function() {
             return Object
                 .values(this.files)
                 .filter(file => {
@@ -59,7 +59,7 @@ export async function create(id) {
                 });
         },
         /// destroy an open project
-        destroy: function () {
+        destroy: function() {
             /// closing tabs
             for (let index in this.files) {
                 if (this.files[index].destroy) {
@@ -71,7 +71,7 @@ export async function create(id) {
             return this;
         },
         /// building a project
-        build: function () {
+        build: function() {
             if (!this.id) {
                 cons.status("Warning: Select a project..");
                 return this;
@@ -94,7 +94,7 @@ export async function create(id) {
             return this;
         },
         /// cleaning up the project
-        clean: function () {
+        clean: function() {
             if (!this.id) {
                 cons.status("Warning: Select a project..");
                 return this;
@@ -117,7 +117,7 @@ export async function create(id) {
             return this;
         },
         /// testing the project
-        test: function () {
+        test: function() {
             if (!this.id) {
                 cons.status("Warning: Select a project..");
                 return this;
@@ -140,7 +140,7 @@ export async function create(id) {
             return this;
         },
         /// Checking the project
-        check: function () {
+        check: function() {
             if (!this.id) {
                 cons.status("Warning: Select a project..");
                 return this;
@@ -161,6 +161,30 @@ export async function create(id) {
                     if (err.content) {
                         cons.output(response.content);
                     } else {
+                        console.warn(err);
+                    }
+                });
+            return this;
+        },
+        /// Checking the project
+        run_script: function(command) {
+            cons.status("Running the script..");
+            wasm.dove_run(this.id, command)
+                .then(response => {
+                    if (response.code == 0) {
+                        cons.status("Done")
+                        cons.output(response.content);
+                    } else {
+                        cons.status("Error")
+                        cons.output(response.content);
+                    }
+                })
+                .catch(err => {
+                    cons.status("Error when running the script");
+                    if (err.content) {
+                        cons.output(response.content);
+                    } else {
+                        cons.status("Error: " + err);
                         console.warn(err);
                     }
                 });

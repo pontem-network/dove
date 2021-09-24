@@ -10,12 +10,13 @@ use anyhow::Error;
 
 use dove::home::{load_project, path_id, Project as DoveProject};
 use proto::project::{
-    Id, IdRef, ProjectInfo, ProjectShortInfo, Tree, ActionType, ProjectActionResponse,
+    Id, IdRef, ProjectInfo, ProjectShortInfo, Tree, ActionType, ProjectConsoleResponse,
 };
 
 use crate::rpc::m_file::MFile;
 use std::time::Instant;
 use std::process::Command;
+use std::ffi::OsStr;
 
 #[derive(Debug)]
 pub struct Project {
@@ -161,41 +162,21 @@ impl Project {
         Ok(())
     }
 
-    pub fn action(&self, action: ActionType) -> Result<ProjectActionResponse, Error> {
-        let args = match action {
+    pub fn action(&self, action: ActionType) -> Result<ProjectConsoleResponse, Error> {
+        let act = match action {
             ActionType::Build => &["build"],
             ActionType::Clean => &["clean"],
             ActionType::Test => &["test"],
             ActionType::Check => &["check"],
         };
-        let dove_project_path = self.info.path.clone();
-        let start = Instant::now();
-        let (code, output) = Command::new("dove")
-            .args(args)
-            .arg("--color=always")
-            .current_dir(&dove_project_path)
-            .output()
-            .map_or_else(
-                |err| (1, err.to_string()),
-                |out| {
-                    let mut cont = if out.status.success() {
-                        String::from_utf8(out.stdout).unwrap_or_default()
-                    } else {
-                        String::from_utf8(out.stderr).unwrap_or_default()
-                    };
-                    cont = output_processing_path(&cont, &dove_project_path);
-                    let duration = start.elapsed();
-                    (
-                        out.status.code().unwrap_or_default(),
-                        format!("{}\nFinished targets in {}s", cont, duration.as_secs_f32()),
-                    )
-                },
-            );
+        run_cli("dove", act, &self.info.path.clone())
+    }
 
-        Ok(ProjectActionResponse {
-            content: output,
-            code: code as u8,
-        })
+    pub fn run(&self, command: String) -> Result<ProjectConsoleResponse, Error> {
+        let mut args = vec!["run".to_string()];
+        args.extend(command_to_argv(&command)?);
+        println!("dove run {:?}", &args);
+        run_cli("dove", args.as_slice(), &self.info.path.clone())
     }
 }
 
@@ -242,16 +223,16 @@ fn output_processing_path(out: &str, project_path: &str) -> String {
                 .find(|(_, char)| char.is_whitespace())
                 .map(|(pos, _)| pos)
             {
-                (format!("{}", &part[1..pos]), &part[pos..])
+                ((&part[1..pos]).to_string(), &part[pos..])
             } else {
-                (format!("{}", &part[1..]), "")
+                ((&part[1..]).to_string(), "")
             };
 
             let positions = if let Some(pos) = path.find(':') {
                 let tmp = &path[pos..]
                     .split(':')
                     .map(|p| p.trim())
-                    .filter(|p| p.len() != 0)
+                    .filter(|p| !p.is_empty())
                     .filter_map(|p| p.parse::<u32>().ok())
                     .collect::<Vec<u32>>();
                 path = { &path[..pos] }.to_string();
@@ -280,6 +261,70 @@ fn output_processing_path(out: &str, project_path: &str) -> String {
         .join("")
 }
 
+fn command_to_argv(command: &str) -> Result<Vec<String>, Error> {
+    let call_end = command
+        .find(')')
+        .ok_or_else(|| anyhow!("No value is specified for the call"))?;
+
+    let call = command[..=call_end].trim();
+    call.find('(')
+        .ok_or_else(|| anyhow!("No value is specified for the call"))
+        .and_then(|pos| {
+            if call[..pos].trim().contains(' ') {
+                Err(anyhow!("The CALL value is filled in incorrectly"))
+            } else {
+                Ok(())
+            }
+        })?;
+
+    let mut argv = vec![call.to_string()];
+    argv.extend(
+        command[call_end + 1..]
+            .trim()
+            .split_whitespace()
+            .map(|s| s.to_string()),
+    );
+
+    Ok(argv)
+}
+
+fn run_cli<I, S>(
+    program: &str,
+    args: I,
+    dove_project_path: &str,
+) -> Result<ProjectConsoleResponse, Error>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    let start = Instant::now();
+    let (code, output) = Command::new(program)
+        .args(args)
+        .arg("--color=always")
+        .current_dir(&dove_project_path)
+        .output()
+        .map_or_else(
+            |err| (1, err.to_string()),
+            |out| {
+                let mut cont = if out.status.success() {
+                    String::from_utf8(out.stdout).unwrap_or_default()
+                } else {
+                    String::from_utf8(out.stderr).unwrap_or_default()
+                };
+                cont = output_processing_path(&cont, dove_project_path);
+                let duration = start.elapsed();
+                (
+                    out.status.code().unwrap_or_default(),
+                    format!("{}\nFinished targets in {}s", cont, duration.as_secs_f32()),
+                )
+            },
+        );
+
+    Ok(ProjectConsoleResponse {
+        content: output,
+        code: code as u8,
+    })
+}
 #[test]
 fn test_output_processing_path() {
     let project_path = "/home/user/dove-project";
@@ -357,4 +402,34 @@ text"#,
             project_path
         )
     );
+}
+
+#[test]
+fn test_command_to_argv() {
+    assert_eq!(
+        vec!["script_name()".to_string()],
+        command_to_argv("script_name()").unwrap()
+    );
+    assert_eq!(
+        vec![
+            "script_name()".to_string(),
+            "-f".to_string(),
+            "test_file".to_string()
+        ],
+        command_to_argv("script_name() -f test_file").unwrap()
+    );
+    assert_eq!(
+        vec![
+            "script_name()".to_string(),
+            "-f".to_string(),
+            "test_file".to_string()
+        ],
+        command_to_argv("script_name()            -f test_file").unwrap()
+    );
+    assert!(command_to_argv("script_name -f test_file").is_err());
+    assert!(command_to_argv("script_name) -f test_file").is_err());
+    assert!(command_to_argv("script_name( -f test_file").is_err());
+    assert!(command_to_argv("-f test_file").is_err());
+    assert!(command_to_argv(" -f script_name() test_file").is_err());
+    assert!(command_to_argv("script name() test_file").is_err());
 }

@@ -2,7 +2,7 @@ use wasm_bindgen::JsValue;
 use crate::context::api_url;
 use crate::api;
 use proto::Empty;
-use proto::project::{ActionType, ProjectActionRequest, CreateProject, Id};
+use proto::project::{ActionType, ProjectActionRequest, CreateProject, Id, ProjectRunRequest};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -56,4 +56,13 @@ pub async fn create_project(name: String, dialect: String) -> Result<JsValue, Js
 #[wasm_bindgen]
 pub async fn remove_project(project_id: Id) -> Result<JsValue, JsValue> {
     api(proto::remove_project(&api_url(), &project_id).await)
+}
+
+#[wasm_bindgen]
+pub async fn dove_run(project_id: String, command: String) -> Result<JsValue, JsValue> {
+    let action = ProjectRunRequest {
+        project_id,
+        command,
+    };
+    api(proto::dove_run(&api_url(), &action).await)
 }

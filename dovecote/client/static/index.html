@@ -69,12 +69,19 @@
                             </svg>
                         </button>
                     </li>
+                    <li class="run_script">
+                        <button type="button" class="icon-svg hide" title="Run script" child-panel="run-container">
+                            <svg>
+                                <use xlink:href="#icon-run"></use>
+                            </svg>
+                        </button>
+                    </li>
                 </ul>
                 <div class="list-panel">
                     <div id="projects-container" class="container hide">
                         <h2 class="head">
                             Projects
-                            <button type="button" class="add_project" title="Create a project">+</button>
+                            <button type="button" class="add add_project" title="Create a project">+</button>
                         </h2>
                         <div id="projects" class="list-block scroll">
                             <div class="in">
@@ -90,6 +97,19 @@
                             </div>
                         </div>
                     </div>
+                    <div id="run-container" class="container hide">
+                        <h2 class="head">Run</h2>
+                        <div id="run_list" class="list-block scroll">
+                            <div class="in">
+                                <ul class="cont">
+                                    <li class="empty">- empty -</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="run_comm">
+                            &gt;<input type="text" class="command" title="Enter the command to call the script" placeholder="Example: script_name<u8>(1,2)" />
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="code-space">
@@ -98,7 +118,7 @@
             </div>
         </div>
     </div>
-    <div id="console">Empty..</div>
+    <div id="console" class="scroll">Empty..</div>
     <div id="footer">
         <div class="status">Loading...</div>
         <button type="button" class="console">
@@ -195,6 +215,9 @@
             </symbol>
             <symbol id="icon-trash" viewBox="0 0 512 512">
                 <path d="m424 64h-88v-16c0-26.467-21.533-48-48-48h-64c-26.467 0-48 21.533-48 48v16h-88c-22.056 0-40 17.944-40 40v56c0 8.836 7.164 16 16 16h8.744l13.823 290.283c1.221 25.636 22.281 45.717 47.945 45.717h242.976c25.665 0 46.725-20.081 47.945-45.717l13.823-290.283h8.744c8.836 0 16-7.164 16-16v-56c0-22.056-17.944-40-40-40zm-216-16c0-8.822 7.178-16 16-16h64c8.822 0 16 7.178 16 16v16h-96zm-128 56c0-4.411 3.589-8 8-8h336c4.411 0 8 3.589 8 8v40c-4.931 0-331.567 0-352 0zm313.469 360.761c-.407 8.545-7.427 15.239-15.981 15.239h-242.976c-8.555 0-15.575-6.694-15.981-15.239l-13.751-288.761h302.44z"/><path d="m256 448c8.836 0 16-7.164 16-16v-208c0-8.836-7.164-16-16-16s-16 7.164-16 16v208c0 8.836 7.163 16 16 16z"/><path d="m336 448c8.836 0 16-7.164 16-16v-208c0-8.836-7.164-16-16-16s-16 7.164-16 16v208c0 8.836 7.163 16 16 16z"/><path d="m176 448c8.836 0 16-7.164 16-16v-208c0-8.836-7.164-16-16-16s-16 7.164-16 16v208c0 8.836 7.163 16 16 16z"/>
+            </symbol>
+            <symbol id="icon-run" viewBox="0 0 191.255 191.255">
+                <path d="M162.929,66.612c-2.814-1.754-6.514-0.896-8.267,1.917s-0.895,6.513,1.917,8.266c6.544,4.081,10.45,11.121,10.45,18.833 s-3.906,14.752-10.45,18.833l-98.417,61.365c-6.943,4.329-15.359,4.542-22.512,0.573c-7.154-3.97-11.425-11.225-11.425-19.406 V34.262c0-8.181,4.271-15.436,11.425-19.406c7.153-3.969,15.569-3.756,22.512,0.573l57.292,35.723 c2.813,1.752,6.513,0.895,8.267-1.917c1.753-2.812,0.895-6.513-1.917-8.266L64.512,5.247c-10.696-6.669-23.661-7-34.685-0.883 C18.806,10.48,12.226,21.657,12.226,34.262v122.73c0,12.605,6.58,23.782,17.602,29.898c5.25,2.913,10.939,4.364,16.616,4.364 c6.241,0,12.467-1.754,18.068-5.247l98.417-61.365c10.082-6.287,16.101-17.133,16.101-29.015S173.011,72.899,162.929,66.612z"/>
             </symbol>
         </svg>
     </div>

@@ -87,16 +87,17 @@ pub fn make_abi(
         dialect,
         address,
     )?
-        .into_serde()
-        .map_err(js_err)?;
+    .into_serde()
+    .map_err(js_err)?;
     JsValue::from_serde(
         &units
             .units
             .into_iter()
             .map(|u| make_module_abi(&u.bytecode))
-            .collect::<Result<Vec<_>, _>>().map_err(js_err)?,
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(js_err)?,
     )
-        .map_err(js_err)
+    .map_err(js_err)
 }
 
 #[derive(Serialize, Deserialize, Debug)]

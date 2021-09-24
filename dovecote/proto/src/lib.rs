@@ -1,3 +1,5 @@
+#![allow(clippy::ptr_arg)]
+
 #[macro_use]
 extern crate serde;
 #[macro_use]
@@ -42,10 +44,13 @@ transport! {
     // Reload project from disk.
     Sync|sync_project: Id => ProjectInfo;
     // clean|build|test project
-    ProjectActionRequest|project_action: ProjectActionRequest => ProjectActionResponse;
+    ProjectActionRequest|project_action: ProjectActionRequest => ProjectConsoleResponse;
+    // dove run
+    ProjectRunRequest|dove_run: ProjectRunRequest => ProjectConsoleResponse;
 }
 
 #[macro_export]
+
 macro_rules! transport {
     ($($name:ident|$fun_name:ident : $req:ident => $resp:ident;)*) => {
 

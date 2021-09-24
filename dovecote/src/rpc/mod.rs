@@ -8,7 +8,8 @@ use proto::file::{
     RenameDirectory, RenameFile, RemoveDirectory,
 };
 use proto::project::{
-    Id, ProjectInfo, ProjectList, ProjectActionRequest, ProjectActionResponse, CreateProject,
+    Id, ProjectInfo, ProjectList, ProjectActionRequest, ProjectConsoleResponse, CreateProject,
+    ProjectRunRequest,
 };
 
 use crate::rpc::projects::Projects;
@@ -177,9 +178,18 @@ impl OnRequest for Rpc {
     fn project_action(
         &self,
         req: ProjectActionRequest,
-    ) -> Result<ProjectActionResponse, anyhow::Error> {
+    ) -> Result<ProjectConsoleResponse, anyhow::Error> {
         let ProjectActionRequest { project_id, action } = req;
         self.projects
             .on_project_mut(&project_id, |project| project.action(action))
+    }
+
+    fn dove_run(&self, req: ProjectRunRequest) -> Result<ProjectConsoleResponse, anyhow::Error> {
+        let ProjectRunRequest {
+            project_id,
+            command,
+        } = req;
+        self.projects
+            .on_project_mut(&project_id, |project| project.run(command))
     }
 }

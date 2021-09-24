@@ -50,6 +50,14 @@ const TEMPLATE_EXPLORER_CHOOSE_DIALECT_POPUP = `
     </div>
 `;
 
+const TEMPLATE_RUN_COMMAND_EMTPY = `<li class="empty">- empty -</li>`;
+const TEMPLATE_RUN_COMMAND_ITEM = `
+<li class="item" data-id="{{id}}">
+    <button class="run" title="Run the command" >{{command}}</button>
+    <button class="remove" title="Delete the command">x</button>
+</li>
+`;
+
 /// initializing the sidebar
 export async function init() {
     /// ID of the Open project
@@ -57,8 +65,10 @@ export async function init() {
 
     init_menu();
     inic_header_buttons();
+    inic_run_commands();
     await project_load();
     await cons.inic_panel();
+
 
     // Add a project
     document
@@ -175,6 +185,7 @@ function on_click_project(e) {
         return false;
     }
     explorer_load(id);
+    run_command_show_history(id);
 }
 
 function on_click_project_remove(e) {
@@ -295,6 +306,8 @@ async function explorer_set(list) {
             window.open_project.close_file(file_id);
         }
     }
+    // show "run script"
+    document.querySelectorAll("#navigation .ico-panel li button")[2].removeClass("hide");
 }
 
 function explorer_add(parent_element, path, data) {
@@ -573,12 +586,109 @@ function select_dialect(parent) {
                 pop.remove();
 
                 if (!value.length) {
-                    reject("name cannot be empty");
+                    reject("Name cannot be empty");
                 } else {
                     resolve(value);
                 }
             })
     });
+}
+
+// ===============================================================
+//  Run scripts
+// ===============================================================
+
+async function inic_run_commands() {
+    container
+        .querySelector("#run-container input.command:not(.i)")
+        .addClass("i")
+        .addEventListener("keyup", function(e) {
+            e.stopPropagation();
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                let command = this.value.trim();
+                if (!command.length) { reutrn; }
+                run_command(command);
+                this.value = "";
+            }
+        });
+}
+
+async function run_command(command) {
+    let history = run_command_get_history(),
+        find_command = history.indexOf(command);
+    if (find_command !== -1) {
+        history.splice(find_command, 1);
+    }
+    history.unshift(command);
+    history = history.slice(0, 10);
+
+    localStorage.setItem("run.commands.history." + window.open_project.id, JSON.stringify(history));
+    run_command_show_history();
+
+    if (window.open_project.run_script) {
+        window.open_project.run_script(command);
+    }
+}
+
+async function run_command_show_history() {
+    let block_history = container.querySelector("#run_list .cont"),
+        history = run_command_get_history();
+
+    let length = history.length;
+    if (!length) {
+        block_history.innerHTML = TEMPLATE_RUN_COMMAND_EMTPY;
+        return;
+    }
+
+    block_history.innerHTML = "";
+    for (let index = 0; index < length; index++) {
+        let item = TEMPLATE_RUN_COMMAND_ITEM
+            .replaceAll("{{command}}", history[index])
+            .replaceAll("{{id}}", index);
+        block_history.insertAdjacentHTML('beforeend', item);
+    }
+
+    block_history
+        .querySelectorAll('button.run')
+        .forEach(button => {
+            button.addEventListener("click", function(e) {
+                e.stopPropagation();
+                let command = run_command_get_history()[this.parentNode.attr("data-id")];
+                if (command !== undefined) {
+                    run_command(command);
+                }
+            });
+        });
+
+    block_history
+        .querySelectorAll('button.remove')
+        .forEach(button => {
+            button.addEventListener("click", function(e) {
+                e.stopPropagation();
+
+                cons.status("Delete an entry");
+                let history = run_command_get_history(),
+                    index = this.parentNode.attr("data-id") * 1;
+                history.splice(index, 1);
+                localStorage.setItem("run.commands.history." + window.open_project.id, JSON.stringify(history));
+
+                cons.status("Done");
+                run_command_show_history();
+            });
+        });
+}
+
+function run_command_get_history() {
+    let history = [];
+    try {
+        history = localStorage.getItem("run.commands.history." + window.open_project.id);
+        history = JSON.parse(history ? history : "[]");
+        if (!Array.isArray(history)) {
+            history = [];
+        }
+    } catch {}
+    return history;
+
 }
 
 // ===============================================================
@@ -618,3 +728,12 @@ function inic_header_buttons() {
             }
         });
 }
+
+setTimeout(() => {
+    document.querySelectorAll("#projects .project")[1].click();
+
+    setTimeout(() => {
+        document.querySelectorAll("#explorer li.file")[0].click();
+        document.querySelectorAll("#navigation .ico-panel li button")[2].click();
+    }, 100);
+}, 200);
