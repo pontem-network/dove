@@ -547,17 +547,16 @@ name = "dovelight"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "base64",
  "bcs",
  "getrandom 0.2.3",
+ "hex",
  "lang",
  "move-binary-format",
  "move-core-types",
  "move-lang",
- "reqwest",
  "serde",
+ "serde_json",
  "wasm-bindgen",
- "wasm-bindgen-futures",
  "web-sys",
 ]
 

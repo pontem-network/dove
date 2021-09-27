@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>dove-light</title>
+    <title>dovelight</title>
 </head>
 <body>
 <script type="module">
@@ -16,16 +16,22 @@
         let source_map = {source_map: sources };
         sources["script.move"] = "script {fun main(){}}";
         sources["module.move"] = "module 0x1::Foo {" +
-            "public fun test(){}" +
+            "use 0x1::DiemTimestamp;" +
+            "public fun test(){" +
+            "   DiemTimestamp::now_microseconds();" +
+            "}" +
             "}";
 
-        let res = build("http://localhost:9090", source_map, "pont", "0x1");
+        let res = build("http://localhost:9933/", source_map, "pont", "0x1");
         console.log(res);
 
         sources = new Map();
         source_map = {source_map: sources };
         sources["module.move"] = "module 0x1::Foo {" +
-            "public fun test(){}" +
+            "use 0x1::DiemTimestamp;" +
+            "public fun test(){" +
+            "   DiemTimestamp::now_microseconds();" +
+            "}" +
             "}";
 
 

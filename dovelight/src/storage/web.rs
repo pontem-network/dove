@@ -28,7 +28,7 @@ impl WebStorage {
 impl Store for WebStorage {
     fn set<V: Serialize>(&self, key: &str, val: &V) -> Result<(), Error> {
         self.storage
-            .set_item(&self.key(key), &base64::encode(bcs::to_bytes(val)?))
+            .set_item(&self.key(key), &hex::encode(bcs::to_bytes(val)?))
             .map_err(js_err)?;
         Ok(())
     }
@@ -40,7 +40,7 @@ impl Store for WebStorage {
 
     fn get<'a, V: DeserializeOwned>(&self, key: &str) -> Result<Option<V>, Error> {
         if let Some(val) = self.storage.get_item(&self.key(key)).map_err(js_err)? {
-            Ok(Some(bcs::from_bytes(&base64::decode(val)?)?))
+            Ok(Some(bcs::from_bytes(&hex::decode(val)?)?))
         } else {
             Ok(None)
         }

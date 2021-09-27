@@ -1,23 +1,24 @@
 use std::fmt::Display;
-
-use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
-
-use storage::web::WebStorage;
-
-use crate::compiler::loader::Loader;
-use lang::compiler::dialects::DialectName;
-use crate::deps::resolver::DependencyResolver;
 use std::str::FromStr;
+
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::ModuleId;
-use crate::deps::index::id_to_str;
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
+
+use lang::compiler::dialects::DialectName;
+use loader::Loader;
+use storage::web::WebStorage;
+
 use crate::abi::make_module_abi;
+use crate::deps::index::id_to_str;
+use crate::deps::resolver::DependencyResolver;
 
 pub mod abi;
 mod compiler;
 pub mod deps;
+pub mod loader;
 pub mod storage;
 
 #[macro_export]
@@ -77,18 +78,14 @@ pub fn module_abi(
 
 #[wasm_bindgen]
 pub fn make_abi(
+    chain_api: String,
     source_map: JsValue,
     dialect: String,
     address: String,
 ) -> Result<JsValue, JsValue> {
-    let units: Units = build(
-        "http://localhost:9009".to_string(),
-        source_map,
-        dialect,
-        address,
-    )?
-    .into_serde()
-    .map_err(js_err)?;
+    let units: Units = build(chain_api, source_map, dialect, address)?
+        .into_serde()
+        .map_err(js_err)?;
     JsValue::from_serde(
         &units
             .units

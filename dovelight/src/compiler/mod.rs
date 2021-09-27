@@ -14,7 +14,6 @@ use crate::deps::resolver::DependencyResolver;
 
 pub mod interact;
 mod intern_table;
-pub mod loader;
 pub mod source_map;
 
 pub fn build<L: DependencyLoader, S: Store>(
