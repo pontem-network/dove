@@ -797,14 +797,4 @@ function inic_header_buttons() {
             return false;
         }
     });
-
-
 }
-
-setTimeout(() => {
-    document.querySelectorAll("#projects .project")[1].click();
-
-    setTimeout(() => {
-        document.querySelectorAll("#explorer li.file")[0].click();
-    }, 100);
-}, 200);
