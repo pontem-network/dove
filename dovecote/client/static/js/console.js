@@ -7,11 +7,20 @@ export async function status(text) {
 
 /// Initializing the console panel
 export async function inic_panel() {
-    document.querySelector("#footer .console").addEventListener("click", function () {
+    document.querySelector("#footer .console").addEventListener("click", function() {
         this.toggleClass("active");
         document.getElementById("console").toggleClass("active");
     });
 
+    document.addEventListener("keyup", function(e) {
+        if (e.code === "Escape") {
+            let console_block = document.getElementById("console");
+            if (console_block.hasClass("active")) {
+                console_block.removeClass("active");
+                document.querySelector("#footer .console").removeClass("active");
+            }
+        }
+    });
 }
 
 /// open the panel and display the output
@@ -30,13 +39,14 @@ export async function output(text) {
         )
         .replaceAll("&quot;", '"');
     inic_output();
+    console_block.focus();
 }
 
 function inic_output() {
     document.querySelectorAll("#console .open_file[path]:not(.click)")
         .forEach(path => {
             path.addClass("click")
-                .addEventListener("click", function (e) {
+                .addEventListener("click", function(e) {
                     e.stopPropagation();
                     document.querySelectorAll("#console, #footer .console")
                         .forEach(el => { el.removeClass("active") });
