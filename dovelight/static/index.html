@@ -13,7 +13,7 @@
         await init();
 
         let sources = new Map();
-        let source_map = {source_map: sources };
+        let source_map = {source_map: sources};
         sources["script.move"] = "script {fun main(){}}";
         sources["module.move"] = "module 0x1::Foo {" +
             "use 0x1::DiemTimestamp;" +
@@ -26,7 +26,7 @@
         console.log(res);
 
         sources = new Map();
-        source_map = {source_map: sources };
+        source_map = {source_map: sources};
         sources["module.move"] = "module 0x1::Foo {" +
             "use 0x1::DiemTimestamp;" +
             "public fun test(){" +
@@ -34,9 +34,8 @@
             "}" +
             "}";
 
-
-        res = make_abi(source_map, "pont", "0x1");
-        console.log(res);
+        console.log(make_abi(source_map, "pont", "0x1"));
+        console.log(module_abi("http://localhost:9933/", "pont", "0x1", "0x1", "DiemTimestamp"));
     }
 
     run();

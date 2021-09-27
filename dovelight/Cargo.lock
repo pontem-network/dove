@@ -161,7 +161,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "diem-workspace-hack",
  "mirai-annotations",
@@ -198,7 +198,7 @@ checksum = "d9df67f7bf9ef8498769f994239c45613ef0c5899415fb58e9add412d2c1a538"
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -214,7 +214,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -450,7 +450,7 @@ dependencies = [
 [[package]]
 name = "diem-workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "Inflector",
  "anyhow",
@@ -500,7 +500,7 @@ dependencies = [
  "standback",
  "subtle",
  "syn 0.15.44",
- "syn 1.0.76",
+ "syn 1.0.77",
  "tiny-keccak",
  "tokio",
  "tokio-util",
@@ -528,7 +528,7 @@ dependencies = [
 [[package]]
 name = "disassembler"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -592,7 +592,7 @@ checksum = "1e94aa31f7c0dc764f57896dc615ddd76fc13b0d5dca7eb6cc5e018a5a09ec06"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -703,7 +703,7 @@ dependencies = [
  "proc-macro-hack",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -974,9 +974,9 @@ dependencies = [
 
 [[package]]
 name = "instant"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d"
+checksum = "716d3d89f35ac6a34fd0eed635395f4c3b76fa889338a4632e5231a8684216bd"
 dependencies = [
  "cfg-if",
 ]
@@ -1003,7 +1003,7 @@ checksum = "68f2d64f2edebec4ce84ad108148e67e1064789bee435edc5b60ad398714a3a9"
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1022,7 +1022,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -1231,7 +1231,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "move-binary-format"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "diem-workspace-hack",
@@ -1254,7 +1254,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1271,7 +1271,7 @@ dependencies = [
 [[package]]
 name = "move-coverage"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1292,7 +1292,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -1306,7 +1306,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1334,7 +1334,7 @@ dependencies = [
 [[package]]
 name = "move-model"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1359,7 +1359,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "bcs",
  "diem-workspace-hack",
@@ -1502,12 +1502,12 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "diem-workspace-hack",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -1591,7 +1591,7 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -1652,7 +1652,7 @@ checksum = "6e8fe8163d14ce7f0cdac2e040116f22eac817edabff0be91e8aff7e9accf389"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -1669,9 +1669,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkg-config"
-version = "0.3.19"
+version = "0.3.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
+checksum = "7c9b1041b4387893b91ee6746cddfc28516aff326a3519fb2adf820932c5e6cb"
 
 [[package]]
 name = "plotters"
@@ -1716,7 +1716,7 @@ dependencies = [
  "proc-macro-error-attr",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
  "version_check",
 ]
 
@@ -1781,7 +1781,7 @@ dependencies = [
  "itertools 0.9.0",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -1915,7 +1915,7 @@ checksum = "4c38e3aecd2b21cb3959637b883bb3714bc7e43f0268b9a29d3743ee3e55cdd2"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -2149,7 +2149,7 @@ checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -2172,7 +2172,7 @@ checksum = "98d0516900518c29efa217c298fa1f4e6c6ffc85ae29fd7f4ee48f176e1a9ed5"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -2298,7 +2298,7 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -2320,9 +2320,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.76"
+version = "1.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6f107db402c2c2055242dbf4d2af0e69197202e9faacbef9571bbe47f5a1b84"
+checksum = "5239bc68e0fef57495900cfea4e8dc75596d9a319d7e16b1e0a440d24e6fe0a0"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
@@ -2337,7 +2337,7 @@ checksum = "474aaa926faa1603c40b7885a9eaea29b444d1cb2850cb7c0e37bb1a4182f4fa"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
  "unicode-xid 0.2.2",
 ]
 
@@ -2390,7 +2390,7 @@ checksum = "bad553cc2c78e8de258400763a647e80e6d1b31ee237275d756f6836d204494c"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -2424,9 +2424,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5241dd6f21443a3606b432718b166d3cedc962fd4b8bea54a8bc7f514ebda986"
+checksum = "f83b2a3d4d9091d0abd7eba4dc2710b1718583bd4d8992e2190720ea38f391f7"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -2465,7 +2465,7 @@ checksum = "54473be61f4ebe4efd09cec9bd5d16fa51d70ea0192213d754d2d500457db110"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -2564,7 +2564,7 @@ checksum = "98863d0dd09fa59a1b79c6750ad80dbda6b75f4e71c437a6a1a8cb91a8bcbd77"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
 ]
 
 [[package]]
@@ -2814,7 +2814,7 @@ dependencies = [
  "log",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
  "wasm-bindgen-shared",
 ]
 
@@ -2848,7 +2848,7 @@ checksum = "7803e0eea25835f8abdc585cd3021b3deb11543c6fe226dcd30b228857c5c5ab"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -2936,6 +2936,6 @@ checksum = "bdff2024a851a322b08f179173ae2ba620445aef1e838f0c196820eade4ae0c7"
 dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
- "syn 1.0.76",
+ "syn 1.0.77",
  "synstructure",
 ]
