@@ -84,6 +84,6 @@ impl<'a, L: DependencyLoader, S: Store> Interact for CompilerInteract<'a, L, S> 
     fn required_dependencies(&mut self) -> Result<Vec<String>, Error> {
         let extractor = mem::take(&mut self.dependency_extractor);
         let usages = extractor.finish();
-        self.dependence_resolver.load_tree(usages)
+        self.dependence_resolver.load_tree(usages, PREFIX)
     }
 }

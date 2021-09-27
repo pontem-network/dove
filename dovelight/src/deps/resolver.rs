@@ -61,7 +61,7 @@ impl<'a, L: DependencyLoader, S: Store> DependencyResolver<'a, L, S> {
         Ok(())
     }
 
-    pub fn load_tree(&self, root_set: HashSet<ModuleId>) -> Result<Vec<String>, Error> {
+    pub fn load_tree(&self, root_set: HashSet<ModuleId>, prefix: &str) -> Result<Vec<String>, Error> {
         let mut index: Index = self.store.get(INDEX_KEY)?.unwrap_or_default();
 
         for root in root_set {
@@ -69,6 +69,6 @@ impl<'a, L: DependencyLoader, S: Store> DependencyResolver<'a, L, S> {
         }
 
         self.store.set(INDEX_KEY, &index)?;
-        Ok(index.all_deps())
+        Ok(index.all_deps(prefix))
     }
 }

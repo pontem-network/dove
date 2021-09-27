@@ -7,7 +7,7 @@
 <body>
 <script type="module">
 
-    import init, {build, make_abi} from './../pkg/dovelight.js';
+    import init, {build, make_abi, module_abi} from './../pkg/dovelight.js';
 
     async function run() {
         await init();
@@ -19,11 +19,11 @@
             "use 0x1::DiemTimestamp;" +
             "public fun test(){" +
             "   DiemTimestamp::now_microseconds();" +
-            "}" +
-            "}";
+            "}"
+        "}";
 
-        let res = build("http://localhost:9933/", source_map, "pont", "0x1");
-        console.log(res);
+        console.log("build");
+        console.log(build("http://localhost:9933/", source_map, "pont", "0x1"));
 
         sources = new Map();
         source_map = {source_map: sources};
@@ -34,8 +34,10 @@
             "}" +
             "}";
 
-        console.log(make_abi(source_map, "pont", "0x1"));
-        console.log(module_abi("http://localhost:9933/", "pont", "0x1", "0x1", "DiemTimestamp"));
+        console.log("make_abi");
+        console.log(make_abi("http://localhost:9933/", source_map, "pont", "0x1"));
+        console.log("module_abi");
+        console.log(module_abi("http://localhost:9933/", "pont", "0x1", "DiemTimestamp"));
     }
 
     run();

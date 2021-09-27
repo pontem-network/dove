@@ -19,11 +19,11 @@ impl Index {
         self.deps.insert(id, deps);
     }
 
-    pub fn all_deps(&self) -> Vec<String> {
+    pub fn all_deps(&self, prefix: &str) -> Vec<String> {
         let deps = self.deps.iter().fold(HashSet::new(), |mut acc, (k, v)| {
-            acc.insert(id_to_str(k));
+            acc.insert(format!("{}{}", prefix, id_to_str(k)));
             for item in v {
-                acc.insert(id_to_str(item));
+                acc.insert(format!("{}{}", prefix, id_to_str(item)));
             }
             acc
         });
