@@ -17,9 +17,9 @@
         sources["script.move"] = "script {fun main(){}}";
         sources["module.move"] = "module 0x1::Foo {" +
             "use 0x1::DiemTimestamp;" +
-            "public fun test(){" +
-            "   DiemTimestamp::now_microseconds();" +
-            "}"
+            "public fun test() { " +
+            "   DiemTimestamp::now_microseconds(); " +
+            "}" +
         "}";
 
         console.log("build");
@@ -33,6 +33,7 @@
             "   DiemTimestamp::now_microseconds();" +
             "}" +
             "}";
+
 
         console.log("make_abi");
         console.log(make_abi("http://localhost:9933/", source_map, "pont", "0x1"));
