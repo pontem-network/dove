@@ -69,7 +69,6 @@ export async function init() {
     await project_load();
     await cons.inic_panel();
 
-
     // Add a project
     document
         .querySelector("#projects-container .head .add_project:not(.i)")
@@ -77,6 +76,26 @@ export async function init() {
         .addEventListener("click", on_add_project);
     // open projects list
     on_click_icon_panel(document.querySelectorAll("#navigation .ico-panel li button")[0]);
+
+    // displaying hints
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Control") {
+            document
+                .querySelectorAll("#navigation .ico-panel li button .keyhelp, #container .header button .keyhelp")
+                .forEach(el => {
+                    el.addClass("show");
+                });
+        }
+    });
+    document.addEventListener("keyup", function(e) {
+        if (e.key === "Control") {
+            document
+                .querySelectorAll("#navigation .ico-panel li button .keyhelp, #container .header button .keyhelp")
+                .forEach(el => {
+                    el.removeClass("show");
+                });
+        }
+    });
 }
 
 // ===============================================================
@@ -94,6 +113,14 @@ function init_menu() {
                     return false;
                 });
         });
+
+    document.addEventListener("keyup", function(e) {
+        if (e.ctrlKey && (e.key === "1" || e.key === "2" || e.key === "3")) {
+            let button = document.querySelectorAll("#navigation .ico-panel li button")[e.key - 1];
+            if (button.hasClass("hide")) { return; }
+            on_click_icon_panel(button);
+        }
+    });
 }
 
 function on_click_icon_panel(click_button) {
@@ -703,22 +730,17 @@ function inic_header_buttons() {
                 window.open_project.build();
             }
         });
-    document
-        .querySelector("#container .header button.clean")
-        .addEventListener("click", function(e) {
+    document.addEventListener("keydown", function(e) {
+        if (e.ctrlKey && e.code === "F6") {
             e.stopPropagation();
-            if (window.open_project.clean) {
-                window.open_project.clean();
-            }
-        });
-    document
-        .querySelector("#container .header button.test")
-        .addEventListener("click", function(e) {
-            e.stopPropagation();
-            if (window.open_project.test) {
-                window.open_project.test();
-            }
-        });
+            document
+                .querySelector("#container .header button.build")
+                .click()
+                .focus();
+            return false;
+        }
+    });
+
     document
         .querySelector("#container .header button.check")
         .addEventListener("click", function(e) {
@@ -727,4 +749,62 @@ function inic_header_buttons() {
                 window.open_project.check();
             }
         });
+    document.addEventListener("keydown", function(e) {
+        if (e.ctrlKey && e.code === "F7") {
+            e.stopPropagation();
+            document
+                .querySelector("#container .header button.check")
+                .click()
+                .focus();
+            return false;
+        }
+    });
+
+    document
+        .querySelector("#container .header button.test")
+        .addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (window.open_project.test) {
+                window.open_project.test();
+            }
+        });
+    document.addEventListener("keydown", function(e) {
+        if (e.ctrlKey && e.code === "F8") {
+            e.stopPropagation();
+            document
+                .querySelector("#container .header button.test")
+                .click()
+                .focus();
+            return false;
+        }
+    });
+
+    document
+        .querySelector("#container .header button.clean")
+        .addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (window.open_project.clean) {
+                window.open_project.clean();
+            }
+        });
+    document.addEventListener("keydown", function(e) {
+        if (e.ctrlKey && e.code === "F9") {
+            e.stopPropagation();
+            document
+                .querySelector("#container .header button.clean")
+                .click()
+                .focus();
+            return false;
+        }
+    });
+
+
 }
+
+setTimeout(() => {
+    document.querySelectorAll("#projects .project")[1].click();
+
+    setTimeout(() => {
+        document.querySelectorAll("#explorer li.file")[0].click();
+    }, 100);
+}, 200);

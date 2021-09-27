@@ -151,26 +151,6 @@ function create_editor(object, line, char) {
             theme: "vs-dark",
             automaticLayout: true
         });
-    object.editor.monaco
-        .addAction({
-            id: 'dove-build',
-            label: 'Build project',
-            keybindings: [
-                monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
-                monaco.KeyMod.chord(
-                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K,
-                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_M
-                )
-            ],
-            precondition: null,
-            keybindingContext: null,
-            contextMenuGroupId: 'navigation',
-            contextMenuOrder: 1.5,
-            run: function(ed) {
-                window.open_project.build();
-                return null;
-            }
-        });
     // loss of editor focus
     object.editor.monaco
         .onDidBlurEditorText(_ => {

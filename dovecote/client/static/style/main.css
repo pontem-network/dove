@@ -108,6 +108,7 @@ body {
 }
 
 #container .header button {
+    position: relative;
     display: block;
     float: left;
     width: 25px;
@@ -163,6 +164,7 @@ body {
 }
 
 #navigation .ico-panel button {
+    position: relative;
     width: var(--icon-panel);
     height: var(--icon-panel);
     margin: 0;
@@ -177,6 +179,25 @@ body {
 #navigation .ico-panel button:hover {
     background-color: var(--color-1);
     cursor: pointer;
+}
+
+#container .header button .keyhelp,
+#navigation .ico-panel button .keyhelp {
+    display: none;
+    position: absolute;
+    z-index: 2;
+    bottom: -5px;
+    right: -5px;
+    border: 1px solid var(--color-3);
+    color: var(--color-6);
+    background-color: var(--color-0);
+    padding: 2px 4px;
+    font-size: 9px;
+}
+
+#container .header button .keyhelp.show,
+#navigation .ico-panel button .keyhelp.show {
+    display: block;
 }
 
 #navigation .list-panel {
@@ -581,6 +602,7 @@ body {
 #console {
     display: none;
     position: absolute;
+    z-index: 3;
     bottom: 0;
     left: 0;
     overflow: hidden auto;

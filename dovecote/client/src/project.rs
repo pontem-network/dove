@@ -48,6 +48,15 @@ pub async fn project_check(project_id: String) -> Result<JsValue, JsValue> {
 }
 
 #[wasm_bindgen]
+pub async fn project_clean(project_id: String) -> Result<JsValue, JsValue> {
+    let action = ProjectActionRequest {
+        project_id,
+        action: ActionType::Clean,
+    };
+    api(proto::project_action(&api_url(), &action).await)
+}
+
+#[wasm_bindgen]
 pub async fn create_project(name: String, dialect: String) -> Result<JsValue, JsValue> {
     let req = CreateProject { name, dialect };
     api(proto::create_project(&api_url(), &req).await)
