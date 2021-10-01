@@ -1,0 +1,697 @@
+:root {
+    --color-0: #212529;
+    --color-1: #343A40;
+    --color-2: #495057;
+    --color-3: #6C757D;
+    --color-4: #ADB5BD;
+    --color-5: #CED4DA;
+    --color-6: #DEE2E6;
+    --color-7: #E9ECEF;
+    --color-8: #F8F9FA;
+    --header-height: 40px;
+    --footer-height: 20px;
+    --icon-panel: 50px;
+    --list-panel: 250px;
+    --tabs-head-height: 30px;
+    --tab-head-height: 30px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    min-height: 100%;
+    padding: 0;
+    margin: 0;
+    background: var(--color-2);
+    font-family: Menlo, Monaco, "Courier New", monospace;
+    font-weight: normal;
+    font-size: 12px;
+    font-feature-settings: "liga" 0, "calt" 0;
+    line-height: 1.2;
+    color: var(--color-8);
+    position: relative;
+}
+
+.hide {
+    display: none;
+}
+
+.icon-svg svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--color-8);
+    transition: fill .1s linear;
+}
+
+.scroll::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+}
+
+.scroll::-webkit-scrollbar-button {
+    background-color: transparent;
+}
+
+.scroll::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.scroll::-webkit-scrollbar-track-piece {
+    background-color: transparent;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+    height: 50px;
+    background-color: var(--color-3);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.scroll::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#container {
+    width: 100%;
+    min-height: 100%;
+    padding-bottom: var(--footer-height);
+}
+
+#container .header {
+    display: block;
+    float: none;
+    clear: both;
+    height: var(--header-height);
+    padding-left: var(--icon-panel);
+}
+
+#container .header:after {
+    content: " ";
+    display: block;
+    float: none;
+    clear: both;
+    border-bottom: 1px solid var(--color-3);
+    opacity: .6;
+}
+
+#container .header button {
+    position: relative;
+    display: block;
+    float: left;
+    width: 25px;
+    height: 25px;
+    padding: 5px;
+    margin: 5px 3px;
+    border: 1px solid var(--color-3);
+    border-radius: 100%;
+    background-color: var(--color-1);
+    cursor: pointer;
+    transition: background .1s linear, border .1s linear;
+}
+
+#container .header button:hover {
+    border-color: var(--color-0);
+    background-color: var(--color-0);
+}
+
+#container .header button svg {
+    fill: var(--color-5);
+}
+
+#container .middle {
+    display: block;
+    clear: both;
+    float: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    align-content: stretch;
+    height: calc(100vh - var(--header-height) - var(--footer-height));
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#navigation {
+    flex: 0 auto;
+    display: flex;
+}
+
+#navigation .ico-panel {
+    display: block;
+    clear: both;
+    float: none;
+    flex: none;
+    width: var(--icon-panel);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#navigation .ico-panel button {
+    position: relative;
+    width: var(--icon-panel);
+    height: var(--icon-panel);
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    padding: 10px;
+    background-color: transparent;
+    transition: background .2s;
+}
+
+#navigation .ico-panel button.open,
+#navigation .ico-panel button:hover {
+    background-color: var(--color-1);
+    cursor: pointer;
+}
+
+#container .header button .keyhelp,
+#navigation .ico-panel button .keyhelp {
+    display: none;
+    position: absolute;
+    z-index: 2;
+    bottom: -5px;
+    right: -5px;
+    border: 1px solid var(--color-3);
+    color: var(--color-6);
+    background-color: var(--color-0);
+    padding: 2px 4px;
+    font-size: 9px;
+}
+
+#container .header button .keyhelp.show,
+#navigation .ico-panel button .keyhelp.show {
+    display: block;
+}
+
+#navigation .list-panel {
+    background-color: var(--color-1);
+}
+
+#navigation .list-panel h2 {
+    position: relative;
+    display: block;
+    padding: 5px 30px 14px 0;
+    font-size: 12px;
+    font-weight: normal;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--color-2);
+}
+
+#navigation .list-panel h2 .add {
+    position: absolute;
+    right: 5px;
+    top: -2px;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 100%;
+    color: var(--color-8);
+    font-size: 20px;
+    line-height: 25px;
+    cursor: pointer;
+    transition: color .1s linear, border .1s linear;
+}
+
+#navigation .list-panel h2 .add:hover {
+    color: #4c8754;
+    border-color: #4c875422;
+    font-size: 23px;
+    line-height: 20px;
+}
+
+#navigation .list-panel .container {
+    position: relative;
+    height: 100%;
+    padding: 5px 15px;
+    width: var(--list-panel);
+}
+
+#navigation .container .list-block {
+    height: calc(100% - 60px);
+    overflow: hidden auto;
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#projects .project {
+    position: relative;
+}
+
+#projects button.project-title {
+    display: block;
+    width: 100%;
+    margin: 5px 0px 5px 5px;
+    padding: 5px 30px 5px 10px;
+    border-width: 0 0 0 2px;
+    color: var(--color-8);
+    text-align: left;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background .1s;
+}
+
+#projects button:hover,
+#projects button.active {
+    background-color: var(--color-3);
+}
+
+#projects button.project-remove {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    height: 25px;
+    width: 25px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 100%;
+    color: var(--color-8);
+    font-size: 18px;
+    line-height: 25px;
+    cursor: pointer;
+    transition: color .1s linear, border .1s linear;
+}
+
+#projects button.project-remove:hover {
+    color: #dc3545;
+    font-size: 22px;
+    line-height: 22px;
+    border-color: #dc354633;
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#explorer {
+    margin-left: -15px;
+}
+
+#explorer ul {
+    display: block;
+    list-style: none;
+    padding: 0 0 0 10px;
+}
+
+#explorer ul li {
+    display: block;
+}
+
+#explorer ul li .name {
+    display: flex;
+    cursor: pointer;
+    padding: 3px 5px;
+    position: relative;
+    transition: background .1s linear;
+}
+
+#explorer ul li .name:hover {
+    background-color: var(--color-0);
+}
+
+#explorer ul span.name * {
+    vertical-align: middle;
+}
+
+.new_name {
+    position: absolute;
+    z-index: 2;
+    top: -2px;
+    padding: 2px;
+    border: 1px solid var(--color-2);
+    background: var(--color-1);
+}
+
+.new_name input {
+    width: 100%;
+    border-width: 0;
+    background-color: var(--color-0);
+    color: var(--color-8);
+    border-radius: 0;
+}
+
+#explorer ul .type-icon {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+#explorer ul span.name svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--color-8);
+}
+
+#explorer ul li .actions {
+    display: inline-block;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+#explorer ul li .actions button {
+    visibility: hidden;
+    background: transparent;
+    border-width: 0;
+    padding: 0;
+}
+
+#explorer ul li .name:hover .actions button {
+    visibility: visible;
+    cursor: pointer;
+}
+
+#explorer ul li .actions button.add:hover svg {
+    fill: #4c8754;
+}
+
+#explorer ul li .actions button.rename:hover svg {
+    fill: #63cbf0;
+}
+
+#explorer ul li .actions button.remove:hover svg {
+    fill: #de4e46;
+}
+
+#explorer ul li.dir>.parent {
+    display: none;
+}
+
+#explorer ul li.dir.open>.parent {
+    display: block;
+}
+
+#explorer ul li.dir>.name .type-icon svg {
+    transform: rotate(-90deg);
+}
+
+#explorer ul li.dir.open>.name .type-icon svg {
+    transform: rotate(0deg);
+}
+
+#explorer .parent .empty {
+    padding: 3px 0 5px 10px;
+    color: var(--color-3);
+    text-shadow: 0 0 1px rgba(0, 0, 0, .5);
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#navigation .container .run_comm {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 25px;
+    width: 100%;
+    padding: 2px 5px;
+    background: var(--color-0);
+    border-right: 1px solid var(--color-1);
+}
+
+#navigation .container .run_comm input {
+    width: 100%;
+    height: 20px;
+    padding: 2px 5px 2px 30px;
+    margin: 0 0 0 -25px;
+    border-width: 0;
+    background: transparent;
+    color: var(--color-8);
+    line-height: 14px;
+}
+
+#navigation .container .run_comm input:focus,
+#navigation .container .run_comm input:active {
+    outline: none;
+}
+
+#run_list .cont,
+#run_list .cont li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#run_list .cont li.item {
+    position: relative;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
+    border-bottom: 1px solid var(--color-2);
+    transition: background .1s linear;
+}
+
+#run_list .cont li.item button {
+    margin-top: 3px;
+    border-width: 0;
+    background: transparent;
+    color: var(--color-8);
+    font-size: 10px;
+    cursor: pointer;
+    transition: background .1s linear;
+}
+
+#run_list .cont li.item:hover {
+    background-color: var(--color-0);
+}
+
+#run_list .cont li.item button.run {
+    padding: 2px 30px 2px 5px;
+    border-left: 2px solid #4c875466;
+    width: 100%;
+    text-align: left;
+}
+
+#run_list .cont li.item button.remove {
+    position: absolute;
+    top: 1px;
+    right: 3px;
+    transition: color .1s linear;
+}
+
+#run_list .cont li.item button.remove:hover {
+    color: #dc3545;
+}
+
+#run_list .cont li.empty {
+    padding: 15px;
+    color: var(--color-3);
+    text-shadow: 0 0 1px rgba(0, 0, 0, .5);
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#code-space {
+    position: relative;
+    overflow-x: hidden;
+    flex: 1;
+    height: 100%;
+    width: 100%;
+}
+
+#code-space .tabs-head,
+#code-space .tabs-body {
+    display: block;
+    clear: both;
+    float: none;
+}
+
+#code-space .tabs-head {
+    height: 30px;
+    padding-left: 10px;
+    overflow: hidden;
+}
+
+#code-space .tabs-head .item {
+    position: relative;
+    display: block;
+    float: left;
+    overflow: hidden;
+    width: auto;
+    height: 30px;
+    padding: 7px 30px 5px 15px;
+    margin: 0 1px;
+    line-height: 20px;
+    white-space: nowrap;
+    background: var(--color-1);
+    cursor: pointer;
+}
+
+#code-space .tabs-head .item.active {
+    background-color: var(--color-0);
+}
+
+#code-space .tabs-head .item .close {
+    position: absolute;
+    right: 8px;
+    top: 4px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border-width: 0;
+    color: var(--color-3);
+    font-size: 20px;
+    font-weight: bold;
+    transform: rotate(-45deg);
+    transition: color .1s linear;
+    cursor: pointer;
+    transition: color .1s linear;
+}
+
+#code-space .tabs-head .item .close:hover {
+    color: #dc3545;
+}
+
+#code-space .tabs-body {
+    width: 100%;
+    height: calc(100% - 30px);
+    background-color: var(--color-0);
+}
+
+#code-space .tabs-body .item {
+    display: none;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#code-space .tabs-body .item.active {
+    display: block;
+}
+
+#editor-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    /* overflow: hidden auto; */
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#console {
+    display: none;
+    position: absolute;
+    z-index: 3;
+    bottom: 0;
+    left: 0;
+    overflow: hidden auto;
+    padding: 15px 15px 30px;
+    width: 100%;
+    height: 400px;
+    background-color: var(--color-0);
+    border-top: 5px solid var(--color-3);
+    white-space: pre;
+}
+
+#console.active {
+    display: block;
+}
+
+@media (max-height: 500px) {
+    #console {
+        height: 100%;
+    }
+}
+
+#console .open_file.click:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+
+/***************************************************
+ *
+ ***************************************************/
+
+#footer {
+    display: flex;
+    position: fixed;
+    justify-content: space-between;
+    align-items: center;
+    left: 0;
+    bottom: 0;
+    z-index: 2;
+    height: 20px;
+    width: 100%;
+    background-color: var(--color-3);
+}
+
+#footer .status {
+    padding: 4px 5px;
+}
+
+#footer button.console {
+    flex: 0 1 auto;
+    width: auto;
+    height: 100%;
+    padding: 0px 10px;
+    border: 1px solid var(--color-4);
+    border-width: 0 1px;
+    background-color: transparent;
+    line-height: var(--footer-height);
+    white-space: nowrap;
+    color: var(--color-8);
+    cursor: pointer;
+    transition: background .1s linear;
+}
+
+#footer button.console:hover {
+    background-color: var(--color-2);
+}
+
+#footer button.console.active {
+    background-color: var(--color-0);
+}
+
+#footer button.console>* {
+    vertical-align: top;
+}
+
+#footer button.console .icon-svg {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+#footer button.console svg {
+    fill: var(--color-8);
+    transform: rotate(180deg);
+    transform-origin: 50% 50%;
+}
+
+#footer button.console.active svg {
+    transform: rotate(0deg);
+}
