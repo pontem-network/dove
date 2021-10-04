@@ -1,5 +1,6 @@
 import './lib.js';
 import * as cons from './console.js';
+import * as localapi from './localapi.js';
 
 const TEMPLATE_TAB = `
     <div class="item" data-id="{{id}}">
@@ -86,18 +87,13 @@ function create_empty() {
         },
         /// loss of focus
         onblur: async function() {
-            if (window.editorEvents !== undefined && window.editorEvents !== null) {
-                let events = window.editorEvents;
-                window.editorEvents = null;
-                let errors = await wasm.flush(events);
-                console.warn(errors);
-            }
+            // ...
         },
         /// close the tab
         destroy: function() {
             this.onblur();
             // distroy editor
-            this.editor.monaco.dispose();
+            if (this.editor.monaco) { this.editor.monaco.dispose(); }
             this.editor.block.remove();
             this.tab.remove();
         }
@@ -143,23 +139,23 @@ function create_in_doom_tab_and_editor(object) {
 }
 
 function create_editor(object, line, char) {
-    object.editor.monaco = monaco.editor
-        .create(object.editor.block, {
-            value: null,
-            language: null,
-            theme: "vs-dark",
-            automaticLayout: true
-        });
-    // loss of editor focus
-    object.editor.monaco
-        .onDidBlurEditorText(_ => {
-            object.onblur();
-        });
-
     // load content and type
     cons.status("loading a file: " + object.file_name);
-    wasm.get_file(object.project_id, object.file_id)
+    localapi
+        .get_file(object.project_id, object.file_id)
         .then(file => {
+            object.editor.monaco = monaco.editor
+                .create(object.editor.block, {
+                    value: null,
+                    language: null,
+                    theme: "vs-dark",
+                    automaticLayout: true
+                });
+            // loss of editor focus
+            object.editor.monaco
+                .onDidBlurEditorText(_ => {
+                    object.onblur();
+                });
             object.editor.monaco.setValue(file.content);
             monaco.editor.setModelLanguage(object.editor.monaco.getModel(), file.tp);
             monaco
@@ -169,32 +165,13 @@ function create_editor(object, line, char) {
             object.editor.monaco
                 .getModel()
                 .onDidChangeContent(async(event) => {
-                    if (!event.isFlush) {
-                        if (window.editorEvents === undefined || window.editorEvents === null) {
-                            window.editorEvents = new Map();
-                        }
-                        let project = window.editorEvents[object.project_id];
-                        if (project === undefined || project === null) {
-                            project = new Map();
-                            window.editorEvents[object.project_id] = project;
-                        }
-                        let fileDiff = project[object.file_id];
-                        if (fileDiff === undefined || fileDiff === null) {
-                            fileDiff = [];
-                            project[object.file_id] = fileDiff;
-                        }
-
-                        event.changes.forEach(function(item, index, array) {
-                            fileDiff.push({
-                                rangeOffset: item.rangeOffset,
-                                rangeLength: item.rangeLength,
-                                text: item.text,
-                            });
-                        });
-                    }
+                    file.content = object.editor.monaco.getValue();
+                    localapi.save_file(file);
                 });
             object.set_position(line, char);
             cons.status("Done");
+        }, error => {
+            console.warn(error)
         });
 
     return object.set_active();

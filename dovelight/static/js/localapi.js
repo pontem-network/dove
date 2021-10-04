@@ -1,6 +1,6 @@
 async function dbconnect() {
     return new Promise((resolve, reject) => {
-        let request = indexedDB.open("dovecote", 3);
+        let request = indexedDB.open("dovecote", 9);
         request.onerror = function(event) {
             reject("failed to create a database. Code: " + event.target.errorCode);
         };
@@ -18,6 +18,11 @@ async function dbconnect() {
             if (db.objectStoreNames.contains('tree')) { db.deleteObjectStore("tree"); }
             let tbtree = db.createObjectStore("tree", { keyPath: "project_id" });
             tbtree.createIndex("data", "data", { unique: false });
+            // files
+            if (db.objectStoreNames.contains('files')) { db.deleteObjectStore("files"); }
+            let tbfiles = db.createObjectStore("files", { keyPath: "file_id" });
+            tbfiles.createIndex("project_id", "project_id", { unique: false });
+            tbfiles.createIndex("content", "content", { unique: false });
         }
     });
 }
@@ -61,16 +66,24 @@ export async function create_project(project_name, dialect) {
     return dbconnect()
         .then((db) => {
             return new Promise((resolve, reject) => {
-                let request = db.transaction("projects", 'readwrite')
+                let project_id = Math.floor(Math.random() * 100) + "_" + new Date().getTime(),
+                    request = db.transaction("projects", 'readwrite')
                     .objectStore("projects")
                     .add({
-                        id: Math.floor(Math.random() * 100) + "_" + new Date().getTime(),
+                        id: project_id,
                         name: project_name,
                         dialect: dialect
                     });
-                request.onsuccess = function(event) {
-                    let row = event.target.result;
-                    resolve()
+                request.onsuccess = function(_) {
+                    resolve(db_project_tree_save(project_id, {
+                        Dir: [
+                            project_name, [
+                                { Dir: ['modules', []] },
+                                { Dir: ['scripts', []] },
+                                { Dir: ['tests', []] },
+                            ]
+                        ]
+                    }));
                 };
                 request.onerror = function(event) {
                     reject(event);
@@ -79,14 +92,26 @@ export async function create_project(project_name, dialect) {
         });
 }
 
-export async function remove_project(id) {
-    return dbconnect()
-        .then((db) => {
+export async function remove_project(project_id) {
+    dbconnect()
+        .then(db => {
+            let files = db
+                .transaction("files", "readwrite")
+                .objectStore("files");
+            files.index("project_id")
+                .getAll(project_id)
+                .onsuccess = e => {
+                    for (const result of e.target.result) {
+                        files.delete(result.file_id);
+                    }
+                };
+
             return new Promise((resolve, reject) => {
-                let request = db.transaction(["projects"], "readwrite").objectStore("projects").delete(id);
-                request.onsuccess = function(event) {
-                    let row = event.target.result;
-                    resolve()
+                let request = db.transaction("projects", "readwrite")
+                    .objectStore("projects")
+                    .delete(project_id);
+                request.onsuccess = function(_) {
+                    resolve(true);
                 };
                 request.onerror = function(event) {
                     reject(event);
@@ -120,7 +145,31 @@ export async function project_tree(project_id) {
         })
 }
 
-async function project_tree_save(project_id, data) {
+async function db_project_tree_get_file_name(project_id, file_id) {
+    function find(tree) {
+        if (tree.Dir) {
+            for (let index in tree.Dir[1]) {
+                let result = find(tree.Dir[1][index]);
+                if (result !== null) {
+                    return result;
+                }
+            }
+        } else if (tree.File) {
+            if (tree.File[0] && tree.File[0] == file_id) {
+                return tree.File[1];
+            }
+        }
+        return null;
+    }
+    return project_tree(project_id)
+        .then(tree => {
+            return new Promise((resolve, reject) => {
+                resolve(find(tree));
+            });
+        });
+}
+
+async function db_project_tree_save(project_id, data) {
     return dbconnect().then(db => {
         return new Promise((resolve, reject) => {
             let row = {
@@ -141,7 +190,7 @@ async function project_tree_save(project_id, data) {
     });
 }
 
-async function project_tree_add(project_id, path, object) {
+async function db_project_tree_add(project_id, path, object) {
     return project_tree(project_id)
         .then(list => {
             let cursor = list,
@@ -171,21 +220,26 @@ async function project_tree_add(project_id, path, object) {
             }
 
             cursor.Dir[1].push(object);
-            return project_tree_save(project_id, list);
+            return db_project_tree_save(project_id, list);
         });
 }
 
 export async function create_file(project_id, path, name) {
-    return project_tree_add(project_id, path, {
+    let file_id = Math.floor(Math.random() * 100) + "_" + new Date().getTime();
+    return db_project_tree_add(project_id, path, {
         File: [
-            Math.floor(Math.random() * 100) + "_" + new Date().getTime(),
+            file_id,
             name
         ]
-    });
+    }).then(save_file({
+        file_id: file_id,
+        project_id: project_id,
+        content: ""
+    }));
 }
 
 export async function create_directory(project_id, path, name) {
-    return project_tree_add(project_id, path, {
+    return db_project_tree_add(project_id, path, {
         Dir: [
             name, []
         ]
@@ -221,7 +275,7 @@ export async function rename_file(project_id, file_id, new_name) {
                     reject("A file with that name already exists");
                 }
                 file.File[1] = new_name;
-                resolve(project_tree_save(project_id, list));
+                resolve(db_project_tree_save(project_id, list));
             });
         });
 }
@@ -262,7 +316,7 @@ export async function rename_directory(project_id, path, old_name, new_name) {
                     reject("A file with that name already exists");
                 }
                 need_dir.Dir[0] = new_name;
-                resolve(project_tree_save(project_id, list));
+                resolve(db_project_tree_save(project_id, list));
             });
         });
 }
@@ -275,8 +329,8 @@ export async function remove_file(project_id, file_id) {
                     for (let index in object.Dir[1]) {
                         if (object.Dir[1][index].File) {
                             if (object.Dir[1][index].File[0] === file_id) {
+                                db_remove_files(object.Dir[1][index]);
                                 object.Dir[1].splice(index, 1);
-                                // @todo Удалить содержимое файла
                                 return true;
                             }
                             continue;
@@ -290,7 +344,7 @@ export async function remove_file(project_id, file_id) {
                 return false;
             };
             remove(list, file_id);
-            return project_tree_save(project_id, list);
+            return db_project_tree_save(project_id, list);
         });
 }
 
@@ -304,7 +358,7 @@ export async function remove_directory(project_id, path) {
                     for (let index in object.Dir[1]) {
                         if (object.Dir[1][index].Dir && object.Dir[1][index].Dir[0] == name) {
                             if (!path_array.length) {
-                                // @todo Удалить файлы из базы
+                                db_remove_files(object.Dir[1][index]);
                                 object.Dir[1].splice(index, 1);
                                 return true;
                             }
@@ -315,6 +369,68 @@ export async function remove_directory(project_id, path) {
                 return false;
             };
             remove(list, path.split('/'));
-            return project_tree_save(project_id, list);
+            return db_project_tree_save(project_id, list);
+        });
+}
+
+export async function get_file(project_id, file_id) {
+    return dbconnect()
+        .then(db => {
+            return new Promise((resolve, reject) => {
+                    let request = db.transaction("files")
+                        .objectStore("files")
+                        .get(file_id);
+                    request.onsuccess = function(event) {
+                        return event.target.result ? resolve(event.target.result) : reject("not found");
+                    };
+                    request.onerror = function(event) {
+                        reject(event);
+                    }
+                })
+                .then(row => {
+                    return db_project_tree_get_file_name(project_id, file_id)
+                        .then(name => {
+                            return new Promise((resolve, reject) => {
+                                row.name = name;
+                                row.tp = name.replace(/^.*\.([^\.]+)$/, "$1");
+                                resolve(row);
+                            });
+                        })
+                });
+        });
+}
+
+export async function save_file(row) {
+    return dbconnect().then(db => {
+        return new Promise((resolve, reject) => {
+            let request = db
+                .transaction("files", 'readwrite')
+                .objectStore("files")
+                .put(row);
+            request.onsuccess = function(e) {
+                resolve(true)
+            };
+            request.onerror = function(e) {
+                reject(e)
+            };
+        })
+    });
+}
+
+async function db_remove_files(object) {
+    function remove(tb, tree) {
+        if (tree.Dir) {
+            for (let index in tree.Dir[1]) {
+                remove(tb, tree.Dir[1][index])
+            }
+        } else if (tree.File) {
+            tb.delete(tree.File[0]);
+        }
+    }
+    dbconnect()
+        .then(db => {
+            let tb = db.transaction("files", "readwrite")
+                .objectStore("files");
+            remove(tb, object);
         });
 }

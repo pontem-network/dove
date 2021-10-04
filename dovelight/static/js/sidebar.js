@@ -220,7 +220,8 @@ function on_click_project(e) {
 function on_click_project_remove(e) {
     e.stopPropagation();
     cons.status("The project is being deleted");
-    localapi.remove_project(this.parentNode.attr("data-id"))
+    localapi
+        .remove_project(this.parentNode.attr("data-id"))
         .then(_ => {
             project_load();
         }, error => {
@@ -423,7 +424,7 @@ function on_click_explorer_dir_add(e) {
     explorer_entering_name(main_block)
         .then(
             name => {
-                if (name.match(/(\.move|\.toml)$/)) {
+                if (name.match(/\.move$/)) {
                     cons.status("Creating a new file");
                     return localapi.create_file(id, path, name);
                 } else {
@@ -525,7 +526,6 @@ function on_click_explorer_file_rename(e) {
                     window.open_project.close_file(old_file_id);
                 }
                 main_block
-                    .attr("data-id", new_file_id)
                     .attr("data-name", new_name_file)
                     .attr("path", main_block.attr("path").split("/").slice(0, -1).join("/") + "/" + new_name_file);
                 main_block.querySelector(".name span").innerHTML = new_name_file;
@@ -813,9 +813,14 @@ function inic_header_buttons() {
 setTimeout(() => {
     // document.querySelector("#projects-container button.add_project").click();
     // document.querySelector("#projects-container input").value = "p_" + Math.floor(Math.random() * 1000000);
-    document.querySelector('.project[data-id="46_1632992999791"] button').click();
+    document.querySelector('.project[data-id="11_1633357641796"] button').click();
 
     setTimeout(() => {
+        document.querySelectorAll('.file')[0].click();
+        // localapi.get_file(window.open_project.id, "74_1633093532346");
+
+        // document.querySelector('.file[data-id="74_1633093532346"]').click();
+
         // localapi.remove_directory(window.open_project.id, "a1/m_2renamed/1/2")
         // localapi.remove_file(window.open_project.id, "90_1633014766535");
         // document.querySelectorAll("#explorer button.remove")[0].click();
