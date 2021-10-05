@@ -222,8 +222,9 @@ function on_click_project_remove(e) {
     cons.status("The project is being deleted");
     localapi
         .remove_project(this.parentNode.attr("data-id"))
+        .then(project_load)
         .then(_ => {
-            project_load();
+            cons.status("Done");
         }, error => {
             cons.status("Error");
             console.warn(error);
@@ -250,9 +251,10 @@ function on_add_project(e) {
                 return localapi.create_project(project_name, dialect);
             }
         )
+        .then(project_load)
         .then(
             _ => {
-                project_load();
+                cons.status("Done");
             },
             error => {
                 cons.status("Error");
@@ -295,12 +297,12 @@ async function explorer_set(list) {
     let button = explorer
         .querySelector(".dir .actions button.rename");
     if (button) {
-        button.remove()
+        button.remove();
     }
     button = explorer
         .querySelector(".dir .actions button.remove");
     if (button) {
-        button.remove()
+        button.remove();
     }
 
     // dir click
@@ -311,24 +313,28 @@ async function explorer_set(list) {
                 .addEventListener('click', on_click_explorer_dir);
             dir.querySelector(".dir-name .actions button.add:not(.i)")
                 .addEventListener("click", on_click_explorer_dir_add);
-            dir.querySelectorAll(".dir-name .actions button.rename:not(.i)").forEach(el => {
-                el.addEventListener("click", on_click_explorer_dir_rename);
-            });
-            dir.querySelectorAll(".dir-name .actions button.remove:not(.i)").forEach(el => {
-                el.addEventListener("click", on_click_explorer_dir_remove);
-            });
+            dir.querySelectorAll(".dir-name .actions button.rename:not(.i)")
+                .forEach(el => {
+                    el.addEventListener("click", on_click_explorer_dir_rename);
+                });
+            dir.querySelectorAll(".dir-name .actions button.remove:not(.i)")
+                .forEach(el => {
+                    el.addEventListener("click", on_click_explorer_dir_remove);
+                });
         });
     // file click
     explorer
         .querySelectorAll("li.file:not(.i)")
         .forEach(file => {
             file.addClass("i").addEventListener('click', on_click_explorer_file);
-            file.querySelectorAll("button.rename:not(.i)").forEach(el => {
-                el.addEventListener("click", on_click_explorer_file_rename);
-            });
-            file.querySelectorAll("button.remove:not(.i)").forEach(el => {
-                el.addEventListener("click", on_click_explorer_file_remove);
-            })
+            file.querySelectorAll("button.rename:not(.i)")
+                .forEach(el => {
+                    el.addEventListener("click", on_click_explorer_file_rename);
+                });
+            file.querySelectorAll("button.remove:not(.i)")
+                .forEach(el => {
+                    el.addEventListener("click", on_click_explorer_file_remove);
+                })
         });
 
     // open explorer panel
@@ -399,7 +405,6 @@ function explorer_add_file(parent, path, id, name) {
 
 function on_click_explorer_dir(e) {
     e.stopPropagation();
-
     this.toggleClass("open");
     return false;
 }
@@ -517,11 +522,10 @@ function on_click_explorer_file_rename(e) {
                 new_name_file = new_name;
                 cons.status("Changing the file name");
                 return localapi.rename_file(project_id, old_file_id, new_name);
-            },
-            error => { cons.status("Error: " + error); }
+            }
         )
         .then(
-            new_file_id => {
+            _ => {
                 if (window.open_project.files[old_file_id]) {
                     window.open_project.close_file(old_file_id);
                 }
@@ -808,28 +812,3 @@ function inic_header_buttons() {
         }
     });
 }
-
-
-setTimeout(() => {
-    // document.querySelector("#projects-container button.add_project").click();
-    // document.querySelector("#projects-container input").value = "p_" + Math.floor(Math.random() * 1000000);
-    document.querySelector('.project[data-id="11_1633357641796"] button').click();
-
-    setTimeout(() => {
-        document.querySelectorAll('.file')[0].click();
-        // localapi.get_file(window.open_project.id, "74_1633093532346");
-
-        // document.querySelector('.file[data-id="74_1633093532346"]').click();
-
-        // localapi.remove_directory(window.open_project.id, "a1/m_2renamed/1/2")
-        // localapi.remove_file(window.open_project.id, "90_1633014766535");
-        // document.querySelectorAll("#explorer button.remove")[0].click();
-        // localapi.rename_file(window.open_project.id, "3_1633067129351", "test_2.move")
-        //     .then(result => {
-        //         console.log(result);
-        //     }, error => {
-        //         console.log(error);
-        //     });
-        // localapi.rename_directory(window.open_project.id, "./a1", "demo", "demo_renamed");
-    }, 50);
-}, 50);

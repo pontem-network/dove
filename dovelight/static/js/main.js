@@ -1,10 +1,10 @@
-// import init, { build, make_abi, module_abi } from '../../pkg/dovelight.js';
+import init, { build, make_abi, module_abi } from '../../pkg/dovelight.js';
 import * as sidebar from './sidebar.js';
 
 async function run() {
     sidebar.init();
 
-    // await init();
+    await init();
 
     // let sources = new Map();
     // let source_map = { source_map: sources };

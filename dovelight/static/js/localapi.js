@@ -1,3 +1,5 @@
+import init, { build, make_abi, module_abi } from '../../pkg/dovelight.js';
+
 async function dbconnect() {
     return new Promise((resolve, reject) => {
         let request = indexedDB.open("dovecote", 9);
@@ -432,5 +434,70 @@ async function db_remove_files(object) {
             let tb = db.transaction("files", "readwrite")
                 .objectStore("files");
             remove(tb, object);
+        });
+}
+
+async function project_modules_and_scripts(project_id) {
+    async function files(cursor, path) {
+        if (cursor.Dir) {
+            if (!cursor.Dir[1] || !Array.isArray(cursor.Dir[1])) {
+                return [];
+            }
+            path = path + "/" + cursor.Dir[0];
+            let answer = [];
+            for (let index in cursor.Dir[1]) {
+                answer = answer.concat(await files(cursor.Dir[1][index], path));
+            }
+            return answer;
+        } else if (cursor.File) {
+            let file = await get_file(project_id, cursor.File[0]);
+            file.path = path + "/" + file.name;
+            return [file];
+        }
+        return [];
+    }
+
+    return project_tree(project_id)
+        .then(async tree => {
+            let scripts = [],
+                modules = [];
+            if (tree.Dir && tree.Dir[1] && Array.isArray(tree.Dir[1])) {
+                let module_cursor = null,
+                    script_cursor = null;
+
+                for (let index in tree.Dir[1]) {
+                    if (tree.Dir[1][index].Dir && tree.Dir[1][index].Dir[0]) {
+                        if (tree.Dir[1][index].Dir[0] == 'modules') {
+                            module_cursor = tree.Dir[1][index];
+                        } else if (tree.Dir[1][index].Dir[0] == 'scripts') {
+                            script_cursor = tree.Dir[1][index];
+                        }
+                    }
+                }
+                if (module_cursor) {
+                    modules = files(module_cursor, ".");
+                }
+                if (script_cursor) {
+                    scripts = files(script_cursor, ".");
+                }
+                modules = (await modules).reduce((a, v) => ({...a, [v.path]: v }), {});
+                scripts = (await scripts).reduce((a, v) => ({...a, [v.path]: v }), {});
+            }
+            return [modules, scripts]
+        });
+}
+
+export async function project_build(project_id) {
+    return project_modules_and_scripts(project_id)
+        .then(files => {
+            let [modules, scripts] = files,
+            all = {...modules, ...scripts },
+                sources = new Map(),
+                source_map = { source_map: sources };
+            Object.keys(all).forEach(key => {
+                sources[key] = all[key].content;
+            });
+
+            return build("http://localhost:9933/", source_map, "pont", "0x1");
         });
 }

@@ -1,5 +1,6 @@
 import * as editor from './editor.js';
 import * as cons from './console.js';
+import * as localapi from './localapi.js';
 
 /// Create a project object. 
 /// It stores information about the project, id, open files
@@ -76,19 +77,18 @@ export async function create(id) {
                 return this;
             }
             cons.status("Building a project..");
-            wasm.project_build(this.id)
+            let start = Date.now();
+
+            localapi.project_build(this.id)
                 .then(response => {
-                    if (response.code == 0) {
-                        cons.status("Done")
-                        cons.output(response.content);
-                    } else {
-                        cons.status("Error")
-                        cons.output(response.content);
-                    }
+                    cons.status("Done");
+                    cons.output("The project was successfully built\n" +
+                        ((Date.now() - start) / 1000) + "s")
+                    console.log();
                 })
                 .catch(err => {
                     cons.status("error when building");
-                    console.warn(err);
+                    cons.output(err);
                 });
             return this;
         },
