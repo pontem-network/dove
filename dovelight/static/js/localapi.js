@@ -475,10 +475,10 @@ async function project_modules_and_scripts(project_id) {
                     }
                 }
                 if (module_cursor) {
-                    modules = files(module_cursor, ".");
+                    modules = files(module_cursor, tree.Dir[0]);
                 }
                 if (script_cursor) {
-                    scripts = files(script_cursor, ".");
+                    scripts = files(script_cursor, tree.Dir[0]);
                 }
                 modules = (await modules).reduce((a, v) => ({...a, [v.path]: v }), {});
                 scripts = (await scripts).reduce((a, v) => ({...a, [v.path]: v }), {});

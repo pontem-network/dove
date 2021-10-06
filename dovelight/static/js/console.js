@@ -30,7 +30,7 @@ export async function output(text) {
         console_block.addClass("active");
         document.querySelector("#footer .console").addClass("active");
     }
-    console.log(text);
+    text = output_preproc(text);
 
     let ansi_up = new window.AnsiUp;
     console_block.innerHTML = ansi_up.ansi_to_html(text)
@@ -41,6 +41,37 @@ export async function output(text) {
         .replaceAll("&quot;", '"');
     inic_output();
     console_block.focus();
+}
+
+function output_preproc(output) {
+    let find, list = [],
+        regex = new RegExp(/(?<source>(?<path>(\w+\/?)+\.move)(?<position>(\:\d+)+))/, 'g');
+
+    while ((find = regex.exec(output)) !== null) {
+        find = find.groups;
+        let path = find.path,
+            [_, line, char] = find.position.split(':'),
+            file_id = document.querySelector('#explorer .file[path="' + path + '"]').attr("data-id");
+
+        list.push({
+            source: find.source,
+            path,
+            file_id,
+            line,
+            char
+        });
+    }
+    list.filter((value, _, self) => {
+            return self.find(el => el.source === value.source) === value;
+        })
+        .forEach(value => {
+            output = output.replaceAll(
+                value.source,
+                '[path path="' + value.path + '" data-id="' + value.file_id + '" line="' + value.line + '" char="' + value.char + '"]' + value.source + "[/path]"
+            );
+        });
+
+    return output;
 }
 
 function inic_output() {

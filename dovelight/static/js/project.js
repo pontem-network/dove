@@ -82,9 +82,9 @@ export async function create(id) {
             localapi.project_build(this.id)
                 .then(response => {
                     cons.status("Done");
-                    cons.output("The project was successfully built\n" +
+                    cons.output("The project was successfully built: " +
                         ((Date.now() - start) / 1000) + "s")
-                    console.log();
+                    console.log(response);
                 })
                 .catch(err => {
                     cons.status("error when building");
