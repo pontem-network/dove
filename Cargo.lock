@@ -15,7 +15,7 @@ dependencies = [
 [[package]]
 name = "abigen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -163,8 +163,8 @@ version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ca8ce00b267af8ccebbd647de0d61e0674b6e61185cc7a592ff88772bed655"
 dependencies = [
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -348,8 +348,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ad26f77093333e0e7c6ffe54ebe3582d908a104e448723eec6d43d08b07143fb"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -359,8 +359,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b95aceadaf327f18f0df5962fedc1bde2f870566a0b9f65c89508a3b1f79334c"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -559,8 +559,8 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d0864d84b8e07b145449be9a8537db86bf9de5ce03b913214694643b4743502"
 dependencies = [
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -699,8 +699,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44318e776df68115a881de9a8fd1b9e53368d7a4a5ce4cc48517da3393233a5e"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -929,7 +929,7 @@ dependencies = [
 [[package]]
 name = "boogie-backend"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -943,7 +943,7 @@ dependencies = [
  "move-binary-format",
  "move-core-types",
  "move-model",
- "num",
+ "num 0.4.0",
  "once_cell",
  "pretty",
  "rand 0.8.4",
@@ -957,7 +957,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "diem-workspace-hack",
  "mirai-annotations",
@@ -1047,7 +1047,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "borrow-graph",
  "bytecode-verifier",
@@ -1061,7 +1061,7 @@ dependencies = [
  "move-binary-format",
  "move-core-types",
  "move-model",
- "num",
+ "num 0.4.0",
  "once_cell",
  "petgraph",
  "serde",
@@ -1071,7 +1071,7 @@ dependencies = [
 [[package]]
 name = "bytecode-interpreter"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode",
@@ -1081,7 +1081,7 @@ dependencies = [
  "move-core-types",
  "move-model",
  "move-vm-runtime",
- "num",
+ "num 0.4.0",
  "serde",
  "sha2 0.9.8",
  "structopt",
@@ -1090,7 +1090,7 @@ dependencies = [
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1106,7 +1106,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -1116,12 +1116,6 @@ dependencies = [
  "move-core-types",
  "petgraph",
 ]
-
-[[package]]
-name = "bytecount"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72feb31ffc86498dacdbd0fcebb56138e7177a8cc5cea4516031d15ae85a742e"
 
 [[package]]
 name = "byteorder"
@@ -1171,9 +1165,9 @@ checksum = "631ae5198c9be5e753e5cc215e1bd73c2b466a3565173db433f52bb9d3e66dba"
 
 [[package]]
 name = "cc"
-version = "1.0.70"
+version = "1.0.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d26a6ce4b6a484fa3edb70f7efa6fc430fd2b87285fe8b84304fd0936faa0dc0"
+checksum = "79c2681d6594606957bbb8631c4b90a7fcaaa72cdb714743a437b156d6a7eedd"
 dependencies = [
  "jobserver",
 ]
@@ -1265,8 +1259,8 @@ dependencies = [
  "heck",
  "proc-macro-error",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -1541,8 +1535,8 @@ version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ccc0a48a9b826acdf4028595adc9db92caea352f7af011a3034acd172a52a0aa"
 dependencies = [
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -1640,9 +1634,9 @@ checksum = "40eebddd2156ce1bb37b20bbe5151340a31828b1f2d22ba4141f3531710e38df"
 dependencies = [
  "convert_case",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
+ "quote 1.0.10",
  "rustc_version 0.3.3",
- "syn 1.0.77",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -1654,7 +1648,7 @@ checksum = "850878694b7933ca4c9569d30a34b55031b9b139ee1fc7b94a527c4ef960d690"
 [[package]]
 name = "diem-crypto"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1683,17 +1677,17 @@ dependencies = [
 [[package]]
 name = "diem-crypto-derive"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
 name = "diem-framework-releases"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1708,7 +1702,7 @@ dependencies = [
 [[package]]
 name = "diem-infallible"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "diem-workspace-hack",
 ]
@@ -1716,18 +1710,18 @@ dependencies = [
 [[package]]
 name = "diem-log-derive"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "diem-workspace-hack",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
 name = "diem-logger"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "backtrace",
  "chrono",
@@ -1745,7 +1739,7 @@ dependencies = [
 [[package]]
 name = "diem-state-view"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "diem-crypto",
@@ -1756,7 +1750,7 @@ dependencies = [
 [[package]]
 name = "diem-types"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1782,7 +1776,7 @@ dependencies = [
 [[package]]
 name = "diem-workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "Inflector",
  "anyhow",
@@ -1825,14 +1819,14 @@ dependencies = [
  "rand_core 0.5.1",
  "regex",
  "regex-syntax",
- "reqwest 0.11.4",
+ "reqwest 0.11.5",
  "rusty-fork",
  "serde",
  "serde_json",
  "standback",
  "subtle 2.4.1",
  "syn 0.15.44",
- "syn 1.0.77",
+ "syn 1.0.80",
  "tiny-keccak",
  "tokio 1.12.0",
  "tokio-util 0.6.8",
@@ -1869,7 +1863,7 @@ dependencies = [
 [[package]]
 name = "disassembler"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1892,7 +1886,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "docgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode",
@@ -1902,7 +1896,7 @@ dependencies = [
  "itertools 0.10.1",
  "log",
  "move-model",
- "num",
+ "num 0.4.0",
  "once_cell",
  "regex",
  "serde",
@@ -1983,7 +1977,9 @@ dependencies = [
  "once_cell",
  "parking_lot 0.11.2",
  "proto",
- "xi-rope",
+ "rip_str",
+ "seshat-unicode 0.0.14",
+ "unicode-segmentation",
 ]
 
 [[package]]
@@ -2009,8 +2005,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "558e40ea573c374cf53507fd240b7ee2f5477df7cfebdb97323ec61c719399c5"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -2081,8 +2077,8 @@ checksum = "7c5f0096a91d210159eceb2ff5e1c4da18388a170e1e3ce948aac9c8fdbbf595"
 dependencies = [
  "heck",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -2101,8 +2097,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e94aa31f7c0dc764f57896dc615ddd76fc13b0d5dca7eb6cc5e018a5a09ec06"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -2149,7 +2145,7 @@ dependencies = [
 [[package]]
 name = "errmapgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2194,8 +2190,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa4da3c766cd7a0db8242e326e9e4e081edd567072893ed320008189715366a4"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
  "synstructure",
 ]
 
@@ -2216,9 +2212,9 @@ dependencies = [
 
 [[package]]
 name = "fiat-crypto"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0676d4691c338f9cf51df2d348816e7d8b3766ea0c777ad31f5189fd84d7850"
+checksum = "231a1fac5c14b525bdc7889c2ffc242905ef497af1cff28dd7c5a959fe56e1bd"
 
 [[package]]
 name = "fixed-hash"
@@ -2358,8 +2354,8 @@ checksum = "3c107da590c5cf22f9bb96193812256e59c60f73786a72429660142d9000c07b"
 dependencies = [
  "frame-support-procedural-tools",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -2371,8 +2367,8 @@ dependencies = [
  "frame-support-procedural-tools-derive",
  "proc-macro-crate",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -2382,8 +2378,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66fb72ae75d457bfcb457e1098cf18134967e9069ecc4bba2c77416924b44843"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -2510,8 +2506,8 @@ dependencies = [
  "autocfg 1.0.1",
  "proc-macro-hack",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -2628,9 +2624,9 @@ version = "0.1.0"
 
 [[package]]
 name = "git2"
-version = "0.13.22"
+version = "0.13.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c1cbbfc9a1996c6af82c2b4caf828d2c653af4fcdbb0e5674cc966eee5a4197"
+checksum = "2a8057932925d3a9d9e4434ea016570d37420ddb1ceed45a174d577f24ed6700"
 dependencies = [
  "bitflags",
  "libc",
@@ -2706,9 +2702,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.4"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7f3675cfef6a30c8031cf9e6493ebdc3bb3272a3fea3923c4210d1830e6a472"
+checksum = "6c06815895acec637cd6ed6e9662c935b866d20a106f8361892893a7d9234964"
 dependencies = [
  "bytes 1.1.0",
  "fnv",
@@ -2992,7 +2988,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "h2 0.3.4",
+ "h2 0.3.6",
  "http",
  "http-body 0.4.3",
  "httparse",
@@ -3111,8 +3107,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ef5550a42e3740a0e71f909d4c861056a284060af885ae7aa6242820f920d9d"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -3135,8 +3131,8 @@ dependencies = [
  "anyhow",
  "proc-macro-hack",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -3220,7 +3216,7 @@ checksum = "68f2d64f2edebec4ce84ad108148e67e1064789bee435edc5b60ad398714a3a9"
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -3239,7 +3235,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -3346,8 +3342,8 @@ checksum = "99a847f9ec7bb52149b2786a17c9cb260d6effc6b8eeb8c16b343a487a7563a3"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -3455,15 +3451,15 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "libc"
-version = "0.2.102"
+version = "0.2.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2a5ac8f984bfcf3a823267e5fde638acc3325f6496633a5da6bb6eb2171e103"
+checksum = "dd8f7255a17a627354f321ef0055d63b898c6fb27eff628af4d1b66b7331edf6"
 
 [[package]]
 name = "libgit2-sys"
-version = "0.12.23+1.2.0"
+version = "0.12.24+1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29730a445bae719db3107078b46808cc45a5b7a6bae3f31272923af969453356"
+checksum = "ddbd6021eef06fb289a8f54b3c2acfdd85ff2a585dfbb24b8576325373d2152c"
 dependencies = [
  "cc",
  "libc",
@@ -3540,8 +3536,8 @@ version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f753d9324cd3ec14bf04b8a8cd0d269c87f294153d6bf2a84497a63a5ad22213"
 dependencies = [
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -3888,7 +3884,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "move-binary-format"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "diem-workspace-hack",
@@ -3902,7 +3898,7 @@ dependencies = [
 [[package]]
 name = "move-cli"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3939,7 +3935,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.2"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3956,7 +3952,7 @@ dependencies = [
 [[package]]
 name = "move-coverage"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -3977,7 +3973,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -3991,7 +3987,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -4046,7 +4042,7 @@ dependencies = [
 [[package]]
 name = "move-model"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -4062,7 +4058,7 @@ dependencies = [
  "move-core-types",
  "move-ir-types",
  "move-lang",
- "num",
+ "num 0.4.0",
  "once_cell",
  "regex",
  "serde",
@@ -4071,7 +4067,7 @@ dependencies = [
 [[package]]
 name = "move-prover"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "abigen",
  "anyhow",
@@ -4094,7 +4090,7 @@ dependencies = [
  "move-ir-types",
  "move-lang",
  "move-model",
- "num",
+ "num 0.4.0",
  "once_cell",
  "pretty",
  "rand 0.8.4",
@@ -4133,7 +4129,7 @@ dependencies = [
 [[package]]
 name = "move-stdlib"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "diem-workspace-hack",
  "docgen",
@@ -4145,7 +4141,7 @@ dependencies = [
 [[package]]
 name = "move-unit-test"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode-interpreter",
@@ -4168,7 +4164,7 @@ dependencies = [
 [[package]]
 name = "move-vm-natives"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "byteorder",
  "diem-crypto",
@@ -4186,7 +4182,7 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "bytecode-verifier",
  "diem-crypto",
@@ -4205,7 +4201,7 @@ dependencies = [
 [[package]]
 name = "move-vm-test-utils"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "diem-workspace-hack",
@@ -4217,7 +4213,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "bcs",
  "diem-workspace-hack",
@@ -4377,6 +4373,20 @@ dependencies = [
 
 [[package]]
 name = "num"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b7a8e9be5e039e2ff869df49155f1c06bd01ade2117ec783e56ab0932b67a8f"
+dependencies = [
+ "num-bigint 0.3.3",
+ "num-complex 0.3.1",
+ "num-integer",
+ "num-iter",
+ "num-rational 0.3.2",
+ "num-traits",
+]
+
+[[package]]
+name = "num"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43db66d1170d347f9a065114077f7dccb00c1b9478c89384490a3425279a4606"
@@ -4402,6 +4412,17 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f6f7833f2cbf2360a6cfd58cd41a53aa7a90bd4c202f5b1c7dd2ed73c57b2c3"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-bigint"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74e768dff5fb39a41b3bcd30bb25cf989706c90d028d1ad71971987aa309d535"
@@ -4418,6 +4439,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6b19411a9719e753aff12e5187b74d60d3dc449ec3f4dc21e3989c3f554bc95"
 dependencies = [
  "autocfg 1.0.1",
+ "num-traits",
+]
+
+[[package]]
+name = "num-complex"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "747d632c0c558b87dbabbe6a82f3b4ae03720d0646ac5b7b4dae89394be5f2c5"
+dependencies = [
  "num-traits",
 ]
 
@@ -4465,6 +4495,18 @@ dependencies = [
 
 [[package]]
 name = "num-rational"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12ac428b1cb17fce6f731001d307d351ec70a6d202fc2e60f7d4c5e42d8f4f07"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-bigint 0.3.3",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-rational"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
@@ -4488,12 +4530,12 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "diem-workspace-hack",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -4591,8 +4633,8 @@ dependencies = [
  "Inflector",
  "proc-macro-error",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -4649,8 +4691,8 @@ checksum = "c41512944b1faff334a5f1b9447611bf4ef40638ccb6328173dacefb338e878c"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -4675,7 +4717,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f557c32c6d268a07c921471619c0295f5efad3a0e76d4f97a05c091a51d110b2"
 dependencies = [
  "proc-macro2 1.0.29",
- "syn 1.0.77",
+ "syn 1.0.80",
  "synstructure",
 ]
 
@@ -4827,8 +4869,8 @@ dependencies = [
  "pest",
  "pest_meta",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -4877,8 +4919,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3be26700300be6d9d23264c73211d8190e755b6b5ca7a1b28230025511b52a5e"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -4888,8 +4930,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e8fe8163d14ce7f0cdac2e040116f22eac817edabff0be91e8aff7e9accf389"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -4912,9 +4954,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkg-config"
-version = "0.3.19"
+version = "0.3.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
+checksum = "7c9b1041b4387893b91ee6746cddfc28516aff326a3519fb2adf820932c5e6cb"
 
 [[package]]
 name = "plotters"
@@ -5024,8 +5066,8 @@ checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
 dependencies = [
  "proc-macro-error-attr",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
  "version_check 0.9.3",
 ]
 
@@ -5036,7 +5078,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
+ "quote 1.0.10",
  "version_check 0.9.3",
 ]
 
@@ -5145,8 +5187,8 @@ dependencies = [
  "anyhow",
  "itertools 0.8.2",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -5158,8 +5200,8 @@ dependencies = [
  "anyhow",
  "itertools 0.9.0",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -5178,7 +5220,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bcs",
- "reqwest 0.11.4",
+ "reqwest 0.11.5",
  "serde",
  "wasm-bindgen",
 ]
@@ -5200,9 +5242,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3d0b9745dc2debf507c8422de05d7226cc1f0644216dfdfead988f9b1ab32a7"
+checksum = "38bc8cc6a5f2e3655e0899c1b848643b2562f853f114bfec7be120678e3ace05"
 dependencies = [
  "proc-macro2 1.0.29",
 ]
@@ -5488,7 +5530,7 @@ dependencies = [
 [[package]]
 name = "read-write-set"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bytecode",
@@ -5531,8 +5573,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c38e3aecd2b21cb3959637b883bb3714bc7e43f0268b9a29d3743ee3e55cdd2"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -5609,9 +5651,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.11.4"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "246e9f61b9bb77df069a947682be06e31ac43ea37862e244a69f177694ea6d22"
+checksum = "51c732d463dd300362ffb44b7b125f299c23d2990411a4253824630ebc7467fb"
 dependencies = [
  "base64",
  "bytes 1.1.0",
@@ -5655,7 +5697,7 @@ dependencies = [
 [[package]]
 name = "resource-viewer"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#c43d890de428f5ea019fcf5b60a0b89da2c1b411"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.3-r1#11ae64bb7af73c4f7305fc145d359daede77d19e"
 dependencies = [
  "anyhow",
  "bcs",
@@ -5696,12 +5738,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "rip_str"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/rip_str.git#0f92b94ab15b8bc37a2dcf7ff0f7fbc1d9cd5e9a"
+dependencies = [
+ "memchr",
+ "seshat-unicode 0.0.15",
+]
+
+[[package]]
 name = "rust-base58"
 version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b313b91fcdc6719ad41fa2dad2b7e810b03833fae4bf911950e15529a5f04439"
 dependencies = [
- "num",
+ "num 0.4.0",
 ]
 
 [[package]]
@@ -5834,9 +5885,9 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "0.8.5"
+version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b82485a532ef0af18878ad4281f73e58161cdba1db7918176e9294f0ca5498a5"
+checksum = "d7a48d098c2a7fdf5740b19deb1181b4fb8a9e68e03ae517c14cde04b5725409"
 dependencies = [
  "dyn-clone",
  "indexmap",
@@ -5847,14 +5898,14 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "0.8.5"
+version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "791c2c848cff1abaeae34fef7e70da5f93171d9eea81ce0fe969a1df627a61a8"
+checksum = "4a9ea2a613fe4cd7118b2bb101a25d8ae6192e1975179b67b2f17afd11e70ac8"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
+ "quote 1.0.10",
  "serde_derive_internals",
- "syn 1.0.77",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6003,8 +6054,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6014,8 +6065,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1dbab34ca63057a1f15280bdf3c39f2b1eb1b54c17e98360e511637aef7418c6"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6037,8 +6088,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98d0516900518c29efa217c298fa1f4e6c6ffc85ae29fd7f4ee48f176e1a9ed5"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6051,6 +6102,24 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "seshat-unicode"
+version = "0.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f4885ee09aab31a24a91818fcdefedc3a0737d96c242d8b0457cecfb54869c1"
+dependencies = [
+ "num 0.3.1",
+]
+
+[[package]]
+name = "seshat-unicode"
+version = "0.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46cf016eb4f844da93d8b796bc7c4727a79294a92450096290060701d6e75331"
+dependencies = [
+ "num 0.3.1",
 ]
 
 [[package]]
@@ -6193,9 +6262,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.6.1"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
+checksum = "1ecab6c735a6bb4139c0caafd0cc3635748bbb3acf4550e8138122099251f309"
 
 [[package]]
 name = "socket2"
@@ -6243,8 +6312,8 @@ dependencies = [
  "blake2-rfc",
  "proc-macro-crate",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6404,8 +6473,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "558a1a24f2feab950ce382923b62879f253207c6cbf7832eb1e47dba5f57fba8"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6538,8 +6607,8 @@ dependencies = [
  "Inflector",
  "proc-macro-crate",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6724,10 +6793,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c87a60a40fccc84bef0652345bbbbbe20a605bf5d0ce81719fc476f5c03b50ef"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
+ "quote 1.0.10",
  "serde",
  "serde_derive",
- "syn 1.0.77",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6738,12 +6807,12 @@ checksum = "58fa5ff6ad0d98d1ffa8cb115892b6e69d67799f6763e162a1c9db421dc22e11"
 dependencies = [
  "base-x",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
+ "quote 1.0.10",
  "serde",
  "serde_derive",
  "serde_json",
  "sha1",
- "syn 1.0.77",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6784,8 +6853,8 @@ dependencies = [
  "heck",
  "proc-macro-error",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6805,8 +6874,8 @@ checksum = "0054a7df764039a6cd8592b9de84be4bec368ff081d203a7d5371cbfa8e65c81"
 dependencies = [
  "heck",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -6888,12 +6957,12 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.77"
+version = "1.0.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5239bc68e0fef57495900cfea4e8dc75596d9a319d7e16b1e0a440d24e6fe0a0"
+checksum = "d010a1623fbd906d51d650a9916aaefc05ffa0e4053ff7fe601167f3e715d194"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
+ "quote 1.0.10",
  "unicode-xid 0.2.2",
 ]
 
@@ -6904,8 +6973,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "474aaa926faa1603c40b7885a9eaea29b444d1cb2850cb7c0e37bb1a4182f4fa"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
  "unicode-xid 0.2.2",
 ]
 
@@ -6988,8 +7057,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bad553cc2c78e8de258400763a647e80e6d1b31ee237275d756f6836d204494c"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -7054,9 +7123,9 @@ checksum = "fd3c141a1b43194f3f56a1411225df8646c55781d5f26db825b3d98507eb482f"
 dependencies = [
  "proc-macro-hack",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
+ "quote 1.0.10",
  "standback",
- "syn 1.0.77",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -7086,9 +7155,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5241dd6f21443a3606b432718b166d3cedc962fd4b8bea54a8bc7f514ebda986"
+checksum = "f83b2a3d4d9091d0abd7eba4dc2710b1718583bd4d8992e2190720ea38f391f7"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -7143,13 +7212,13 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "1.3.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54473be61f4ebe4efd09cec9bd5d16fa51d70ea0192213d754d2d500457db110"
+checksum = "154794c8f499c2619acd19e839294703e9e32e7630ef5f46ea80d4ef0fbee5eb"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -7254,9 +7323,9 @@ checksum = "360dfd1d6d30e05fda32ace2c8c70e9c0a9da713275777f5a4dbb8a1893930c6"
 
 [[package]]
 name = "tracing"
-version = "0.1.28"
+version = "0.1.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84f96e095c0c82419687c20ddf5cb3eadb61f4e1405923c9dc8e53a1adacbda8"
+checksum = "375a639232caf30edfc78e8d89b2d4c375515393e7af7e16f01cd96917fb2105"
 dependencies = [
  "cfg-if 1.0.0",
  "log",
@@ -7267,20 +7336,20 @@ dependencies = [
 
 [[package]]
 name = "tracing-attributes"
-version = "0.1.16"
+version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98863d0dd09fa59a1b79c6750ad80dbda6b75f4e71c437a6a1a8cb91a8bcbd77"
+checksum = "f4f480b8f81512e825f337ad51e94c1eb5d3bbdf2b363dcd01e2b19a9ffe3f8e"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
 name = "tracing-core"
-version = "0.1.20"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46125608c26121c81b0c6d693eab5a420e416da7e43c426d2e8f7df8da8a3acf"
+checksum = "1f4ed65637b8390770814083d20756f87bfa2c21bf2f110babdc5438351746e4"
 dependencies = [
  "lazy_static",
 ]
@@ -7318,9 +7387,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.2.24"
+version = "0.2.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdd0568dbfe3baf7048b7908d2b32bca0d81cd56bec6d2a8f894b01d74f86be3"
+checksum = "0e0d2eaa99c3c2e41547cfa109e910a68ea03823cccad4a0525dcbc9b01e8c71"
 dependencies = [
  "ansi_term 0.12.1",
  "chrono",
@@ -7535,9 +7604,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-bidi"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "246f4c42e67e7a4e3c6106ff716a5d067d4132a642840b242e357e468a2a0085"
+checksum = "1a01404663e3db436ed2746d9fefef640d868edae3cceb81c3b8d5732fda678f"
 
 [[package]]
 name = "unicode-normalization"
@@ -7648,8 +7717,8 @@ checksum = "c860ad1273f4eee7006cee05db20c9e60e5d24cba024a32e1094aa8e574f3668"
 dependencies = [
  "nom",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
@@ -7802,8 +7871,8 @@ dependencies = [
  "lazy_static",
  "log",
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
  "wasm-bindgen-shared",
 ]
 
@@ -7825,7 +7894,7 @@ version = "0.2.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d56146e7c495528bf6587663bea13a8eb588d39b36b679d83972e1a2dbbdacf9"
 dependencies = [
- "quote 1.0.9",
+ "quote 1.0.10",
  "wasm-bindgen-macro-support",
 ]
 
@@ -7836,8 +7905,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7803e0eea25835f8abdc585cd3021b3deb11543c6fe226dcd30b228857c5c5ab"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -8032,17 +8101,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "xi-rope"
-version = "0.3.0"
-source = "git+https://github.com/google/xi-editor?tag=xi-unicode-v0.2.1#9743487c92ceea53771fba9435f4274d29e0d457"
-dependencies = [
- "bytecount",
- "memchr",
- "regex",
- "unicode-segmentation",
-]
-
-[[package]]
 name = "zeroize"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8058,7 +8116,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bdff2024a851a322b08f179173ae2ba620445aef1e838f0c196820eade4ae0c7"
 dependencies = [
  "proc-macro2 1.0.29",
- "quote 1.0.9",
- "syn 1.0.77",
+ "quote 1.0.10",
+ "syn 1.0.80",
  "synstructure",
 ]

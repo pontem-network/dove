@@ -5,19 +5,19 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Error;
-use xi_rope::Rope;
 
 use proto::file::{Diff, File as FileModel};
+use rip_str::RipString;
 
 #[derive(Debug)]
 pub struct MFile {
     pub path: Arc<PathBuf>,
-    pub content: Rope,
+    pub content: RipString,
 }
 
 impl MFile {
     pub fn load(path: Arc<PathBuf>) -> Result<MFile, Error> {
-        let content = Rope::from(fs::read_to_string(path.as_ref())?);
+        let content = RipString::from(fs::read_to_string(path.as_ref())?.as_str());
         Ok(MFile { path, content })
     }
 
@@ -33,7 +33,7 @@ impl MFile {
         for diff in diff {
             self.content.edit(
                 diff.range_offset as usize..(diff.range_offset + diff.range_length) as usize,
-                diff.text,
+                &diff.text,
             );
         }
         let mut f = OpenOptions::new()
