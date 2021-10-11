@@ -1,12 +1,11 @@
-use std::collections::HashMap;
-use anyhow::{Error, anyhow};
+use std::collections::BTreeMap;
+use anyhow::Error;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::metadata::{FuncMeta, ModuleMeta, parse_module_definition, make_script_meta};
 use lang::compiler::preprocessor::BuilderPreprocessor;
 use move_lang::parser::ast::{Definition, LeadingNameAccess_};
-use move_lang::errors::FilesSourceText;
-use crate::move_langwasm::parse_file;
 use move_lang::callback::Interact;
+use move_lang::parser::syntax::parse_file_string;
 use move_core_types::account_address::AccountAddress;
 
 pub fn script_meta_source(
@@ -68,18 +67,15 @@ fn parse(
     sender: &str,
 ) -> Result<Vec<Definition>, Error> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
-    let mut files: FilesSourceText = HashMap::new();
-    let (defs, _, errors) = parse_file(
-        &mut files,
+    parse_file_string(
         preprocessor.static_str(name.to_string()),
-        source.to_string(),
-        &mut preprocessor,
-    )?;
-    if errors.is_empty() {
-        Ok(defs)
-    } else {
-        Err(anyhow!("Could not compile scripts '{}'.", name))
-    }
+        source,
+        BTreeMap::new(),
+    )
+    .map_or_else(
+        |_| anyhow::bail!("Could not compile scripts '{}'.", name),
+        |(def, _)| Ok(def),
+    )
 }
 
 #[cfg(test)]

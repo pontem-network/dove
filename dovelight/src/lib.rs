@@ -20,7 +20,6 @@ pub mod compiler;
 pub mod deps;
 pub mod langwasm;
 pub mod loader;
-pub mod move_langwasm;
 pub mod storage;
 pub mod tx;
 
