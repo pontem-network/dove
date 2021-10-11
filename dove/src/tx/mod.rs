@@ -1,10 +1,11 @@
-use crate::tx::cmd::{CallDeclarationCmd, CallDeclaration};
-use crate::tx::model::EnrichedTransaction;
 use anyhow::Error;
 use std::convert::TryFrom;
+use dove_lib::tx::parser::Call;
+use dove_lib::tx::fn_call::Config;
+use crate::tx::cmd::{CallDeclarationCmd, CallDeclaration};
+use crate::tx::model::EnrichedTransaction;
 use crate::context::Context;
-use crate::tx::parser::Call;
-use crate::tx::fn_call::{make_function_call, Config, make_script_call};
+use crate::tx::fn_call::{make_function_call, make_script_call};
 
 /// Tx builder.
 pub mod builder;
@@ -14,8 +15,6 @@ pub mod cmd;
 pub mod fn_call;
 /// Transaction model.
 pub mod model;
-/// Call parser.
-pub mod parser;
 /// Execution unit resolver.
 pub mod resolver;
 

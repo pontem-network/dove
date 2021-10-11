@@ -1,11 +1,11 @@
 use anyhow::Error;
 use structopt::StructOpt;
 
+use dove_lib::tx::fn_call::Config;
 use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::tx::cmd::CallDeclarationCmd;
 use crate::tx::make_transaction;
-use crate::tx::fn_call::Config;
 use crate::tx::model::EnrichedTransaction;
 use crate::executor::execute_transaction;
 

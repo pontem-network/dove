@@ -3,9 +3,10 @@ use anyhow::Error;
 use structopt::StructOpt;
 use std::fmt::Debug;
 use std::convert::TryFrom;
-use crate::tx::parser::{parse_call, Call, parse_tp_param};
+use dove_lib::tx::parser::{parse_call, parse_tp_param};
 use lang::compiler::mut_string::MutString;
 use lang::compiler::preprocessor::normalize_source_text;
+use dove_lib::tx::parser::Call;
 
 /// Call declaration.
 #[derive(StructOpt, Debug)]

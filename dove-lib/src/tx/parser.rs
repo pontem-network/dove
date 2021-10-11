@@ -1,107 +1,18 @@
-use move_core_types::language_storage::TypeTag;
-use anyhow::Error;
+use anyhow::{Error, anyhow};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
-use move_lang::parser::lexer::{Lexer, Tok};
-use move_lang::parser::syntax::{parse_type, parse_address_bytes, consume_token};
-use lang::lexer::unwrap_spanned_ty;
+use move_core_types::language_storage::TypeTag;
 use lang::compiler::mut_string::MutString;
+use move_lang::parser::lexer::{Tok, Lexer};
 use lang::compiler::dialects::Dialect;
 use lang::compiler::preprocessor::normalize_source_text;
+use move_lang::parser::syntax::{parse_address_bytes, consume_token, parse_type};
+use lang::lexer::unwrap_spanned_ty;
 use std::str::FromStr;
-
-/// Call.
-#[derive(Debug)]
-pub enum Call {
-    /// Function call declaration.
-    Function {
-        /// Module address.
-        address: Option<AccountAddress>,
-        /// Module name.
-        module: Identifier,
-        /// Function name.
-        func: Identifier,
-        /// Function type parameter.
-        type_tag: Vec<TypeTag>,
-        /// Function args.
-        args: Vec<String>,
-    },
-    /// Script call declaration.
-    Script {
-        /// Script name.
-        name: Identifier,
-        /// Function type parameter.
-        type_tag: Vec<TypeTag>,
-        /// Function args.
-        args: Vec<String>,
-    },
-}
-
-impl Call {
-    pub(crate) fn set_args(&mut self, new_args: Vec<String>) {
-        match self {
-            Call::Function { args, .. } => {
-                *args = new_args;
-            }
-            Call::Script { args, .. } => {
-                *args = new_args;
-            }
-        }
-    }
-
-    pub(crate) fn set_tp_params(&mut self, new_tags: Vec<TypeTag>) {
-        match self {
-            Call::Function { type_tag, .. } => {
-                *type_tag = new_tags;
-            }
-            Call::Script { type_tag, .. } => {
-                *type_tag = new_tags;
-            }
-        }
-    }
-
-    #[cfg(test)]
-    pub fn script(self) -> (Identifier, Vec<TypeTag>, Vec<String>) {
-        if let Call::Script {
-            name,
-            type_tag,
-            args,
-        } = self
-        {
-            (name, type_tag, args)
-        } else {
-            panic!("Script is expected")
-        }
-    }
-
-    #[cfg(test)]
-    pub fn func(
-        self,
-    ) -> (
-        Option<AccountAddress>,
-        Identifier,
-        Identifier,
-        Vec<TypeTag>,
-        Vec<String>,
-    ) {
-        if let Call::Function {
-            address,
-            module,
-            func,
-            type_tag,
-            args,
-        } = self
-        {
-            (address, module, func, type_tag, args)
-        } else {
-            panic!("Function is expected")
-        }
-    }
-}
 
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
-pub(crate) fn parse_call(dialect: &dyn Dialect, sender: &str, call: &str) -> Result<Call, Error> {
+pub fn parse_call(dialect: &dyn Dialect, sender: &str, call: &str) -> Result<Call, Error> {
     let mut mut_source = MutString::new(call);
     normalize_source_text(dialect, (call, &mut mut_source), sender);
     let call = mut_source.freeze();
@@ -273,7 +184,17 @@ fn parse_args(lexer: &mut Lexer) -> Result<Vec<String>, Error> {
     }
 }
 
-pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
+/// parse type params
+///
+/// u8 => TypeTag::U8
+/// u64 => TypeTag::U64
+/// ...
+pub fn parse_type_param(lexer: &mut Lexer) -> Result<TypeTag, Error> {
+    let ty = parse_type(lexer).map_err(|err| Error::msg(format!("{:?}", err)))?;
+    unwrap_spanned_ty(ty)
+}
+
+pub fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
     let mut lexer = Lexer::new(tp, "tp", Default::default());
     lexer
         .advance()
@@ -281,17 +202,7 @@ pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
     parse_type_param(&mut lexer)
 }
 
-/// parse type params
-///
-/// u8 => TypeTag::U8
-/// u64 => TypeTag::U64
-/// ...
-pub(crate) fn parse_type_param(lexer: &mut Lexer) -> Result<TypeTag, Error> {
-    let ty = parse_type(lexer).map_err(|err| Error::msg(format!("{:?}", err)))?;
-    unwrap_spanned_ty(ty)
-}
-
-pub(crate) fn parse_vec<E>(tkn: &str, tp_name: &str) -> Result<Vec<E>, Error>
+pub fn parse_vec<E>(tkn: &str, tp_name: &str) -> Result<Vec<E>, Error>
 where
     E: FromStr,
 {
@@ -328,6 +239,95 @@ where
         }
     }
     Ok(elements)
+}
+
+/// Call.
+#[derive(Debug)]
+pub enum Call {
+    /// Function call declaration.
+    Function {
+        /// Module address.
+        address: Option<AccountAddress>,
+        /// Module name.
+        module: Identifier,
+        /// Function name.
+        func: Identifier,
+        /// Function type parameter.
+        type_tag: Vec<TypeTag>,
+        /// Function args.
+        args: Vec<String>,
+    },
+    /// Script call declaration.
+    Script {
+        /// Script name.
+        name: Identifier,
+        /// Function type parameter.
+        type_tag: Vec<TypeTag>,
+        /// Function args.
+        args: Vec<String>,
+    },
+}
+
+impl Call {
+    pub fn set_args(&mut self, new_args: Vec<String>) {
+        match self {
+            Call::Function { args, .. } => {
+                *args = new_args;
+            }
+            Call::Script { args, .. } => {
+                *args = new_args;
+            }
+        }
+    }
+
+    pub fn set_tp_params(&mut self, new_tags: Vec<TypeTag>) {
+        match self {
+            Call::Function { type_tag, .. } => {
+                *type_tag = new_tags;
+            }
+            Call::Script { type_tag, .. } => {
+                *type_tag = new_tags;
+            }
+        }
+    }
+
+    #[cfg(test)]
+    pub fn script(self) -> (Identifier, Vec<TypeTag>, Vec<String>) {
+        if let Call::Script {
+            name,
+            type_tag,
+            args,
+        } = self
+        {
+            (name, type_tag, args)
+        } else {
+            panic!("Script is expected")
+        }
+    }
+
+    #[cfg(test)]
+    pub fn func(
+        self,
+    ) -> (
+        Option<AccountAddress>,
+        Identifier,
+        Identifier,
+        Vec<TypeTag>,
+        Vec<String>,
+    ) {
+        if let Call::Function {
+            address,
+            module,
+            func,
+            type_tag,
+            args,
+        } = self
+        {
+            (address, module, func, type_tag, args)
+        } else {
+            panic!("Function is expected")
+        }
+    }
 }
 
 #[cfg(test)]
@@ -417,13 +417,18 @@ mod tests_call_parser {
         assert_eq!(type_tag, vec![TypeTag::U8]);
         assert!(args.is_empty());
     }
-
     #[test]
     fn script_call() {
         let dialect = DialectName::Pont.get_dialect();
         let sender = "0x1";
 
-        let (name, type_tag, args) = parse_call(dialect.as_ref(), sender, "create_account<u8, 0x01::Dfinance::USD<u8>>(10, 68656c6c6f, [10, 23], true, 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE)").unwrap().script();
+        let (name, type_tag, args) = parse_call(
+                dialect.as_ref(),
+                sender,
+                "create_account<u8, 0x01::Dfinance::USD<u8>>(10, 68656c6c6f, [10, 23], true, 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE)"
+            )
+            .unwrap()
+            .script();
         assert_eq!(name.as_str(), "create_account");
         assert_eq!(
             type_tag,

@@ -3,6 +3,7 @@ members = [
     "language_server",
     "net",
     "dove",
+    "dove-lib",
     "lang",
     "lang/compat",
     "lang/decompiler",

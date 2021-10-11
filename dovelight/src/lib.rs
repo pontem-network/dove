@@ -1,25 +1,28 @@
 use std::fmt::Display;
 use std::str::FromStr;
+use wasm_bindgen::prelude::*;
+use serde::{Deserialize, Serialize};
+use loader::Loader;
+use storage::web::WebStorage;
 
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::ModuleId;
-use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
-
-use lang::compiler::dialects::DialectName;
-use loader::Loader;
-use storage::web::WebStorage;
+use lang::compiler::dialects::{Dialect, DialectName};
 
 use crate::abi::make_module_abi;
 use crate::deps::index::id_to_str;
 use crate::deps::resolver::DependencyResolver;
+use crate::tx::ProjectData;
 
 pub mod abi;
-mod compiler;
+pub mod compiler;
 pub mod deps;
+pub mod langwasm;
 pub mod loader;
+pub mod move_langwasm;
 pub mod storage;
+pub mod tx;
 
 #[macro_export]
 macro_rules! console_log {
@@ -106,6 +109,35 @@ pub struct Units {
 pub struct Unit {
     pub name: String,
     pub bytecode: Vec<u8>,
+}
+
+/// Creating a transaction
+#[wasm_bindgen]
+pub fn tx(
+    // Node address. http://localhost:9933/
+    chain_api: String,
+    // Project code. Scripts and modules
+    source_map: JsValue,
+    // Dialect of the project. diem, dfinance, pont
+    dialect: String,
+    // Call String. NAME_SCRIPT<U8, BOOL>(1,[2,3])
+    call: String,
+) -> Result<JsValue, JsValue> {
+    let result = tx::make_transaction(
+        &chain_api,
+        ProjectData {
+            dialect: DialectName::from_str(&dialect)
+                .map_err(js_err)?
+                .get_dialect(),
+            source_map: source_map.into_serde().map_err(js_err)?,
+            address: AccountAddress::from_hex_literal("0x1").map_err(js_err)?,
+        },
+        &call,
+        None,
+    )
+    .map_err(js_err)
+    .and_then(|r| JsValue::from_serde(&r).map_err(js_err))?;
+    Ok(result)
 }
 
 pub fn js_err<D: Display>(err: D) -> JsValue {
