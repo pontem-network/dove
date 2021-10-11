@@ -1,17 +1,7 @@
-use std::borrow::Cow;
-use std::collections::HashMap;
-use anyhow::{Error, anyhow};
+use anyhow::Error;
 use regex::Regex;
-use lang::compiler::metadata::{FuncMeta, script_meta};
-use lang::compiler::dialects::Dialect;
-use lang::compiler::preprocessor::BuilderPreprocessor;
+use lang::compiler::metadata::FuncMeta;
 use move_core_types::identifier::Identifier;
-use move_lang::parser::ast::Definition;
-use move_lang::errors::{FilesSourceText, Errors};
-use move_lang::callback::Interact;
-use move_lang::{parser, MatchedFileCommentMap, strip_comments_and_verify};
-use move_lang::parser::syntax::parse_file_string;
-use crate::compiler::source_map::SourceMap;
 use crate::tx::ProjectData;
 use crate::langwasm::metadata::script_meta_source;
 
@@ -76,10 +66,11 @@ mod test {
     use std::str::FromStr;
     use lang::compiler::dialects::DialectName;
     use move_core_types::account_address::AccountAddress;
+    use move_core_types::identifier::Identifier;
+    use lang::compiler::metadata::{FuncMeta, Visibility};
     use crate::compiler::source_map::SourceMap;
     use crate::tx::ProjectData;
     use crate::tx::resolver::find_script;
-    use move_core_types::identifier::Identifier;
 
     #[test]
     fn test_find_script() {
@@ -103,8 +94,40 @@ mod test {
         };
 
         let name = Identifier::new("run_tmp_0").unwrap();
-        let result = find_script(&project_data, &name, None);
-        println!("{:?}", result);
-        // assert_eq!(vec!["demo".to_string()], result.unwrap());
+        let mut result = find_script(&project_data, &name, None).unwrap();
+        result.sort_by(|a, b| a.0.cmp(&b.0));
+
+        assert_eq!(
+            result,
+            vec![
+                (
+                    "script.test0.move".to_string(),
+                    FuncMeta {
+                        name: name.clone(),
+                        visibility: Visibility::Script,
+                        type_parameters: vec![],
+                        parameters: vec![],
+                    },
+                ),
+                (
+                    "script.test0_1.move".to_string(),
+                    FuncMeta {
+                        name: name.clone(),
+                        visibility: Visibility::Script,
+                        type_parameters: vec![],
+                        parameters: vec![],
+                    },
+                ),
+                (
+                    "script.test12.move".to_string(),
+                    FuncMeta {
+                        name: name.clone(),
+                        visibility: Visibility::Script,
+                        type_parameters: vec![],
+                        parameters: vec![],
+                    },
+                ),
+            ]
+        );
     }
 }

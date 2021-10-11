@@ -8,7 +8,7 @@ use storage::web::WebStorage;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::ModuleId;
-use lang::compiler::dialects::{Dialect, DialectName};
+use lang::compiler::dialects::DialectName;
 
 use crate::abi::make_module_abi;
 use crate::deps::index::id_to_str;

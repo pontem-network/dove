@@ -7,7 +7,6 @@ use crate::tx::ProjectData;
 use crate::tx::resolver::find_script;
 use crate::storage::web::WebStorage;
 use crate::loader::Loader;
-use crate::compiler;
 
 /// Create a transaction from a script
 pub(crate) fn make_script_call(
@@ -24,8 +23,8 @@ pub(crate) fn make_script_call(
     // At what index is the script located
     file: Option<String>,
 ) -> Result<(), Error> {
-    let cache = WebStorage::new_in_family("dove_cache_")?;
-    let loader = Loader::new(chain_api.to_string());
+    let _cache = WebStorage::new_in_family("dove_cache_")?;
+    let _loader = Loader::new(chain_api.to_string());
 
     let config_for_tx = Config::for_tx();
     let account_address = project_data.address.clone();

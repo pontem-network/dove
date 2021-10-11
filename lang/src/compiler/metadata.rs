@@ -116,7 +116,7 @@ fn parse(
     }
 }
 
-fn make_script_meta(script: Script) -> Result<FuncMeta, Error> {
+pub fn make_script_meta(script: Script) -> Result<FuncMeta, Error> {
     let func = script.function;
     let type_parameters = func
         .signature
@@ -196,7 +196,7 @@ fn extract_type_name(tp: Type) -> String {
     }
 }
 
-fn parse_module_definition(
+pub fn parse_module_definition(
     module: ModuleDefinition,
     adds: Option<AccountAddress>,
 ) -> Result<ModuleMeta, Error> {
