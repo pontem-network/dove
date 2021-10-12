@@ -50,6 +50,13 @@ impl Signers {
             Signers::Implicit(v) => v.len(),
         }
     }
+    #[cfg(test)]
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Signers::Explicit(v) => v.is_empty(),
+            Signers::Implicit(v) => v.is_empty(),
+        }
+    }
 }
 
 /// Script argument type.
