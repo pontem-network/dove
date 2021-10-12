@@ -4,7 +4,9 @@ use wasm_bindgen::JsValue;
 use move_core_types::account_address::AccountAddress;
 use lang::compiler::dialects::{Dialect, DialectName};
 use dove_lib::tx::parser::{parse_call, Call};
-use crate::Units;
+use dove_lib::tx::fn_call::Config;
+use dove_lib::tx::model::EnrichedTransaction;
+use crate::Unit;
 use crate::compiler::source_map::SourceMap;
 use crate::tx::fn_call::make_script_call;
 
@@ -21,15 +23,16 @@ pub fn make_transaction(
     call: &str,
     // At what index is the script located
     file: Option<String>,
-) -> Result<Units, Error> {
+) -> Result<Unit, Error> {
     let _addr = &proejct_data.address;
+    let cfg = Config::for_tx();
     let call = parse_call(
         proejct_data.dialect.as_ref(),
         &proejct_data.address.to_string(),
         call,
     )?;
 
-    let _tx = match call {
+    let etx = match call {
         Call::Function {
             address: _,
             module: _,
@@ -43,10 +46,16 @@ pub fn make_transaction(
             name,
             type_tag,
             args,
-        } => make_script_call(chain_api, &proejct_data, name, type_tag, args, file),
+        } => make_script_call(chain_api, &proejct_data, name, type_tag, args, file, cfg),
     }?;
 
-    bail!("@todo return tx 2")
+    match etx {
+        EnrichedTransaction::Local { .. } => unreachable!(),
+        EnrichedTransaction::Global { tx, name } => Ok(Unit {
+            name,
+            bytecode: bcs::to_bytes(&tx)?,
+        }),
+    }
 }
 
 pub struct ProjectData {
