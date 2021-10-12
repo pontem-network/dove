@@ -5,6 +5,7 @@ use move_core_types::identifier::Identifier;
 use move_core_types::value::MoveValue;
 use move_core_types::language_storage::TypeTag;
 use move_core_types::account_address::AccountAddress;
+use move_binary_format::CompiledModule;
 
 /// Signer type.
 #[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, Eq, PartialEq)]
@@ -212,4 +213,25 @@ impl Transaction {
             Transaction::V1(v) => v,
         }
     }
+}
+
+/// Transaction with additional info.
+#[derive(Debug)]
+pub enum EnrichedTransaction {
+    /// A transaction intended for execution in the local executor.
+    Local {
+        /// Transaction.
+        tx: Transaction,
+        /// Signers.
+        signers: Vec<AccountAddress>,
+        /// Execution dependence.
+        deps: Vec<CompiledModule>,
+    },
+    /// A transaction intended for execution in the chain executor.
+    Global {
+        /// Transaction.
+        tx: Transaction,
+        /// Transaction name.
+        name: String,
+    },
 }

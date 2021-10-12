@@ -15,7 +15,7 @@ use codespan_reporting::term::termcolor::{StandardStream, ColorChoice};
 use move_core_types::identifier::Identifier;
 use move_lang::callback::Interact;
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone)]
 pub struct FuncMeta {
     pub name: Identifier,
     pub visibility: Visibility,
@@ -40,7 +40,7 @@ pub fn script_meta(
         .collect::<Vec<_>>())
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone)]
 pub enum Visibility {
     Public,
     Script,

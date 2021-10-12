@@ -3,9 +3,9 @@ use std::convert::TryFrom;
 use dove_lib::tx::parser::Call;
 use dove_lib::tx::fn_call::Config;
 use crate::tx::cmd::{CallDeclarationCmd, CallDeclaration};
-use crate::tx::model::EnrichedTransaction;
 use crate::context::Context;
 use crate::tx::fn_call::{make_function_call, make_script_call};
+use dove_lib::tx::model::EnrichedTransaction;
 
 /// Tx builder.
 pub mod builder;
@@ -13,8 +13,6 @@ pub mod builder;
 pub mod cmd;
 /// Function call.
 pub mod fn_call;
-/// Transaction model.
-pub mod model;
 /// Execution unit resolver.
 pub mod resolver;
 

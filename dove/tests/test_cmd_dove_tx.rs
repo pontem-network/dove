@@ -6,7 +6,7 @@ use fs_extra::file::write_all;
 use dove::tests_helper::{execute_dove_at, project_remove, project_start_new_and_build};
 use move_core_types::language_storage::{TypeTag, StructTag, CORE_CODE_ADDRESS};
 use move_core_types::identifier::Identifier;
-use dove::tx::model::{Transaction, Signer, V1};
+use dove_lib::tx::model::{Transaction, Signer, V1};
 
 /// $ dove tx
 #[test]

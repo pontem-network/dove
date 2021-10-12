@@ -6,8 +6,8 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::tx::cmd::CallDeclarationCmd;
 use crate::tx::make_transaction;
-use crate::tx::model::EnrichedTransaction;
 use crate::executor::execute_transaction;
+use dove_lib::tx::model::EnrichedTransaction;
 
 /// Run move script
 #[derive(StructOpt, Debug)]

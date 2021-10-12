@@ -4,11 +4,10 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::TypeTag;
 use move_lang::compiled_unit::CompiledUnit;
-use dove_lib::tx::model::{Transaction, Signers, Call};
+use dove_lib::tx::model::{Transaction, Signers, Call, EnrichedTransaction};
 use dove_lib::tx::fn_call::{prepare_function_signature, select_function, Config};
 use crate::tx::resolver::{find_module_function, find_script};
 use crate::tx::builder::move_build;
-use crate::tx::model::{EnrichedTransaction};
 use crate::context::Context;
 
 pub(crate) fn make_script_call(
