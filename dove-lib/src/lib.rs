@@ -1,2 +1,0 @@
-/// Transactions.
-pub mod tx;

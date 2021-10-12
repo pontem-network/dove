@@ -1,12 +1,12 @@
 use std::str::FromStr;
+use std::fmt::Debug;
 use anyhow::{bail, anyhow, ensure, Error};
-use lang::compiler::metadata::FuncMeta;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::TypeTag;
-use crate::tx::model::{Signer, Signers, ScriptArg, Address};
-use std::fmt::Debug;
-use crate::tx::parser::parse_vec;
 use diem_types::account_config::{diem_root_address, treasury_compliance_account_address};
+use crate::compiler::metadata::FuncMeta;
+use crate::tx::model::{Signer, Signers, ScriptArg, Address};
+use crate::tx::parser::parse_vec;
 
 /// Transaction config.
 pub struct Config {

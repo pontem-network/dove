@@ -40,7 +40,6 @@ indexmap = { version = "=1.6.2", default-features = false, features = ["std"] }
 semver = "1.0.3"
 codespan-reporting = "0.8.0"
 
-dove-lib = { path = "../dove-lib" }
 lang = { path = "../lang" }
 decompiler = { path = "../lang/decompiler" }
 git-hash = { path = "../common/git-hash" }

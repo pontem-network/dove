@@ -8,7 +8,7 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::gas_schedule::{GasUnits, GasAlgebra, CostTable};
 use move_core_types::language_storage::ModuleId;
 use move_core_types::gas_schedule::GasCarrier;
-use dove_lib::tx::model::{Transaction, Call};
+use lang::tx::model::{Transaction, Call};
 use crate::context::Context;
 
 /// Execute transaction.

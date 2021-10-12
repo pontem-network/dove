@@ -3,10 +3,10 @@ use anyhow::Error;
 use structopt::StructOpt;
 use std::fmt::Debug;
 use std::convert::TryFrom;
-use dove_lib::tx::parser::{parse_call, parse_tp_param};
+use lang::tx::parser::{parse_call, parse_tp_param};
 use lang::compiler::mut_string::MutString;
 use lang::compiler::preprocessor::normalize_source_text;
-use dove_lib::tx::parser::Call;
+use lang::tx::parser::Call;
 
 /// Call declaration.
 #[derive(StructOpt, Debug)]

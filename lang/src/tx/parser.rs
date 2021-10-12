@@ -1,14 +1,14 @@
+use std::str::FromStr;
 use anyhow::{Error, anyhow};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::TypeTag;
-use lang::compiler::mut_string::MutString;
 use move_lang::parser::lexer::{Tok, Lexer};
-use lang::compiler::dialects::Dialect;
-use lang::compiler::preprocessor::normalize_source_text;
 use move_lang::parser::syntax::{parse_address_bytes, consume_token, parse_type};
-use lang::lexer::unwrap_spanned_ty;
-use std::str::FromStr;
+use crate::compiler::dialects::Dialect;
+use crate::compiler::preprocessor::normalize_source_text;
+use crate::lexer::unwrap_spanned_ty;
+use crate::compiler::mut_string::MutString;
 
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
@@ -336,7 +336,7 @@ mod tests_call_parser {
     use move_core_types::language_storage::{StructTag, TypeTag};
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use crate::tx::parser::{parse_call};
-    use lang::compiler::dialects::DialectName;
+    use crate::compiler::dialects::DialectName;
 
     #[test]
     fn func_call() {
