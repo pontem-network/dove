@@ -5,11 +5,13 @@ use move_core_types::identifier::Identifier;
 use move_lang::compiled_unit::CompiledUnit;
 use lang::tx::fn_call::{select_function, prepare_function_signature, Config};
 use lang::tx::model::{Signers, Transaction, Call, EnrichedTransaction};
-use crate::compiler::build_with_indexsource;
-use crate::tx::ProjectData;
-use crate::tx::resolver::find_script;
+use crate::compiler::build_base;
+use crate::compiler::interact::CompilerInteract;
 use crate::storage::web::WebStorage;
 use crate::loader::Loader;
+use crate::deps::resolver::DependencyResolver;
+use crate::tx::ProjectData;
+use crate::tx::resolver::find_script;
 
 /// Create a transaction from a script
 pub(crate) fn make_script_call(
@@ -28,7 +30,7 @@ pub(crate) fn make_script_call(
     // config
     cfg: Config,
 ) -> Result<EnrichedTransaction, Error> {
-    let cache = WebStorage::new_in_family("dove_cache_")?;
+    let store = WebStorage::new_in_family("dove_cache_")?;
     let loader = Loader::new(chain_api.to_string());
 
     let account_address = project_data.address.clone();
@@ -40,7 +42,7 @@ pub(crate) fn make_script_call(
         &meta.parameters,
         &args,
         !cfg.deny_signers_definition,
-        account_address,
+        account_address.clone(),
     )?;
     let (signers, mut tx) = match signers {
         Signers::Explicit(signers) => (
@@ -56,25 +58,31 @@ pub(crate) fn make_script_call(
     // @todo Used to run
     // let (_, interface) = ctx.build_index()?;
 
-    let (modules, script): (Vec<_>, Vec<_>) = build_with_indexsource(
-        loader,
-        cache,
+    let sender = account_address.to_string();
+    let resolver = DependencyResolver::new(project_data.dialect.as_ref(), loader, store);
+    let mut interact = CompilerInteract::new(
+        project_data.dialect.as_ref(),
+        &sender,
         project_data.source_map.clone(),
-        &project_data.dialect.name().to_string(),
-        &account_address.to_string(),
-    )?
-    .into_iter()
-    .filter_map(|(index, unit)| match unit {
-        CompiledUnit::Module { module, .. } => Some(Either::Left(module)),
-        CompiledUnit::Script { key, script, .. } => {
-            if index == finded_index && key == name.as_str() {
-                Some(Either::Right(script))
-            } else {
-                None
-            }
-        }
-    })
-    .partition_map(|u| u);
+        resolver,
+    );
+
+    let (modules, script): (Vec<_>, Vec<_>) =
+        build_base(&mut interact, project_data.source_map.clone())?
+            .into_iter()
+            .filter_map(|unit| match unit {
+                CompiledUnit::Module { module, .. } => Some(Either::Left(module)),
+                CompiledUnit::Script {
+                    loc, key, script, ..
+                } => {
+                    if loc.file == finded_index && key == name.as_str() {
+                        Some(Either::Right(script))
+                    } else {
+                        None
+                    }
+                }
+            })
+            .partition_map(|u| u);
 
     if script.is_empty() {
         bail!("The script {:?} could not be compiled", finded_index);

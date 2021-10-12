@@ -25,11 +25,15 @@ pub fn build<L: DependencyLoader, S: Store>(
     dialect: &str,
     sender: &str,
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
-    let result = build_with_indexsource(loader, store, source_map, dialect, sender)?;
     let dialect = DialectName::from_str(dialect)?.get_dialect();
+    let resolver = DependencyResolver::new(dialect.as_ref(), loader, store);
+    let mut interact =
+        CompilerInteract::new(dialect.as_ref(), sender, source_map.clone(), resolver);
+
+    let result = build_base(&mut interact, source_map)?;
     result
         .into_iter()
-        .map(|(_, unit)| {
+        .map(|unit| {
             let mut bytecode = unit.serialize();
             dialect
                 .adapt_to_target(&mut bytecode)
@@ -38,27 +42,17 @@ pub fn build<L: DependencyLoader, S: Store>(
         .collect::<Result<Vec<_>, _>>()
 }
 
-pub fn build_with_indexsource<L: DependencyLoader, S: Store>(
-    loader: L,
-    store: S,
+pub fn build_base<L: DependencyLoader, S: Store>(
+    interact: &mut CompilerInteract<L, S>,
     source_map: SourceMap,
-    dialect: &str,
-    sender: &str,
-) -> Result<HashMap<String, CompiledUnit>, Error> {
+) -> Result<Vec<CompiledUnit>, Error> {
     let ids = source_map.keys();
-    let dialect = DialectName::from_str(dialect)?.get_dialect();
-    let resolver = DependencyResolver::new(dialect.as_ref(), loader, store);
-    let mut interact = CompilerInteract::new(dialect.as_ref(), sender, source_map, resolver);
-    let (_, units_res) = move_lang::move_compile(&ids, &[], None, Flags::empty(), &mut interact)?;
+    let (_, units_res) = move_lang::move_compile(&ids, &[], None, Flags::empty(), interact)?;
 
     let sources = interact.sources();
     match units_res {
         Ok(compiled_units) => {
             let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
-            let compiled_units = compiled_units
-                .into_iter()
-                .map(|unit| (unit.loc().file.to_string(), unit))
-                .collect();
             if !ice_errors.is_empty() {
                 let error =
                     report_errors_to_color_buffer(sources, interact.transform(ice_errors));
