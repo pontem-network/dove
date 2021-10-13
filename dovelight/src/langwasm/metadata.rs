@@ -9,12 +9,12 @@ use move_lang::parser::syntax::parse_file_string;
 use move_core_types::account_address::AccountAddress;
 
 pub fn script_meta_source(
-    name: &str,
+    script_name: &str,
     source: &str,
     dialect: &dyn Dialect,
     sender: &str,
 ) -> Result<Vec<FuncMeta>, Error> {
-    Ok(parse(name, source, dialect, sender)?
+    Ok(parse(script_name, source, dialect, sender)?
         .into_iter()
         .filter_map(|def| {
             if let Definition::Script(script) = def {

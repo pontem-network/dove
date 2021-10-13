@@ -1,5 +1,4 @@
 use std::str::FromStr;
-use std::collections::HashMap;
 
 use anyhow::Error;
 use move_lang::compiled_unit;

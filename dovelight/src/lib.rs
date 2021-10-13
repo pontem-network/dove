@@ -14,6 +14,7 @@ use crate::abi::make_module_abi;
 use crate::deps::index::id_to_str;
 use crate::deps::resolver::DependencyResolver;
 use crate::tx::ProjectData;
+use lang::tx::fn_call::Config;
 
 pub mod abi;
 pub mod compiler;
@@ -123,13 +124,14 @@ pub fn tx(
     call: String,
 ) -> Result<JsValue, JsValue> {
     let result = tx::make_transaction(
-        &chain_api,
         ProjectData {
             dialect: DialectName::from_str(&dialect)
                 .map_err(js_err)?
                 .get_dialect(),
             source_map: source_map.into_serde().map_err(js_err)?,
-            address: AccountAddress::from_hex_literal("0x1").map_err(js_err)?,
+            account_address: AccountAddress::from_hex_literal("0x1").map_err(js_err)?,
+            chain_api,
+            cfg: Config::for_tx(),
         },
         &call,
         None,
