@@ -11,7 +11,7 @@ async function run() {
     let source_map = { source_map: sources };
     sources["version.module.move"] = "module 0x1::Version { " +
         "public fun get():u8 { 8 } " +
-        "public(script) fun version_run(){ let _r = 0x1::Version::get(); } " +
+        "public(script) fun version_run(){ fsadf let _r = 0x1::Version::get(); } " +
         "}";
     sources["empty.module.move"] = "module 0x1::Empty { " +
         " public fun empty() { } " +
@@ -21,9 +21,10 @@ async function run() {
         "fun version(){ let _v = Version::get(); }" +
         "}";
 
-    console.log(build("http://localhost:9933/", source_map, "pont", "0x1"));
-    console.log(tx("http://localhost:9933/", source_map, "pont", "version()"));
-    console.log(tx("http://localhost:9933/", source_map, "pont", "0x1::Version::version_run()"));
+    // console.log(build("http://localhost:9933/", source_map, "pont", "0x1"));
+    // console.log(tx("http://localhost:9933/", source_map, "pont", "version()"));
+    let r = tx("http://localhost:9933/", source_map, "pont", "0x1::Version::version_run()");
+    console.log(r);
 
 
     // sources = new Map();

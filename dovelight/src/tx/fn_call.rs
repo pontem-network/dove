@@ -8,15 +8,15 @@ use lang::tx::fn_call::{select_function, prepare_function_signature};
 use lang::tx::model::{Signers, Transaction, Call, EnrichedTransaction};
 use crate::compiler::build_base;
 use crate::compiler::interact::CompilerInteract;
-use crate::storage::web::WebStorage;
-use crate::loader::Loader;
-use crate::deps::resolver::DependencyResolver;
-use crate::tx::ProjectData;
+use crate::tx::Context;
 use crate::tx::resolver::{find_script, find_module_function};
+use crate::compiler::source_map::SourceMap;
 
 pub(crate) fn make_script_call(
-    // Project data
-    project_data: &ProjectData,
+    // Project Code
+    source_map: &SourceMap,
+    // Launch data
+    context: &Context,
     // script name
     name: Identifier,
     // Generics for script
@@ -26,23 +26,20 @@ pub(crate) fn make_script_call(
     // At what index is the script located
     index_in_source_map: Option<String>,
 ) -> Result<EnrichedTransaction, Error> {
-    let store = WebStorage::new_in_family("dove_cache_")?;
-    let loader = Loader::new(project_data.chain_api.to_string());
-    let account_address = project_data.account_address.clone();
-    let scripts = find_script(project_data, &name, index_in_source_map)?;
+    let scripts = find_script(source_map, context, &name, index_in_source_map)?;
 
     let (finded_index, meta) = select_function(
         scripts.clone(),
-        account_address,
+        context.account_address(),
         &type_tag,
         &args,
-        &project_data.cfg,
+        &context.cfg,
     )?;
     let (signers, args) = prepare_function_signature(
         &meta.parameters,
         &args,
-        !project_data.cfg.deny_signers_definition,
-        account_address.clone(),
+        !context.cfg.deny_signers_definition,
+        context.account_address(),
     )?;
     // Creating transaction
     let (signers, mut tx) = match signers {
@@ -60,30 +57,29 @@ pub(crate) fn make_script_call(
     // let (_, interface) = ctx.build_index()?;
 
     // Building project
-    let sender = account_address.to_string();
-    let resolver = DependencyResolver::new(project_data.dialect.as_ref(), loader, store);
+    let sender = context.account_address_as_string();
+    let resolver = context.resolver()?;
     let mut interact = CompilerInteract::new(
-        project_data.dialect.as_ref(),
+        context.dialect.as_ref(),
         &sender,
-        project_data.source_map.clone(),
+        source_map.clone(),
         resolver,
     );
-    let (modules, script): (Vec<_>, Vec<_>) =
-        build_base(&mut interact, project_data.source_map.clone())?
-            .into_iter()
-            .filter_map(|unit| match unit {
-                CompiledUnit::Module { module, .. } => Some(Either::Left(module)),
-                CompiledUnit::Script {
-                    loc, key, script, ..
-                } => {
-                    if loc.file == finded_index && key == name.as_str() {
-                        Some(Either::Right(script))
-                    } else {
-                        None
-                    }
+    let (modules, script): (Vec<_>, Vec<_>) = build_base(&mut interact, source_map.clone())?
+        .into_iter()
+        .filter_map(|unit| match unit {
+            CompiledUnit::Module { module, .. } => Some(Either::Left(module)),
+            CompiledUnit::Script {
+                loc, key, script, ..
+            } => {
+                if loc.file == finded_index && key == name.as_str() {
+                    Some(Either::Right(script))
+                } else {
+                    None
                 }
-            })
-            .partition_map(|u| u);
+            }
+        })
+        .partition_map(|u| u);
 
     if script.is_empty() {
         bail!("The script {:?} could not be compiled", finded_index);
@@ -98,7 +94,7 @@ pub(crate) fn make_script_call(
         }
     }
 
-    Ok(if project_data.cfg.exe_context {
+    Ok(if context.cfg.exe_context {
         // @todo Used to run
         // modules.extend(interface.load_mv()?);
         EnrichedTransaction::Local {
@@ -116,8 +112,10 @@ pub(crate) fn make_script_call(
 
 #[allow(clippy::too_many_arguments)]
 pub fn make_function_call(
-    // Project data
-    project_data: &ProjectData,
+    // Project Code
+    source_map: &SourceMap,
+    // Launch data
+    conext: &Context,
     // Module address
     module_address: AccountAddress,
     // module name
@@ -132,25 +130,20 @@ pub fn make_function_call(
     source_index: Option<String>,
 ) -> Result<EnrichedTransaction, Error> {
     let functions = find_module_function(
-        project_data,
+        source_map,
+        conext,
         &module_address,
         &module_name,
         &function_name,
         source_index.as_ref(),
     )?;
-    let account_address = project_data.account_address.clone();
-    let (_, meta) = select_function(
-        functions,
-        account_address,
-        &type_tag,
-        &args,
-        &project_data.cfg,
-    )?;
+    let account_address = conext.account_address.clone();
+    let (_, meta) = select_function(functions, account_address, &type_tag, &args, &conext.cfg)?;
 
     let (signers, args) = prepare_function_signature(
         &meta.parameters,
         &args,
-        !project_data.cfg.deny_signers_definition,
+        !conext.cfg.deny_signers_definition,
         account_address,
     )?;
     let tx_name = format!("{}_{}", module_name, function_name);
@@ -179,7 +172,7 @@ pub fn make_function_call(
         ),
     };
 
-    Ok(if project_data.cfg.exe_context {
+    Ok(if conext.cfg.exe_context {
         // @todo for run
         anyhow::bail!("@todo make_function_call exe_context")
         // let modules_dir = ctx.str_path_for(&ctx.manifest.layout.modules_dir)?;
