@@ -53,7 +53,7 @@ const TEMPLATE_EXPLORER_CHOOSE_DIALECT_POPUP = `
 const TEMPLATE_RUN_COMMAND_EMTPY = `<li class="empty">- empty -</li>`;
 const TEMPLATE_RUN_COMMAND_ITEM = `
 <li class="item" data-id="{{id}}">
-    <button class="run" title="Run the command" >{{command}}</button>
+    <button class="com" title="Run the command" >{{command}}</button>
     <button class="remove" title="Delete the command">x</button>
 </li>
 `;
@@ -66,6 +66,7 @@ export async function init() {
     init_menu();
     inic_header_buttons();
     inic_run_commands();
+    inic_tx_commands();
     await project_load();
     await cons.inic_panel();
 
@@ -115,7 +116,7 @@ function init_menu() {
         });
 
     document.addEventListener("keyup", function(e) {
-        if (e.ctrlKey && (e.key === "1" || e.key === "2" || e.key === "3")) {
+        if (e.ctrlKey && (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4")) {
             let button = document.querySelectorAll("#navigation .ico-panel li button")[e.key - 1];
             if (button.hasClass("hide")) { return; }
             on_click_icon_panel(button);
@@ -124,10 +125,11 @@ function init_menu() {
 }
 
 function on_click_icon_panel(click_button) {
+    let chield = document
+        .getElementById(click_button.attr("child-panel"));
     if (click_button.hasClass("open")) {
         click_button.removeClass("open");
-        document
-            .getElementById(click_button.attr("child-panel"))
+        chield
             .removeClass("open")
             .addClass('hide');
         return;
@@ -148,10 +150,14 @@ function on_click_icon_panel(click_button) {
             el.removeClass("open").addClass("hide")
         });
 
-    document
-        .getElementById(click_button.attr("child-panel"))
+    chield
         .removeClass("hide")
         .addClass("open");
+
+    let command_input = chield.querySelector('input.command');
+    if (command_input) {
+        command_input.focus();
+    }
 }
 
 // ===============================================================
@@ -214,7 +220,8 @@ function on_click_project(e) {
         return false;
     }
     explorer_load(id);
-    run_command_show_history(id);
+    run_command_show_history();
+    tx_command_show_history();
 }
 
 function on_click_project_remove(e) {
@@ -348,7 +355,9 @@ async function explorer_set(list) {
         }
     }
     // show "run script"
-    document.querySelectorAll("#navigation .ico-panel li button")[2].removeClass("hide");
+    let buttons = document.querySelectorAll("#navigation .ico-panel li button");
+    buttons[2].removeClass("hide");
+    buttons[3].removeClass("hide");
 }
 
 function explorer_add(parent_element, path, data) {
@@ -690,7 +699,7 @@ async function run_command_show_history() {
     }
 
     block_history
-        .querySelectorAll('button.run')
+        .querySelectorAll('button.com')
         .forEach(button => {
             button.addEventListener("click", function(e) {
                 e.stopPropagation();
@@ -723,6 +732,103 @@ function run_command_get_history() {
     let history = [];
     try {
         history = localStorage.getItem("run.commands.history." + window.open_project.id);
+        history = JSON.parse(history ? history : "[]");
+        if (!Array.isArray(history)) {
+            history = [];
+        }
+    } catch {}
+    return history;
+
+}
+
+// ===============================================================
+//  tx scripts
+// ===============================================================
+
+async function inic_tx_commands() {
+    container
+        .querySelector("#tx-container input.command:not(.i)")
+        .addClass("i")
+        .addEventListener("keyup", function(e) {
+            e.stopPropagation();
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                let command = this.value.trim();
+                if (!command.length) { reutrn; }
+                tx_command(command);
+                this.value = "";
+            }
+        });
+}
+
+async function tx_command(command) {
+    let history = tx_command_get_history(),
+        find_command = history.indexOf(command);
+    if (find_command !== -1) {
+        history.splice(find_command, 1);
+    }
+    history.unshift(command);
+    history = history.slice(0, 10);
+
+    localStorage.setItem("tx.commands.history." + window.open_project.id, JSON.stringify(history));
+    tx_command_show_history();
+
+    if (window.open_project.transaction) {
+        window.open_project.transaction(command);
+    }
+}
+
+async function tx_command_show_history() {
+    let block_history = container.querySelector("#tx_list .cont"),
+        history = tx_command_get_history();
+
+    let length = history.length;
+    if (!length) {
+        block_history.innerHTML = TEMPLATE_RUN_COMMAND_EMTPY;
+        return;
+    }
+
+    block_history.innerHTML = "";
+    for (let index = 0; index < length; index++) {
+        let item = TEMPLATE_RUN_COMMAND_ITEM
+            .replaceAll("{{command}}", history[index])
+            .replaceAll("{{id}}", index);
+        block_history.insertAdjacentHTML('beforeend', item);
+    }
+
+    block_history
+        .querySelectorAll('button.com')
+        .forEach(button => {
+            button.addEventListener("click", function(e) {
+                e.stopPropagation();
+                let command = tx_command_get_history()[this.parentNode.attr("data-id")];
+                if (command !== undefined) {
+                    tx_command(command);
+                }
+            });
+        });
+
+    block_history
+        .querySelectorAll('button.remove')
+        .forEach(button => {
+            button.addEventListener("click", function(e) {
+                e.stopPropagation();
+
+                cons.status("Delete an entry");
+                let history = tx_command_get_history(),
+                    index = this.parentNode.attr("data-id") * 1;
+                history.splice(index, 1);
+                localStorage.setItem("tx.commands.history." + window.open_project.id, JSON.stringify(history));
+
+                cons.status("Done");
+                tx_command_show_history();
+            });
+        });
+}
+
+function tx_command_get_history() {
+    let history = [];
+    try {
+        history = localStorage.getItem("tx.commands.history." + window.open_project.id);
         history = JSON.parse(history ? history : "[]");
         if (!Array.isArray(history)) {
             history = [];

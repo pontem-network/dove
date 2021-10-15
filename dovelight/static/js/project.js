@@ -99,7 +99,7 @@ export async function create(id) {
                 return this;
             }
             cons.status("Cleaning up the project..");
-            wasm.project_clean(this.id)
+            localapi.project_clean(this.id)
                 .then(response => {
                     if (response.code == 0) {
                         cons.status("Done")
@@ -122,7 +122,7 @@ export async function create(id) {
                 return this;
             }
             cons.status("Testing the project..");
-            wasm.project_test(this.id)
+            localapi.project_test(this.id)
                 .then(response => {
                     if (response.code == 0) {
                         cons.status("Done")
@@ -145,7 +145,7 @@ export async function create(id) {
                 return this;
             }
             cons.status("Checking the project..");
-            wasm.project_check(this.id)
+            localapi.project_check(this.id)
                 .then(response => {
                     if (response.code == 0) {
                         cons.status("Done")
@@ -168,7 +168,7 @@ export async function create(id) {
         /// Checking the project
         run_script: function(command) {
             cons.status("Running the script..");
-            wasm.dove_run(this.id, command)
+            localapi.project_run(this.id, command)
                 .then(response => {
                     if (response.code == 0) {
                         cons.status("Done")
@@ -186,6 +186,25 @@ export async function create(id) {
                         cons.status("Error: " + err);
                         console.warn(err);
                     }
+                });
+            return this;
+        },
+
+        /// Checking the project
+        transaction: function(command) {
+            cons.status("Creating a transaction..");
+            let start = Date.now();
+            localapi.project_tx(this.id, command)
+                .then(response => {
+                    cons.status("Done");
+                    cons.output("The transaction was successfully created: " +
+                        ((Date.now() - start) / 1000) + "s")
+                    console.log(response);
+                })
+                .catch(err => {
+                    cons.status("Error when creating a transaction");
+                    let message = (err.indexOf("error") === -1 ? "Error: " : "") + err;
+                    cons.output(message);
                 });
             return this;
         },

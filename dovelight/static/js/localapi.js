@@ -1,4 +1,6 @@
-import init, { build, make_abi, module_abi } from '../../pkg/dovelight.js';
+import init, { build, tx, make_abi, module_abi } from '../../pkg/dovelight.js';
+
+const CHAIN_API = "http://localhost:9933/";
 
 async function dbconnect() {
     return new Promise((resolve, reject) => {
@@ -498,6 +500,92 @@ export async function project_build(project_id) {
                 sources[key] = all[key].content;
             });
 
-            return build("http://localhost:9933/", source_map, "pont", "0x1");
+            return build(CHAIN_API, source_map, "pont", "0x1");
+        });
+}
+
+export async function project_clean(project_id) {
+    return project_modules_and_scripts(project_id)
+        .then(files => {
+            let [modules, scripts] = files,
+            all = {...modules, ...scripts },
+                sources = new Map(),
+                source_map = { source_map: sources };
+            Object.keys(all).forEach(key => {
+                sources[key] = all[key].content;
+            });
+
+            return new Promise((resolve, reject) => {
+                reject("@todo project_clean")
+            });
+            // return clean(CHAIN_API, source_map, "pont", "0x1");
+        });
+}
+
+export async function project_test(project_id) {
+    return project_modules_and_scripts(project_id)
+        .then(files => {
+            let [modules, scripts] = files,
+            all = {...modules, ...scripts },
+                sources = new Map(),
+                source_map = { source_map: sources };
+            Object.keys(all).forEach(key => {
+                sources[key] = all[key].content;
+            });
+
+            return new Promise((resolve, reject) => {
+                reject("@todo project_test")
+            });
+            // return clean(CHAIN_API, source_map, "pont", "0x1");
+        });
+}
+
+export async function project_check(project_id) {
+    return project_modules_and_scripts(project_id)
+        .then(files => {
+            let [modules, scripts] = files,
+            all = {...modules, ...scripts },
+                sources = new Map(),
+                source_map = { source_map: sources };
+            Object.keys(all).forEach(key => {
+                sources[key] = all[key].content;
+            });
+
+            return new Promise((resolve, reject) => {
+                reject("@todo project_check")
+            });
+            // return clean(CHAIN_API, source_map, "pont", "0x1");
+        });
+}
+
+export async function project_run(project_id, command) {
+    return project_modules_and_scripts(project_id)
+        .then(files => {
+            let [modules, scripts] = files,
+            all = {...modules, ...scripts },
+                sources = new Map(),
+                source_map = { source_map: sources };
+            Object.keys(all).forEach(key => {
+                sources[key] = all[key].content;
+            });
+
+            return new Promise((resolve, reject) => {
+                reject("@todo project_run")
+            });
+            // return clean(CHAIN_API, source_map, "pont", "0x1");
+        });
+}
+
+export async function project_tx(project_id, call) {
+    return project_modules_and_scripts(project_id)
+        .then(files => {
+            let [modules, scripts] = files,
+            all = {...modules, ...scripts },
+                sources = new Map(),
+                source_map = { source_map: sources };
+            Object.keys(all).forEach(key => {
+                sources[key] = all[key].content;
+            });
+            return tx(CHAIN_API, source_map, "pont", call);
         });
 }

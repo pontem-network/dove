@@ -450,14 +450,14 @@ body {
     outline: none;
 }
 
-#run_list .cont,
-#run_list .cont li {
+.list-command .cont,
+.list-command .cont li {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-#run_list .cont li.item {
+.list-command .cont li.item {
     position: relative;
     padding-bottom: 3px;
     margin-bottom: 3px;
@@ -465,7 +465,7 @@ body {
     transition: background .1s linear;
 }
 
-#run_list .cont li.item button {
+.list-command .cont li.item button {
     margin-top: 3px;
     border-width: 0;
     background: transparent;
@@ -475,29 +475,29 @@ body {
     transition: background .1s linear;
 }
 
-#run_list .cont li.item:hover {
+.list-command .cont li.item:hover {
     background-color: var(--color-0);
 }
 
-#run_list .cont li.item button.run {
+.list-command .cont li.item button.com {
     padding: 2px 30px 2px 5px;
     border-left: 2px solid #4c875466;
     width: 100%;
     text-align: left;
 }
 
-#run_list .cont li.item button.remove {
+.list-command .cont li.item button.remove {
     position: absolute;
     top: 1px;
     right: 3px;
     transition: color .1s linear;
 }
 
-#run_list .cont li.item button.remove:hover {
+.list-command .cont li.item button.remove:hover {
     color: #dc3545;
 }
 
-#run_list .cont li.empty {
+.list-command .cont li.empty {
     padding: 15px;
     color: var(--color-3);
     text-shadow: 0 0 1px rgba(0, 0, 0, .5);

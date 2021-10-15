@@ -81,6 +81,14 @@
                             <div class="keyhelp">ctrl+3</div>
                         </button>
                     </li>
+                    <li class="tx_script">
+                        <button type="button" class="icon-svg hide" title="tx script" child-panel="tx-container">
+                            <svg>
+                                <use xlink:href="#icon-tx"></use>
+                            </svg>
+                            <div class="keyhelp">ctrl+4</div>
+                        </button>
+                    </li>
                 </ul>
                 <div class="list-panel">
                     <div id="projects-container" class="container hide">
@@ -104,7 +112,7 @@
                     </div>
                     <div id="run-container" class="container hide">
                         <h2 class="head">Run</h2>
-                        <div id="run_list" class="list-block scroll">
+                        <div id="run_list" class="list-block list-command scroll">
                             <div class="in">
                                 <ul class="cont">
                                     <li class="empty">- empty -</li>
@@ -113,6 +121,19 @@
                         </div>
                         <div class="run_comm">
                             &gt;<input type="text" class="command" title="Enter the command to call the script" placeholder="Example: script_name<u8>(1,2)" />
+                        </div>
+                    </div>
+                    <div id="tx-container" class="container hide">
+                        <h2 class="head">Transaction</h2>
+                        <div id="tx_list" class="list-block list-command scroll">
+                            <div class="in">
+                                <ul class="cont">
+                                    <li class="empty">- empty -</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="run_comm">
+                            &gt;<input type="text" class="command" title="Enter the command to call" placeholder="Example: script_name<u8>(1,2)" />
                         </div>
                     </div>
                 </div>
@@ -236,6 +257,14 @@
             <symbol id="icon-run" viewBox="0 0 191.255 191.255">
                 <path
                     d="M162.929,66.612c-2.814-1.754-6.514-0.896-8.267,1.917s-0.895,6.513,1.917,8.266c6.544,4.081,10.45,11.121,10.45,18.833 s-3.906,14.752-10.45,18.833l-98.417,61.365c-6.943,4.329-15.359,4.542-22.512,0.573c-7.154-3.97-11.425-11.225-11.425-19.406 V34.262c0-8.181,4.271-15.436,11.425-19.406c7.153-3.969,15.569-3.756,22.512,0.573l57.292,35.723 c2.813,1.752,6.513,0.895,8.267-1.917c1.753-2.812,0.895-6.513-1.917-8.266L64.512,5.247c-10.696-6.669-23.661-7-34.685-0.883 C18.806,10.48,12.226,21.657,12.226,34.262v122.73c0,12.605,6.58,23.782,17.602,29.898c5.25,2.913,10.939,4.364,16.616,4.364 c6.241,0,12.467-1.754,18.068-5.247l98.417-61.365c10.082-6.287,16.101-17.133,16.101-29.015S173.011,72.899,162.929,66.612z" />
+            </symbol>
+            <symbol id="icon-tx" viewBox="0 0 980.000000 813.000000">
+                <g transform="translate(0.000000,813.000000) scale(0.100000,-0.100000)">
+                    <path
+                        d="M6465 8117 c-287 -74 -432 -395 -299 -665 39 -80 -74 42 1336 -1442 l774 -815 -3960 -5 c-3770 -5 -3963 -6 -4006 -23 -200 -80 -326 -280 -306 -485 18 -170 114 -308 266 -381 l75 -36 4602 -3 4602 -2 88 98 c48 54 100 123 115 153 72 149 60 340 -31 479 -44 67 -2866 3030 -2920 3065 -93 62 -235 88 -336 62z" />
+                    <path
+                        d="M169 3785 c-47 -53 -98 -117 -112 -144 -81 -147 -74 -346 16 -484 27 -41 545 -592 1432 -1523 765 -802 1408 -1476 1430 -1498 118 -115 280 -155 437 -106 208 64 346 296 308 519 -26 156 24 98 -1114 1296 -570 600 -1036 1093 -1036 1098 0 4 1775 7 3944 7 3843 0 3946 0 4005 19 153 48 270 174 305 331 28 121 16 222 -40 332 -34 67 -120 157 -182 191 -113 62 271 57 -4737 57 l-4570 0 -86 -95z" />
+                </g>
             </symbol>
         </svg>
     </div>
