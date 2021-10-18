@@ -71,7 +71,7 @@ impl<T: fmt::Debug> fmt::Debug for Spanned<T> {
 impl From<LocDiem> for Loc {
     fn from(locdiem: LocDiem) -> Loc {
         Loc {
-            span: locdiem.span.into(),
+            span: locdiem.span,
             file: locdiem.file.to_string(),
         }
     }
