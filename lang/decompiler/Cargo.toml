@@ -38,7 +38,7 @@ cffi = []
 
 # cli:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = "3.0.0-beta.2"
+structopt = "0.3"
 anyhow = "1.0"
 
 [target.wasm32-unknown-unknown.dependencies]
