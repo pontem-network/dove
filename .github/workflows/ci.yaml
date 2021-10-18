@@ -48,13 +48,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: SYS
+        run: |
+          uname -a
+          uname -m
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           profile: minimal
           override: true
           target: aarch64-apple-darwin
+
+      - name: Build All
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=aarch64-apple-darwin
 
       - name: Test All
         uses: actions-rs/cargo@v1
