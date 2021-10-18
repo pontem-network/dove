@@ -33,6 +33,35 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --tests --examples -- -Dwarnings
 
+  tests-experimental:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS-aarch64
+            os: macOS-11
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          target: aarch64-apple-darwin
+
+      - name: Test All
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --target=aarch64-apple-darwin --no-fail-fast --all --all-features
+
   tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
