@@ -4,8 +4,7 @@ use std::{
     fmt,
     hash::{Hash, Hasher},
 };
-use codespan::Span;
-use move_ir_types::location::Loc as LocDiem;
+use move_ir_types::location::{Loc as LocDiem, SpanDef};
 
 //**************************************************************************************************
 // Spanned
@@ -26,7 +25,7 @@ impl<T> Spanned<T> {
     pub fn unsafe_no_loc(value: T) -> Spanned<T> {
         Spanned {
             value,
-            loc: Loc::new(Self::NO_LOC_FILE.to_string(), Span::default()),
+            loc: Loc::new(Self::NO_LOC_FILE.to_string(), SpanDef::default()),
         }
     }
 }
@@ -86,10 +85,11 @@ pub const fn sp<T>(loc: Loc, value: T) -> Spanned<T> {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Loc {
     pub file: String,
-    pub span: Span,
+    pub span: SpanDef,
 }
+
 impl Loc {
-    pub fn new(file: String, span: Span) -> Loc {
+    pub fn new(file: String, span: SpanDef) -> Loc {
         Loc { file, span }
     }
 
@@ -97,7 +97,7 @@ impl Loc {
         self.file
     }
 
-    pub fn span(self) -> Span {
+    pub fn span(self) -> SpanDef {
         self.span
     }
 }
@@ -109,12 +109,12 @@ impl PartialOrd for Loc {
             return Some(file_ord);
         }
 
-        let start_ord = self.span.start().partial_cmp(&other.span.start())?;
+        let start_ord = self.span.start.partial_cmp(&other.span.start)?;
         if start_ord != Ordering::Equal {
             return Some(start_ord);
         }
 
-        self.span.end().partial_cmp(&other.span.end())
+        self.span.end.partial_cmp(&other.span.end)
     }
 }
 
@@ -122,9 +122,9 @@ impl Ord for Loc {
     fn cmp(&self, other: &Loc) -> Ordering {
         self.file.cmp(&other.file).then_with(|| {
             self.span
-                .start()
-                .cmp(&other.span.start())
-                .then_with(|| self.span.end().cmp(&other.span.end()))
+                .start
+                .cmp(&other.span.start)
+                .then_with(|| self.span.end.cmp(&other.span.end))
         })
     }
 }

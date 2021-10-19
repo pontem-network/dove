@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use anyhow::Error;
+use codespan::Span;
 use move_core_types::account_address::AccountAddress;
-use move_lang::{leak_str, parse_file, MatchedFileCommentMap};
+use move_lang::{parse_file, MatchedFileCommentMap};
 use move_lang::errors::{FilesSourceText, output_errors};
 use move_lang::parser::ast::{
     Definition, Script, Type, Type_, NameAccessChain_, LeadingNameAccess_, ModuleDefinition,
@@ -12,6 +13,7 @@ use move_lang::parser::ast::{
 use crate::compiler::dialects::Dialect;
 use crate::compiler::preprocessor::BuilderPreprocessor;
 use codespan_reporting::term::termcolor::{StandardStream, ColorChoice};
+use ir_to_bytecode_syntax::syntax::leak_str;
 use move_core_types::identifier::Identifier;
 use move_lang::shared::Identifier as Iden;
 
@@ -200,6 +202,7 @@ fn make_script_meta(script: Script, docs: &MatchedFileCommentMap) -> Result<Func
         .into_iter()
         .map(|(var, tp)| (var.0.value, extract_type_name(tp)))
         .collect();
+    let span: Span = func.loc.span.into();
     Ok(Spanned::new(
         func.loc.into(),
         FuncMeta_ {
@@ -207,7 +210,7 @@ fn make_script_meta(script: Script, docs: &MatchedFileCommentMap) -> Result<Func
             visibility: Visibility::Script,
             type_parameters,
             parameters,
-            doc: docs.get(&func.loc.span.start()).cloned(),
+            doc: docs.get(&span.start()).cloned(),
         },
     ))
 }
@@ -314,6 +317,7 @@ fn parse_module_definition(
                     AstVisibility::Internal => Visibility::Internal,
                 };
 
+                let span: Span = func.loc.span.into();
                 Some(Spanned::new(
                     func.loc.into(),
                     FuncMeta_ {
@@ -322,7 +326,7 @@ fn parse_module_definition(
                         visibility,
                         type_parameters,
                         parameters,
-                        doc: docs.get(&func.loc.span.start()).cloned(),
+                        doc: docs.get(&span.start()).cloned(),
                     },
                 ))
             }
@@ -339,17 +343,19 @@ fn parse_module_definition(
                     .iter()
                     .map(|ab| ab.value.to_string())
                     .collect();
+
                 let fields = match struc.fields {
                     StructFields::Defined(fields) => fields
                         .iter()
                         .map(|(name, tp)| {
+                            let span: Span = name.loc().span.into();
                             Spanned::new(
                                 name.loc().into(),
                                 StructMetaField_ {
                                     name: Identifier::new(name.to_string())
                                         .expect("Valid identifier"),
                                     type_field: extract_type_name(tp.clone()),
-                                    doc: docs.get(&name.loc().span.start()).cloned(),
+                                    doc: docs.get(&span.start()).cloned(),
                                 },
                             )
                         })
@@ -364,6 +370,8 @@ fn parse_module_definition(
                         (name.to_string(), ab)
                     })
                     .collect();
+
+                let span: Span = struc.loc.span.into();
                 Some(Spanned::new(
                     struc.loc.into(),
                     StructMeta_ {
@@ -371,7 +379,7 @@ fn parse_module_definition(
                         abilities,
                         type_parameters,
                         fields,
-                        doc: docs.get(&struc.loc.span.start()).cloned(),
+                        doc: docs.get(&span.start()).cloned(),
                     },
                 ))
             }
@@ -379,6 +387,7 @@ fn parse_module_definition(
         })
         .collect();
 
+    let span: Span = module.loc.span.into();
     Ok(Spanned::new(
         module.loc.into(),
         ModuleMeta_ {
@@ -386,7 +395,7 @@ fn parse_module_definition(
             name: Identifier::new(name.0.value)?,
             funs,
             structs,
-            doc: docs.get(&module.loc.span.start()).cloned(),
+            doc: docs.get(&span.start()).cloned(),
         },
     ))
 }
@@ -403,11 +412,11 @@ mod metadata_tests {
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_core_types::identifier::Identifier;
     use move_core_types::account_address::AccountAddress;
-    use codespan::Span;
+    use move_ir_types::location::SpanDef;
     use crate::compiler::metadata::spanned::Loc;
 
     fn spanned_wrap<T>(value: T) -> Spanned<T> {
-        Spanned::new(Loc::new("none".to_string(), Span::new(0, 0)), value)
+        Spanned::new(Loc::new("none".to_string(), SpanDef::default()), value)
     }
     fn create_field(name: &str, tp: &str, doc: Option<&str>) -> StructMetaField {
         spanned_wrap(StructMetaField_ {
