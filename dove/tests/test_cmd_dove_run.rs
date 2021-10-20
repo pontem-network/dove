@@ -1,5 +1,7 @@
 use fs_extra::file::write_all;
-use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_remove};
+use dove::tests_helper::{
+    execute_dove_at, project_start_new_and_build, project_remove, execute_dove_bin_at,
+};
 use std::path::PathBuf;
 
 /// $ dove run
@@ -41,7 +43,13 @@ fn test_cmd_dove_run_with_call_and_arguments() {
         vec!["dove", "run", "withnums", "--args", "1", "2"],
     ] {
         execute_dove_at(args.as_ref(), &project_folder)
-            .map(|err| format!("Failed to execute '{}'. Error:{}", args.join(" "), err))
+            .map_err(|err| {
+                format!(
+                    "Failed to execute '{}'. Error:{}",
+                    args.join(" "),
+                    err.to_string()
+                )
+            })
             .unwrap();
     }
     project_remove(&project_folder);
@@ -61,8 +69,32 @@ fn test_cmd_dove_run_multiple_scripts() {
     project_remove(&project_folder);
 }
 
+/// dove run 'main()'
+#[test]
+fn test_cmd_dove_run_script_with_attr_dialect() {
+    let path_dove = env!("CARGO_BIN_EXE_dove");
+    for (dialect, result) in [("diem", 1), ("pont", 2), ("dfinance", 3)] {
+        let project_folder = create_project_with_attr_dialect(
+            "project_run_script_with_attr_dialect",
+            Some(dialect),
+        );
+        let args = &["dove", "run", "main()"];
+        let stdout = execute_dove_bin_at(path_dove, args, &project_folder)
+            .map_err(|err| {
+                format!(
+                    "Failed to execute '{}'. Error:{}",
+                    args.join(" "),
+                    err.to_string()
+                )
+            })
+            .unwrap();
+        assert!(stdout.contains(format!("[debug] {}", result).as_str()));
+        project_remove(&project_folder);
+    }
+}
+
 fn create_project_with_a_single_script_without_parameters(project_name: &str) -> PathBuf {
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
@@ -73,7 +105,7 @@ fn create_project_with_a_single_script_without_parameters(project_name: &str) ->
 }
 
 fn create_project_with_any_scripts(project_name: &str) -> PathBuf {
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/noparams.move
     write_all(
         &project_folder.join("scripts").join("noparams.move"),
@@ -93,5 +125,66 @@ fn create_project_with_any_scripts(project_name: &str) -> PathBuf {
                 script { fun script_2(_a:u64) {  } }",
     )
     .unwrap();
+    project_folder
+}
+
+fn create_project_with_attr_dialect(project_name: &str, dialect: Option<&str>) -> PathBuf {
+    let project_folder = project_start_new_and_build(project_name, dialect);
+    // project_folder/scripts/main.move
+    write_all(
+        &project_folder.join("scripts").join("main.move"),
+        "script {
+            use 0x1::Debug;
+            use 0x1::Version;
+            fun main(){
+                Debug::print<u8>(&Version::get());
+            }
+        }",
+    )
+    .unwrap();
+    // project_folder/modules/mdiem.move
+    write_all(
+        &project_folder.join("modules").join("mdiem.move"),
+        "
+        #![dialect(diem)]
+        /*
+         #![dialect(dfinance)]
+        */
+        module 0x1::Version{
+            public fun get():u8{
+                1
+            }
+        }",
+    )
+    .unwrap();
+    // project_folder/modules/mpont.move
+    write_all(
+        &project_folder.join("modules").join("mpont.move"),
+        "
+        #![dialect(pont)]
+        /*
+         // #![dialect(diem)]
+        */
+        module 0x1::Version{
+            public fun get():u8{
+                2
+            }
+        }",
+    )
+    .unwrap();
+    // project_folder/modules/mdfinance.move
+    write_all(
+        &project_folder.join("modules").join("mdfinance.move"),
+        "
+        #![dialect(dfinance)]
+        // #![dialect(pont)]
+        module 0x1::Version{
+            public fun get():u8{
+                3
+            }
+        }",
+    )
+    .unwrap();
+
     project_folder
 }
