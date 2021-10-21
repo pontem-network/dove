@@ -58,8 +58,12 @@ pub(crate) fn make_script_call(
 
     let (path, meta) = select_function(scripts, addr, &type_tag, &args, &cfg)?;
 
-    let (signers, args) =
-        prepare_function_signature(&meta.parameters, &args, !cfg.deny_signers_definition, addr)?;
+    let (signers, args) = prepare_function_signature(
+        &meta.value.parameters,
+        &args,
+        !cfg.deny_signers_definition,
+        addr,
+    )?;
 
     let (signers, mut tx) = match signers {
         Signers::Explicit(signers) => (
@@ -141,8 +145,12 @@ pub(crate) fn make_function_call(
     let addr = ctx.account_address()?;
     let (_, meta) = select_function(functions, addr, &type_tag, &args, &cfg)?;
 
-    let (signers, args) =
-        prepare_function_signature(&meta.parameters, &args, !cfg.deny_signers_definition, addr)?;
+    let (signers, args) = prepare_function_signature(
+        &meta.value.parameters,
+        &args,
+        !cfg.deny_signers_definition,
+        addr,
+    )?;
 
     let tx_name = format!("{}_{}", module, func);
     let (signers, tx) = match signers {
@@ -191,10 +199,10 @@ fn select_function(
     } else if func.len() > 1 {
         let mut func = func
             .into_iter()
-            .filter(|(_, f)| f.type_parameters.len() == type_tag.len())
+            .filter(|(_, f)| f.value.type_parameters.len() == type_tag.len())
             .filter(|(_, f)| {
                 prepare_function_signature(
-                    &f.parameters,
+                    &f.value.parameters,
                     args,
                     !cfg.deny_signers_definition,
                     addr,

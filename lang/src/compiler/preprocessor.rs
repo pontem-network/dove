@@ -1,9 +1,11 @@
 use move_lang::errors::{Errors, FilesSourceText};
-use move_lang::preprocessor::SourceProcessor;
 
 use crate::compiler::dialects::{Dialect, line_endings};
 use crate::compiler::mut_string::{MutString, NewValue};
 use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
+use move_lang::callback::Interact;
+use std::borrow::Cow;
+use std::mem;
 
 pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
@@ -22,8 +24,8 @@ impl<'a> BuilderPreprocessor<'a> {
         }
     }
 
-    pub fn into_source(self) -> FilesSourceText {
-        self.files
+    pub fn into_source(&mut self) -> FilesSourceText {
+        mem::take(&mut self.files)
     }
 
     pub fn transform(&self, errors: Errors) -> Errors {
@@ -31,17 +33,16 @@ impl<'a> BuilderPreprocessor<'a> {
     }
 }
 
-impl<'a> SourceProcessor for BuilderPreprocessor<'a> {
-    fn process(&mut self, name: &'static str, source: String) -> String {
+impl<'a> Interact for BuilderPreprocessor<'a> {
+    fn preprocess<'b>(&mut self, name: &'static str, source: Cow<'b, str>) -> Cow<'b, str> {
         let mut mut_source = MutString::new(&source);
         let file_source_map =
             normalize_source_text(self.dialect, (&source, &mut mut_source), self.sender);
         let post_processed_source = mut_source.freeze();
-
         self.offsets_map.insert(name, file_source_map);
-        self.files.insert(name, source);
+        self.files.insert(name, source.to_string());
 
-        post_processed_source
+        Cow::from(post_processed_source)
     }
 }
 

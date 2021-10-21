@@ -26,8 +26,8 @@ use std::collections::HashSet;
 use crate::inner::db::FileDiagnostic;
 use crate::inner::config::Config;
 use crate::inner::analysis::Analysis;
-use lang::compiler::file::MoveFile;
 use std::fmt::Debug;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct LspError {
@@ -63,9 +63,9 @@ pub enum ResponseEvent {
 
 #[derive(Debug)]
 pub enum FileSystemEvent {
-    AddFile(MoveFile<'static, 'static>),
-    RemoveFile(String),
-    ChangeFile(MoveFile<'static, 'static>),
+    AddFile(PathBuf),
+    RemoveFile(PathBuf),
+    ChangeFile(PathBuf),
 }
 
 pub enum Event {
@@ -216,7 +216,7 @@ pub fn loop_turn(
             .opened_files
             .files()
             .iter()
-            .chain(analysis.db().module_files().keys())
+            .chain(&analysis.db().module_files())
             .map(|f| f.to_string())
             .collect::<HashSet<_>>();
 
@@ -275,33 +275,27 @@ fn on_notification(
 ) -> Result<()> {
     let not = match notification_cast::<DidOpenTextDocument>(not) {
         Ok(params) => {
-            let fpath = uri_to_str(params.text_document.uri)?;
+            let fpath_string = uri_to_str(params.text_document.uri)?;
+            let fpath = PathBuf::from(&fpath_string);
 
-            let file = MoveFile::with_content(fpath.clone(), params.text_document.text);
             fs_events_sender
-                .send(FileSystemEvent::AddFile(file))
+                .send(FileSystemEvent::AddFile(fpath))
                 .unwrap();
 
-            loop_state.opened_files.add(fpath);
+            loop_state.opened_files.add(fpath_string);
             return Ok(());
         }
         Err(not) => not,
     };
     let not = match notification_cast::<DidChangeTextDocument>(not) {
-        Ok(mut params) => {
-            let fpath = uri_to_str(params.text_document.uri)?;
+        Ok(params) => {
+            let fpath_string = uri_to_str(params.text_document.uri)?;
+            let fpath = PathBuf::from(&fpath_string);
 
-            let new_text = params
-                .content_changes
-                .pop()
-                .ok_or_else(|| anyhow::anyhow!("empty changes".to_string()))?
-                .text;
-
-            let changed_file = MoveFile::with_content(fpath.clone(), new_text);
             fs_events_sender
-                .send(FileSystemEvent::ChangeFile(changed_file))
+                .send(FileSystemEvent::ChangeFile(fpath))
                 .unwrap();
-            loop_state.opened_files.add(fpath);
+            loop_state.opened_files.add(fpath_string);
             return Ok(());
         }
         Err(not) => not,
@@ -341,8 +335,10 @@ fn on_notification(
     let not = match notification_cast::<DidChangeWatchedFiles>(not) {
         Ok(params) => {
             for file_event in params.changes {
-                let fpath = uri_to_str(file_event.uri)?;
-                loop_state.opened_files.remove(fpath.clone());
+                let fpath_string = uri_to_str(file_event.uri)?;
+                let fpath = PathBuf::from(&fpath_string);
+
+                loop_state.opened_files.remove(fpath_string.clone());
                 fs_events_sender
                     .send(FileSystemEvent::RemoveFile(fpath))
                     .unwrap();
@@ -371,17 +367,11 @@ pub fn compute_file_diagnostics<I>(
         // clear previous diagnostics for file
         diagnostics.push(FileDiagnostic::new_empty(&fpath));
 
-        let text = match analysis.db().available_files.get(&fpath) {
-            Some(text) => text,
-            None => {
-                log::warn!("Trying to check untracked file: {:?}", fpath);
-                continue;
-            }
-        };
-        if let Some(d) = analysis.check_file(MoveFile::with_content(fpath, text)) {
+        if let Some(d) = analysis.check_file(fpath) {
             diagnostics.push(d);
         }
     }
+
     task_sender
         .send(ResponseEvent::Diagnostic(diagnostics))
         .unwrap();

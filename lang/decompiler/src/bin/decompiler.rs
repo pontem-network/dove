@@ -1,22 +1,25 @@
-extern crate clap;
-
 use std::fs::{canonicalize, File, read};
 use std::io::Write;
 use std::path::PathBuf;
+use structopt::StructOpt;
 
 use anyhow::Error;
-use clap::Clap;
 
-#[derive(Clap, Debug)]
-#[clap(name = "Move decompiler", version = decompiler::VERSION)]
+#[derive(StructOpt, Debug)]
+#[structopt(name = "Move decompiler", version = decompiler::VERSION)]
 struct Opt {
-    #[clap(about = "Path to input file", long, short)]
+    #[structopt(about = "Path to input file", long = "input", short = "i")]
     /// Path to compiled Move binary
     input: PathBuf,
-    #[clap(about = "Dialect name", long, short, default_value = "pontem")]
+    #[structopt(
+        about = "Dialect name",
+        long = "dialect",
+        short = "d",
+        default_value = "pontem"
+    )]
     /// Dialect name.
     dialect: String,
-    #[clap(about = "Path to output file", long, short)]
+    #[structopt(about = "Path to output file", long = "output", short = "o")]
     /// Optional path to output file.
     /// Prints results to stdout by default.
     output: Option<PathBuf>,
@@ -29,7 +32,7 @@ fn main() {
 }
 
 fn run() -> Result<(), Error> {
-    let opts = Opt::parse();
+    let opts = Opt::from_args();
 
     let input = canonicalize(opts.input)?;
     let mut bytes = read(input)?;

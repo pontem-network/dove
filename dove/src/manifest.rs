@@ -129,7 +129,7 @@ fn artifacts() -> String {
 }
 
 fn index() -> String {
-    format!("{}{}{}", artifacts(), MS, ".DoveIndex.toml")
+    format!("{}{}{}", system_folder(), MS, ".DoveIndex.toml")
 }
 
 fn storage_dir() -> String {
@@ -142,6 +142,14 @@ fn exe_build_dir() -> String {
 
 fn code_code_address() -> String {
     "0x1".to_string()
+}
+
+fn system_folder() -> String {
+    format!("{}{}{}", artifacts(), MS, ".system")
+}
+
+fn project_map() -> String {
+    format!("{}{}{}", system_folder(), MS, "project.map")
 }
 
 /// Project layout.
@@ -203,6 +211,14 @@ pub struct Layout {
     /// Path to pover settings
     #[serde(default = "prover_toml")]
     pub prover_toml: String,
+
+    /// Path t
+    #[serde(default = "system_folder")]
+    pub system_folder: String,
+
+    /// Path to project map
+    #[serde(default = "project_map")]
+    pub project_map: String,
 }
 
 impl Layout {
@@ -225,6 +241,8 @@ impl Layout {
             storage_dir: ctx.str_path_for(&self.storage_dir)?,
             exe_build_dir: ctx.str_path_for(&self.exe_build_dir)?,
             prover_toml: ctx.str_path_for(&self.prover_toml)?,
+            system_folder: ctx.str_path_for(&self.system_folder)?,
+            project_map: ctx.str_path_for(&self.project_map)?,
         })
     }
 }
@@ -248,6 +266,8 @@ impl Default for Layout {
             storage_dir: storage_dir(),
             exe_build_dir: exe_build_dir(),
             prover_toml: prover_toml(),
+            system_folder: system_folder(),
+            project_map: project_map(),
         }
     }
 }

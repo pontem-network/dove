@@ -8,12 +8,12 @@
 
 #[macro_use]
 extern crate log;
+use structopt::StructOpt;
 
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
-use clap::Clap;
 use http::Uri;
 use move_core_types::language_storage::TypeTag;
 use resource_viewer as rv;
@@ -26,13 +26,13 @@ use net::{make_net, NetView};
 const STDOUT_PATH: &str = "-";
 const VERSION: &str = git_hash::crate_version_with_git_hash_short!();
 
-#[derive(Clap, Debug)]
-#[clap(name = "Move resource viewer", version = VERSION)]
+#[derive(StructOpt, Debug)]
+#[structopt(name = "Move resource viewer", version = VERSION)]
 struct Cfg {
     /// Owner's address
-    #[clap(long, short)]
+    #[structopt(long, short)]
     address: String,
-    #[clap(default_value = "pont")]
+    #[structopt(default_value = "pont")]
     dialect: String,
 
     /// Query in `TypeTag` format,
@@ -42,36 +42,36 @@ struct Cfg {
     /// Query examples:
     /// "0x1::Account::Balance<0x1::XFI::T>",
     /// "0x1::Account::Balance<0x1::Coins::ETH>"
-    #[clap(long, short)]
+    #[structopt(long, short)]
     query: tte::TypeTagQuery,
 
     /// Time: maximum block number
-    #[clap(long, short)]
+    #[structopt(long, short)]
     height: Option<String>,
 
     /// Output file path.
     /// Special value for write to stdout: "-"
-    #[clap(long, short)]
-    #[clap(default_value = STDOUT_PATH)]
+    #[structopt(long, short)]
+    #[structopt(default_value = STDOUT_PATH)]
     output: PathBuf,
 
     /// Sets output format to JSON.
     /// Optional, `true` if output file extension is .json
-    #[clap(long, short)]
+    #[structopt(long, short)]
     json: Option<bool>,
 
     /// Node REST API address
-    #[clap(long)]
+    #[structopt(long)]
     api: Uri,
 
     /// Enables compatibility mode
-    #[clap(long, short)]
+    #[structopt(long, short)]
     compat: bool,
 
     /// Export JSON schema for output format.
     /// Special value for write to stdout: "-"
     #[cfg(feature = "json-schema")]
-    #[clap(long = "json-schema")]
+    #[structopt(long = "json-schema")]
     json_schema: Option<PathBuf>,
 }
 
@@ -94,7 +94,7 @@ fn init_logger() -> Result<(), impl std::error::Error> {
 }
 
 fn run() -> Result<(), Error> {
-    let cfg = Cfg::parse();
+    let cfg = Cfg::from_args();
 
     let dialect_name = DialectName::from_str(&cfg.dialect)?;
 
