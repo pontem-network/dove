@@ -1,8 +1,13 @@
 {
   inputs = {
     fenix.url = "github:nix-community/fenix";
+    fenix.inputs.nixpkgs.follows = "nixpkgs";
+    
     naersk.url = "github:nmattia/naersk";
+    naersk.inputs.nixpkgs.follows = "nixpkgs";
+    
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
     utils.url = "github:numtide/flake-utils";
   };
 
