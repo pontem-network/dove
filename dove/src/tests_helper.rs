@@ -25,9 +25,9 @@ pub fn project_start_for_init(project_name: &str) -> PathBuf {
 }
 
 /// create new project and set local dependencies
-pub fn project_start_new(project_name: &str) -> PathBuf {
+pub fn project_start_new(project_name: &str, dialect: Option<&str>) -> PathBuf {
     let (base_folder, project_folder) = project_start(project_name);
-    project_new_local(&base_folder, &project_folder, project_name);
+    project_new_local(&base_folder, &project_folder, project_name, dialect);
     project_folder
 }
 
@@ -39,8 +39,8 @@ pub fn project_start_new_default(project_name: &str) -> PathBuf {
 }
 
 /// create default project and return project path
-pub fn project_start_new_and_build(project_name: &str) -> PathBuf {
-    let project_folder = project_start_new(project_name);
+pub fn project_start_new_and_build(project_name: &str, dialect: Option<&str>) -> PathBuf {
+    let project_folder = project_start_new(project_name, dialect);
     project_build(&project_folder);
     project_folder
 }
@@ -95,8 +95,17 @@ pub fn set_dependency_in_toml(
 }
 
 /// $ dove new ###
-pub fn project_new_local(base_folder: &Path, project_folder: &Path, project_name: &str) {
-    execute_dove_at(&["dove", "new", project_name], base_folder).unwrap();
+pub fn project_new_local(
+    base_folder: &Path,
+    project_folder: &Path,
+    project_name: &str,
+    dialect: Option<&str>,
+) {
+    execute_dove_at(
+        &["dove", "new", project_name, "-d", dialect.unwrap_or("pont")],
+        base_folder,
+    )
+    .unwrap();
     set_dependencies_local_move_stdlib(project_folder);
 }
 

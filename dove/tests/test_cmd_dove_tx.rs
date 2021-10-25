@@ -13,7 +13,7 @@ use dove::tx::model::{Transaction, Signer, V1};
 fn test_cmd_dove_tx_without_arguments() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_without_arguments";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
@@ -53,7 +53,7 @@ fn test_cmd_dove_tx_without_arguments() {
 fn test_cmd_dove_tx_with_type() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_with_type";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/modules/mdemo.move
     write_all(
         &project_folder.join("modules").join("mdemo.move"),
@@ -149,7 +149,7 @@ fn test_cmd_dove_tx_with_type() {
 fn test_cmd_dove_tx_with_output_file_name() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_with_output_file_name";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
@@ -180,7 +180,7 @@ fn test_cmd_dove_tx_with_output_file_name() {
 fn test_cmd_dove_tx_with_script_name_arg() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_with_script_name_arg";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
@@ -212,7 +212,7 @@ fn test_cmd_dove_tx_with_script_name_arg() {
 fn test_cmd_dove_tx_with_script_name_option() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_with_script_name_option";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
@@ -244,7 +244,7 @@ fn test_cmd_dove_tx_with_script_name_option() {
 fn test_cmd_dove_tx_with_script_file_name() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_with_script_file_name";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo_1.move
     write_all(
         &project_folder.join("scripts").join("sdemo_1.move"),
@@ -285,7 +285,7 @@ fn test_cmd_dove_tx_with_script_file_name() {
 fn test_cmd_dove_tx_with_script_method_args() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_with_script_method_args";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
@@ -324,7 +324,7 @@ fn test_cmd_dove_tx_with_script_method_args() {
 fn test_cmd_dove_tx_with_script_method_args_option() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_with_script_method_args_option";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
     write_all(
         &project_folder.join("scripts").join("sdemo.move"),
@@ -364,7 +364,7 @@ fn test_cmd_dove_tx_with_script_method_args_option() {
 fn test_cmd_dove_tx_multiple_scripts() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_multiple_scripts";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/multiple.move
     write_all(
         &project_folder.join("scripts").join("multiple.move"),
@@ -398,7 +398,7 @@ fn test_cmd_dove_tx_multiple_scripts() {
 fn test_cmd_dove_tx_signer() {
     // Path to dove folder, project and project name
     let project_name = "project_tx_signer";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/signer.move
     write_all(
         &project_folder.join("scripts").join("signer.move"),

@@ -5,7 +5,7 @@ use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_r
 fn test_cmd_dove_clean() {
     // Path to dove folder, project and project name
     let project_name = "project_clean";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     let project_artifacts = project_folder.join("artifacts");
     assert!(
         project_artifacts.exists(),

@@ -6,7 +6,7 @@ use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_r
 fn test_cmd_dove_test_run_all_test_in_project() {
     // Path to dove folder, project and project name
     let project_name = "project_test_run_all_test_in_project";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/modules/mdemo.move
     write_all(
         &project_folder.join("modules").join("mdemo.move"),
@@ -39,7 +39,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
 fn test_cmd_dove_test_run_one_test_in_project() {
     // Path to dove folder, project and project name
     let project_name = "project_test_run_one_test_in_project";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/modules/mdemo.move
     write_all(
         &project_folder.join("modules").join("mdemo.move"),
@@ -83,7 +83,7 @@ fn test_cmd_dove_test_run_one_test_in_project() {
 fn test_cmd_dove_test_fail_test_in_project() {
     // Path to dove folder, project and project name
     let project_name = "project_test_fail_test_in_project";
-    let project_folder = project_start_new_and_build(project_name);
+    let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/tests/test_1.move
     write_all(
         &project_folder.join("tests").join("test_1.move"),
