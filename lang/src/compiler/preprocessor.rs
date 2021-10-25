@@ -1,12 +1,13 @@
-use move_lang::errors::{Errors, FilesSourceText};
-
-use crate::compiler::dialects::{Dialect, line_endings};
-use crate::compiler::mut_string::{MutString, NewValue};
-use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
-use move_lang::callback::Interact;
 use std::borrow::Cow;
 use std::mem;
 use regex::Regex;
+use lazy_static::lazy_static;
+
+use move_lang::errors::{Errors, FilesSourceText};
+use move_lang::callback::Interact;
+use crate::compiler::dialects::{Dialect, line_endings};
+use crate::compiler::mut_string::{MutString, NewValue};
+use crate::compiler::source_map::{FileOffsetMap, len_difference, ProjectOffsetMap};
 
 pub struct BuilderPreprocessor<'a> {
     offsets_map: ProjectOffsetMap,
@@ -78,9 +79,12 @@ fn replace_sender_placeholder<'a, 'b>(
 }
 
 fn attr_dialect<'b>(dialect_project: &str, source: Cow<'b, str>) -> Cow<'b, str> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"\#!\[dialect\((?P<name>\w+)\)\]\s").unwrap();
+    };
+
     fn pr(dialect_project: &str, source: String, start: usize) -> String {
-        let rg = Regex::new(r"\#!\[dialect\((?P<name>\w+)\)\]\s").unwrap();
-        let find = match rg.find_at(&source, start) {
+        let find = match RE.find_at(&source, start) {
             Some(find) => find,
             None => return source,
         };
@@ -95,11 +99,13 @@ fn attr_dialect<'b>(dialect_project: &str, source: Cow<'b, str>) -> Cow<'b, str>
             }
         }
 
-        if rg.replace(find.as_str(), "$name").as_ref() != dialect_project {
+        if RE.replace(find.as_str(), "$name").as_ref() != dialect_project {
             return "".to_string();
         }
 
-        let source = source[..find.start()].to_owned() + &source[find.end() - 1..];
+        let source = source[..find.start()].to_owned()
+            + " ".repeat(find.end() - 1 - find.start()).as_str()
+            + &source[find.end() - 1..];
         pr(dialect_project, source, find.start())
     }
 
@@ -158,12 +164,15 @@ mod test {
     #[test]
     pub fn test_attr_dialect() {
         let mut source;
+        let mut result;
 
         source = r"
                         #![dialect(pont)]
                         true
                     ";
-        assert_eq!(attr_dialect("pont", Cow::from(source)).trim(), "true");
+        result = attr_dialect("pont", Cow::from(source));
+        assert_eq!(result.trim(), "true");
+        assert_eq!(result.len(), source.len());
         assert_eq!(attr_dialect("diem", Cow::from(source)).trim(), "");
 
         source = r"
@@ -183,16 +192,18 @@ mod test {
                         */
                         true
                     ";
+        result = attr_dialect("pont", Cow::from(source));
         assert_eq!(
-            attr_dialect("pont", Cow::from(source)).trim(),
+            result.trim(),
             "// #![dialect(dfinance)]\n                        \
-            /**/\n                        \
+            /**/                 \n                        \
             // #![dialect(diem)]\n                        \
             /*\n                        \
             #![dialect(diem)]\n                        \
             */\n                        \
             true"
         );
+        assert_eq!(result.len(), source.len());
         assert_eq!(attr_dialect("diem", Cow::from(source)).trim(), "");
 
         source = r"
