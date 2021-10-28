@@ -16,7 +16,9 @@ Supported projects and dialects:
 
 **Using pre-compiled binaries:**
 
-Just visit [releases page](https://github.com/pontem-network/pontem/releases/tag/v0.3.1) and download binaries you are going to use.
+* If you are using **Mac OS** see [how to install OpenSSL](https://github.com/pontem-network/move-tools/issues/147#issuecomment-946744809).
+
+Just visit [releases page](https://github.com/pontem-network/move-tools/releases) and download binaries you are going to use.
 
 **Using source code:**
 
