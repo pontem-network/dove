@@ -29,6 +29,8 @@ cd move-tools
 
 ## Dove
 
+* If you are using **Mac OS** see [how to install OpenSSL](https://github.com/pontem-network/move-tools/issues/147#issuecomment-946744809).
+
 Regular installation:
 
 ```shell script
