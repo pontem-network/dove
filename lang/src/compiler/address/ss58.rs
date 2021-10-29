@@ -1,4 +1,5 @@
 use rust_base58::base58::FromBase58;
+use rust_base58::ToBase58;
 use anyhow::{anyhow, ensure, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -72,11 +73,25 @@ pub fn replace_ss58_addresses(
     }
 }
 
+/// Convert address to ss58
+/// 0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D => 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+pub fn address_to_ss58(account: &AccountAddress) -> String {
+    let mut ss58_address = [0; 35];
+    ss58_address[0] = 42;
+    ss58_address[1..33].copy_from_slice(&account.to_u8());
+    let hash = ss58hash(&ss58_address[0..33]);
+    ss58_address[33..35].copy_from_slice(&hash.as_bytes()[0..2]);
+    ss58_address.to_base58()
+}
+
 #[cfg(test)]
 mod test {
     use crate::compiler::source_map::FileOffsetMap;
-    use super::{PUB_KEY_LENGTH, replace_ss58_addresses, ss58_to_diem, ss58hash};
     use crate::compiler::mut_string::MutString;
+    use super::{
+        PUB_KEY_LENGTH, replace_ss58_addresses, ss58_to_diem, ss58hash, ss58_to_address,
+        address_to_ss58,
+    };
 
     #[test]
     fn test_ss58_to_diem() {
@@ -132,5 +147,13 @@ mod test {
         ",
             mut_str.freeze()
         );
+    }
+
+    #[test]
+    fn test_to_ss58check_with_version() {
+        let ss58 = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+        let adr = ss58_to_address(ss58).unwrap();
+
+        assert_eq!(ss58, &address_to_ss58(&adr));
     }
 }
