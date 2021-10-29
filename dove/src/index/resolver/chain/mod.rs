@@ -14,7 +14,7 @@ pub mod loader;
 /// Returns module path by its identifier.
 /// Downloads a module tree if it is not in the cache.
 pub fn resolve(ctx: &Context, module_id: &ModuleId) -> Result<(), Error> {
-    let dep = make_path(ctx, module_id);
+    let dep = make_path(ctx, module_id)?;
     if !dep.exists() {
         if let Some(chain_url) = &ctx.manifest.package.blockchain_api {
             let loader = RestBytecodeLoader::new(ctx.dialect.as_ref(), chain_url.parse()?)?;
@@ -46,9 +46,12 @@ fn load(path: &Path, loader: &RestBytecodeLoader, module_id: &ModuleId) -> Resul
     Ok(())
 }
 
-fn make_path(ctx: &Context, module_id: &ModuleId) -> PathBuf {
+fn make_path(ctx: &Context, module_id: &ModuleId) -> Result<PathBuf, Error> {
     let deps_dir = ctx.path_for(&ctx.manifest.layout.chain_deps);
-    deps_dir.join(make_local_name(module_id))
+    if !deps_dir.exists() {
+        std::fs::create_dir_all(&deps_dir)?;
+    }
+    Ok(deps_dir.join(make_local_name(module_id)))
 }
 
 fn make_local_name(module_name: &ModuleId) -> String {
