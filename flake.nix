@@ -4,6 +4,9 @@
     naersk.url = "github:nmattia/naersk";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
+
+    fenix.inputs.nixpkgs.follows = "nixpkgs";
+    naersk.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, utils, naersk, fenix }:
@@ -43,8 +46,9 @@
 
         });
 
-        defaultApp = utils.mkApp {
+        defaultApp = utils.lib.mkApp {
             drv = self.defaultPackage."${system}";
+            exePath = "/bin/dove";
         };
 
         devShell = with pkgs; mkShell {
