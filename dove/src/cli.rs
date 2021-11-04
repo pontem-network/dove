@@ -15,6 +15,7 @@ use crate::cmd::new::New;
 use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::Cmd;
+use crate::cmd::export::Export;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use crate::cmd::docgen::DocGen;
@@ -82,6 +83,11 @@ enum Opt {
         #[structopt(flatten)]
         cmd: DocGen,
     },
+    #[structopt(about = "Export dove.toml => move .toml")]
+    Export {
+        #[structopt(flatten)]
+        cmd: Export,
+    },
 }
 
 /// Public interface for the CLI (useful for testing).
@@ -104,6 +110,7 @@ where
         Opt::Tx { cmd } => cmd.execute(cwd),
         Opt::Prove { cmd } => cmd.execute(cwd),
         Opt::DocGen { cmd } => cmd.execute(cwd),
+        Opt::Export { cmd } => cmd.execute(cwd),
     }
 }
 

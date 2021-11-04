@@ -10,6 +10,8 @@ pub mod build;
 pub mod clean;
 /// Documentation generator.
 pub mod docgen;
+/// Export Dove.toml => Move.toml
+pub mod export;
 /// Dependencies fetcher.
 pub mod fetch;
 /// Project initializer.
