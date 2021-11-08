@@ -32,6 +32,8 @@ pub mod context;
 pub mod docs;
 /// Move executor.
 pub mod executor;
+/// Export Dove.toml => Move.toml
+pub mod export;
 /// Dove modules index.
 pub mod index;
 /// Dove configuration.
