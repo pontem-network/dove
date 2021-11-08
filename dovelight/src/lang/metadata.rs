@@ -7,8 +7,8 @@ use move_lang::parser::ast::{Definition, LeadingNameAccess_};
 use move_lang::callback::Interact;
 use move_lang::parser::syntax::parse_file_string;
 use move_core_types::account_address::AccountAddress;
-use crate::tx::report_errors;
-use crate::compiler::source_map::SourceMap;
+use crate::lang::tx::report_errors;
+use crate::lang::compiler::source_map::SourceMap;
 
 pub fn script_meta_source(
     script_name: &str,
@@ -84,7 +84,7 @@ fn parse(
 mod metadata_tests {
     use lang::compiler::dialects::DialectName;
     use lang::compiler::metadata::{ModuleMeta, FuncMeta, Visibility};
-    use crate::langwasm::metadata::{module_meta_source, script_meta_source};
+    use crate::lang::metadata::{module_meta_source, script_meta_source};
     use move_core_types::identifier::Identifier;
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_core_types::account_address::AccountAddress;

@@ -53,7 +53,7 @@ mod tests {
     use move_core_types::language_storage::ModuleId;
     use move_core_types::account_address::AccountAddress;
     use move_core_types::identifier::Identifier;
-    use crate::deps::index::{id_to_str, str_to_id};
+    use crate::lang::deps::index::{id_to_str, str_to_id};
 
     #[test]
     pub fn encode_decode() {

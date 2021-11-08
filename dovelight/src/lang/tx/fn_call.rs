@@ -6,11 +6,11 @@ use move_core_types::account_address::AccountAddress;
 use move_lang::compiled_unit::CompiledUnit;
 use lang::tx::fn_call::{select_function, prepare_function_signature};
 use lang::tx::model::{Signers, Transaction, Call, EnrichedTransaction};
-use crate::compiler::build_base;
-use crate::compiler::interact::CompilerInteract;
-use crate::tx::Context;
-use crate::tx::resolver::{find_script, find_module_function};
-use crate::compiler::source_map::SourceMap;
+use crate::lang::compiler::build_base;
+use crate::lang::compiler::interact::CompilerInteract;
+use crate::lang::tx::Context;
+use crate::lang::tx::resolver::{find_script, find_module_function};
+use crate::lang::compiler::source_map::SourceMap;
 
 pub(crate) fn make_script_call(
     // Project Code
@@ -53,9 +53,6 @@ pub(crate) fn make_script_call(
         ),
     };
 
-    // @todo Used to run
-    // let (_, interface) = ctx.build_index()?;
-
     // Building project
     let sender = context.account_address_as_string();
     let resolver = context.resolver()?;
@@ -95,8 +92,6 @@ pub(crate) fn make_script_call(
     }
 
     Ok(if context.cfg.exe_context {
-        // @todo Used to run
-        // modules.extend(interface.load_mv()?);
         EnrichedTransaction::Local {
             tx,
             signers,
@@ -173,24 +168,7 @@ pub fn make_function_call(
     };
 
     Ok(if conext.cfg.exe_context {
-        // @todo for run
         anyhow::bail!("@todo make_function_call exe_context")
-        // let modules_dir = ctx.str_path_for(&ctx.manifest.layout.modules_dir)?;
-        //
-        // let (_, interface) = ctx.build_index()?;
-        // let mut deps = move_build(
-        //     ctx,
-        //     &[modules_dir],
-        //     &[interface.dir.to_string_lossy().into_owned()],
-        // )?
-        // .into_iter()
-        // .filter_map(|m| match m {
-        //     CompiledUnit::Module { module, .. } => Some(module),
-        //     CompiledUnit::Script { .. } => None,
-        // })
-        // .collect::<Vec<_>>();
-        // deps.extend(interface.load_mv()?);
-        // EnrichedTransaction::Local { tx, signers, deps }
     } else {
         EnrichedTransaction::Global { tx, name: tx_name }
     })

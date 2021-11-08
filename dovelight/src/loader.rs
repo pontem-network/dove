@@ -1,10 +1,10 @@
-use crate::deps::DependencyLoader;
+use crate::lang::deps::DependencyLoader;
 use move_core_types::language_storage::ModuleId;
 use anyhow::{Error, anyhow};
 use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};
-use web_sys::{XmlHttpRequest, Blob, BlobPropertyBag};
-use wasm_bindgen::JsValue;
+use crate::env::http::http_request;
+use crate::env::http::Request as HttpRequest;
 
 #[derive(Clone)]
 pub struct Loader {
@@ -26,30 +26,23 @@ impl DependencyLoader for Loader {
             params: vec![format!("0x{}", hex::encode(bcs::to_bytes(id)?))],
         };
 
-        let err = |err| anyhow!("Failed to send http request:{:?}", err);
-        let xhr = XmlHttpRequest::new().map_err(err)?;
-        xhr.open_with_async("POST", &self.chain_api, false)
-            .map_err(err)?;
-        xhr.set_request_header("Content-Type", "application/json")
-            .map_err(err)?;
+        let resp = http_request(HttpRequest {
+            method: "POST".to_string(),
+            url: self.chain_api.to_string(),
+            headers: vec![("Content-Type".to_string(), "application/json".to_string())],
+            body: Some(serde_json::to_string(&req)?),
+        })?;
 
-        let blob = Blob::new_with_str_sequence_and_options(
-            &JsValue::from_serde(&vec![serde_json::to_string(&req)?])?,
-            &BlobPropertyBag::new().type_("application/json"),
-        )
-        .map_err(err)?;
-        xhr.send_with_opt_blob(Some(&blob)).map_err(err)?;
-        let status = xhr.status().map_err(err)?;
-        if status != 200 {
+        if resp.status != 200 {
             return Err(anyhow!(
                 "Failed to get module :{}. Error:{}-{:?}",
                 id,
-                status,
-                xhr.status_text().map_err(err)
+                resp.status,
+                resp.response
             ));
         }
-        let resp: Response =
-            serde_json::from_str(&xhr.response_text().map_err(err)?.unwrap_or_default())?;
+
+        let resp: Response = serde_json::from_str(&resp.response)?;
         if let Some(err) = resp.error {
             return Err(Error::msg(err));
         }

@@ -11,6 +11,7 @@ members = [
     "common/git-hash",
     "dovecote",
     "dovecote/proto",
+    "client"
 ]
 
 exclude = [

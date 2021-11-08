@@ -9,9 +9,9 @@ use move_lang::compiled_unit::CompiledUnit;
 use interact::CompilerInteract;
 use lang::compiler::dialects::DialectName;
 
-use crate::compiler::source_map::SourceMap;
-use crate::deps::{DependencyLoader, Store};
-use crate::deps::resolver::DependencyResolver;
+use crate::lang::compiler::source_map::SourceMap;
+use crate::lang::deps::{DependencyLoader, Store};
+use crate::lang::deps::resolver::DependencyResolver;
 
 pub mod interact;
 mod intern_table;

@@ -3,9 +3,9 @@ use regex::Regex;
 use lang::compiler::metadata::FuncMeta;
 use move_core_types::identifier::Identifier;
 use move_core_types::account_address::AccountAddress;
-use crate::tx::Context;
-use crate::langwasm::metadata::{script_meta_source, module_meta_source};
-use crate::compiler::source_map::SourceMap;
+use crate::lang::tx::Context;
+use crate::lang::metadata::{script_meta_source, module_meta_source};
+use crate::lang::compiler::source_map::SourceMap;
 
 pub fn find_script(
     // Project Code
@@ -138,9 +138,9 @@ mod test {
     use move_core_types::account_address::AccountAddress;
     use move_core_types::identifier::Identifier;
     use lang::compiler::metadata::{FuncMeta, Visibility};
-    use crate::compiler::source_map::SourceMap;
-    use crate::tx::Context;
-    use crate::tx::resolver::{find_script, find_module_function};
+    use crate::lang::compiler::source_map::SourceMap;
+    use crate::lang::tx::Context;
+    use crate::lang::tx::resolver::{find_script, find_module_function};
     use lang::tx::fn_call::Config;
 
     #[test]

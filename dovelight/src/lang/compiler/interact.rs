@@ -1,15 +1,15 @@
 use move_lang::callback::Interact;
 use move_lang::parser::ast::Definition;
-use crate::compiler::intern_table::InternTable;
+use crate::lang::compiler::intern_table::InternTable;
 use lang::compiler::preprocessor::BuilderPreprocessor;
 use lang::compiler::dialects::Dialect;
 use std::borrow::Cow;
 use anyhow::Error;
-use crate::compiler::source_map::SourceMap;
-use crate::deps::extractor::ImportsExtractor;
+use crate::lang::compiler::source_map::SourceMap;
+use crate::lang::deps::extractor::ImportsExtractor;
 use core::mem;
-use crate::deps::{DependencyLoader, Store};
-use crate::deps::resolver::DependencyResolver;
+use crate::lang::deps::{DependencyLoader, Store};
+use crate::lang::deps::resolver::DependencyResolver;
 use move_lang::errors::{Errors, FilesSourceText};
 
 const PREFIX: &str = "dep_";

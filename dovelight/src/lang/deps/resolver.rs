@@ -1,10 +1,10 @@
 use anyhow::Error;
 use move_core_types::language_storage::ModuleId;
 use std::collections::{HashSet};
-use crate::deps::{DependencyLoader, Store};
-use crate::deps::index::{Index, str_to_id};
+use crate::lang::deps::{DependencyLoader, Store};
+use crate::lang::deps::index::{Index, str_to_id};
 use move_lang::interface_generator::make_interface;
-use crate::deps::extractor::extract_source_deps;
+use crate::lang::deps::extractor::extract_source_deps;
 use lang::compiler::dialects::Dialect;
 
 const INDEX_KEY: &str = "dependency_index";
