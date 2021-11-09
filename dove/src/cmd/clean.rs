@@ -16,33 +16,36 @@ pub struct Clean {
 }
 
 impl Cmd for Clean {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
-        let clear_type = self.clear_type.unwrap_or_default();
-
-        match clear_type {
-            ClearType::State => {
-                let path = ctx.path_for(&ctx.manifest.layout.storage_dir);
-                if path.exists() {
-                    fs::remove_dir_all(path)?;
-                }
-                Ok(())
-            }
-            ClearType::All => {
-                let artifacts = ctx.path_for(&ctx.manifest.layout.artifacts);
-                let index_path = ctx.path_for(&ctx.manifest.layout.index);
-
-                if index_path.exists() {
-                    fs::remove_file(index_path)?;
-                }
-
-                if artifacts.exists() {
-                    fs::remove_dir_all(artifacts).map_err(Into::into)
-                } else {
-                    Ok(())
-                }
-            }
-        }
+    fn apply(&self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+        todo!()
     }
+    // fn apply(self, ctx: Context) -> Result<(), Error> {
+    //     let clear_type = self.clear_type.unwrap_or_default();
+    //
+    //     match clear_type {
+    //         ClearType::State => {
+    //             let path = ctx.path_for(&ctx.manifest.layout.storage_dir);
+    //             if path.exists() {
+    //                 fs::remove_dir_all(path)?;
+    //             }
+    //             Ok(())
+    //         }
+    //         ClearType::All => {
+    //             let artifacts = ctx.path_for(&ctx.manifest.layout.artifacts);
+    //             let index_path = ctx.path_for(&ctx.manifest.layout.index);
+    //
+    //             if index_path.exists() {
+    //                 fs::remove_file(index_path)?;
+    //             }
+    //
+    //             if artifacts.exists() {
+    //                 fs::remove_dir_all(artifacts).map_err(Into::into)
+    //             } else {
+    //                 Ok(())
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 /// The type of cleaning.

@@ -1,12 +1,12 @@
 use anyhow::Error;
 use structopt::StructOpt;
 
-use lang::compiler::file::find_move_files;
+// use lang::compiler::file::find_move_files;
 
 use crate::cmd::Cmd;
 use crate::context::Context;
-use lang::compiler::preprocessor::BuilderPreprocessor;
-use move_unit_test::UnitTestingConfig;
+// use lang::compiler::preprocessor::BuilderPreprocessor;
+// use move_unit_test::UnitTestingConfig;
 
 /// Run tests.
 #[derive(StructOpt, Debug)]
@@ -51,58 +51,57 @@ pub struct Test {
     #[structopt(long = "stackless")]
     pub check_stackless_vm: bool,
 
-    /// Verbose mode
-    #[structopt(short = "v", long = "verbose")]
-    pub verbose: bool,
-
     /// Color mode.
     #[structopt(long, hidden = true)]
     color: Option<String>,
 }
 
 impl Cmd for Test {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
-        let tests_dir = ctx.path_for(&ctx.manifest.layout.tests_dir);
-        if !tests_dir.exists() {
-            return Ok(());
-        }
-
-        let mut deps = ctx.build_index()?.0.into_deps_roots();
-        deps.push(tests_dir.to_string_lossy().to_string());
-        deps.push(
-            ctx.path_for(&ctx.manifest.layout.modules_dir)
-                .to_string_lossy()
-                .to_string(),
-        );
-
-        let source_files = find_move_files(&deps)
-            .into_iter()
-            .map(|p| p.to_string_lossy().to_string())
-            .collect::<Vec<_>>();
-
-        let unit_test_config = UnitTestingConfig {
-            instruction_execution_bound: self.instruction_execution_bound,
-            filter: self.filter,
-            list: self.list,
-            num_threads: self.num_threads,
-            report_statistics: self.report_statistics,
-            report_storage_on_error: self.report_storage_on_error,
-            source_files,
-            check_stackless_vm: self.check_stackless_vm,
-            verbose: self.verbose,
-        };
-
-        let address = ctx.account_address_str()?;
-        let mut preprocessor = BuilderPreprocessor::new(ctx.dialect.as_ref(), &address);
-        let test_plan = unit_test_config.build_test_plan(&mut preprocessor);
-        if let Some(test_plan) = test_plan {
-            let (_, is_ok) =
-                unit_test_config.run_and_report_unit_tests(test_plan, std::io::stdout())?;
-            if !is_ok {
-                bail!("Tests failed: {}", ctx.project_name());
-            }
-        }
-
-        Ok(())
+    fn apply(&self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+        todo!()
     }
+    // fn apply(self, ctx: Context) -> Result<(), Error> {
+    //     let tests_dir = ctx.path_for(&ctx.manifest.layout.tests_dir);
+    //     if !tests_dir.exists() {
+    //         return Ok(());
+    //     }
+    //
+    //     let mut deps = ctx.build_index()?.0.into_deps_roots();
+    //     deps.push(tests_dir.to_string_lossy().to_string());
+    //     deps.push(
+    //         ctx.path_for(&ctx.manifest.layout.modules_dir)
+    //             .to_string_lossy()
+    //             .to_string(),
+    //     );
+    //
+    //     let source_files = find_move_files(&deps)
+    //         .into_iter()
+    //         .map(|p| p.to_string_lossy().to_string())
+    //         .collect::<Vec<_>>();
+    //
+    //     let unit_test_config = UnitTestingConfig {
+    //         instruction_execution_bound: self.instruction_execution_bound,
+    //         filter: self.filter,
+    //         list: self.list,
+    //         num_threads: self.num_threads,
+    //         report_statistics: self.report_statistics,
+    //         report_storage_on_error: self.report_storage_on_error,
+    //         source_files,
+    //         check_stackless_vm: self.check_stackless_vm,
+    //         verbose: self.verbose,
+    //     };
+    //
+    //     let address = ctx.account_address_str()?;
+    //     let mut preprocessor = BuilderPreprocessor::new(ctx.dialect.as_ref(), &address);
+    //     let test_plan = unit_test_config.build_test_plan(&mut preprocessor);
+    //     if let Some(test_plan) = test_plan {
+    //         let (_, is_ok) =
+    //             unit_test_config.run_and_report_unit_tests(test_plan, std::io::stdout())?;
+    //         if !is_ok {
+    //             bail!("Tests failed: {}", ctx.project_name());
+    //         }
+    //     }
+    //
+    //     Ok(())
+    // }
 }

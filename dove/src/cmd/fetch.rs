@@ -12,8 +12,11 @@ pub struct Fetch {
 }
 
 impl Cmd for Fetch {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
-        ctx.build_index()?;
-        Ok(())
+    fn apply(&self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+        todo!()
     }
+    // fn apply(self, ctx: Context) -> Result<(), Error> {
+    //     ctx.build_index()?;
+    //     Ok(())
+    // }
 }
