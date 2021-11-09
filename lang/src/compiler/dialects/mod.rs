@@ -47,7 +47,7 @@ pub trait Dialect {
     fn copy(&self) -> Box<dyn Dialect>;
 }
 
-#[derive(serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DialectName {
     Diem,

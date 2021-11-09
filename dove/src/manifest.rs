@@ -208,11 +208,11 @@ pub struct Layout {
     #[serde(default = "exe_build_dir")]
     pub exe_build_dir: String,
 
-    /// Path to pover settings
+    /// Path to prover settings
     #[serde(default = "prover_toml")]
     pub prover_toml: String,
 
-    /// Path t
+    /// Path to the project's system folder
     #[serde(default = "system_folder")]
     pub system_folder: String,
 
