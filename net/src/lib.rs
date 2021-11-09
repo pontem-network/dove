@@ -3,7 +3,6 @@ use http::Uri;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{ModuleId, StructTag};
 use move_core_types::vm_status::StatusCode;
-use substrate_api_client::Api;
 use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 
 use lang::compiler::dialects::Dialect as DialectTrait;
@@ -31,7 +30,7 @@ where
         })),
         DialectName::Pont => Ok(Box::new(PontNet {
             dialect: name.get_dialect(),
-            api: Api::new(uri.to_string()),
+            api: uri.to_string(),
         })),
     }
 }
