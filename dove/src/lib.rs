@@ -19,7 +19,7 @@ pub const DIEM_HASH: &str = git_hash::dependency_git_short_hash_from_cargo_lock!
 
 #[macro_use]
 extern crate anyhow;
-#[macro_use]
+// #[macro_use]
 extern crate log;
 
 /// Dove cli interface.
@@ -32,8 +32,8 @@ pub mod context;
 // pub mod docs;
 // /// Move executor.
 // pub mod executor;
-// /// Export Dove.toml => Move.toml
-// pub mod export;
+/// Export Dove.toml => Move.toml
+pub mod export;
 // /// Dove modules index.
 // pub mod index;
 // /// Dove configuration.

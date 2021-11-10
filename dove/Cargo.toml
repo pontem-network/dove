@@ -16,10 +16,12 @@ git-hash = { path = "../common/git-hash" }
 
 #DIEM
 move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
+move-symbol-pool = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
 move-cli = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
 move-package = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
 move-stdlib = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
 dialect = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
+boogie-backend = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
 
 # third-party dependencies
 log = "0.4.14"
@@ -30,22 +32,26 @@ once_cell = "1.8.0"
 termcolor = "1.1.2"
 atty = "0.2.14"
 bcs = "0.1.3"
+reqwest = { version = "0.10.4", features = ["blocking", "json"] }
+
+rand = "=0.7.3"
+twox-hash = "1.5.0"
+toml = "0.5"
+hex = "0.4.2"
 
 #http = "0.2"
-#toml = "0.5"
+#tiny-keccak = { version = "2.0.2", default-features = false, features = ["sha3"] }
+#lang = { path = "../lang" }
+
+
 
 #lazy_static = "1.4.0"
 #bech32 = "0.7.2"
 #regex = "1.4.3"
-#twox-hash = "1.5.0"
 #once_cell = "1.4.0"
-#hex = "0.4.2"
 #walkdir = "2.3.1"
 #fs_extra = "1.2.0"
-#tiny-keccak = { version = "2.0.2", default-features = false, features = ["sha3"] }
-#rand = "=0.7.3"
 
-#reqwest = { version = "0.10.4", features = ["blocking", "json"] }
 #itertools = "0.9.0"
 #maplit = "1.0.2"
 #serde_json = "1.0.52"
@@ -56,7 +62,6 @@ bcs = "0.1.3"
 #semver = "1.0.3"
 #codespan-reporting = "0.8.0"
 #
-#lang = { path = "../lang" }
 #decompiler = { path = "../lang/decompiler" }
 #net = { path = "../net" }
 
@@ -65,17 +70,18 @@ bcs = "0.1.3"
 #move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 #docgen = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 #move-model = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
-#diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
-#diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
+
+
 #move-unit-test = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 #move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 #move-vm-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 #diem-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 #move-binary-format = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
+#diem-crypto-derive = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
+#diem-crypto = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
 
 ## move-prover deps
 #move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
-#boogie-backend = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 
 [features]
 default = []
