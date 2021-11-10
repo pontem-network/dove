@@ -1,13 +1,15 @@
 use std::path::Path;
 use anyhow::Error;
-use crate::manifest::{Dependence as DoveDependence};
+use crate::export::dove_manifest::Dependence as DoveDependence;
 use crate::export::movetoml::Dependency;
 use crate::export::git_dependency::convert_git_dependency;
 use crate::export::local_dependency::convert_local_dependency;
 
+/// manifest Dove.toml
+pub mod dove_manifest;
 mod git_dependency;
 mod local_dependency;
-/// manifest move.toml
+/// manifest Move.toml
 pub mod movetoml;
 
 /// Create internal directories for the "move" project

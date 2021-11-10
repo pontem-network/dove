@@ -1,11 +1,11 @@
 use std::path::{PathBuf, Path};
 use anyhow::Error;
 use rand::Rng;
-use crate::manifest::Git;
-use crate::export::movetoml::{Dependency, DependencyGit};
 use std::env::temp_dir;
 use twox_hash::xxh3::hash128;
 use crate::export::DependenceExport;
+use crate::export::dove_manifest::Git;
+use crate::export::movetoml::{Dependency, DependencyGit};
 
 /// Git dependency conversion: Dove.toml => Move.toml
 pub fn convert_git_dependency(git: &Git) -> DependenceExport {
