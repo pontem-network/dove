@@ -1,18 +1,19 @@
-extern crate structopt;
-
 use std::env;
-
-use anyhow::Result;
-use structopt::StructOpt;
-use crate::cmd::new::New;
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
+
+use anyhow::{Result, Error};
+use structopt::StructOpt;
+use semver::{Version, VersionReq};
+
 use move_cli::{Command as DiemCommand, experimental, Move, package, run_cli, sandbox};
-use crate::cmd::{Cmd};
 use move_cli::DEFAULT_SOURCE_DIR;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
+
 use crate::{DOVE_VERSION, DOVE_HASH, PONT_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
+use crate::cmd::Cmd;
+use crate::cmd::new::New;
 use crate::cmd::build::Build;
 use crate::cmd::clean::Clean;
 use crate::cmd::docgen::DocGen;
@@ -143,12 +144,16 @@ impl Command {
             Command::Package { path, config, cmd } => {
                 CommonCommand::Diem(DiemCommand::Package { path, config, cmd })
             }
-            Command::Compile { source_files, no_source_maps, check } => {
-                CommonCommand::Diem(DiemCommand::Compile { source_files, no_source_maps, check })
-            }
-            Command::Sandbox { cmd } => {
-                CommonCommand::Diem(DiemCommand::Sandbox { cmd })
-            }
+            Command::Compile {
+                source_files,
+                no_source_maps,
+                check,
+            } => CommonCommand::Diem(DiemCommand::Compile {
+                source_files,
+                no_source_maps,
+                check,
+            }),
+            Command::Sandbox { cmd } => CommonCommand::Diem(DiemCommand::Sandbox { cmd }),
             Command::Experimental { cmd } => {
                 CommonCommand::Diem(DiemCommand::Experimental { cmd })
             }
@@ -168,18 +173,29 @@ impl Command {
 
 /// Public interface for the CLI (useful for testing).
 pub fn execute<Args>(args: Args, cwd: PathBuf) -> Result<()>
-    where
-        Args: IntoIterator,
-        Args::Item: Into<OsString> + Clone,
+where
+    Args: IntoIterator,
+    Args::Item: Into<OsString> + Clone,
 {
     let Opt { move_args, cmd } = Opt::from_iter(args);
     let commands = cmd.select_backend();
+
+    if let Some(minimal_version) = get_minimal_dove_version(&cwd) {
+        check_dove_version(&minimal_version)?;
+    }
+
     match commands {
         CommonCommand::Diem(cmd) => {
-            let error_descriptions: ErrorMapping = bcs::from_bytes(move_stdlib::error_descriptions())?;
+            let error_descriptions: ErrorMapping =
+                bcs::from_bytes(move_stdlib::error_descriptions())?;
             run_cli(
-                move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
-                &error_descriptions, &move_args, &cmd)
+                move_stdlib::natives::all_natives(
+                    AccountAddress::from_hex_literal("0x1").unwrap(),
+                ),
+                &error_descriptions,
+                &move_args,
+                &cmd,
+            )
         }
         CommonCommand::Dove(cmd) => {
             let ctx = cmd.context(cwd, move_args)?;
@@ -209,6 +225,49 @@ fn create_long_version() -> &'static str {
             Move-Stdlib {}",
             dove, diem, PONT_STDLIB_VERSION
         )
-            .into_boxed_str(),
+        .into_boxed_str(),
     )
+}
+
+fn check_dove_version(req_ver: &str) -> Result<(), Error> {
+    let act_ver = env!("CARGO_PKG_VERSION");
+    let req = VersionReq::parse(req_ver)
+        .map_err(|err| Error::new(err).context("Failed to parse dove_version from Move.toml"))?;
+    let actual = Version::parse(act_ver).expect("Expected valid dove version");
+    if !req.matches(&actual) {
+        Err(anyhow!("The dove version must meet the conditions '{}'. The current version of dove is '{}'.", req_ver, act_ver))
+    } else {
+        Ok(())
+    }
+}
+
+/// Get minimal version of Dove from Move.toml
+fn get_minimal_dove_version(project_path: &Path) -> Option<String> {
+    let move_toml_path = project_path.join("Move.toml");
+    if !move_toml_path.exists() {
+        return None;
+    }
+    let move_toml_content = std::fs::read_to_string(&move_toml_path).ok()?;
+    let move_toml = toml::from_str::<toml::Value>(&move_toml_content).ok()?;
+    move_toml
+        .get("package")
+        .and_then(|pack| pack.get("dove_version"))
+        .and_then(|name| name.as_str().map(|t| t.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use semver::Version;
+    use super::check_dove_version;
+
+    #[test]
+    fn test_dove_version() {
+        Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+    }
+
+    #[test]
+    fn test_check_dove_version() {
+        check_dove_version(">=1.2.3, <1.8.0").unwrap();
+        check_dove_version("<1.2.2").unwrap_err();
+    }
 }
