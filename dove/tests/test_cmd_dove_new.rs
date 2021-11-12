@@ -1,175 +1,127 @@
-use dove::tests_helper::*;
-/// $ dove new demoproject_25
+mod helper;
+
+use std::str::FromStr;
+use crate::helper::{
+    pre_start, execute_dove_at, delete_project, get_project_name_from_toml,
+    get_project_dialect_from_toml, assert_basic_project_dirs_exist,
+    get_account_address_from_toml,
+};
+use dialect::Dialect;
+
+/// Creating a default project without additional parameters
+/// $ dove new project_new_without_arguments
 #[test]
 fn test_cmd_dove_new_without_arguments() {
     // Project name and path
     let project_name = "project_new_without_arguments";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    execute_dove_at(&["dove", "new", project_name], &base_folder).unwrap();
-    assert_valid_dove_toml(&project_folder, project_name, Some("pont"), None, None);
-    assert_basic_project_dirs_exist(&project_folder);
-    set_dependencies_local_move_stdlib(&project_folder);
-    project_build(&project_folder);
-    project_remove(&project_folder);
+    let (base_path, project_path) = pre_start(&project_name).unwrap();
+
+    execute_dove_at(&["new", project_name], &base_path).unwrap();
+
+    assert_eq!(
+        get_project_name_from_toml(&project_path),
+        Some(project_name.to_string())
+    );
+    assert_eq!(get_project_dialect_from_toml(&project_path), None);
+    assert!(assert_basic_project_dirs_exist(&project_path).is_ok());
+
+    delete_project(&project_path).unwrap();
 }
 
-/// $ dove new demoproject_32 -d ###
+/// Checking the "minimal" parameter
+/// $ dove new project_new_with_minimal --minimal
 #[test]
-fn test_cmd_dove_new_dialect() {
-    // Path to dove folder, Project name and path
-    let project_name = "project_new_dialect";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    for dialect in &["pont", "diem", "dfinance"] {
-        execute_dove_at(&["dove", "new", project_name, "-d", dialect], &base_folder).unwrap();
-        assert_valid_dove_toml(&project_folder, project_name, Some(dialect), None, None);
-        assert_basic_project_dirs_exist(&project_folder);
-        set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
-        project_remove(&project_folder);
-    }
-}
-
-/// $ dove new demoproject_33 -d dfinance -a ###
-#[test]
-fn test_cmd_dove_new_difinance_with_address() {
-    // Path to dove folder, Project name and path
-    let project_name = "project_new_difinance_with_address";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    for address in &["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"] {
-        execute_dove_at(
-            &["dove", "new", project_name, "-d", "dfinance", "-a", address],
-            &base_folder,
-        )
-        .unwrap();
-        assert_valid_dove_toml(
-            &project_folder,
-            project_name,
-            Some("dfinance"),
-            Some(address),
-            None,
-        );
-        assert_basic_project_dirs_exist(&project_folder);
-        set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
-        project_remove(&project_folder);
-    }
-}
-
-/// $ dove new demoproject_31 -d diem -a ###
-#[test]
-fn test_cmd_dove_new_diem_with_address() {
-    // Path to dove folder, Project name and path
-    let project_name = "project_new_diem_with_address";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    for address in &["0x1"] {
-        execute_dove_at(
-            &["dove", "new", project_name, "-d", "diem", "-a", address],
-            &base_folder,
-        )
-        .unwrap();
-        assert_valid_dove_toml(
-            &project_folder,
-            project_name,
-            Some("diem"),
-            Some(address),
-            None,
-        );
-        assert_basic_project_dirs_exist(&project_folder);
-        set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
-        project_remove(&project_folder);
-    }
-}
-
-/// $ dove new demoproject_29 -d pont -a ###
-#[test]
-fn test_cmd_dove_new_pont_with_address() {
+fn test_cmd_dove_new_with_minimal() {
     // Project name and path
-    let project_name = "project_new_pont_with_address";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    for address in &["5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv", "0x1"] {
+    let project_name = "project_new_with_minimal";
+    let (base_path, project_path) = pre_start(&project_name).unwrap();
+
+    execute_dove_at(&["new", project_name, "--minimal"], &base_path).unwrap();
+    assert!(assert_basic_project_dirs_exist(&project_path).is_err());
+
+    delete_project(&project_path).unwrap();
+}
+
+/// Creating a project with different dialects. Dialects: "pont", "diem", "dfinance"
+/// $ dove new project_new_with_dialect --dialect ###
+#[test]
+fn test_cmd_dove_new_with_dialect() {
+    // Project name and path
+    let project_name = "project_new_with_dialect";
+    let (base_path, project_path) = pre_start(&project_name).unwrap();
+
+    for dialect_name in ["pont", "diem", "dfinance"] {
         execute_dove_at(
-            &["dove", "new", project_name, "-d", "pont", "-a", address],
-            &base_folder,
+            &["new", project_name, "--dialect", dialect_name],
+            &base_path,
         )
         .unwrap();
-        assert_valid_dove_toml(
-            &project_folder,
-            project_name,
-            Some("pont"),
-            Some(address),
-            None,
+        assert_eq!(
+            get_project_dialect_from_toml(&project_path),
+            Some(dialect_name.to_string())
         );
-        assert_basic_project_dirs_exist(&project_folder);
-        set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
-        project_remove(&project_folder);
+
+        delete_project(&project_path).unwrap();
     }
 }
 
-/// $ dove new ### -r ###
+/// Creating a project with a non-existent dialect
+/// $ dove new project_new_with_nonexistent_dialect --dialect noname
 #[test]
-fn test_cmd_dove_new_pont_with_repo() {
+fn test_cmd_dove_new_with_nonexistent_dialect() {
     // Project name and path
-    let project_name = "project_new_pont_with_repo";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    for api in &[
-        "http://demo.ru/api",
-        "https://demo.ru/api",
-        "http://127.0.0.1/api",
-        "http://localhost/api",
-        "http://localhost:8080/api",
+    let project_name = "project_new_with_nonexistent_dialect";
+    let (base_path, _) = pre_start(&project_name).unwrap();
+
+    assert!(execute_dove_at(&["new", project_name, "--dialect", "noname"], &base_path).is_err());
+}
+
+/// Creating a project with an address
+/// $ dove new project_new_with_address --dialect ### -a ###
+#[test]
+fn test_cmd_dove_new_with_address() {
+    // Project name and path
+    let project_name = "project_new_with_address";
+
+    let (base_path, project_path) = pre_start(&project_name).unwrap();
+
+    for (dialect_name, addresses) in [
+        (
+            "dfinance",
+            vec!["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"],
+        ),
+        ("diem", vec!["0x1"]),
+        (
+            "pont",
+            vec!["0x1", "5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"],
+        ),
     ] {
-        execute_dove_at(&["dove", "new", project_name, "-r", api], &base_folder).unwrap();
-        assert_valid_dove_toml(&project_folder, project_name, None, None, Some(api));
-        assert_basic_project_dirs_exist(&project_folder);
-        set_dependencies_local_move_stdlib(&project_folder);
-        project_build(&project_folder);
-        project_remove(&project_folder);
-    }
-}
+        let dialect = Dialect::from_str(dialect_name).unwrap();
+        for address in addresses {
+            let account_address = dialect.parse_address(address).unwrap().to_hex_literal();
+            execute_dove_at(
+                &[
+                    "new",
+                    project_name,
+                    "--dialect",
+                    &dialect_name,
+                    "-a",
+                    &format!("Account={}", &account_address),
+                ],
+                &base_path,
+            )
+            .unwrap();
 
-/// $ dove new demoproject_38 -r ###
-#[test]
-fn test_cmd_dove_new_pont_with_incorrect_repo() {
-    // Project name and path
-    let project_name = "project_new_pont_with_incorrect_repo";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    for api in &[
-        "demo",
-        "/demo",
-        "/demo/api",
-        "//demo/api",
-        "//demo:8080/api",
-        "127.0.0.1/api",
-        "ftp://demo.ru/api",
-    ] {
-        assert!(execute_dove_bin_at(
-            env!("CARGO_BIN_EXE_dove"),
-            &["dove", "new", project_name, "-r", api],
-            &base_folder
-        )
-        .is_err());
-    }
-}
+            assert_eq!(
+                get_project_dialect_from_toml(&project_path),
+                Some(dialect_name.to_string())
+            );
+            assert_eq!(
+                get_account_address_from_toml(&project_path),
+                Some(account_address)
+            );
 
-/// $ dove new demoproject_37 -d incorrectdialect
-#[test]
-fn test_cmd_dove_new_incorrect_dialect() {
-    // Project name and path
-    let project_name = "project_new_incorrect_dialect";
-    let (base_folder, project_folder) = project_start(project_name);
-    project_remove(&project_folder);
-    assert!(execute_dove_at(
-        &["dove", "new", project_name, "-d", "incorrectdialect"],
-        &base_folder,
-    )
-    .is_err());
+            delete_project(&project_path).unwrap();
+        }
+    }
 }
