@@ -4,10 +4,8 @@ use std::collections::BTreeMap;
 use structopt::StructOpt;
 use anyhow::{Error, Result};
 use serde::Serialize;
-use dialect::{init_context, Dialect};
+use dialect::Dialect;
 use move_cli::Move;
-use move_package::source_package::parsed_manifest::SourceManifest;
-use move_symbol_pool::symbol::Symbol;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::{

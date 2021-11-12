@@ -1,7 +1,6 @@
 use std::fs;
 use std::path::{PathBuf, Path};
 use std::fs::read_to_string;
-use anyhow::Error;
 use structopt::StructOpt;
 use toml::Value;
 
@@ -16,6 +15,8 @@ use move_package::BuildConfig;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
+use std::collections::HashMap;
+use toml::map::Map;
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -58,6 +59,7 @@ impl Cmd for New {
                 dev_mode: false,
             },
         };
+
         run_cli(
             move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
             &error_descriptions,
@@ -69,11 +71,8 @@ impl Cmd for New {
         if !project_dir.exists() {
             bail!("Failed to create a project")
         }
-        let move_toml_path = project_dir.join("Move.toml");
-        // add to Move.toml - dialect,
-        if let Some(dialect) = ctx.move_args.dialect.as_ref() {
-            add_dialect(&move_toml_path, dialect)?;
-        }
+
+        add_dialect_and_addresses(&project_dir, &ctx.move_args)?;
 
         if !self.minimal {
             println!(
@@ -96,16 +95,43 @@ impl Cmd for New {
     }
 }
 
-fn add_dialect(move_toml_path: &Path, dialect: &Dialect) -> anyhow::Result<()> {
-    let mut move_toml = read_to_string(move_toml_path)?.parse::<Value>()?;
-    let packgage = move_toml
-        .get_mut("package")
-        .and_then(|package| package.as_table_mut())
-        .ok_or(anyhow!(r#""package" section in "Move.toml" was not found"#))?;
-    packgage.insert(
-        "dialect".to_string(),
-        Value::String(dialect.name().to_string()),
-    );
+fn add_dialect_and_addresses(project_dir: &Path, move_args: &Move) -> anyhow::Result<()> {
+    if move_args.dialect.is_none() && move_args.named_addresses.is_empty() {
+        return Ok(());
+    }
+
+    let move_toml_path = project_dir.join("Move.toml");
+    let mut move_toml = read_to_string(&move_toml_path)?.parse::<Value>()?;
+    // add to Move.toml - dialect,
+    if let Some(dialect) = move_args.dialect.as_ref() {
+        let packgage = move_toml
+            .get_mut("package")
+            .and_then(|package| package.as_table_mut())
+            .ok_or(anyhow!(r#""package" section in "Move.toml" was not found"#))?;
+        packgage.insert(
+            "dialect".to_string(),
+            Value::String(dialect.name().to_string()),
+        );
+    }
+
+    if !move_args.named_addresses.is_empty() {
+        if move_toml.get_mut("addresses").is_none() {
+            let new_table = Value::Table(Map::new());
+            move_toml
+                .as_table_mut()
+                .unwrap()
+                .insert("addresses".to_string(), new_table);
+        }
+        let address_table = move_toml
+            .get_mut("addresses")
+            .and_then(|value| value.as_table_mut())
+            .ok_or_else(|| anyhow!(r#"Couldn't get the "addresses" section in "Move.toml""#))?;
+
+        for (name, address) in &move_args.named_addresses {
+            address_table.insert(name.clone(), Value::String(address.to_string()));
+        }
+    }
+
     fs::write(&move_toml_path, move_toml.to_string())?;
     Ok(())
 }

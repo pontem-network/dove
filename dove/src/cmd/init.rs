@@ -58,11 +58,8 @@ impl Cmd for Init {
             r#"Invalid project name "{}". Allowed symbols a-z, A-Z, 0-9,_,-"#,
             project_name
         );
-        let dialect_name = ctx
-            .move_args
-            .dialect
-            .map_or("pont", |dialect| dialect.name());
-        let move_toml_string = move_toml_new(project_name, dialect_name);
+
+        let move_toml_string = move_toml_new(project_name, &ctx.move_args);
         std::fs::write(move_toml_path, move_toml_string)?;
 
         if !self.minimal {
@@ -94,13 +91,26 @@ fn is_valid_name(text: &str) -> bool {
     RE.is_match(text)
 }
 
-fn move_toml_new(project_name: &str, dialect: &str) -> String {
-    format!(
-        r#"[package]
-name = "{}"
-version = "0.0.0"
-dialect = "{}"
-"#,
-        project_name, dialect
-    )
+fn move_toml_new(project_name: &str, move_args: &Move) -> String {
+    let dialect_name = move_args.dialect.map_or("pont", |dialect| dialect.name());
+
+    let mut move_toml_string = format!(
+        "\
+        [package]\n\
+        name = \"{}\"\n\
+        version = \"0.0.0\"\n\
+        dialect = \"{}\"\n\
+        ",
+        project_name, dialect_name
+    );
+
+    if !move_args.named_addresses.is_empty() {
+        move_toml_string += "\n[addresses]\n";
+
+        for (name, address) in &move_args.named_addresses {
+            move_toml_string += format!("{} = \"{}\"\n", name, address.to_string()).as_str();
+        }
+    }
+
+    move_toml_string
 }

@@ -1,19 +1,13 @@
 use std::fs::read_to_string;
 use std::path::PathBuf;
+use anyhow::Result;
 
-use anyhow::{Error, Result};
-use structopt::StructOpt;
-
-use dialect::{Dialect, init_context};
+use dialect::init_context;
 use move_cli::Move;
-use move_package::resolution::resolution_graph::ResolutionGraph;
 use move_package::source_package::{layout, manifest_parser};
-use move_package::source_package::manifest_parser::parse_dialect;
 use move_package::source_package::parsed_manifest::SourceManifest;
 use move_symbol_pool::symbol::Symbol;
 
-use crate::cmd::new::New;
-use crate::cmd::init::Init;
 use crate::context::Context;
 use std::collections::BTreeMap;
 
