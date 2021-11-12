@@ -1,3 +1,4 @@
+// @todo Delete?
 use crate::stdout::STDOUT_STREAM;
 
 /// Prints output.

@@ -75,12 +75,24 @@ impl Cmd for New {
             add_dialect(&move_toml_path, dialect)?;
         }
 
-        if self.minimal {
-            return Ok(());
+        if !self.minimal {
+            println!(
+                "Creating default directories(to omit those, use --minimal): \n\
+                        \t./sources\n\
+                        \t./examples\n\
+                        \t./scripts\n\
+                        \t./doc_templates\n\
+                        \t./tests"
+            );
+            // Create directories - "sources", "examples", "scripts", "doc_templates", "tests"
+            create_project_directories(&project_dir)?;
         }
+        println!(
+            "Project was successfully created in {}",
+            project_dir.display()
+        );
 
-        // Create directories - "sources", "examples", "scripts", "doc_templates", "tests"
-        create_project_directories(&project_dir)
+        Ok(())
     }
 }
 
