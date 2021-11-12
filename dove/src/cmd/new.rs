@@ -4,7 +4,6 @@ use std::fs::read_to_string;
 use structopt::StructOpt;
 use toml::Value;
 
-use dialect::Dialect;
 use move_cli::{Move, run_cli};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;

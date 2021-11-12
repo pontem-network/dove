@@ -1,5 +1,7 @@
+#![allow(dead_code)]
+
 use std::path::{PathBuf, Path};
-use std::fs::remove_dir_all;
+use std::fs::{remove_dir_all, create_dir};
 use anyhow::{Result, ensure};
 
 /// get tmp_folder, project_folder and remove project folder if exist
@@ -8,6 +10,14 @@ pub fn pre_start(project_name: &str) -> Result<(PathBuf, PathBuf)> {
     let project_folder = tmp_folder.join(project_name);
     delete_project(&project_folder)?;
     Ok((tmp_folder, project_folder))
+}
+/// get tmp_folder, project_folder and remove project folder if exist
+pub fn pre_start_init(project_name: &str) -> Result<PathBuf> {
+    let tmp_folder = std::env::temp_dir();
+    let project_folder = tmp_folder.join(project_name);
+    delete_project(&project_folder)?;
+    create_dir(&project_folder)?;
+    Ok(project_folder)
 }
 
 /// remove project

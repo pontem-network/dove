@@ -92,17 +92,18 @@ fn is_valid_name(text: &str) -> bool {
 }
 
 fn move_toml_new(project_name: &str, move_args: &Move) -> String {
-    let dialect_name = move_args.dialect.map_or("pont", |dialect| dialect.name());
-
     let mut move_toml_string = format!(
         "\
         [package]\n\
         name = \"{}\"\n\
         version = \"0.0.0\"\n\
-        dialect = \"{}\"\n\
         ",
-        project_name, dialect_name
+        project_name
     );
+
+    if let Some(dialect_name) = move_args.dialect.map(|dialect| dialect.name()) {
+        move_toml_string += format!("dialect = \"{}\"\n", dialect_name).as_str();
+    }
 
     if !move_args.named_addresses.is_empty() {
         move_toml_string += "\n[addresses]\n";
