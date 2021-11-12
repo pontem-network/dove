@@ -9,10 +9,13 @@ use move_cli::Move;
 use move_package::resolution::resolution_graph::ResolutionGraph;
 use move_package::source_package::{layout, manifest_parser};
 use move_package::source_package::manifest_parser::parse_dialect;
+use move_package::source_package::parsed_manifest::SourceManifest;
+use move_symbol_pool::symbol::Symbol;
 
 use crate::cmd::new::New;
 use crate::cmd::init::Init;
 use crate::context::Context;
+use std::collections::BTreeMap;
 
 /// Project builder.
 pub mod build;
@@ -57,4 +60,34 @@ pub trait Cmd {
 
     /// Apply command with given context.
     fn apply(&self, ctx: Context) -> Result<()>;
+}
+
+/// Context with empty manifest
+pub fn context_with_empty_manifest(project_dir: PathBuf, move_args: Move) -> Result<Context> {
+    init_context(move_args.dialect);
+    Ok(Context {
+        project_dir,
+        move_args,
+        // empty manifest
+        manifest: default_sourcemanifest(),
+    })
+}
+
+/// empty manifest
+fn default_sourcemanifest() -> SourceManifest {
+    use move_package::source_package::parsed_manifest::PackageInfo;
+
+    SourceManifest {
+        package: PackageInfo {
+            name: Symbol::from("Default"),
+            version: (0, 0, 0),
+            license: None,
+            authors: Vec::new(),
+        },
+        addresses: None,
+        dependencies: BTreeMap::new(),
+        dev_address_assignments: None,
+        dev_dependencies: BTreeMap::new(),
+        build: None,
+    }
 }

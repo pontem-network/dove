@@ -8,7 +8,7 @@ use dialect::{init_context, Dialect};
 use move_cli::Move;
 use move_package::source_package::parsed_manifest::SourceManifest;
 use move_symbol_pool::symbol::Symbol;
-use crate::cmd::Cmd;
+use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::{
     create_project_directories, move_modules, dependency_create_from, DependenceExport,
@@ -27,13 +27,7 @@ pub struct Export {
 impl Cmd for Export {
     /// Redefined. Empty Manifest
     fn context(&self, project_dir: PathBuf, move_args: Move) -> anyhow::Result<Context> {
-        init_context(move_args.dialect);
-        Ok(Context {
-            project_dir,
-            move_args,
-            // Not used
-            manifest: default_sourcemanifest(),
-        })
+        context_with_empty_manifest(project_dir, move_args)
     }
 
     fn apply(&self, ctx: Context) -> anyhow::Result<()>
@@ -143,24 +137,6 @@ impl Export {
         // Saving move toml
         std::fs::write(&project_dir.join("Move.toml"), move_toml_string)
             .map_err(|err| anyhow!(err.to_string()))
-    }
-}
-
-fn default_sourcemanifest() -> SourceManifest {
-    use move_package::source_package::parsed_manifest::PackageInfo;
-
-    SourceManifest {
-        package: PackageInfo {
-            name: Symbol::from("Default"),
-            version: (0, 0, 0),
-            license: None,
-            authors: Vec::new(),
-        },
-        addresses: None,
-        dependencies: BTreeMap::new(),
-        dev_address_assignments: None,
-        dev_dependencies: BTreeMap::new(),
-        build: None,
     }
 }
 
