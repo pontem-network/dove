@@ -41,7 +41,7 @@ pub fn ss58_to_address(ss58: &str) -> Result<AccountAddress> {
         return Err(anyhow!("Wrong address checksum"));
     }
     let mut addr = [0; PUB_KEY_LENGTH];
-    addr.copy_from_slice(&address);
+    addr.copy_from_slice(address);
     Ok(AccountAddress::new(addr))
 }
 
