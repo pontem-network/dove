@@ -1,20 +1,16 @@
 use std::fs::read_to_string;
 use std::path::PathBuf;
-use crate::context::Context;
+use anyhow::Result;
 
-use anyhow::{Error, Result};
-use dialect::{Dialect, init_context};
+use dialect::init_context;
 use move_cli::Move;
-use move_package::resolution::resolution_graph::ResolutionGraph;
 use move_package::source_package::{layout, manifest_parser};
-use move_package::source_package::manifest_parser::parse_dialect;
-use crate::cmd::new::New;
-use structopt::StructOpt;
-use crate::cmd::init::Init;
+use move_package::source_package::parsed_manifest::SourceManifest;
+use move_symbol_pool::symbol::Symbol;
 
-// use semver::{Version, VersionReq};
-// use crate::context::{Context, get_context, load_manifest};
-//
+use crate::context::Context;
+use std::collections::BTreeMap;
+
 /// Project builder.
 pub mod build;
 /// Project dependencies loader.
@@ -60,31 +56,32 @@ pub trait Cmd {
     fn apply(&self, ctx: Context) -> Result<()>;
 }
 
-//
-// fn check_dove_version(req_ver: &str, act_ver: &str) -> Result<(), Error> {
-//     let req = VersionReq::parse(req_ver)
-//         .map_err(|err| Error::new(err).context("Failed to parse dove_version from Dove.toml"))?;
-//     let actual = Version::parse(act_ver).expect("Expected valid dove version");
-//     if !req.matches(&actual) {
-//         Err(anyhow!("The dove version must meet the conditions '{}'. The current version of dove is '{}'.", req_ver, act_ver))
-//     } else {
-//         Ok(())
-//     }
-// }
-//
-// #[cfg(test)]
-// mod tests {
-//     use semver::Version;
-//     use crate::cmd::check_dove_version;
-//
-//     #[test]
-//     fn test_dove_version() {
-//         Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
-//     }
-//
-//     #[test]
-//     fn test_check_dove_version() {
-//         check_dove_version(">=1.2.3, <1.8.0", "1.5.2").unwrap();
-//         check_dove_version(">=1.2.2", "1.2.0").unwrap_err();
-//     }
-// }
+/// Context with empty manifest
+pub fn context_with_empty_manifest(project_dir: PathBuf, move_args: Move) -> Result<Context> {
+    init_context(move_args.dialect);
+    Ok(Context {
+        project_dir,
+        move_args,
+        // empty manifest
+        manifest: default_sourcemanifest(),
+    })
+}
+
+/// empty manifest
+fn default_sourcemanifest() -> SourceManifest {
+    use move_package::source_package::parsed_manifest::PackageInfo;
+
+    SourceManifest {
+        package: PackageInfo {
+            name: Symbol::from("Default"),
+            version: (0, 0, 0),
+            license: None,
+            authors: Vec::new(),
+        },
+        addresses: None,
+        dependencies: BTreeMap::new(),
+        dev_address_assignments: None,
+        dev_dependencies: BTreeMap::new(),
+        build: None,
+    }
+}

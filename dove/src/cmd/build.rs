@@ -13,7 +13,7 @@
 // use move_lang::unwrap_or_report_errors;
 // use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
-use termcolor::{ColorChoice, StandardStream};
+// use termcolor::{ColorChoice, StandardStream};
 //
 // use lang::compiler::build;
 // use lang::compiler::file::find_move_files;
@@ -70,7 +70,10 @@ pub struct Build {
 }
 
 impl Cmd for Build {
-    fn apply(&self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+    fn apply(&self, ctx: Context) -> anyhow::Result<()>
+    where
+        Self: Sized,
+    {
         todo!()
     }
     // fn apply(self, ctx: Context) -> Result<(), Error> {

@@ -1,5 +1,4 @@
 use std::{fmt, fs};
-use std::convert::TryFrom;
 use std::path::{MAIN_SEPARATOR as MS, Path};
 use serde::{Deserialize, Deserializer};
 use serde::de::{Error as DeError, SeqAccess, Visitor};
