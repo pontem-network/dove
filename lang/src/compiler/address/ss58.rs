@@ -1,19 +1,18 @@
 use rust_base58::base58::FromBase58;
 use rust_base58::ToBase58;
 use anyhow::{anyhow, ensure, Result};
-use lazy_static::lazy_static;
 use regex::Regex;
 use crate::compiler::source_map::FileOffsetMap;
 use move_core_types::account_address::AccountAddress;
 use crate::compiler::mut_string::{MutString, NewValue};
 use std::rc::Rc;
+use once_cell::sync::Lazy;
 
 const SS58_PREFIX: &[u8] = b"SS58PRE";
 const PUB_KEY_LENGTH: usize = 32;
+const CHECK_SUM_LEN: usize = 2;
 
-lazy_static! {
-    static ref SS58_REGEX: Regex = Regex::new(r#"[1-9A-HJ-NP-Za-km-z]{40,}"#,).unwrap();
-}
+static SS58_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"[1-9A-HJ-NP-Za-km-z]{40,}"#).unwrap());
 
 fn ss58hash(data: &[u8]) -> blake2_rfc::blake2b::Blake2bResult {
     let mut context = blake2_rfc::blake2b::Blake2b::new(64);
@@ -28,16 +27,17 @@ pub fn ss58_to_address(ss58: &str) -> Result<AccountAddress> {
         Err(err) => return Err(anyhow!("Wrong base58:{}", err)),
     };
     ensure!(
-        bs58.len() == PUB_KEY_LENGTH + 3,
-        format!("Address length must be equal {} bytes", PUB_KEY_LENGTH + 3)
+        bs58.len() > PUB_KEY_LENGTH + CHECK_SUM_LEN,
+        format!("Address length must be equal or greater than {} bytes", PUB_KEY_LENGTH + CHECK_SUM_LEN)
     );
-    if bs58[PUB_KEY_LENGTH + 1..PUB_KEY_LENGTH + 3]
-        != ss58hash(&bs58[0..PUB_KEY_LENGTH + 1]).as_bytes()[0..2]
-    {
+    let check_sum = &bs58[bs58.len() - CHECK_SUM_LEN..];
+    let address = &bs58[bs58.len() - PUB_KEY_LENGTH - CHECK_SUM_LEN..bs58.len() - CHECK_SUM_LEN];
+
+    if check_sum != &ss58hash(&bs58[0..bs58.len() - CHECK_SUM_LEN]).as_bytes()[0..CHECK_SUM_LEN] {
         return Err(anyhow!("Wrong address checksum"));
     }
     let mut addr = [0; PUB_KEY_LENGTH];
-    addr.copy_from_slice(&bs58[1..PUB_KEY_LENGTH + 1]);
+    addr.copy_from_slice(&address);
     Ok(AccountAddress::new(addr))
 }
 
@@ -92,6 +92,23 @@ mod test {
         PUB_KEY_LENGTH, replace_ss58_addresses, ss58_to_diem, ss58hash, ss58_to_address,
         address_to_ss58,
     };
+
+
+    #[test]
+    fn test_ss58_to_diem_1() {
+        let polka_address = "gkNW9pAcCHxZrnoVkhLkEQtsLsW5NWTC75cdAdxAMs9LNYCYg";
+        let diem_address = ss58_to_diem(polka_address).unwrap();
+
+        assert_eq!(
+            hex::decode(&diem_address[2..]).unwrap().len(),
+            PUB_KEY_LENGTH
+        );
+
+        assert_eq!(
+            "0x8EAF04151687736326C9FEA17E25FC5287613693C912909CB226AA4794F26A48",
+            diem_address
+        );
+    }
 
     #[test]
     fn test_ss58_to_diem() {
