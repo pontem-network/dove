@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use std::string::ToString;
 use structopt::StructOpt;
 use lazy_static::lazy_static;
-use move_cli::Move;
 use regex::Regex;
+use move_cli::Move;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
@@ -19,18 +19,6 @@ pub struct Init {
         short = "m"
     )]
     minimal: bool,
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
-}
-
-impl Init {
-    /// Creates a new Init command.
-    pub fn new(minimal: bool) -> Init {
-        Init {
-            minimal,
-            color: None,
-        }
-    }
 }
 
 impl Cmd for Init {

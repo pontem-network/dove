@@ -1,28 +1,16 @@
-// use std::fs;
-// use std::fs::File;
-// use std::io::Write;
-// use std::path::Path;
-//
-// use move_lang::shared::Flags;
-// use anyhow::Error;
-// use move_lang::{
-//     compiled_unit,
-//     errors::{FilesSourceText, output_errors},
-// };
-// use move_lang::compiled_unit::CompiledUnit;
-// use move_lang::unwrap_or_report_errors;
-// use serde::{Deserialize, Serialize};
+use std::fs;
+use std::ffi::OsStr;
+use std::io::Write;
+use std::path::{PathBuf, Path};
+use std::fs::{remove_file, create_dir_all};
 use structopt::StructOpt;
-// use termcolor::{ColorChoice, StandardStream};
-//
-// use lang::compiler::build;
-// use lang::compiler::file::find_move_files;
-//
-// use crate::cmd::Cmd;
-// use crate::cmd::docgen::DocGen;
-// use crate::context::Context;
-// use crate::stdoutln;
-
+use toml::from_str;
+use move_core_types::errmap::ErrorMapping;
+use move_core_types::account_address::AccountAddress;
+use move_cli::Command as MoveCommand;
+use move_cli::package::cli::PackageCommand;
+use move_cli::run_cli;
+use move_package::BuildConfig;
 use crate::cmd::Cmd;
 use crate::context::Context;
 
@@ -30,43 +18,41 @@ use crate::context::Context;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Build {
-    #[structopt(
-        help = "Add transitive dependencies to the target.",
-        short = "t",
-        long = "tree"
-    )]
-    tree: bool,
+    // @todo test
+    #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
+    doc: bool,
+
+    // @todo test
+    /// Generate error map for the package and its dependencies
+    /// at path for use by the Move explanation tool.
+    #[structopt(long)]
+    error_map: Option<String>,
+
+    // Pack the assembled modules into a single file,
+    // except for those specified in modules_exclude
+    // @todo check
     #[structopt(
         help = "Package modules in a binary file.",
         short = "p",
         long = "package"
     )]
     package: bool,
-    #[structopt(help = "Emit source map.", short = "s", long = "emit_source_maps")]
-    emit_source_maps: bool,
-    #[structopt(help = "File name of module package.", short = "o", long = "output")]
-    output: Option<String>,
-    #[structopt(
-        help = "Names of files or directory excluded from the build process.",
-        short = "e",
-        long = "exclude"
-    )]
-    exclude: Vec<String>,
+    // @todo test
+    // Names of modules to exclude from the package process..
+    // Used with the "package" parameter.
+    // Modules are taken from the ./build/NAME_PROJECT/bytecode_modules directory.
+    // The names are case-insensitive and can be specified with an extension.mv or without it.
+    // -modules_exclude NAME_1 NAME_2 NAME_3.mv
     #[structopt(
         help = "Names of modules to exclude from the package process..",
         long = "modules_exclude"
     )]
     modules_exclude: Vec<String>,
-    #[structopt(
-        help = "Do not specify the order of modules.",
-        short = "u",
-        long = "unordered"
-    )]
-    unordered: bool,
-    #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
-    doc: bool,
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
+    // @todo test
+    // File name of module package.
+    // Used with the "package" parameter.
+    #[structopt(help = "File name of module package.", short = "o", long = "output")]
+    output: Option<String>,
 }
 
 impl Cmd for Build {
@@ -74,205 +60,164 @@ impl Cmd for Build {
     where
         Self: Sized,
     {
-        todo!()
+        // Move-cli build
+        let error_descriptions: ErrorMapping =
+            bcs::from_bytes(move_stdlib::error_descriptions())?;
+        let cmd = MoveCommand::Package {
+            cmd: PackageCommand::Build {},
+            path: Some(ctx.project_dir.clone()),
+            config: BuildConfig {
+                generate_abis: false,
+                generate_docs: self.doc,
+                test_mode: false,
+                dev_mode: false,
+            },
+        };
+
+        run_cli(
+            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
+            &error_descriptions,
+            &ctx.move_args,
+            &cmd,
+        )?;
+
+        // Move-cli error map
+        self.run_error_map(&ctx)?;
+
+        // packaging of modules
+        self.run_package(&ctx)?;
+
+        Ok(())
     }
-    // fn apply(self, ctx: Context) -> Result<(), Error> {
-    //     let dirs = ctx.paths_for(&[
-    //         &ctx.manifest.layout.scripts_dir,
-    //         &ctx.manifest.layout.modules_dir,
-    //     ]);
-    //
-    //     let (index, interface) = ctx.build_index()?;
-    //
-    //     let (exclude_files, exclude_dirs): (Vec<_>, Vec<_>) =
-    //         self.exclude.iter().partition(|e| e.ends_with(".move"));
-    //
-    //     let exclude_dirs = ctx.paths_for(&exclude_dirs);
-    //
-    //     let mut source_list = find_move_files(&dirs)
-    //         .filter_map(|path| path.canonicalize().ok())
-    //         .filter(|path| {
-    //             !(exclude_dirs.iter().any(|dir| path.starts_with(dir))
-    //                 || exclude_files.iter().any(|file| path.ends_with(file)))
-    //         })
-    //         .map(|path| path.to_string_lossy().to_string())
-    //         .collect::<Vec<_>>();
-    //
-    //     let dep_list = if self.tree {
-    //         source_list.extend(index.into_deps_roots());
-    //         vec![]
-    //     } else {
-    //         vec![interface.dir.to_string_lossy().to_string()]
-    //     };
-    //
-    //     let sender = ctx.account_address_str()?;
-    //
-    //     let (files, res) = build(
-    //         &source_list,
-    //         &dep_list,
-    //         ctx.dialect.as_ref(),
-    //         &sender,
-    //         None,
-    //         Flags::empty(),
-    //     )?;
-    //     let units = unwrap_or_report_errors!(files, res);
-    //
-    //     self.verify_and_store(
-    //         &ctx,
-    //         files,
-    //         units,
-    //         &self.modules_exclude,
-    //         self.emit_source_maps,
-    //     )?;
-    //
-    //     if self.doc {
-    //         let doc = DocGen {};
-    //         doc.apply(ctx)?;
-    //     }
-    //
-    //     Ok(())
-    // }
 }
-//
-// impl Build {
-//     /// Verify and store compilation results.
-//     fn verify_and_store(
-//         &self,
-//         ctx: &Context,
-//         files: FilesSourceText,
-//         compiled_units: Vec<CompiledUnit>,
-//         exclude_modules: &[String],
-//         emit_source_maps: bool,
-//     ) -> Result<(), Error> {
-//         let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
-//         let (modules, scripts): (Vec<_>, Vec<_>) = compiled_units
-//             .into_iter()
-//             .filter(|u| !exclude_modules.contains(&u.name()))
-//             .partition(|u| matches!(u, CompiledUnit::Module { .. }));
-//
-//         self.store_modules(ctx, modules, emit_source_maps)?;
-//         self.store_scripts(ctx, scripts, emit_source_maps)?;
-//
-//         if !ice_errors.is_empty() {
-//             let mut writer = StandardStream::stderr(ColorChoice::Auto);
-//             output_errors(&mut writer, files, ice_errors);
-//             Err(anyhow!("could not verify:{}", ctx.project_name()))
-//         } else {
-//             Ok(())
-//         }
-//     }
-//
-//     fn store_modules(
-//         &self,
-//         ctx: &Context,
-//         units: Vec<CompiledUnit>,
-//         emit_source_maps: bool,
-//     ) -> Result<(), Error> {
-//         if !units.is_empty() {
-//             if self.package {
-//                 let packages_dir = ctx.path_for(&ctx.manifest.layout.bundles_output);
-//                 if !packages_dir.exists() {
-//                     fs::create_dir_all(&packages_dir)?;
-//                 }
-//
-//                 let pac_file = match &self.output {
-//                     None => {
-//                         let mut pac_file = match &ctx.manifest.package.name {
-//                             None => packages_dir.join("modules"),
-//                             Some(pac_name) => packages_dir.join(pac_name),
-//                         };
-//                         pac_file.set_extension("pac");
-//                         pac_file
-//                     }
-//                     Some(name) => {
-//                         let mut pac_file = packages_dir.join(name);
-//                         if !name.to_lowercase().ends_with(".pac") {
-//                             pac_file.set_extension("pac");
-//                         }
-//                         pac_file
-//                     }
-//                 };
-//
-//                 stdoutln!("Package content: ");
-//                 for unit in &units {
-//                     stdoutln!("\t{}", unit.name());
-//                 }
-//                 stdoutln!("Store: {:?}", pac_file.as_os_str());
-//                 let package = ModulePackage::with_units(units);
-//                 File::create(&pac_file)?.write_all(&package.encode()?)?
-//             } else {
-//                 let modules_dir = ctx.path_for(&ctx.manifest.layout.modules_output);
-//                 if modules_dir.exists() {
-//                     fs::remove_dir_all(&modules_dir)?;
-//                 }
-//                 fs::create_dir_all(&modules_dir)?;
-//
-//                 self.store_units(ctx, units, &modules_dir, emit_source_maps)?;
-//             }
-//         }
-//         Ok(())
-//     }
-//
-//     fn store_scripts(
-//         &self,
-//         ctx: &Context,
-//         units: Vec<CompiledUnit>,
-//         emit_source_maps: bool,
-//     ) -> Result<(), Error> {
-//         if !units.is_empty() {
-//             let scripts_dir = ctx.path_for(&ctx.manifest.layout.scripts_output);
-//             if scripts_dir.exists() {
-//                 fs::remove_dir_all(&scripts_dir)?;
-//             }
-//             fs::create_dir_all(&scripts_dir)?;
-//
-//             self.store_units(ctx, units, &scripts_dir, emit_source_maps)?;
-//         }
-//         Ok(())
-//     }
-//
-//     fn store_units(
-//         &self,
-//         ctx: &Context,
-//         units: Vec<CompiledUnit>,
-//         base_dir: &Path,
-//         emit_source_maps: bool,
-//     ) -> Result<(), Error> {
-//         for (idx, unit) in units.into_iter().enumerate() {
-//             let mut path = if !self.unordered {
-//                 base_dir.join(format!("{}_{}", idx, unit.name()))
-//             } else {
-//                 base_dir.join(unit.name())
-//             };
-//
-//             path.set_extension("mv");
-//             let mut bytecode = unit.serialize();
-//             ctx.dialect.adapt_to_target(&mut bytecode)?;
-//
-//             File::create(&path)?.write_all(&bytecode)?;
-//
-//             if emit_source_maps {
-//                 path.set_extension("mvsm");
-//                 File::create(&path)?.write_all(&unit.serialize_source_map())?;
-//             }
-//         }
-//         Ok(())
-//     }
-// }
-//
-// #[derive(Serialize, Deserialize, Debug)]
-// struct ModulePackage {
-//     modules: Vec<Vec<u8>>,
-// }
-//
-// impl ModulePackage {
-//     fn with_units(units: Vec<CompiledUnit>) -> ModulePackage {
-//         ModulePackage {
-//             modules: units.into_iter().map(|unit| unit.serialize()).collect(),
-//         }
-//     }
-//
-//     pub fn encode(&self) -> Result<Vec<u8>, Error> {
-//         bcs::to_bytes(&self).map_err(|err| err.into())
-//     }
-// }
+
+impl Build {
+    /// Generate error map for the package and its dependencies
+    /// at path for use by the Move explanation tool.
+    fn run_error_map(&self, ctx: &Context) -> anyhow::Result<()> {
+        if self.error_map.is_none() {
+            return Ok(());
+        }
+
+        let path = PathBuf::from(self.error_map.clone().unwrap_or_default());
+
+        let error_descriptions: ErrorMapping =
+            bcs::from_bytes(move_stdlib::error_descriptions())?;
+        let cmd = MoveCommand::Package {
+            cmd: PackageCommand::ErrMapGen {
+                error_prefix: None,
+                output_file: path,
+            },
+            path: Some(ctx.project_dir.clone()),
+            config: BuildConfig {
+                generate_abis: false,
+                generate_docs: false,
+                test_mode: false,
+                dev_mode: false,
+            },
+        };
+
+        run_cli(
+            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
+            &error_descriptions,
+            &ctx.move_args,
+            &cmd,
+        )?;
+        Ok(())
+    }
+
+    /// Names of modules to exclude from the package process..
+    fn run_package(&self, ctx: &Context) -> anyhow::Result<()> {
+        if !self.package {
+            return Ok(());
+        }
+
+        // Path to the output file
+        let mut output_file_path = PathBuf::from(
+            self.output
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or("package.mv"),
+        )
+        .with_extension("mv");
+        if let Some(parent_path) = output_file_path.parent() {
+            if !parent_path.exists() {
+                create_dir_all(&parent_path)?;
+            }
+        }
+        if output_file_path.exists() {
+            remove_file(&output_file_path)?;
+        }
+
+        // Search for modules
+        let mut bytecode_modules_path =
+            get_bytecode_modules_path(&ctx.project_dir, &ctx.manifest.package.name)
+                .unwrap_or_default();
+
+        for module_name in self.modules_exclude.iter() {
+            let module_name = if module_name.ends_with(".mv") {
+                module_name.to_lowercase()
+            } else {
+                module_name.to_lowercase() + ".mv"
+            };
+
+            if let Some((finded_index, _)) = bytecode_modules_path
+                .iter()
+                .enumerate()
+                .filter_map(|(index, path)| {
+                    path.file_name()
+                        .map(|file_name| (index, file_name.to_string_lossy().to_lowercase()))
+                })
+                .find(|(index, file_name)| file_name == &module_name)
+            {
+                bytecode_modules_path.remove(finded_index);
+            }
+        }
+
+        // Build into a single file
+        if bytecode_modules_path.is_empty() {
+            println!("NOTE: No modules for packaging");
+            return Ok(());
+        }
+
+        let mut file = fs::File::create(&output_file_path)?;
+        for path in bytecode_modules_path.iter() {
+            let content = fs::read(path)?;
+            file.write(&content);
+        }
+
+        println!(
+            "Modules are packed {}",
+            output_file_path
+                .canonicalize()
+                .unwrap_or_default()
+                .display()
+        );
+        Ok(())
+    }
+}
+
+/// Return file paths from ./PROJECT_FOLDER/build/PROJECT_NAME/bytecode_modules
+/// Only with the .mv extension
+fn get_bytecode_modules_path(
+    project_dir: &Path,
+    project_name: &str,
+) -> anyhow::Result<Vec<PathBuf>> {
+    let path = project_dir
+        .join("build")
+        .join(project_name)
+        .join("bytecode_modules");
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let list = fs::read_dir(path)?
+        .map(|res| res.map(|e| e.path()))
+        .collect::<Result<Vec<_>, _>>()
+        .map(|list| {
+            list.into_iter()
+                .filter(|path| path.is_file() && path.extension() == Some(OsStr::new("mv")))
+                .collect::<Vec<_>>()
+        })?;
+    Ok(list)
+}

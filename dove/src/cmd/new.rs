@@ -1,8 +1,10 @@
 use std::fs;
 use std::path::{PathBuf, Path};
 use std::fs::read_to_string;
-use structopt::StructOpt;
+use std::collections::HashMap;
 use toml::Value;
+use toml::map::Map;
+use structopt::StructOpt;
 
 use move_cli::{Move, run_cli};
 use move_core_types::account_address::AccountAddress;
@@ -14,8 +16,6 @@ use move_package::BuildConfig;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
-use std::collections::HashMap;
-use toml::map::Map;
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -30,8 +30,6 @@ pub struct New {
         short = "m"
     )]
     minimal: bool,
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
 }
 
 impl Cmd for New {

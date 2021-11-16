@@ -11,6 +11,7 @@ pub fn pre_start(project_name: &str) -> Result<(PathBuf, PathBuf)> {
     delete_project(&project_folder)?;
     Ok((tmp_folder, project_folder))
 }
+
 /// get tmp_folder, project_folder and remove project folder if exist
 pub fn pre_start_init(project_name: &str) -> Result<PathBuf> {
     let tmp_folder = std::env::temp_dir();
