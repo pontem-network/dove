@@ -6,8 +6,6 @@ use crate::context::Context;
 use crate::tx::parser::Call;
 use crate::tx::fn_call::{make_function_call, Config, make_script_call};
 
-/// Tx builder.
-pub mod builder;
 /// Command helper.
 pub mod cmd;
 /// Function call.
@@ -25,7 +23,7 @@ pub fn make_transaction(
     cmd: CallDeclarationCmd,
     cfg: Config,
 ) -> Result<EnrichedTransaction, Error> {
-    let declaration = CallDeclaration::try_from((ctx, cmd))?;
+    let declaration = CallDeclaration::try_from(cmd)?;
     let addr = ctx.account_address()?;
     match declaration.call {
         Call::Function {

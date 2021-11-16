@@ -1,7 +1,13 @@
-use std::path::PathBuf;
-use dialect::Dialect;
+use std::cell::RefCell;
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+use anyhow::Error;
 use move_cli::Move;
-use move_package::source_package::parsed_manifest::SourceManifest;
+use move_core_types::account_address::AccountAddress;
+use move_package::source_package::parsed_manifest::{AddressDeclarations, SourceManifest};
+use move_symbol_pool::Symbol;
+use once_cell::unsync::Lazy;
 
 // use std::path::{Path, PathBuf};
 // use std::str::FromStr;
@@ -26,36 +32,44 @@ pub struct Context {
     /// Project manifest.
     pub manifest: SourceManifest,
 }
-//
-// impl Context {
-//     /// Returns create absolute path in project as string.
-//     pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
-//         let mut abs_path = self.path_for(path);
-//
-//         if abs_path.exists() {
-//             abs_path = dunce::canonicalize(abs_path)?;
-//         }
-//
-//         abs_path
-//             .to_str()
-//             .map(|path| path.to_owned())
-//             .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
-//     }
-//
-//     /// Create absolute path in project.
-//     pub fn path_for<P: AsRef<Path>>(&self, path: P) -> PathBuf {
-//         self.project_dir.join(path)
-//     }
-//
-//     /// Create absolute paths in project.
-//     pub fn paths_for<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<PathBuf> {
-//         paths
-//             .iter()
-//             .map(|d| self.path_for(&d))
-//             .filter(|p| p.exists())
-//             .collect()
-//     }
-//
+
+impl Context {
+    /// Returns create absolute path in project as string.
+    pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
+        let mut abs_path = self.path_for(path);
+
+        if abs_path.exists() {
+            abs_path = fs::canonicalize(abs_path)?;
+        }
+
+        abs_path
+            .to_str()
+            .map(|path| path.to_owned())
+            .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
+    }
+
+    /// Create absolute path in project.
+    pub fn path_for<P: AsRef<Path>>(&self, path: P) -> PathBuf {
+        self.project_dir.join(path)
+    }
+
+    /// Create absolute paths in project.
+    pub fn paths_for<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<PathBuf> {
+        paths
+            .iter()
+            .map(|d| self.path_for(&d))
+            .filter(|p| p.exists())
+            .collect()
+    }
+
+    pub fn named_address(&self) -> AddressDeclarations {
+        let mut named_address = self.manifest.addresses.clone().unwrap_or_default();
+        for (name, addr) in &self.move_args.named_addresses {
+            named_address.insert(Symbol::from(name.as_str()), Some(AccountAddress::new(addr.into_bytes())));
+        }
+        named_address
+    }
+
 //     /// Build project index.
 //     pub fn build_index(&self) -> Result<(Index, Interface), Error> {
 //         let index_path = self.path_for(&self.manifest.layout.index);
@@ -124,7 +138,7 @@ pub struct Context {
 //         self.path_for(&self.manifest.layout.system_folder)
 //             .join("interface.lock")
 //     }
-// }
+}
 //
 // pub(crate) fn get_context(project_dir: PathBuf, manifest: DoveToml) -> Result<Context> {
 //     let dialect_name = manifest

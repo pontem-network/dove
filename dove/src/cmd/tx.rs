@@ -29,20 +29,20 @@ pub struct CreateTransactionCmd {
 }
 
 impl Cmd for CreateTransactionCmd {
-    fn apply(&self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+    fn apply(&mut self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+        // let tx = make_transaction(&ctx, self.call.take(), Config::for_tx())?;
+        // let output_filename = self.output.as_ref().take();
+        // match tx {
+        //     EnrichedTransaction::Local { .. } => unreachable!(),
+        //     EnrichedTransaction::Global { tx, name } => {
+        //         store_transaction(&ctx, &output_filename.unwrap_or(&name), tx)
+        //     }
+        // }
         todo!()
     }
-    // fn apply(mut self, ctx: Context) -> Result<(), Error> {
-    //     let tx = make_transaction(&ctx, self.call, Config::for_tx())?;
-    //     let output_filename = self.output.take();
-    //     match tx {
-    //         EnrichedTransaction::Local { .. } => unreachable!(),
-    //         EnrichedTransaction::Global { tx, name } => {
-    //             store_transaction(&ctx, &output_filename.unwrap_or(name), tx)
-    //         }
-    //     }
-    // }
 }
+
+
 //
 // fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), Error> {
 //     let tx_dir = ctx.path_for(&ctx.manifest.layout.transactions_output);

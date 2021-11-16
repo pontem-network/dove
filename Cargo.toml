@@ -3,7 +3,7 @@ members = [
 #    "language_server",
 #    "net",
     "dove",
-#    "lang",
+    "lang",
 #    "lang/compat",
 #    "lang/decompiler",
 #    "resource-viewer",

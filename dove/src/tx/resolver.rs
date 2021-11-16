@@ -4,8 +4,8 @@ use anyhow::Error;
 use regex::Regex;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
-use lang::compiler::file::find_move_files;
-use lang::compiler::metadata::{module_meta, script_meta, FuncMeta};
+use lang::file::find_move_files;
+use lang::metadata::{FuncMeta, module_meta, script_meta};
 use crate::context::Context;
 
 pub(crate) fn find_module_function(
@@ -35,7 +35,7 @@ pub(crate) fn find_module_function(
     Ok(move_files
         .iter()
         .filter_map(|f| {
-            module_meta(&f.to_string_lossy(), ctx.dialect.as_ref(), &sender)
+            module_meta(&f.to_string_lossy())
                 .ok()
                 .map(|m| (f, m))
         })
@@ -70,11 +70,10 @@ pub(crate) fn find_script(
         find_move_files(&[ctx.path_for(&ctx.manifest.layout.scripts_dir)]).collect()
     };
     let move_files = find_by_regexp(move_files, &format!(r#"fun[\s]+{}"#, name.as_str()))?;
-    let sender = ctx.account_address_str()?;
     Ok(move_files
         .iter()
         .filter_map(|p| {
-            script_meta(&p.to_string_lossy(), ctx.dialect.as_ref(), &sender)
+            script_meta(&p.to_string_lossy())
                 .ok()
                 .map(|f| (p, f))
         })

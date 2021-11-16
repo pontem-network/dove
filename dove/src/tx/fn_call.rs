@@ -3,7 +3,6 @@ use crate::context::Context;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::TypeTag;
-use lang::compiler::metadata::FuncMeta;
 use anyhow::Error;
 use std::path::PathBuf;
 use crate::tx::resolver::{find_module_function, find_script};
@@ -11,7 +10,6 @@ use std::str::FromStr;
 use std::fmt::Debug;
 use crate::tx::parser::parse_vec;
 use diem_types::account_config::{treasury_compliance_account_address, diem_root_address};
-use crate::tx::builder::move_build;
 use move_lang::compiled_unit::CompiledUnit;
 use itertools::{Itertools, Either};
 
@@ -47,7 +45,6 @@ impl Config {
 
 pub(crate) fn make_script_call(
     ctx: &Context,
-    addr: AccountAddress,
     name: Identifier,
     type_tag: Vec<TypeTag>,
     args: Vec<String>,
@@ -56,7 +53,7 @@ pub(crate) fn make_script_call(
 ) -> Result<EnrichedTransaction, Error> {
     let scripts = find_script(ctx, &name, file)?;
 
-    let (path, meta) = select_function(scripts, addr, &type_tag, &args, &cfg)?;
+    let (path, meta) = select_function(scripts, &type_tag, &args, &cfg)?;
 
     let (signers, args) = prepare_function_signature(
         &meta.value.parameters,
@@ -76,7 +73,6 @@ pub(crate) fn make_script_call(
         ),
     };
 
-    let (_, interface) = ctx.build_index()?;
 
     let (mut modules, script): (Vec<_>, Vec<_>) = move_build(
         ctx,
@@ -189,7 +185,6 @@ pub(crate) fn make_function_call(
 
 fn select_function(
     mut func: Vec<(PathBuf, FuncMeta)>,
-    addr: AccountAddress,
     type_tag: &[TypeTag],
     args: &[String],
     cfg: &Config,

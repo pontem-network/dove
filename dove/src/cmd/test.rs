@@ -1,4 +1,3 @@
-use anyhow::Error;
 use structopt::StructOpt;
 
 // use lang::compiler::file::find_move_files;
@@ -57,7 +56,7 @@ pub struct Test {
 }
 
 impl Cmd for Test {
-    fn apply(&self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+    fn apply(&mut self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
         todo!()
     }
     // fn apply(self, ctx: Context) -> Result<(), Error> {

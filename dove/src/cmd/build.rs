@@ -70,7 +70,7 @@ pub struct Build {
 }
 
 impl Cmd for Build {
-    fn apply(&self, ctx: Context) -> anyhow::Result<()>
+    fn apply(&mut self, ctx: Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {

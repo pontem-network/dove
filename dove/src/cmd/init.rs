@@ -34,11 +34,11 @@ impl Init {
 }
 
 impl Cmd for Init {
-    fn context(&self, project_dir: PathBuf, move_args: Move) -> anyhow::Result<Context> {
+    fn context(&mut self, project_dir: PathBuf, move_args: Move) -> anyhow::Result<Context> {
         context_with_empty_manifest(project_dir, move_args)
     }
 
-    fn apply(&self, ctx: Context) -> anyhow::Result<()>
+    fn apply(&mut self, ctx: Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {

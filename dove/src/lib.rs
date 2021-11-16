@@ -45,4 +45,4 @@ pub mod stdout;
 // #[doc(hidden)]
 // pub mod tests_helper;
 // /// Transactions.
-// pub mod tx;
+//pub mod tx;

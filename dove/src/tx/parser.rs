@@ -5,10 +5,8 @@ use move_core_types::identifier::Identifier;
 use move_lang::parser::lexer::{Lexer, Tok};
 use move_lang::parser::syntax::{parse_type, parse_address_bytes, consume_token};
 use lang::lexer::unwrap_spanned_ty;
-use lang::compiler::mut_string::MutString;
-use lang::compiler::dialects::Dialect;
-use lang::compiler::preprocessor::normalize_source_text;
 use std::str::FromStr;
+use move_symbol_pool::Symbol;
 
 /// Call.
 #[derive(Debug)]
@@ -101,12 +99,8 @@ impl Call {
 
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
-pub(crate) fn parse_call(dialect: &dyn Dialect, sender: &str, call: &str) -> Result<Call, Error> {
-    let mut mut_source = MutString::new(call);
-    normalize_source_text(dialect, (call, &mut mut_source), sender);
-    let call = mut_source.freeze();
-
-    let mut lexer = Lexer::new(&call, "call", Default::default());
+pub(crate) fn parse_call(call: &str) -> Result<Call, Error> {
+    let mut lexer = Lexer::new(&call, Symbol::from("call"));
 
     // Get the name of the function|script
     let error_message = "Invalid call format: expected function identifier.\n\n\
@@ -274,7 +268,7 @@ fn parse_args(lexer: &mut Lexer) -> Result<Vec<String>, Error> {
 }
 
 pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
-    let mut lexer = Lexer::new(tp, "tp", Default::default());
+    let mut lexer = Lexer::new(tp, "tp");
     lexer
         .advance()
         .map_err(|err| Error::msg(format!("{:?}", err)))?;
@@ -297,7 +291,7 @@ where
 {
     let map_err = |err| Error::msg(format!("{:?}", err));
 
-    let mut lexer = Lexer::new(tkn, "vec", Default::default());
+    let mut lexer = Lexer::new(tkn, "vec");
     lexer.advance().map_err(map_err)?;
 
     if lexer.peek() != Tok::LBracket {

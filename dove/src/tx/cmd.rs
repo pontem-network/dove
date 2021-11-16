@@ -3,9 +3,8 @@ use anyhow::Error;
 use structopt::StructOpt;
 use std::fmt::Debug;
 use std::convert::TryFrom;
+use std::mem;
 use crate::tx::parser::{parse_call, Call, parse_tp_param};
-use lang::compiler::mut_string::MutString;
-use lang::compiler::preprocessor::normalize_source_text;
 
 /// Call declaration.
 #[derive(StructOpt, Debug)]
@@ -38,37 +37,30 @@ Examples:
     file_name: Option<String>,
 }
 
-impl TryFrom<(&Context, CallDeclarationCmd)> for CallDeclaration {
+impl CallDeclarationCmd {
+    pub fn take(&mut self) -> Self {
+        Self {
+            call: mem::take(&mut self.call),
+            type_parameters: self.type_parameters.take(),
+            args: self.args.take(),
+            file_name: self.file_name.take(),
+        }
+    }
+}
+
+impl TryFrom<CallDeclarationCmd> for CallDeclaration {
     type Error = Error;
 
-    fn try_from((ctx, cmd): (&Context, CallDeclarationCmd)) -> Result<Self, Self::Error> {
-        let sender = ctx.account_address_str()?;
-        let mut call = parse_call(ctx.dialect.as_ref(), &sender, &cmd.call)?;
-
-        if let Some(mut cmd_args) = cmd.args {
-            for arg in cmd_args.as_mut_slice() {
-                let mut mut_source = MutString::new(arg);
-                normalize_source_text(ctx.dialect.as_ref(), (arg, &mut mut_source), &sender);
-                let new_arg = mut_source.freeze();
-                *arg = new_arg;
-            }
-
-            call.set_args(cmd_args);
+    fn try_from(cmd: CallDeclarationCmd) -> Result<Self, Self::Error> {
+        let mut call = parse_call(&cmd.call)?;
+        if let Some(args) = cmd.args {
+            call.set_args(args);
         }
 
         if let Some(tp) = cmd.type_parameters {
             call.set_tp_params(
                 tp.iter()
-                    .map(|tp| {
-                        let mut mut_source = MutString::new(tp);
-                        normalize_source_text(
-                            ctx.dialect.as_ref(),
-                            (tp, &mut mut_source),
-                            &sender,
-                        );
-                        let tp = mut_source.freeze();
-                        parse_tp_param(&tp)
-                    })
+                    .map(|tp| parse_tp_param(tp))
                     .collect::<Result<_, _>>()?,
             );
         }

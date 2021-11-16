@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 use anyhow::Result;
@@ -10,6 +11,7 @@ use move_symbol_pool::symbol::Symbol;
 
 use crate::context::Context;
 use std::collections::BTreeMap;
+use move_core_types::account_address::AccountAddress;
 
 /// Project builder.
 pub mod build;
@@ -38,12 +40,17 @@ pub mod tx;
 pub trait Cmd {
     /// Returns project context.
     /// This function must be overridden if the command is used with a custom context.
-    fn context(&self, project_dir: PathBuf, move_args: Move) -> Result<Context> {
+    fn context(&mut self, project_dir: PathBuf, move_args: Move) -> Result<Context> {
         init_context(move_args.dialect);
         let manifest_string =
             read_to_string(project_dir.join(layout::SourcePackageLayout::Manifest.path()))?;
         let toml_manifest = manifest_parser::parse_move_manifest_string(manifest_string)?;
         let manifest = manifest_parser::parse_source_manifest(toml_manifest)?;
+
+        // let mut named_address = manifest.addresses.unwrap_or_default();
+        // for (name, addr) in &move_args.named_addresses {
+        //     named_address.insert(Symbol::from(name), Some(AccountAddress::new(addr.into_bytes())));
+        // }
 
         Ok(Context {
             project_dir,
@@ -53,7 +60,7 @@ pub trait Cmd {
     }
 
     /// Apply command with given context.
-    fn apply(&self, ctx: Context) -> Result<()>;
+    fn apply(&mut self, ctx: Context) -> Result<()>;
 }
 
 /// Context with empty manifest

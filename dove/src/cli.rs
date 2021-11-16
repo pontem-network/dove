@@ -197,7 +197,7 @@ where
                 &cmd,
             )
         }
-        CommonCommand::Dove(cmd) => {
+        CommonCommand::Dove(mut cmd) => {
             let ctx = cmd.context(cwd, move_args)?;
             cmd.apply(ctx)
         }

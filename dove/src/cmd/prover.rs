@@ -45,7 +45,7 @@ pub struct Prove {
 }
 
 impl Cmd for Prove {
-    fn apply(&self, ctx: Context) -> Result<()> where Self: Sized {
+    fn apply(&mut self, ctx: Context) -> Result<()> where Self: Sized {
         todo!()
     }
     // fn apply(mut self, ctx: Context) -> Result<()>
