@@ -4,7 +4,6 @@ use std::io::Write;
 use std::path::{PathBuf, Path};
 use std::fs::{remove_file, create_dir_all};
 use structopt::StructOpt;
-use toml::from_str;
 use move_core_types::errmap::ErrorMapping;
 use move_core_types::account_address::AccountAddress;
 use move_cli::Command as MoveCommand;
@@ -133,13 +132,8 @@ impl Build {
         }
 
         // Path to the output file
-        let mut output_file_path = PathBuf::from(
-            self.output
-                .as_ref()
-                .map(|s| s.as_str())
-                .unwrap_or("package.mv"),
-        )
-        .with_extension("mv");
+        let output_file_path =
+            PathBuf::from(self.output.as_deref().unwrap_or("package.mv")).with_extension("mv");
         if let Some(parent_path) = output_file_path.parent() {
             if !parent_path.exists() {
                 create_dir_all(&parent_path)?;
@@ -168,7 +162,7 @@ impl Build {
                     path.file_name()
                         .map(|file_name| (index, file_name.to_string_lossy().to_lowercase()))
                 })
-                .find(|(index, file_name)| file_name == &module_name)
+                .find(|(_, file_name)| file_name == &module_name)
             {
                 bytecode_modules_path.remove(finded_index);
             }
@@ -183,7 +177,7 @@ impl Build {
         let mut file = fs::File::create(&output_file_path)?;
         for path in bytecode_modules_path.iter() {
             let content = fs::read(path)?;
-            file.write(&content);
+            file.write_all(&content)?;
         }
 
         println!(

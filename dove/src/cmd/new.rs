@@ -1,7 +1,6 @@
 use std::fs;
 use std::path::{PathBuf, Path};
 use std::fs::read_to_string;
-use std::collections::HashMap;
 use toml::Value;
 use toml::map::Map;
 use structopt::StructOpt;
@@ -104,7 +103,7 @@ fn add_dialect_and_addresses(project_dir: &Path, move_args: &Move) -> anyhow::Re
         let packgage = move_toml
             .get_mut("package")
             .and_then(|package| package.as_table_mut())
-            .ok_or(anyhow!(r#""package" section in "Move.toml" was not found"#))?;
+            .ok_or_else(|| anyhow!(r#""package" section in "Move.toml" was not found"#))?;
         packgage.insert(
             "dialect".to_string(),
             Value::String(dialect.name().to_string()),

@@ -60,7 +60,7 @@ impl Cmd for Init {
                         \t./tests"
             );
             // Create directories - "sources", "examples", "scripts", "doc_templates", "tests"
-            create_project_directories(&project_dir)?;
+            create_project_directories(project_dir)?;
         }
 
         println!(
