@@ -3,9 +3,10 @@
 use std::path::{PathBuf, Path};
 use std::fs::{remove_dir_all, create_dir};
 use anyhow::{Result, ensure};
+use std::collections::HashMap;
 
 /// get tmp_folder, project_folder and remove project folder if exist
-pub fn pre_start(project_name: &str) -> Result<(PathBuf, PathBuf)> {
+pub fn pre_start_dove_new(project_name: &str) -> Result<(PathBuf, PathBuf)> {
     let tmp_folder = std::env::temp_dir();
     let project_folder = tmp_folder.join(project_name);
     delete_project(&project_folder)?;
@@ -13,7 +14,7 @@ pub fn pre_start(project_name: &str) -> Result<(PathBuf, PathBuf)> {
 }
 
 /// get tmp_folder, project_folder and remove project folder if exist
-pub fn pre_start_init(project_name: &str) -> Result<PathBuf> {
+pub fn pre_start_dove_init(project_name: &str) -> Result<PathBuf> {
     let tmp_folder = std::env::temp_dir();
     let project_folder = tmp_folder.join(project_name);
     delete_project(&project_folder)?;
@@ -113,4 +114,24 @@ pub fn assert_basic_project_dirs_exist(project_dir: &Path) -> Result<()> {
         );
     }
     Ok(())
+}
+
+/// Create a new project in a temporary directory
+/// Returns the path to the project
+pub fn create_new_project(project_name: &str, addresses: HashMap<&str, &str>) -> Result<PathBuf> {
+    let (base_dir, project_dir) = pre_start_dove_new(&project_name)?;
+    let mut args = vec!["new", project_name];
+
+    let addresses: Vec<String> = addresses
+        .iter()
+        .map(|(name, address)| format!(r#"{}={}"#, name, address))
+        .collect();
+
+    if !addresses.is_empty() {
+        args.push("--addresses");
+        args.extend(addresses.iter().map(|v| v.as_str()));
+    }
+
+    execute_dove_at(&args, &base_dir)?;
+    Ok(project_dir)
 }

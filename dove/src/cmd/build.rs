@@ -10,6 +10,7 @@ use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
 use move_package::BuildConfig;
+use move_symbol_pool::Symbol;
 use crate::cmd::Cmd;
 use crate::context::Context;
 
@@ -17,26 +18,25 @@ use crate::context::Context;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Build {
-    // @todo test
     #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
     doc: bool,
 
-    // @todo test
     /// Generate error map for the package and its dependencies
     /// at path for use by the Move explanation tool.
     #[structopt(long)]
     error_map: Option<String>,
+    /// Address. Used as an additional parameter in error_map
+    #[structopt(long)]
+    address: Option<String>,
 
     // Pack the assembled modules into a single file,
     // except for those specified in modules_exclude
-    // @todo check
     #[structopt(
         help = "Package modules in a binary file.",
         short = "p",
         long = "package"
     )]
     package: bool,
-    // @todo test
     // Names of modules to exclude from the package process..
     // Used with the "package" parameter.
     // Modules are taken from the ./build/NAME_PROJECT/bytecode_modules directory.
@@ -47,7 +47,6 @@ pub struct Build {
         long = "modules_exclude"
     )]
     modules_exclude: Vec<String>,
-    // @todo test
     // File name of module package.
     // Used with the "package" parameter.
     #[structopt(help = "File name of module package.", short = "o", long = "output")]
@@ -116,8 +115,20 @@ impl Build {
             },
         };
 
+        let address = self.address.clone().unwrap_or_else(|| "0x1".to_string());
+        let account = if !address.starts_with("0x") {
+            ctx.manifest
+                .addresses
+                .as_ref()
+                .and_then(|list| list.get(&Symbol::from(address.as_str())).cloned())
+                .and_then(|add| add)
+                .unwrap_or(AccountAddress::from_hex_literal("0x1")?)
+        } else {
+            AccountAddress::from_hex_literal(&address)?
+        };
+
         run_cli(
-            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
+            move_stdlib::natives::all_natives(account),
             &error_descriptions,
             &ctx.move_args,
             &cmd,
