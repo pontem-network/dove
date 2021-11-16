@@ -2,7 +2,7 @@ mod helper;
 
 use std::str::FromStr;
 use crate::helper::{
-    pre_start_init, execute_dove_at, delete_project, get_project_name_from_toml,
+    pre_start_dove_init, execute_dove_at, delete_project, get_project_name_from_toml,
     get_project_dialect_from_toml, assert_basic_project_dirs_exist,
     get_account_address_from_toml,
 };
@@ -14,7 +14,7 @@ use dialect::Dialect;
 fn test_cmd_dove_init_without_arguments() {
     // Project name and path
     let project_name = "project_init_without_arguments";
-    let project_path = pre_start_init(&project_name).unwrap();
+    let project_path = pre_start_dove_init(&project_name).unwrap();
 
     execute_dove_at(&["init"], &project_path).unwrap();
 
@@ -34,7 +34,7 @@ fn test_cmd_dove_init_without_arguments() {
 fn test_cmd_dove_init_with_minimal() {
     // Project name and path
     let project_name = "project_init_with_minimal";
-    let project_path = pre_start_init(&project_name).unwrap();
+    let project_path = pre_start_dove_init(&project_name).unwrap();
 
     execute_dove_at(&["init", "--minimal"], &project_path).unwrap();
     assert!(assert_basic_project_dirs_exist(&project_path).is_err());
@@ -48,7 +48,7 @@ fn test_cmd_dove_init_with_minimal() {
 fn test_cmd_dove_init_with_dialect() {
     // Project name and path
     let project_name = "project_init_with_dialect";
-    let project_path = pre_start_init(&project_name).unwrap();
+    let project_path = pre_start_dove_init(&project_name).unwrap();
 
     for dialect_name in ["pont", "diem", "dfinance"] {
         execute_dove_at(&["init", "--dialect", dialect_name], &project_path).unwrap();
@@ -56,7 +56,7 @@ fn test_cmd_dove_init_with_dialect() {
             get_project_dialect_from_toml(&project_path),
             Some(dialect_name.to_string())
         );
-        pre_start_init(&project_name).unwrap();
+        pre_start_dove_init(&project_name).unwrap();
     }
 }
 
@@ -66,7 +66,7 @@ fn test_cmd_dove_init_with_dialect() {
 fn test_cmd_dove_init_with_nonexistent_dialect() {
     // Project name and path
     let project_name = "project_init_with_nonexistent_dialect";
-    let project_path = pre_start_init(&project_name).unwrap();
+    let project_path = pre_start_dove_init(&project_name).unwrap();
 
     assert!(execute_dove_at(&["init", "--dialect", "noname"], &project_path).is_err());
 }
@@ -78,7 +78,7 @@ fn test_cmd_dove_init_with_address() {
     // Project name and path
     let project_name = "project_init_with_address";
 
-    let project_path = pre_start_init(&project_name).unwrap();
+    let project_path = pre_start_dove_init(&project_name).unwrap();
 
     for (dialect_name, addresses) in [
         (
@@ -115,7 +115,7 @@ fn test_cmd_dove_init_with_address() {
                 Some(account_address)
             );
 
-            pre_start_init(&project_name).unwrap();
+            pre_start_dove_init(&project_name).unwrap();
         }
     }
 }
