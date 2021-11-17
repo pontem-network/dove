@@ -24,7 +24,7 @@ pub struct Clean {
 }
 
 impl Cmd for Clean {
-    fn apply(&self, ctx: &mut Context) -> anyhow::Result<()>
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {

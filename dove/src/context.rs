@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::{Path, PathBuf};
 use anyhow::Error;
 use move_cli::Move;
@@ -34,7 +35,7 @@ pub struct Context {
 impl Context {
     /// Path for bundle
     ///     ./build/<package name>/bundles
-    pub fn bundles_output_path(&self, package_name: &str) -> Result<PathBuf> {
+    pub fn bundles_output_path(&self, package_name: &str) -> Result<PathBuf, Error> {
         let dir = self
             .project_dir
             .join("build")
