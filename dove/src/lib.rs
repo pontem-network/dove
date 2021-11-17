@@ -44,5 +44,5 @@ pub mod export;
 pub mod stdout;
 // #[doc(hidden)]
 // pub mod tests_helper;
-// /// Transactions.
-//pub mod tx;
+/// Transactions.
+pub mod tx;

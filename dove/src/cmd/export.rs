@@ -28,7 +28,7 @@ impl Cmd for Export {
         context_with_empty_manifest(project_dir, move_args)
     }
 
-    fn apply(&mut self, ctx: Context) -> anyhow::Result<()>
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {

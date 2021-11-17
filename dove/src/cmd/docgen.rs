@@ -17,7 +17,10 @@ use crate::context::Context;
 pub struct DocGen {}
 
 impl Cmd for DocGen {
-    fn apply(&mut self, ctx: Context) -> Result<()> where Self: Sized {
+    fn apply(&mut self, ctx: &mut Context) -> Result<()>
+    where
+        Self: Sized,
+    {
         todo!()
     }
 }

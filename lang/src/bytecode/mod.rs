@@ -3,25 +3,21 @@ pub mod info;
 
 use std::vec::IntoIter;
 use anyhow::Error;
-use move_binary_format::access::{ModuleAccess, ScriptAccess};
-use move_binary_format::CompiledModule;
-use move_binary_format::file_format::{Ability, AbilitySet, empty_module, SignatureToken, StructHandleIndex, Visibility};
-use move_core_types::account_address::AccountAddress;
-use crate::bytecode::accessor::{Bytecode, BytecodeAccess, BytecodeRef, BytecodeType};
+use crate::bytecode::accessor::{BytecodeAccess, BytecodeRef, BytecodeType};
 use crate::bytecode::info::BytecodeInfo;
 
 pub struct SearchParams<'a> {
-    tp: Option<BytecodeType>,
-    package: Option<&'a str>,
-    name: Option<&'a str>,
+    pub tp: Option<BytecodeType>,
+    pub package: Option<&'a str>,
+    pub name: Option<&'a str>,
 }
 
-pub fn find<'a, A>(
+pub fn find<A>(
     accessor: A,
-    params: SearchParams<'a>,
-) -> Result<BytecodeIter<IntoIter<BytecodeRef<'a>>, A>, Error>
-    where
-        A: BytecodeAccess,
+    params: SearchParams,
+) -> Result<BytecodeIter<IntoIter<BytecodeRef>, A>, Error>
+where
+    A: BytecodeAccess,
 {
     Ok(BytecodeIter {
         refs: accessor
@@ -31,14 +27,12 @@ pub fn find<'a, A>(
     })
 }
 
-pub struct BytecodeIter<'a, I: Iterator<Item=BytecodeRef<'a>>, A: BytecodeAccess> {
+pub struct BytecodeIter<I: Iterator<Item = BytecodeRef>, A: BytecodeAccess> {
     refs: I,
     accessor: A,
 }
 
-impl<'a, I: Iterator<Item=BytecodeRef<'a>>, A: BytecodeAccess> Iterator
-for BytecodeIter<'a, I, A>
-{
+impl<I: Iterator<Item = BytecodeRef>, A: BytecodeAccess> Iterator for BytecodeIter<I, A> {
     type Item = Result<BytecodeInfo, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {

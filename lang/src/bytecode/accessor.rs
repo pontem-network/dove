@@ -1,9 +1,8 @@
-use std::borrow::Cow;
 use anyhow::Error;
 use move_binary_format::{CompiledModule};
 use move_binary_format::file_format::CompiledScript;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum BytecodeType {
     Script,
     Module,
@@ -16,11 +15,7 @@ pub enum Bytecode {
 }
 
 #[derive(Debug)]
-pub struct BytecodeRef<'a> {
-    package: Cow<'a, str>,
-    tp: BytecodeType,
-    name: Cow<'a, str>,
-}
+pub struct BytecodeRef(pub String, pub BytecodeType);
 
 pub trait BytecodeAccess {
     fn list<'a>(
@@ -28,6 +23,7 @@ pub trait BytecodeAccess {
         package: Option<&'a str>,
         name: Option<&'a str>,
         tp: Option<BytecodeType>,
-    ) -> Result<Vec<BytecodeRef<'a>>, Error>;
+    ) -> Result<Vec<BytecodeRef>, Error>;
+
     fn load(&self, rf: &BytecodeRef) -> Result<Option<Bytecode>, Error>;
 }

@@ -1,5 +1,5 @@
-use anyhow::Error;
 use structopt::StructOpt;
+use crate::cmd::build::run_internal_build;
 
 use crate::cmd::Cmd;
 use crate::context::Context;
@@ -32,7 +32,12 @@ pub struct Run {
 }
 
 impl Cmd for Run {
-    fn apply(&mut self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    where
+        Self: Sized,
+    {
+        run_internal_build(ctx)?;
+
         todo!()
     }
     // fn apply(self, ctx: Context) -> Result<(), Error> {

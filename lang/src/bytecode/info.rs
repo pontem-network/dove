@@ -1,8 +1,11 @@
 use anyhow::Error;
 use move_binary_format::access::{ModuleAccess, ScriptAccess};
 use move_binary_format::CompiledModule;
-use move_binary_format::file_format::{Ability, AbilitySet, empty_module, SignatureToken, StructHandleIndex, Visibility};
+use move_binary_format::file_format::{
+    Ability, AbilitySet, SignatureToken, StructHandleIndex, Visibility,
+};
 use move_core_types::account_address::AccountAddress;
+use move_lang::expansion::ast::Address;
 use crate::bytecode::accessor::Bytecode;
 
 #[derive(Debug)]
@@ -12,9 +15,7 @@ pub struct BytecodeInfo {
 
 impl From<Bytecode> for BytecodeInfo {
     fn from(bytecode: Bytecode) -> Self {
-        BytecodeInfo {
-            bytecode
-        }
+        BytecodeInfo { bytecode }
     }
 }
 
@@ -33,15 +34,24 @@ impl BytecodeInfo {
         }
     }
 
+    pub fn address(&self) -> Option<AccountAddress> {
+        match &self.bytecode {
+            Bytecode::Script(_, _, _) => None,
+            Bytecode::Module(bytecode) => Some(*bytecode.address()),
+        }
+    }
+
     pub fn find_script_function(&self, name: &str) -> Option<Script> {
         match &self.bytecode {
             Bytecode::Script(name, script, module) => {
-                let type_parameters = script.type_parameters
+                let type_parameters = script
+                    .type_parameters
                     .iter()
                     .map(TypeAbilities::from)
                     .collect();
 
-                let parameters = script.signature_at(script.parameters)
+                let parameters = script
+                    .signature_at(script.parameters)
                     .0
                     .iter()
                     .map(|p| make_type(p, &module))
@@ -95,6 +105,12 @@ pub struct Script<'a> {
     pub parameters: Vec<Type<'a>>,
     pub type_parameters: Vec<TypeAbilities>,
     pub returns: Vec<Type<'a>>,
+}
+
+impl<'a> Script<'a> {
+    pub fn type_params_count(&self) -> usize {
+        self.type_parameters.len()
+    }
 }
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]

@@ -1,13 +1,10 @@
-use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 use anyhow::Error;
 use move_cli::Move;
 use move_core_types::account_address::AccountAddress;
+use move_package::compilation::package_layout::CompiledPackageLayout;
 use move_package::source_package::parsed_manifest::{AddressDeclarations, SourceManifest};
 use move_symbol_pool::Symbol;
-use once_cell::unsync::Lazy;
 
 // use std::path::{Path, PathBuf};
 // use std::str::FromStr;
@@ -23,6 +20,11 @@ use once_cell::unsync::Lazy;
 // use crate::index::interface::{InterfaceBuilder, Interface};
 // use crate::metadata::MapDependencies;
 //
+
+pub trait Layout {
+    fn path<P: AsRef<Path>>(&self, root: P) -> PathBuf;
+}
+
 /// Project context.
 pub struct Context {
     /// Project root directory.
@@ -34,110 +36,122 @@ pub struct Context {
 }
 
 impl Context {
-    /// Returns create absolute path in project as string.
-    pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
-        let mut abs_path = self.path_for(path);
-
-        if abs_path.exists() {
-            abs_path = fs::canonicalize(abs_path)?;
+    // /// Returns create absolute path in project as string.
+    // pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
+    //     let mut abs_path = self.path_for(path);
+    //
+    //     if abs_path.exists() {
+    //         abs_path = fs::canonicalize(abs_path)?;
+    //     }
+    //
+    //     abs_path
+    //         .to_str()
+    //         .map(|path| path.to_owned())
+    //         .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
+    // }
+    //
+    /// Create absolute path in build dir.
+    pub fn path_for_build(&self, pac_name: Option<&str>, path: CompiledPackageLayout) -> PathBuf {
+        let build = self.project_dir.join(CompiledPackageLayout::Root.path());
+        if CompiledPackageLayout::Root != path {
+            if let Some(pac_name) = pac_name {
+                build.join(pac_name).join(path.path())
+            } else {
+                build
+            }
+        } else {
+            build
         }
-
-        abs_path
-            .to_str()
-            .map(|path| path.to_owned())
-            .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
     }
-
-    /// Create absolute path in project.
-    pub fn path_for<P: AsRef<Path>>(&self, path: P) -> PathBuf {
-        self.project_dir.join(path)
-    }
-
-    /// Create absolute paths in project.
-    pub fn paths_for<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<PathBuf> {
-        paths
-            .iter()
-            .map(|d| self.path_for(&d))
-            .filter(|p| p.exists())
-            .collect()
-    }
+    //
+    // /// Create absolute paths in project.
+    // pub fn paths_for<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<PathBuf> {
+    //     paths
+    //         .iter()
+    //         .map(|d| self.path_for(&d))
+    //         .filter(|p| p.exists())
+    //         .collect()
+    // }
 
     pub fn named_address(&self) -> AddressDeclarations {
         let mut named_address = self.manifest.addresses.clone().unwrap_or_default();
         for (name, addr) in &self.move_args.named_addresses {
-            named_address.insert(Symbol::from(name.as_str()), Some(AccountAddress::new(addr.into_bytes())));
+            named_address.insert(
+                Symbol::from(name.as_str()),
+                Some(AccountAddress::new(addr.into_bytes())),
+            );
         }
         named_address
     }
 
-//     /// Build project index.
-//     pub fn build_index(&self) -> Result<(Index, Interface), Error> {
-//         let index_path = self.path_for(&self.manifest.layout.index);
-//         let old_index = Index::load(&index_path)?.unwrap_or_default();
-//
-//         let package_hash = self.package_hash();
-//         let index = if old_index.package_hash == package_hash {
-//             old_index
-//         } else {
-//             let new_index = Index::build(package_hash, self)?;
-//             new_index.store(&index_path)?;
-//             new_index.remove_unused(old_index.diff(&new_index))?;
-//             new_index.remove_unnecessary_elements_in_dependencies();
-//             MapDependencies::create_and_save(self)?;
-//             new_index
-//         };
-//         let builder = InterfaceBuilder::new(self, &index);
-//         let interface = builder.build()?;
-//         Ok((index, interface))
-//     }
-//
-//     /// Returns project name or default name `project` if the name is not defined.
-//     pub fn project_name(&self) -> String {
-//         self.manifest.package.name.clone().unwrap_or_else(|| {
-//             self.project_dir
-//                 .file_name()
-//                 .and_then(|name| name.to_str())
-//                 .unwrap_or("project")
-//                 .to_owned()
-//         })
-//     }
-//
-//     /// Returns provided account address.
-//     pub fn account_address(&self) -> Result<AccountAddress> {
-//         self.dialect
-//             .parse_address(&self.manifest.package.account_address)
-//     }
-//
-//     /// Returns provided account address.
-//     pub fn account_address_str(&self) -> Result<String> {
-//         Ok(format!(
-//             "0x{}",
-//             self.dialect
-//                 .parse_address(&self.manifest.package.account_address)?
-//         ))
-//     }
-//     /// Calculates package hash.
-//     pub fn package_hash(&self) -> String {
-//         self.manifest.package.hash().to_string()
-//     }
-//
-//     /// Returns interface files dir.
-//     pub fn interface_files_dir(&self) -> PathBuf {
-//         self.path_for(&self.manifest.layout.system_folder)
-//             .join("interface_files_dir")
-//     }
-//
-//     /// Returns directory for dependency bytecode.
-//     pub fn deps_mv_dir(&self) -> PathBuf {
-//         self.path_for(&self.manifest.layout.system_folder)
-//             .join("depmv")
-//     }
-//
-//     /// Interface files lock.
-//     pub fn interface_files_lock(&self) -> PathBuf {
-//         self.path_for(&self.manifest.layout.system_folder)
-//             .join("interface.lock")
-//     }
+    //     /// Build project index.
+    //     pub fn build_index(&self) -> Result<(Index, Interface), Error> {
+    //         let index_path = self.path_for(&self.manifest.layout.index);
+    //         let old_index = Index::load(&index_path)?.unwrap_or_default();
+    //
+    //         let package_hash = self.package_hash();
+    //         let index = if old_index.package_hash == package_hash {
+    //             old_index
+    //         } else {
+    //             let new_index = Index::build(package_hash, self)?;
+    //             new_index.store(&index_path)?;
+    //             new_index.remove_unused(old_index.diff(&new_index))?;
+    //             new_index.remove_unnecessary_elements_in_dependencies();
+    //             MapDependencies::create_and_save(self)?;
+    //             new_index
+    //         };
+    //         let builder = InterfaceBuilder::new(self, &index);
+    //         let interface = builder.build()?;
+    //         Ok((index, interface))
+    //     }
+    //
+    //     /// Returns project name or default name `project` if the name is not defined.
+    //     pub fn project_name(&self) -> String {
+    //         self.manifest.package.name.clone().unwrap_or_else(|| {
+    //             self.project_dir
+    //                 .file_name()
+    //                 .and_then(|name| name.to_str())
+    //                 .unwrap_or("project")
+    //                 .to_owned()
+    //         })
+    //     }
+    //
+    //     /// Returns provided account address.
+    //     pub fn account_address(&self) -> Result<AccountAddress> {
+    //         self.dialect
+    //             .parse_address(&self.manifest.package.account_address)
+    //     }
+    //
+    //     /// Returns provided account address.
+    //     pub fn account_address_str(&self) -> Result<String> {
+    //         Ok(format!(
+    //             "0x{}",
+    //             self.dialect
+    //                 .parse_address(&self.manifest.package.account_address)?
+    //         ))
+    //     }
+    //     /// Calculates package hash.
+    //     pub fn package_hash(&self) -> String {
+    //         self.manifest.package.hash().to_string()
+    //     }
+    //
+    //     /// Returns interface files dir.
+    //     pub fn interface_files_dir(&self) -> PathBuf {
+    //         self.path_for(&self.manifest.layout.system_folder)
+    //             .join("interface_files_dir")
+    //     }
+    //
+    //     /// Returns directory for dependency bytecode.
+    //     pub fn deps_mv_dir(&self) -> PathBuf {
+    //         self.path_for(&self.manifest.layout.system_folder)
+    //             .join("depmv")
+    //     }
+    //
+    //     /// Interface files lock.
+    //     pub fn interface_files_lock(&self) -> PathBuf {
+    //         self.path_for(&self.manifest.layout.system_folder)
+    //             .join("interface.lock")
+    //     }
 }
 //
 // pub(crate) fn get_context(project_dir: PathBuf, manifest: DoveToml) -> Result<Context> {

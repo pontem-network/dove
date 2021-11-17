@@ -1,5 +1,4 @@
 use anyhow::Error;
-use std::fs;
 use crate::cmd::Cmd;
 use crate::context::Context;
 use structopt::StructOpt;
@@ -16,7 +15,10 @@ pub struct Clean {
 }
 
 impl Cmd for Clean {
-    fn apply(&mut self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    where
+        Self: Sized,
+    {
         todo!()
     }
     // fn apply(self, ctx: Context) -> Result<(), Error> {

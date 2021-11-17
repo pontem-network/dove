@@ -1,10 +1,11 @@
 use crate::cmd::Cmd;
 use crate::context::Context;
-use anyhow::Error;
 use structopt::StructOpt;
 use std::fmt::Debug;
-use std::fs;
-use crate::stdoutln;
+use crate::cmd::build::run_internal_build;
+use crate::tx::cmd::CallDeclarationCmd;
+use crate::tx::fn_call::Config;
+use crate::tx::make_transaction;
 // use crate::tx::cmd::CallDeclarationCmd;
 // use crate::tx::model::{Transaction, EnrichedTransaction};
 // use crate::tx::make_transaction;
@@ -20,8 +21,8 @@ use crate::stdoutln;
     $ dove tx '0x1::Module::script_name<0x01::Dfinance::USD>()'
 ")]
 pub struct CreateTransactionCmd {
-    // #[structopt(flatten)]
-    // call: CallDeclarationCmd,
+    #[structopt(flatten)]
+    call: CallDeclarationCmd,
     #[structopt(help = "Output file name.", long = "output", short = "o")]
     output: Option<String>,
     #[structopt(long, hidden = true)]
@@ -29,8 +30,12 @@ pub struct CreateTransactionCmd {
 }
 
 impl Cmd for CreateTransactionCmd {
-    fn apply(&mut self, ctx: Context) -> anyhow::Result<()> where Self: Sized {
-        // let tx = make_transaction(&ctx, self.call.take(), Config::for_tx())?;
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    where
+        Self: Sized,
+    {
+        run_internal_build(ctx)?;
+        let tx = make_transaction(&ctx, self.call.take(), Config::for_tx())?;
         // let output_filename = self.output.as_ref().take();
         // match tx {
         //     EnrichedTransaction::Local { .. } => unreachable!(),
@@ -41,7 +46,6 @@ impl Cmd for CreateTransactionCmd {
         todo!()
     }
 }
-
 
 //
 // fn store_transaction(ctx: &Context, name: &str, tx: Transaction) -> Result<(), Error> {

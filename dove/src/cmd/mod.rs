@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 use anyhow::Result;
@@ -11,7 +10,6 @@ use move_symbol_pool::symbol::Symbol;
 
 use crate::context::Context;
 use std::collections::BTreeMap;
-use move_core_types::account_address::AccountAddress;
 
 /// Project builder.
 pub mod build;
@@ -60,7 +58,7 @@ pub trait Cmd {
     }
 
     /// Apply command with given context.
-    fn apply(&mut self, ctx: Context) -> Result<()>;
+    fn apply(&mut self, ctx: &mut Context) -> Result<()>;
 }
 
 /// Context with empty manifest

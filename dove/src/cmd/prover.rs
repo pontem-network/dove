@@ -1,8 +1,6 @@
-use std::ffi::OsStr;
 use anyhow::{ensure, Result};
 // use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
 use structopt::StructOpt;
-use serde::Deserialize;
 // use lang::compiler::{file::find_move_files};
 
 use crate::context::Context;
@@ -10,10 +8,6 @@ use crate::context::Context;
 use super::Cmd;
 // use boogie_backend::options::BoogieOptions;
 // use lang::compiler::preprocessor::BuilderPreprocessor;
-use std::path::PathBuf;
-use std::fs::read_to_string;
-use std::env;
-use std::str::FromStr;
 
 #[cfg(target_family = "unix")]
 const BOOGIE_EXE: &str = "boogie";
@@ -45,7 +39,10 @@ pub struct Prove {
 }
 
 impl Cmd for Prove {
-    fn apply(&mut self, ctx: Context) -> Result<()> where Self: Sized {
+    fn apply(&mut self, ctx: &mut Context) -> Result<()>
+    where
+        Self: Sized,
+    {
         todo!()
     }
     // fn apply(mut self, ctx: Context) -> Result<()>

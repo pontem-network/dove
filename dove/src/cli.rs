@@ -198,8 +198,8 @@ where
             )
         }
         CommonCommand::Dove(mut cmd) => {
-            let ctx = cmd.context(cwd, move_args)?;
-            cmd.apply(ctx)
+            let mut ctx = cmd.context(cwd, move_args)?;
+            cmd.apply(&mut ctx)
         }
     }
 }

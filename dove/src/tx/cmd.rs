@@ -1,9 +1,9 @@
-use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
 use std::fmt::Debug;
 use std::convert::TryFrom;
 use std::mem;
+use move_package::source_package::parsed_manifest::AddressDeclarations;
 use crate::tx::parser::{parse_call, Call, parse_tp_param};
 
 /// Call declaration.
@@ -33,6 +33,13 @@ Examples:
         short = "a"
     )]
     args: Option<Vec<String>>,
+    #[structopt(
+        help = r#"Move package name"#,
+        name = "Move package name.",
+        long = "package",
+        short = "p"
+    )]
+    package: Option<String>,
     #[structopt(help = "File name.", long = "file", short = "f")]
     file_name: Option<String>,
 }
@@ -43,16 +50,17 @@ impl CallDeclarationCmd {
             call: mem::take(&mut self.call),
             type_parameters: self.type_parameters.take(),
             args: self.args.take(),
+            package: self.package.take(),
             file_name: self.file_name.take(),
         }
     }
 }
 
-impl TryFrom<CallDeclarationCmd> for CallDeclaration {
+impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
     type Error = Error;
 
-    fn try_from(cmd: CallDeclarationCmd) -> Result<Self, Self::Error> {
-        let mut call = parse_call(&cmd.call)?;
+    fn try_from((addr_map, cmd): (&AddressDeclarations, CallDeclarationCmd)) -> Result<Self, Self::Error> {
+        let mut call = parse_call(&addr_map, &cmd.call)?;
         if let Some(args) = cmd.args {
             call.set_args(args);
         }
@@ -67,7 +75,7 @@ impl TryFrom<CallDeclarationCmd> for CallDeclaration {
 
         Ok(CallDeclaration {
             call,
-            file_name: cmd.file_name,
+            package: cmd.package,
         })
     }
 }
@@ -76,6 +84,6 @@ impl TryFrom<CallDeclarationCmd> for CallDeclaration {
 pub struct CallDeclaration {
     /// Call declaration.
     pub call: Call,
-    /// Execution unit file name.
-    pub file_name: Option<String>,
+    /// Package
+    pub package: Option<String>,
 }

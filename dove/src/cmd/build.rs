@@ -3,6 +3,7 @@ use std::ffi::OsStr;
 use std::io::Write;
 use std::path::{PathBuf, Path};
 use std::fs::{remove_file, create_dir_all};
+use anyhow::Error;
 use structopt::StructOpt;
 use move_core_types::errmap::ErrorMapping;
 use move_core_types::account_address::AccountAddress;
@@ -15,7 +16,7 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 
 /// Build dependencies.
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Build {
     #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
@@ -54,7 +55,7 @@ pub struct Build {
 }
 
 impl Cmd for Build {
-    fn apply(&mut self, ctx: Context) -> anyhow::Result<()>
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {
@@ -225,4 +226,9 @@ fn get_bytecode_modules_path(
                 .collect::<Vec<_>>()
         })?;
     Ok(list)
+}
+
+pub fn run_internal_build(ctx: &mut Context) -> Result<(), Error> {
+    let mut cmd = Build::default();
+    cmd.apply(ctx)
 }
