@@ -5,6 +5,7 @@ use std::path::{PathBuf, Path};
 use std::fs::{remove_file, create_dir_all};
 use anyhow::Error;
 use structopt::StructOpt;
+use anyhow::Result;
 use move_core_types::errmap::ErrorMapping;
 use move_core_types::account_address::AccountAddress;
 use move_cli::Command as MoveCommand;
@@ -86,6 +87,9 @@ impl Cmd for Build {
         // packaging of modules
         self.run_package(&ctx)?;
 
+        // Checking directories in the "build" section, if there are none, then create
+        checking_build_directories(&ctx)?;
+
         Ok(())
     }
 }
@@ -93,7 +97,7 @@ impl Cmd for Build {
 impl Build {
     /// Generate error map for the package and its dependencies
     /// at path for use by the Move explanation tool.
-    fn run_error_map(&self, ctx: &Context) -> anyhow::Result<()> {
+    fn run_error_map(&self, ctx: &Context) -> Result<()> {
         if self.error_map.is_none() {
             return Ok(());
         }
@@ -138,7 +142,7 @@ impl Build {
     }
 
     /// Names of modules to exclude from the package process..
-    fn run_package(&self, ctx: &Context) -> anyhow::Result<()> {
+    fn run_package(&self, ctx: &Context) -> Result<()> {
         if !self.package {
             return Ok(());
         }
@@ -203,12 +207,34 @@ impl Build {
     }
 }
 
+/// Checking directories in the "build" section, if there are none, then create
+/// Fixes an error when reassembling an empty project
+///     <PROJECT_DIR>/build/<PROJECT_NAME>/bytecode_modules
+///     <PROJECT_DIR>/build/<PROJECT_NAME>/bytecode_scripts
+///     <PROJECT_DIR>/build/<PROJECT_NAME>/source_maps
+///     <PROJECT_DIR>/build/<PROJECT_NAME>/sources
+fn checking_build_directories(ctx: &Context) -> Result<()> {
+    let build_path = ctx
+        .project_dir
+        .join("build")
+        .join(ctx.manifest.package.name.as_str());
+    for path in [
+        build_path.join("bytecode_modules"),
+        build_path.join("bytecode_scripts"),
+        build_path.join("source_maps"),
+        build_path.join("sources"),
+    ] {
+        if path.exists() {
+            continue;
+        }
+        fs::create_dir_all(&path)?;
+    }
+    Ok(())
+}
+
 /// Return file paths from ./PROJECT_FOLDER/build/PROJECT_NAME/bytecode_modules
 /// Only with the .mv extension
-fn get_bytecode_modules_path(
-    project_dir: &Path,
-    project_name: &str,
-) -> anyhow::Result<Vec<PathBuf>> {
+fn get_bytecode_modules_path(project_dir: &Path, project_name: &str) -> Result<Vec<PathBuf>> {
     let path = project_dir
         .join("build")
         .join(project_name)
