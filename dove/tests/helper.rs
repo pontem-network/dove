@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
 use std::path::{PathBuf, Path};
+use std::fs;
 use std::fs::{remove_dir_all, create_dir};
-use anyhow::{Result, ensure};
 use std::collections::HashMap;
+use anyhow::{Result, ensure};
+use std::io::Write;
 
 /// get tmp_folder, project_folder and remove project folder if exist
 pub fn pre_start_dove_new(project_name: &str) -> Result<(PathBuf, PathBuf)> {
@@ -134,4 +136,32 @@ pub fn create_new_project(project_name: &str, addresses: HashMap<&str, &str>) ->
 
     execute_dove_at(&args, &base_dir)?;
     Ok(project_dir)
+}
+
+/// Create a test project
+pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
+    let addresses = [("Demo", "0x2")].into_iter().collect();
+    let project_path = create_new_project(&project_name, addresses)?;
+    // scripts/main.move
+    let mut main_script = fs::File::create(project_path.join("scripts").join("main.move"))?;
+    main_script.write(b"script { fun main(){} }")?;
+
+    // sources/demo1v.move
+    let mut demo1v_script = fs::File::create(project_path.join("sources").join("demo1v.move"))?;
+    demo1v_script.write(b"module Demo::Demo1v{ fun run(){ } }")?;
+
+    // sources/demo2v.move
+    let mut demo2v_script = fs::File::create(project_path.join("sources").join("demo2v.move"))?;
+    demo2v_script.write(b"module Demo::Demo2v{ fun run(){ } }")?;
+
+    // sources/demo3v.move
+    let mut demo3v_script = fs::File::create(project_path.join("sources").join("demo3v.move"))?;
+    demo3v_script.write(b"module Demo::Demo3v{ fun run(){ } }")?;
+
+    Ok(project_path)
+}
+
+/// Build a project
+pub fn build(project_dir: &Path) -> Result<String> {
+    execute_dove_at(&["build"], project_dir)
 }
