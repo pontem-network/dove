@@ -61,10 +61,16 @@ fn test_cmd_dove_build_with_package() {
     .unwrap();
 
     let mut content = Vec::new();
-    fs::File::open(project_path.join("demo.mv"))
-        .unwrap()
-        .read_to_end(&mut content)
-        .unwrap();
+    fs::File::open(
+        project_path
+            .join("build")
+            .join(project_name)
+            .join("bundles")
+            .join("demo.mv"),
+    )
+    .unwrap()
+    .read_to_end(&mut content)
+    .unwrap();
 
     assert!(find_u8(&content, b"Demo3v"));
     assert!(!find_u8(&content, b"Demo2v"));
