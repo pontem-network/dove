@@ -1,24 +1,17 @@
-// @todo
+mod helper;
 
-use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_remove};
+use crate::helper::{new_demo_project, delete_project, build, execute_dove_at};
 
 /// $ dove clean
 #[test]
 fn test_cmd_dove_clean() {
-    // Path to dove folder, project and project name
     let project_name = "project_clean";
-    let project_folder = project_start_new_and_build(project_name, None);
-    let project_artifacts = project_folder.join("artifacts");
-    assert!(
-        project_artifacts.exists(),
-        "Artifacts directory was not found: {}",
-        project_artifacts.display()
-    );
-    execute_dove_at(&["dove", "clean"], &project_folder).unwrap();
-    assert!(
-        !project_artifacts.exists(),
-        "Directory was not deleted: {}",
-        project_artifacts.display()
-    );
-    project_remove(&project_folder);
+    let project_dir = new_demo_project(project_name).unwrap();
+    build(&project_dir).unwrap();
+
+    assert!(project_dir.join("build").exists());
+    execute_dove_at(&["clean"], &project_dir).unwrap();
+    assert!(!project_dir.join("build").exists());
+
+    delete_project(&project_dir).unwrap();
 }

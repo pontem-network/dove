@@ -1,64 +1,78 @@
+use std::fs;
+use structopt::StructOpt;
+use std::str::FromStr;
 use anyhow::Error;
 use crate::cmd::Cmd;
 use crate::context::Context;
-use structopt::StructOpt;
-use std::str::FromStr;
 
 /// Clean target directory command.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Clean {
-    #[structopt(about = "Type of cleaning.")]
+    // Directories will be deleted
+    // [state] Clear only the executor state:
+    //      PROJECT_DIR/storage
+    //      PROJECT_DIR/build/mv_interfaces
+    //      PROJECT_DIR/build/package
+    // [all] Clear all:
+    //      PROJECT_DIR/storage
+    //      PROJECT_DIR/build
+    #[structopt(help = "Type of cleaning. [default=all]\n\
+                        state - Clear only the executor state.\n\
+                        all - Clear all.")]
     clear_type: Option<ClearType>,
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
 }
 
 impl Cmd for Clean {
-    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    fn apply(&self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {
-        todo!()
+        let clear_type = self.clear_type.unwrap_or_default();
+
+        let folders = match clear_type {
+            // Clear only the executor state.
+            ClearType::State => {
+                vec![
+                    ctx.project_dir.join("storage"),
+                    ctx.project_dir.join("build").join("mv_interfaces"),
+                    ctx.project_dir.join("build").join("package"),
+                ]
+            }
+            // Clear all.
+            ClearType::All => {
+                vec![
+                    ctx.project_dir.join("storage"),
+                    ctx.project_dir.join("build"),
+                ]
+            }
+        };
+
+        for path in folders {
+            if !path.exists() {
+                continue;
+            }
+            if let Err(err) = fs::remove_dir_all(&path) {
+                println!(
+                    "Warning: failed to delete directory {}\n{}",
+                    path.display(),
+                    err.to_string()
+                );
+            }
+        }
+        Ok(())
     }
-    // fn apply(self, ctx: Context) -> Result<(), Error> {
-    //     let clear_type = self.clear_type.unwrap_or_default();
-    //
-    //     match clear_type {
-    //         ClearType::State => {
-    //             let path = ctx.path_for(&ctx.manifest.layout.storage_dir);
-    //             if path.exists() {
-    //                 fs::remove_dir_all(path)?;
-    //             }
-    //             Ok(())
-    //         }
-    //         ClearType::All => {
-    //             let artifacts = ctx.path_for(&ctx.manifest.layout.artifacts);
-    //             let index_path = ctx.path_for(&ctx.manifest.layout.index);
-    //
-    //             if index_path.exists() {
-    //                 fs::remove_file(index_path)?;
-    //             }
-    //
-    //             if artifacts.exists() {
-    //                 fs::remove_dir_all(artifacts).map_err(Into::into)
-    //             } else {
-    //                 Ok(())
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 /// The type of cleaning.
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Copy, Clone)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub enum ClearType {
     /// Clear only the executor state.
-    #[structopt(about = "Clear only the executor state.")]
+    #[structopt(help = "Clear only the executor state.")]
     State,
     /// Clear all.
-    #[structopt(about = "Clear all.")]
+    #[structopt(help = "Clear all.")]
     All,
 }
 

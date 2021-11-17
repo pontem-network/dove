@@ -144,13 +144,13 @@ impl Build {
         }
 
         // Path to the output file
-        let output_file_path =
-            PathBuf::from(self.output.as_deref().unwrap_or("package.mv")).with_extension("mv");
-        if let Some(parent_path) = output_file_path.parent() {
-            if !parent_path.exists() {
-                create_dir_all(&parent_path)?;
-            }
-        }
+        let output_file_path = ctx
+            .bundles_output_path(
+                self.output
+                    .as_deref()
+                    .unwrap_or(ctx.manifest.package.name.as_str()),
+            )?
+            .with_extension("mv");
         if output_file_path.exists() {
             remove_file(&output_file_path)?;
         }

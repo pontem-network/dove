@@ -5,6 +5,7 @@ use move_core_types::account_address::AccountAddress;
 use move_package::compilation::package_layout::CompiledPackageLayout;
 use move_package::source_package::parsed_manifest::{AddressDeclarations, SourceManifest};
 use move_symbol_pool::Symbol;
+use semver::Op;
 
 // use std::path::{Path, PathBuf};
 // use std::str::FromStr;
@@ -20,11 +21,6 @@ use move_symbol_pool::Symbol;
 // use crate::index::interface::{InterfaceBuilder, Interface};
 // use crate::metadata::MapDependencies;
 //
-
-pub trait Layout {
-    fn path<P: AsRef<Path>>(&self, root: P) -> PathBuf;
-}
-
 /// Project context.
 pub struct Context {
     /// Project root directory.
@@ -36,21 +32,20 @@ pub struct Context {
 }
 
 impl Context {
-    // /// Returns create absolute path in project as string.
-    // pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
-    //     let mut abs_path = self.path_for(path);
-    //
-    //     if abs_path.exists() {
-    //         abs_path = fs::canonicalize(abs_path)?;
-    //     }
-    //
-    //     abs_path
-    //         .to_str()
-    //         .map(|path| path.to_owned())
-    //         .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
-    // }
-    //
-    /// Create absolute path in build dir.
+    /// Path for bundle
+    ///     ./build/<package name>/bundles
+    pub fn bundles_output_path(&self, package_name: &str) -> Result<PathBuf> {
+        let dir = self
+            .project_dir
+            .join("build")
+            .join(self.manifest.package.name.as_str())
+            .join("bundles");
+        if !dir.exists() {
+            fs::create_dir_all(&dir)?;
+        }
+        Ok(dir.join(package_name))
+    }
+
     pub fn path_for_build(&self, pac_name: Option<&str>, path: CompiledPackageLayout) -> PathBuf {
         let build = self.project_dir.join(CompiledPackageLayout::Root.path());
         if CompiledPackageLayout::Root != path {
@@ -63,15 +58,6 @@ impl Context {
             build
         }
     }
-    //
-    // /// Create absolute paths in project.
-    // pub fn paths_for<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<PathBuf> {
-    //     paths
-    //         .iter()
-    //         .map(|d| self.path_for(&d))
-    //         .filter(|p| p.exists())
-    //         .collect()
-    // }
 
     pub fn named_address(&self) -> AddressDeclarations {
         let mut named_address = self.manifest.addresses.clone().unwrap_or_default();
@@ -84,6 +70,34 @@ impl Context {
         named_address
     }
 
+    //     /// Returns create absolute path in project as string.
+    //     pub fn str_path_for<P: AsRef<Path>>(&self, path: P) -> Result<String, Error> {
+    //         let mut abs_path = self.path_for(path);
+    //
+    //         if abs_path.exists() {
+    //             abs_path = dunce::canonicalize(abs_path)?;
+    //         }
+    //
+    //         abs_path
+    //             .to_str()
+    //             .map(|path| path.to_owned())
+    //             .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", abs_path))
+    //     }
+    //
+    //     /// Create absolute path in project.
+    //     pub fn path_for<P: AsRef<Path>>(&self, path: P) -> PathBuf {
+    //         self.project_dir.join(path)
+    //     }
+    //
+    //     /// Create absolute paths in project.
+    //     pub fn paths_for<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<PathBuf> {
+    //         paths
+    //             .iter()
+    //             .map(|d| self.path_for(&d))
+    //             .filter(|p| p.exists())
+    //             .collect()
+    //     }
+    //
     //     /// Build project index.
     //     pub fn build_index(&self) -> Result<(Index, Interface), Error> {
     //         let index_path = self.path_for(&self.manifest.layout.index);
@@ -152,40 +166,40 @@ impl Context {
     //         self.path_for(&self.manifest.layout.system_folder)
     //             .join("interface.lock")
     //     }
+    // }
+    //
+    // pub(crate) fn get_context(project_dir: PathBuf, manifest: DoveToml) -> Result<Context> {
+    //     let dialect_name = manifest
+    //         .package
+    //         .dialect
+    //         .clone()
+    //         .unwrap_or_else(default_dialect);
+    //     let dialect = DialectName::from_str(&dialect_name)?;
+    //
+    //     Ok(Context {
+    //         project_dir,
+    //         manifest,
+    //         dialect: dialect.get_dialect(),
+    //     })
+    // }
+    //
+    // pub(crate) fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
+    //     let manifest = project_dir.join(MANIFEST);
+    //     if !manifest.exists() {
+    //         Err(anyhow!(
+    //             "could not find `{}` in `{:?}`.",
+    //             MANIFEST,
+    //             project_dir
+    //         ))
+    //     } else {
+    //         read_manifest(&manifest)
+    //     }
+    // }
+    //
+    // pub(crate) fn str_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    //     let path = path.as_ref();
+    //
+    //     path.to_str()
+    //         .map(|path| path.to_owned())
+    //         .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", path))
 }
-//
-// pub(crate) fn get_context(project_dir: PathBuf, manifest: DoveToml) -> Result<Context> {
-//     let dialect_name = manifest
-//         .package
-//         .dialect
-//         .clone()
-//         .unwrap_or_else(default_dialect);
-//     let dialect = DialectName::from_str(&dialect_name)?;
-//
-//     Ok(Context {
-//         project_dir,
-//         manifest,
-//         dialect: dialect.get_dialect(),
-//     })
-// }
-//
-// pub(crate) fn load_manifest(project_dir: &Path) -> Result<DoveToml> {
-//     let manifest = project_dir.join(MANIFEST);
-//     if !manifest.exists() {
-//         Err(anyhow!(
-//             "could not find `{}` in `{:?}`.",
-//             MANIFEST,
-//             project_dir
-//         ))
-//     } else {
-//         read_manifest(&manifest)
-//     }
-// }
-//
-// pub(crate) fn str_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
-//     let path = path.as_ref();
-//
-//     path.to_str()
-//         .map(|path| path.to_owned())
-//         .ok_or_else(|| anyhow!("Failed to display absolute path:[{:?}]", path))
-// }
