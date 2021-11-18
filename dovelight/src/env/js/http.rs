@@ -8,8 +8,8 @@ pub fn http_request(req: Request) -> Result<Response, Error> {
     js_result(send_http_request(req))
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(module="wasm_resolver")]
 extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
+    #[wasm_bindgen(js_namespace = resolver)]
     pub fn send_http_request(request: JsValue) -> JsValue;
 }
