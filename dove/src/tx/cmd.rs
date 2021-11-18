@@ -59,7 +59,9 @@ impl CallDeclarationCmd {
 impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
     type Error = Error;
 
-    fn try_from((addr_map, cmd): (&AddressDeclarations, CallDeclarationCmd)) -> Result<Self, Self::Error> {
+    fn try_from(
+        (addr_map, cmd): (&AddressDeclarations, CallDeclarationCmd),
+    ) -> Result<Self, Self::Error> {
         let mut call = parse_call(&addr_map, &cmd.call)?;
         if let Some(args) = cmd.args {
             call.set_args(args);

@@ -57,6 +57,14 @@ pub fn make_transaction(
             name,
             type_tag,
             args,
-        } => make_script_call(ctx,&address_decl, name, type_tag, args, declaration.package, cfg),
+        } => make_script_call(
+            ctx,
+            &address_decl,
+            name,
+            type_tag,
+            args,
+            declaration.package,
+            cfg,
+        ),
     }
 }

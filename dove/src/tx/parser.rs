@@ -17,7 +17,6 @@ const ERROR_MESSAGE: &str = "Invalid call format: expected function identifier.\
          or\n\
          ACCOUNT_ADDRESS::MODULE_NAME::FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
 
-
 /// Call.
 #[derive(Debug)]
 pub enum Call {
@@ -134,9 +133,9 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
         );
         consume_token(&mut ctx.tokens, Tok::ColonColon).map_err(|_| {
             anyhow!(
-                    "{}\n\n A double colon was expected after the module address.",
-                    ERROR_MESSAGE
-                )
+                "{}\n\n A double colon was expected after the module address.",
+                ERROR_MESSAGE
+            )
         })?;
         Some(address)
     } else {
@@ -171,15 +170,13 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
                 args: vec![],
             }
         }
-        2 => {
-            Call::Function {
-                address,
-                module: Identifier::new(tokens.remove(0))?,
-                func: Identifier::new(tokens.remove(0))?,
-                type_tag: vec![],
-                args: vec![],
-            }
-        }
+        2 => Call::Function {
+            address,
+            module: Identifier::new(tokens.remove(0))?,
+            func: Identifier::new(tokens.remove(0))?,
+            type_tag: vec![],
+            args: vec![],
+        },
         3 => {
             if let Some(addr) = address {
                 return Err(Error::msg(ERROR_MESSAGE));
@@ -325,8 +322,8 @@ pub(crate) fn parse_type_param(ctx: &mut Context) -> Result<TypeTag, Error> {
 }
 
 pub(crate) fn parse_vec<E>(tkn: &str, tp_name: &str) -> Result<Vec<E>, Error>
-    where
-        E: FromStr,
+where
+    E: FromStr,
 {
     let map_err = |err| Error::msg(format!("{:?}", err));
 
@@ -401,8 +398,8 @@ mod tests_call_parser {
             &Default::default(),
             "0x1::Account::create_account<u8, 0x01::Dfinance::USD>",
         )
-            .unwrap()
-            .func();
+        .unwrap()
+        .func();
         assert_eq!(address, Some(CORE_CODE_ADDRESS));
         assert_eq!(name.as_str(), "Account");
         assert_eq!(func.as_str(), "create_account");
@@ -424,8 +421,8 @@ mod tests_call_parser {
             &Default::default(),
             "0x1::Account::create_account(10, 68656c6c6f, [10, 23],)",
         )
-            .unwrap()
-            .func();
+        .unwrap()
+        .func();
         assert_eq!(address, Some(CORE_CODE_ADDRESS));
         assert_eq!(name.as_str(), "Account");
         assert_eq!(func.as_str(), "create_account");
@@ -456,8 +453,8 @@ mod tests_call_parser {
             &Default::default(),
             "create_account<u8, 0x01::Dfinance::USD<u8>>(10, 68656c6c6f, [10, 23], true, Std)",
         )
-            .unwrap()
-            .script();
+        .unwrap()
+        .script();
         assert_eq!(name.as_str(), "create_account");
         assert_eq!(
             type_tag,
@@ -486,8 +483,8 @@ mod tests_call_parser {
             &Default::default(),
             "create_account<0x01::Dfinance::USD>([true, false], [0x01, 0x02])",
         )
-            .unwrap()
-            .script();
+        .unwrap()
+        .script();
         assert_eq!(name.as_str(), "create_account");
         assert_eq!(
             tp,
@@ -521,13 +518,18 @@ mod tests_call_parser {
     #[test]
     fn named_address() {
         let mut map = BTreeMap::new();
-        map.insert(Symbol::from("Core"), Some(AccountAddress::from_hex_literal("0x13").unwrap()));
-        let (address, name, func, type_tag, args) = parse_call(
-            &map,
-            "Core::Diem::create_account(Std)",
-        ).unwrap()
-            .func();
-        assert_eq!(address, Some(AccountAddress::from_hex_literal("0x13").unwrap()));
+        map.insert(
+            Symbol::from("Core"),
+            Some(AccountAddress::from_hex_literal("0x13").unwrap()),
+        );
+        let (address, name, func, type_tag, args) =
+            parse_call(&map, "Core::Diem::create_account(Std)")
+                .unwrap()
+                .func();
+        assert_eq!(
+            address,
+            Some(AccountAddress::from_hex_literal("0x13").unwrap())
+        );
         assert_eq!(name.as_str(), "Diem");
         assert_eq!(func.as_str(), "create_account");
         assert!(type_tag.is_empty());
@@ -538,7 +540,10 @@ mod tests_call_parser {
     #[should_panic]
     fn named_address_not_found() {
         let mut map = BTreeMap::new();
-        map.insert(Symbol::from("CoRe"), Some(AccountAddress::from_hex_literal("0x13").unwrap()));
+        map.insert(
+            Symbol::from("CoRe"),
+            Some(AccountAddress::from_hex_literal("0x13").unwrap()),
+        );
         parse_call(&map, "Core::Diem::create_account(Std)").unwrap();
     }
 }

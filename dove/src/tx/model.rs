@@ -6,6 +6,7 @@ use std::str::FromStr;
 use move_core_types::account_address::AccountAddress;
 use serde::{Deserialize, Serialize};
 use move_binary_format::CompiledModule;
+use move_symbol_pool::Symbol;
 
 /// Transaction model.
 #[derive(Serialize, Deserialize, Debug)]
@@ -165,6 +166,8 @@ pub enum Signer {
     Treasury,
     /// Template to replace.
     Placeholder,
+    /// Named address.
+    Name(Symbol),
 }
 
 impl FromStr for Signer {
@@ -175,12 +178,7 @@ impl FromStr for Signer {
             "root" | "rt" | "dr" => Self::Root,
             "treasury" | "tr" | "tc" => Self::Treasury,
             "_" => Self::Placeholder,
-            _ => {
-                return Err(anyhow!(
-                    "Unexpected signer type: '{}'. Expected one of (root, rt, treasury, tr, _)",
-                    s
-                ));
-            }
+            _ => Self::Name(Symbol::from(s)),
         })
     }
 }
@@ -224,8 +222,6 @@ pub enum EnrichedTransaction {
         tx: Transaction,
         /// Signers.
         signers: Vec<AccountAddress>,
-        /// Execution dependence.
-        deps: Vec<CompiledModule>,
     },
     /// A transaction intended for execution in the chain executor.
     Global {

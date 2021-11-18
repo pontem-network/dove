@@ -41,6 +41,13 @@ impl BytecodeInfo {
         }
     }
 
+    pub fn name(&self) -> String {
+        match &self.bytecode {
+            Bytecode::Script(name, _, _) => name.to_string(),
+            Bytecode::Module(bytecode) => bytecode.self_id().name().to_string(),
+        }
+    }
+
     pub fn find_script_function(&self, name: &str) -> Option<Script> {
         match &self.bytecode {
             Bytecode::Script(name, script, module) => {
