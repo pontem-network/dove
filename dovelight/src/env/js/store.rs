@@ -20,7 +20,7 @@ pub fn drop(key: String) -> Result<(), Error> {
     js_result(remove_item(&key))
 }
 
-#[wasm_bindgen(module=wasm_resolver)]
+#[wasm_bindgen(module="wasm_resolver.js")]
 extern "C" {
     #[wasm_bindgen(js_namespace = resolver)]
     pub fn set_item(key: &str, val: &str) -> JsValue;
