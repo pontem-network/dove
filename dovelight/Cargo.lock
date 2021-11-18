@@ -727,7 +727,6 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "wasi 0.10.2+wasi-snapshot-preview1",
  "wasm-bindgen",
  "web-sys",
 ]

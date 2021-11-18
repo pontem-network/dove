@@ -1,12 +1,18 @@
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+#[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js"))]
 mod js;
 #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
 mod wasi;
+#[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "web"))]
+mod web;
 
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-pub use crate::env::js::log::{log};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "web"))]
+pub use crate::env::web::log::log;
+
+#[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js"))]
+pub use crate::env::js::log::log;
+
 #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
-pub use crate::env::wasi::log::{log};
+pub use crate::env::wasi::log::log;
 #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
 pub use crate::env::wasi::{make_buffer, drop_buffer, MemPtr};
 
@@ -16,8 +22,12 @@ macro_rules! console_log {
 }
 
 pub mod http {
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "web"))]
+    pub use crate::env::web::http::http_request;
+
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js"))]
     pub use crate::env::js::http::http_request;
+
     #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
     pub use crate::env::wasi::http::http_request;
     use serde::{Serialize, Deserialize};
@@ -42,7 +52,9 @@ pub mod store {
     use serde::ser::Serialize;
     use serde::de::DeserializeOwned;
 
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "web"))]
+    pub use crate::env::web::store::*;
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js"))]
     pub use crate::env::js::store::*;
     #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
     pub use crate::env::wasi::store::*;

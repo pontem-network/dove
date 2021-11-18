@@ -23,11 +23,14 @@ move-core-types = { git = "https://github.com/pontem-network/diem.git", branch =
 move-ir-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.3-r1" }
 lang = { path = "../lang" }
 
-[target.'cfg(all(target_arch = "wasm32", target_os = "wasi"))'.dependencies]
-wasi = "0.10.2+wasi-snapshot-preview1"
+#[target.'cfg(all(target_arch = "wasm32", target_os = "wasi"))'.dependencies]
+#wasi = "0.10.2+wasi-snapshot-preview1"
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 wasm-bindgen = { version = "0.2.74" }
 getrandom = { version = "0.2", features = ["js"] }
-web-sys = { version = "0.3.55", features = ["Storage", "XmlHttpRequest"] }
+web-sys = { version = "0.3.55", features = ["Storage", "XmlHttpRequest"], optional = true }
 
+[features]
+js = []
+web = ["web-sys"]

@@ -1,31 +1,33 @@
+use wasm_bindgen::prelude::*;
+
 use anyhow::Error;
-use web_sys::window;
-use web_sys::Storage;
-use crate::env::js::js_err;
+use super::js_result;
 
 pub fn store(key: String, val: Vec<u8>) -> Result<(), Error> {
-    let storage = get_store()?;
-    storage.set_item(&key, &hex::encode(&val)).map_err(js_err)
+    js_result(set_item(&key, &hex::encode(&val)))
 }
 
 pub fn load(key: String) -> Result<Option<Vec<u8>>, Error> {
-    let storage = get_store()?;
-    Ok(if let Some(val) = storage.get_item(&key).map_err(js_err)? {
-        Some(hex::decode(val)?)
-    } else {
-        None
-    })
+    let item = get_item(&key);
+    if item.is_null() {
+        return Ok(None);
+    }
+    let item: String = js_result(item)?;
+    Ok(Some(hex::decode(item)?))
 }
 
 pub fn drop(key: String) -> Result<(), Error> {
-    let storage = get_store()?;
-    storage.remove_item(&key).map_err(js_err)
+    js_result(remove_item(&key))
 }
 
-fn get_store() -> Result<Storage, Error> {
-    let window = window().ok_or_else(|| anyhow::anyhow!("Window is expected."))?;
-    window
-        .local_storage()
-        .map_err(|err| anyhow::anyhow!("Failed to get local storage.{:?}", err))?
-        .ok_or_else(|| anyhow::anyhow!("Window is expected."))
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = set_item)]
+    pub fn set_item(key: &str, val: &str) -> JsValue;
+
+    #[wasm_bindgen(js_namespace = get_item)]
+    pub fn get_item(key: &str) -> JsValue;
+
+    #[wasm_bindgen(js_namespace = remove_item)]
+    pub fn remove_item(key: &str) -> JsValue;
 }
