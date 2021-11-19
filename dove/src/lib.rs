@@ -29,7 +29,5 @@ pub mod context;
 pub mod export;
 /// StdOut stream
 pub mod stdout;
-// #[doc(hidden)]
-// pub mod tests_helper;
 /// Transactions.
 pub mod tx;
