@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::borrow::Cow;
 use anyhow::Error;
 use lang::compiler::dialects::Dialect;
 use lang::compiler::metadata::{FuncMeta, ModuleMeta, parse_module_definition, make_script_meta};
@@ -7,6 +7,7 @@ use move_lang::parser::ast::{Definition, LeadingNameAccess_};
 use move_lang::callback::Interact;
 use move_lang::parser::syntax::parse_file_string;
 use move_core_types::account_address::AccountAddress;
+use move_lang::strip_comments_and_verify;
 use crate::lang::tx::report_errors;
 use crate::lang::compiler::source_map::SourceMap;
 
@@ -69,13 +70,24 @@ fn parse(
     sender: &str,
 ) -> Result<Vec<Definition>, Error> {
     let mut preprocessor = BuilderPreprocessor::new(dialect, sender);
-    parse_file_string(
-        preprocessor.static_str(name.to_string()),
-        source,
-        BTreeMap::new(),
-    )
-    .map_or_else(
-        |errors| Err(report_errors(&SourceMap::from((name, source)), errors)),
+    let name = preprocessor.static_str(name.to_string());
+    let source = preprocessor
+        .preprocess(name, Cow::Borrowed(source))
+        .to_string();
+    let (source, map) = strip_comments_and_verify(name, &source).map_err(|errors| {
+        report_errors(
+            &SourceMap::from((name.to_string(), source)),
+            errors,
+        )
+    })?;
+
+    parse_file_string(name, &source, map).map_or_else(
+        |errors| {
+            Err(report_errors(
+                &SourceMap::from((name.to_string(), source)),
+                errors,
+            ))
+        },
         |(def, _)| Ok(def),
     )
 }

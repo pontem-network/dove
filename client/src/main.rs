@@ -33,8 +33,10 @@ fn source_map() -> SourceMap {
         "\
     script {
        use 0x1::DiemTimestamp;
-       use 0x1::Foo;
+       use 0x1:Foo;
        fun main() {
+            //adasd
+            let _addr = @gkQ5K6EnLRgZkwozG8GiBAEnJyM6FxzbSaSmVhKJ2w8FcK7ih;
             DiemTimestamp::now_microseconds();
             Foo::get_num();
        }
@@ -47,7 +49,11 @@ fn source_map() -> SourceMap {
         "module.move".to_string(),
         "\
         module 0x1::Foo {
+            //use gkQ5K6EnLRgZkwozG8GiBAEnJyM6FxzbSaSmVhKJ2w8FcK7ih::Dia;
+            /// test fn
             public fun get_num(): u64 {
+                let _addr = @gkQ5K6EnLRgZkwozG8GiBAEnJyM6FxzbSaSmVhKJ2w8FcK7ih;
+                // sfsfd
                 10
             }
         }

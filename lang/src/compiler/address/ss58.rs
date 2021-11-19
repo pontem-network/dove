@@ -9,6 +9,7 @@ use std::rc::Rc;
 
 const SS58_PREFIX: &[u8] = b"SS58PRE";
 const PUB_KEY_LENGTH: usize = 32;
+const CHECK_SUM_LEN: usize = 2;
 
 lazy_static! {
     static ref SS58_REGEX: Regex = Regex::new(r#"[1-9A-HJ-NP-Za-km-z]{40,}"#,).unwrap();
@@ -27,16 +28,20 @@ pub fn ss58_to_address(ss58: &str) -> Result<AccountAddress> {
         Err(err) => return Err(anyhow!("Wrong base58:{}", err)),
     };
     ensure!(
-        bs58.len() == PUB_KEY_LENGTH + 3,
-        format!("Address length must be equal {} bytes", PUB_KEY_LENGTH + 3)
+        bs58.len() > PUB_KEY_LENGTH + CHECK_SUM_LEN,
+        format!(
+            "Address length must be equal or greater than {} bytes",
+            PUB_KEY_LENGTH + CHECK_SUM_LEN
+        )
     );
-    if bs58[PUB_KEY_LENGTH + 1..PUB_KEY_LENGTH + 3]
-        != ss58hash(&bs58[0..PUB_KEY_LENGTH + 1]).as_bytes()[0..2]
-    {
+    let check_sum = &bs58[bs58.len() - CHECK_SUM_LEN..];
+    let address = &bs58[bs58.len() - PUB_KEY_LENGTH - CHECK_SUM_LEN..bs58.len() - CHECK_SUM_LEN];
+
+    if check_sum != &ss58hash(&bs58[0..bs58.len() - CHECK_SUM_LEN]).as_bytes()[0..CHECK_SUM_LEN] {
         return Err(anyhow!("Wrong address checksum"));
     }
     let mut addr = [0; PUB_KEY_LENGTH];
-    addr.copy_from_slice(&bs58[1..PUB_KEY_LENGTH + 1]);
+    addr.copy_from_slice(address);
     Ok(AccountAddress::new(addr))
 }
 
