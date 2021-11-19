@@ -10,13 +10,13 @@ use std::slice::from_raw_parts_mut;
 /// Creat a transaction request.
 #[derive(Serialize, Deserialize, Debug)]
 struct TxRequest {
-    // Node address. http://localhost:9933/
+    /// Node address. http://localhost:9933/
     chain_api: String,
-    // Project code. Scripts and modules
+    /// Project code. Scripts and modules
     source_map: SourceMap,
-    // Dialect of the project. diem, dfinance, pont
+    /// Dialect of the project. diem, dfinance, pont
     dialect: String,
-    // Call String. NAME_SCRIPT<U8, BOOL>(1,[2,3])
+    /// Call String. NAME_SCRIPT<U8, BOOL>(1,[2,3])
     call: String,
 }
 

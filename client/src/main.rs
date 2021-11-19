@@ -64,11 +64,11 @@ fn init_wasm(module: &[u8]) -> Result<Instance, Error> {
     let mut wasi_env = WasiState::new("dove").finalize()?;
     let import_object = imports! {
         "env" => {
-            "_log" => Function::new_native(&store, env::log),
-            "send_http_request" => Function::new_native(&store, env::send_http_request),
-            "store" => Function::new_native(&store, env::store),
-            "drop" => Function::new_native(&store, env::drop),
-            "load" => Function::new_native(&store, env::load),
+            // "_log" => Function::new_native(&store, env::log),
+             "send_http_request" => Function::new_native(&store, env::send_http_request),
+            // "store" => Function::new_native(&store, env::store),
+            // "drop" => Function::new_native(&store, env::drop),
+            // "load" => Function::new_native(&store, env::load),
         }
     };
 
