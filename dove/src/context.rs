@@ -47,6 +47,18 @@ impl Context {
         Ok(dir.join(package_name))
     }
 
+    /// Path to boogie_options.toml
+    ///     <PROJECT_DIR>/boogie_options.toml
+    pub fn boogie_options_path(&self) -> PathBuf {
+        self.project_dir.join("boogie_options.toml")
+    }
+
+    /// Path to doc.toml
+    ///     <PROJECT_DIR>/doc.toml
+    pub fn doc_path(&self) -> PathBuf {
+        self.project_dir.join("doc.toml")
+    }
+
     pub fn path_for_build(&self, pac_name: Option<&str>, path: CompiledPackageLayout) -> PathBuf {
         let build = self.project_dir.join(CompiledPackageLayout::Root.path());
         if CompiledPackageLayout::Root != path {
