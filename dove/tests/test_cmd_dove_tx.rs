@@ -2,9 +2,6 @@
 
 use std::fs;
 use std::fs::remove_file;
-
-use fs_extra::file::write_all;
-
 use dove::tests_helper::{execute_dove_at, project_remove, project_start_new_and_build};
 use move_core_types::language_storage::{TypeTag, StructTag, CORE_CODE_ADDRESS};
 use move_core_types::identifier::Identifier;
@@ -17,7 +14,7 @@ fn test_cmd_dove_tx_without_arguments() {
     let project_name = "project_tx_without_arguments";
     let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/scripts/sdemo.move
-    write_all(
+    fs::write(
         &project_folder.join("scripts").join("sdemo.move"),
         "script {
                     fun main() {

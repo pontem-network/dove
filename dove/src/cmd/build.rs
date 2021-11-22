@@ -75,7 +75,7 @@ impl Cmd for Build {
         };
 
         run_cli(
-            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
+            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x4").unwrap()),
             &error_descriptions,
             &ctx.move_args,
             &cmd,

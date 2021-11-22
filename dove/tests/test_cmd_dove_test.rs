@@ -1,6 +1,6 @@
 // @todo
 
-use fs_extra::file::write_all;
+use std::fs;
 use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_remove};
 
 /// $ dove test
@@ -10,7 +10,7 @@ fn test_cmd_dove_test_run_all_test_in_project() {
     let project_name = "project_test_run_all_test_in_project";
     let project_folder = project_start_new_and_build(project_name, None);
     // project_folder/modules/mdemo.move
-    write_all(
+    fs::write(
         &project_folder.join("modules").join("mdemo.move"),
         "address 0x1 {
                 module DemoModule {
