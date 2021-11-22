@@ -29,8 +29,7 @@ Examples:
     #[structopt(
         help = r#"Script arguments, e.g. 10 20 30"#,
         name = "Script arguments.",
-        long = "args",
-        short = "a"
+        long = "args"
     )]
     args: Option<Vec<String>>,
     #[structopt(
@@ -59,7 +58,9 @@ impl CallDeclarationCmd {
 impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
     type Error = Error;
 
-    fn try_from((addr_map, cmd): (&AddressDeclarations, CallDeclarationCmd)) -> Result<Self, Self::Error> {
+    fn try_from(
+        (addr_map, cmd): (&AddressDeclarations, CallDeclarationCmd),
+    ) -> Result<Self, Self::Error> {
         let mut call = parse_call(&addr_map, &cmd.call)?;
         if let Some(args) = cmd.args {
             call.set_args(args);

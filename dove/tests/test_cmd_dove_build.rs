@@ -2,7 +2,8 @@ mod helper;
 
 use std::fs;
 use std::io::Read;
-use crate::helper::{delete_project, execute_dove_at, new_demo_project};
+use crate::helper::{delete_project, execute_dove_at, new_demo_project, build, create_new_project};
+use std::collections::HashMap;
 
 /// Build a project without additional parameters
 /// $ dove build
@@ -84,6 +85,17 @@ fn test_cmd_dove_build_error_map() {
 
     execute_dove_at(&["build", "--error-map", "error_map"], &project_path).unwrap();
     assert!(project_path.join("error_map.errmap").exists());
+
+    delete_project(&project_path).unwrap();
+}
+
+#[test]
+fn test_cmd_dove_build_two_times() {
+    let project_name = "project_build_two_times";
+    let project_path = create_new_project(&project_name, HashMap::new()).unwrap();
+
+    build(&project_path).unwrap();
+    build(&project_path).unwrap();
 
     delete_project(&project_path).unwrap();
 }
