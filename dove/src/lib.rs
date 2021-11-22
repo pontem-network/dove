@@ -1,6 +1,5 @@
 //! Move compiler.
-
-// #![deny(missing_docs)]
+#![deny(missing_docs)]
 
 /// Dove build version
 pub const DOVE_VERSION: &str = git_hash::crate_version!();
@@ -19,8 +18,6 @@ pub const DIEM_HASH: &str = git_hash::dependency_git_short_hash_from_cargo_lock!
 
 #[macro_use]
 extern crate anyhow;
-// #[macro_use]
-extern crate log;
 
 /// Dove cli interface.
 pub mod cli;
@@ -28,18 +25,8 @@ pub mod cli;
 pub mod cmd;
 /// Dove execution context.
 pub mod context;
-// /// Docgen.
-// pub mod docs;
-// /// Move executor.
-// pub mod executor;
 /// Export Dove.toml => Move.toml
 pub mod export;
-// /// Dove modules index.
-// pub mod index;
-// /// Dove configuration.
-// pub mod manifest;
-// /// Metadata from project
-// pub mod metadata;
 /// StdOut stream
 pub mod stdout;
 // #[doc(hidden)]

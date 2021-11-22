@@ -7,6 +7,7 @@ use anyhow::Error;
 use boogie_backend::options::BoogieOptions;
 use docgen_options::DocgenOptions;
 
+/// Doc gen options.
 pub mod docgen_options;
 
 /// Dove manifest.

@@ -40,18 +40,16 @@ Examples:
         short = "c"
     )]
     package: Option<String>,
-    #[structopt(help = "File name.", long = "file", short = "f")]
-    file_name: Option<String>,
 }
 
 impl CallDeclarationCmd {
+    /// Takes call data.
     pub fn take(&mut self) -> Self {
         Self {
             call: mem::take(&mut self.call),
             type_parameters: self.type_parameters.take(),
             params: self.params.take(),
             package: self.package.take(),
-            file_name: self.file_name.take(),
         }
     }
 }

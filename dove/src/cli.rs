@@ -35,22 +35,27 @@ struct Opt {
     pub cmd: Command,
 }
 
+/// Common command. Contains move-cli and dove commands.
 pub enum CommonCommand {
+    /// Diem(move-cli) commands.
     Diem(DiemCommand),
+    /// Dove commands.
     Dove(Box<dyn Cmd>),
 }
 
+/// Move cli and dove commands.
 #[derive(StructOpt)]
 pub enum Command {
+    /// Package option.
     #[structopt(name = "package")]
     Package {
         /// Path to package. If none is supplied the current directory will be used.
         #[structopt(long = "path", short = "p", global = true, parse(from_os_str))]
         path: Option<PathBuf>,
-
+        /// Build config.
         #[structopt(flatten)]
         config: move_package::BuildConfig,
-
+        /// Package sub commands.
         #[structopt(subcommand)]
         cmd: package::cli::PackageCommand,
     },
@@ -73,18 +78,21 @@ pub enum Command {
     /// Execute a sandbox command.
     #[structopt(name = "sandbox")]
     Sandbox {
+        /// Sandbox command.
         #[structopt(subcommand)]
         cmd: sandbox::cli::SandboxCommand,
     },
     /// (Experimental) Run static analyses on Move source or bytecode.
     #[structopt(name = "experimental")]
     Experimental {
+        /// Experimental commands.
         #[structopt(subcommand)]
         cmd: experimental::cli::ExperimentalCommand,
     },
-
+    /// Init new project with existing folder.
     #[structopt(about = "Init directory as move project")]
     Init {
+        /// Command.
         #[structopt(flatten)]
         cmd: Init,
     },
@@ -95,44 +103,60 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: New,
     },
+    /// Build package.
     #[structopt(about = "Build project")]
     Build {
+        /// Command.
         #[structopt(flatten)]
         cmd: Build,
     },
+    /// Clean project.
     #[structopt(about = "Remove the target directory")]
     Clean {
+        /// Command.
         #[structopt(flatten)]
         cmd: Clean,
     },
+    /// Test package.
     #[structopt(about = "Run move tests")]
     Test {
+        /// Command.
         #[structopt(flatten)]
         cmd: Test,
     },
+    /// Run script and modules script function.
     #[structopt(about = "Run move script")]
     Run {
+        /// Command.
         #[structopt(flatten)]
         cmd: Run,
     },
+    /// Create transaction.
     #[structopt(about = "Create transaction")]
     Tx {
+        /// Command.
         #[structopt(flatten)]
         cmd: CreateTransactionCmd,
     },
+    /// Run move prover.
     #[structopt(about = "Run move prover")]
     Prove {
+        /// Command.
         #[structopt(flatten)]
         cmd: crate::cmd::prover::Prove,
     },
+    /// Migrate from Dove project to the Move cli project.
     #[structopt(about = "Export dove.toml => move .toml")]
     Export {
+        /// Command.
         #[structopt(flatten)]
         cmd: Export,
     },
 }
 
 impl Command {
+    /// Creates `CommonCommand`.
+    /// Split commands to two different execution backend (move-cli, dove).
     pub fn select_backend(self) -> CommonCommand {
         match self {
             Command::Package { path, config, cmd } => {

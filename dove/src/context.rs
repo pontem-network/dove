@@ -44,6 +44,7 @@ impl Context {
         self.project_dir.join("doc.toml")
     }
 
+    /// Creates path to the move cli build folder.
     pub fn path_for_build(&self, pac_name: Option<&str>, path: CompiledPackageLayout) -> PathBuf {
         let build = self.project_dir.join(CompiledPackageLayout::Root.path());
         if CompiledPackageLayout::Root != path {
@@ -57,6 +58,7 @@ impl Context {
         }
     }
 
+    /// Creates and returns map of named addresses.
     pub fn named_address(&self) -> AddressDeclarations {
         let mut named_address = self.manifest.addresses.clone().unwrap_or_default();
         for (name, addr) in &self.move_args.named_addresses {
@@ -68,6 +70,7 @@ impl Context {
         named_address
     }
 
+    /// Returns transaction output folder for specified `package` or for the default package.
     pub fn tx_output_path(&self, pac: Option<String>) -> PathBuf {
         let mut build = self.project_dir.join(CompiledPackageLayout::Root.path());
         if let Some(pac) = pac {

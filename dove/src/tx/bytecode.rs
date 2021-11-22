@@ -7,11 +7,13 @@ use move_package::compilation::package_layout::CompiledPackageLayout;
 use lang::bytecode::accessor::{Bytecode, BytecodeAccess, BytecodeRef, BytecodeType};
 use crate::context::Context;
 
+/// Dove bytecode resolver.
 pub struct DoveBytecode {
     path: PathBuf,
 }
 
 impl DoveBytecode {
+    /// Creates a new [DoveBytecode].
     pub fn new(ctx: &Context) -> DoveBytecode {
         DoveBytecode {
             path: ctx.path_for_build(None, CompiledPackageLayout::Root),
@@ -130,8 +132,11 @@ impl BytecodeAccess for DoveBytecode {
             BytecodeType::Script => {
                 let name = path
                     .file_name()
-                    .map(|name| name.to_string_lossy().to_string())
-                    .unwrap_or_else(|| "main.mv".to_string());
+                    .map(|name| {
+                        let name = name.to_string_lossy();
+                        name[0..name.len() - 3].to_string()
+                    })
+                    .unwrap_or_else(|| "main".to_string());
                 Bytecode::Script(
                     name,
                     CompiledScript::deserialize(&bytecode)?,

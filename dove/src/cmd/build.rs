@@ -254,6 +254,7 @@ fn get_bytecode_modules_path(project_dir: &Path, project_name: &str) -> Result<V
     Ok(list)
 }
 
+/// Build project.
 pub fn run_internal_build(ctx: &mut Context) -> Result<(), Error> {
     let mut cmd = Build::default();
     cmd.apply(ctx)

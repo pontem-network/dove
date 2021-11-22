@@ -63,38 +63,46 @@ pub(crate) fn make_script_call(
     let (signers, args, info) =
         select_function(functions, &name, &args, &type_tag, &cfg, addr_map)?;
 
-    let (signers, mut tx) = match signers {
-        Signers::Explicit(signers) => (
-            signers,
-            Transaction::new_script_tx(vec![], vec![], args, type_tag)?,
-        ),
-        Signers::Implicit(signers) => (
-            vec![],
-            Transaction::new_script_tx(signers, vec![], args, type_tag)?,
-        ),
-    };
-
-    let mut buff = Vec::new();
-    info.serialize(&mut buff)?;
-
-    match &mut tx.inner_mut().call {
-        Call::Script { code, .. } => *code = buff,
-        Call::ScriptFunction { .. } => {
-            // no-op
-        }
-    }
 
     Ok(if cfg.tx_context {
+        let (_, mut tx) = match signers {
+            Signers::Explicit(signers) => (
+                signers,
+                Transaction::new_script_tx(vec![], vec![], args, type_tag)?,
+            ),
+            Signers::Implicit(signers) => (
+                vec![],
+                Transaction::new_script_tx(signers, vec![], args, type_tag)?,
+            ),
+        };
+
+        let mut buff = Vec::new();
+        info.serialize(&mut buff)?;
+
+        match &mut tx.inner_mut().call {
+            Call::Script { code, .. } => *code = buff,
+            Call::ScriptFunction { .. } => {
+                // no-op
+            }
+        }
+
         EnrichedTransaction::Global {
             bi: info,
             tx,
             name: name.into_string(),
         }
     } else {
+        let signers = match signers {
+            Signers::Explicit(signers) => signers,
+            Signers::Implicit(_) => vec![],
+        };
+
         EnrichedTransaction::Local {
             bi: info,
-            tx,
+            args,
             signers,
+            type_tag,
+            func_name: None
         }
     })
 }
@@ -134,27 +142,31 @@ pub(crate) fn make_function_call(
 
     let addr = info.address().unwrap_or(CORE_CODE_ADDRESS);
     let tx_name = format!("{}_{}", module, func);
-    let (signers, tx) = match signers {
-        Signers::Explicit(signers) => (
-            signers,
-            Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?,
-        ),
-        Signers::Implicit(signers) => (
-            vec![],
-            Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?,
-        ),
-    };
+
     if cfg.tx_context {
+        let tx= match signers {
+            Signers::Explicit(_) =>
+                Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?,
+            Signers::Implicit(signers) =>
+                Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?,
+        };
         Ok(EnrichedTransaction::Global {
             bi: info,
             tx,
             name: tx_name,
         })
     } else {
+        let signers = match signers {
+            Signers::Explicit(signers) => signers,
+            Signers::Implicit(_) => vec![],
+        };
+
         Ok(EnrichedTransaction::Local {
             bi: info,
-            tx,
             signers,
+            args,
+            type_tag,
+            func_name: Some(func.into_string()),
         })
     }
 }
