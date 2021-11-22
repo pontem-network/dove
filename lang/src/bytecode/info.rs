@@ -21,8 +21,8 @@ impl From<Bytecode> for BytecodeInfo {
 impl BytecodeInfo {
     pub fn bytecode_ref(&self) -> &BytecodeRef {
         match &self.bytecode {
-            Bytecode::Script(_, _, _, rf) => &rf,
-            Bytecode::Module(_, rf) => &rf,
+            Bytecode::Script(_, _, _, rf) => rf,
+            Bytecode::Module(_, rf) => rf,
         }
     }
 
@@ -67,7 +67,7 @@ impl BytecodeInfo {
                     .signature_at(script.parameters)
                     .0
                     .iter()
-                    .map(|p| make_type(p, &module))
+                    .map(|p| make_type(p, module))
                     .collect();
 
                 Some(Script {

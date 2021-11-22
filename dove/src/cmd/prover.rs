@@ -6,16 +6,11 @@ use std::fs::read_dir;
 use anyhow::{ensure, Result};
 use structopt::StructOpt;
 use serde::Deserialize;
-use itertools::Itertools;
 use boogie_backend::options::BoogieOptions;
 use super::Cmd;
 use crate::context::Context;
 use crate::cmd::build::run_internal_build;
 use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
-use std::collections::BTreeMap;
-
-// use lang::compiler::{file::find_move_files};
-// use lang::compiler::preprocessor::BuilderPreprocessor;
 
 #[cfg(target_family = "unix")]
 const BOOGIE_EXE: &str = "boogie";
@@ -51,7 +46,7 @@ impl Cmd for Prove {
     where
         Self: Sized,
     {
-        let (boogie_exe, z3_exe, cvc4_exe) = self.make_config(&ctx).map(|conf| {
+        let (boogie_exe, z3_exe, cvc4_exe) = self.make_config(ctx).map(|conf| {
             (
                 conf.boogie_exe.unwrap_or_default(),
                 conf.z3_exe.unwrap_or_default(),
@@ -71,9 +66,9 @@ impl Cmd for Prove {
         run_internal_build(ctx)?;
 
         // Get paths to all dependency files
-        let move_deps = get_dependency_paths(&ctx)?;
+        let move_deps = get_dependency_paths(ctx)?;
         // Get all project files "move"
-        let move_sources = get_project_movefile_paths(&ctx)?;
+        let move_sources = get_project_movefile_paths(ctx)?;
 
         let boogie_options_path = ctx.boogie_options_path();
         let mut boogie_options = if boogie_options_path.exists() {
@@ -99,7 +94,7 @@ impl Cmd for Prove {
                     .map(|(name, value)| {
                         value
                             .map(|value| format!("{}={}", name, value.to_hex_literal()))
-                            .unwrap_or(name.to_string())
+                            .unwrap_or_else(|| name.to_string())
                     })
                     .collect()
             })

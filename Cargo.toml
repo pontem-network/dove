@@ -4,7 +4,6 @@ members = [
 #    "net",
     "dove",
     "lang",
-#    "lang/compat",
 #    "lang/decompiler",
 #    "resource-viewer",
 #    "resources",

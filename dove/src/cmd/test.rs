@@ -56,7 +56,7 @@ pub struct Test {
 }
 
 impl Cmd for Test {
-    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    fn apply(&mut self, _ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {

@@ -991,6 +991,7 @@ dependencies = [
  "move-core-types",
  "move-lang",
  "move-package",
+ "move-prover",
  "move-stdlib",
  "move-symbol-pool",
  "once_cell",

@@ -37,18 +37,23 @@ impl Cmd for CreateTransactionCmd {
         Self: Sized,
     {
         run_internal_build(ctx)?;
-        let tx = make_transaction(&ctx, self.call.take(), Config::for_tx())?;
-         let output_filename = self.output.as_ref().take();
+        let tx = make_transaction(ctx, self.call.take(), Config::for_tx())?;
+        let output_filename = self.output.as_ref().take();
         match tx {
             EnrichedTransaction::Local { .. } => unreachable!(),
             EnrichedTransaction::Global { bi, tx, name } => {
-                store_transaction(&ctx, &output_filename.unwrap_or(&name), bi.bytecode_ref(), tx)
+                store_transaction(ctx, output_filename.unwrap_or(&name), bi.bytecode_ref(), tx)
             }
         }
     }
 }
 
-fn store_transaction(ctx: &Context, name: &str, rf: &BytecodeRef, tx: Transaction) -> Result<(), Error> {
+fn store_transaction(
+    ctx: &Context,
+    name: &str,
+    rf: &BytecodeRef,
+    tx: Transaction,
+) -> Result<(), Error> {
     let tx_dir = ctx.tx_output_path(get_package_from_path(&rf.0));
     if !tx_dir.exists() {
         fs::create_dir_all(&tx_dir)?;
@@ -68,7 +73,8 @@ fn store_transaction(ctx: &Context, name: &str, rf: &BytecodeRef, tx: Transactio
 
 fn get_package_from_path<A: AsRef<Path>>(path: A) -> Option<String> {
     let path: &Path = path.as_ref();
-    path.parent().and_then(|p| p.parent())
+    path.parent()
+        .and_then(|p| p.parent())
         .and_then(|p| p.file_name())
         .map(|name| name.to_string_lossy().to_string())
 }

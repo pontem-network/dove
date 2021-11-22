@@ -31,7 +31,7 @@ impl BytecodeAccess for DoveBytecode {
             .filter(|path| path.path().is_dir())
             .filter_map(|path| {
                 if let Some(package) = package {
-                    if package == path.file_name().to_string_lossy().to_string() {
+                    if package == path.file_name().to_string_lossy() {
                         Some(path.path())
                     } else {
                         None
@@ -92,7 +92,8 @@ impl BytecodeAccess for DoveBytecode {
                     .filter(|path| {
                         if let Some(name) = name {
                             if let Some(file_name) = path.file_name() {
-                                let file_name = &file_name.to_string_lossy()[0..file_name.len() - 3];
+                                let file_name =
+                                    &file_name.to_string_lossy()[0..file_name.len() - 3];
                                 if !file_name.starts_with(name) {
                                     return false;
                                 }
@@ -135,7 +136,7 @@ impl BytecodeAccess for DoveBytecode {
                     name,
                     CompiledScript::deserialize(&bytecode)?,
                     empty_module(),
-                    rf
+                    rf,
                 )
             }
             BytecodeType::Module => Bytecode::Module(CompiledModule::deserialize(&bytecode)?, rf),

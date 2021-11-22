@@ -16,7 +16,6 @@ use crate::cmd::Cmd;
 use crate::cmd::new::New;
 use crate::cmd::build::Build;
 use crate::cmd::clean::Clean;
-use crate::cmd::docgen::DocGen;
 use crate::cmd::export::Export;
 use crate::cmd::init::Init;
 use crate::cmd::run::Run;
@@ -126,11 +125,6 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: crate::cmd::prover::Prove,
     },
-    #[structopt(about = "Generate documentation")]
-    DocGen {
-        #[structopt(flatten)]
-        cmd: DocGen,
-    },
     #[structopt(about = "Export dove.toml => move .toml")]
     Export {
         #[structopt(flatten)]
@@ -165,7 +159,6 @@ impl Command {
             Command::Run { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Tx { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Prove { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::DocGen { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Export { cmd } => CommonCommand::Dove(Box::new(cmd)),
         }
     }

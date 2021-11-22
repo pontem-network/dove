@@ -82,13 +82,13 @@ impl Cmd for Build {
         )?;
 
         // Move-cli error map
-        self.run_error_map(&ctx)?;
+        self.run_error_map(ctx)?;
 
         // packaging of modules
-        self.run_package(&ctx)?;
+        self.run_package(ctx)?;
 
         // Checking directories in the "build" section, if there are none, then create
-        checking_build_directories(&ctx)?;
+        checking_build_directories(ctx)?;
 
         Ok(())
     }
@@ -152,7 +152,7 @@ impl Build {
             .bundles_output_path(
                 self.output
                     .as_deref()
-                    .unwrap_or(ctx.manifest.package.name.as_str()),
+                    .unwrap_or_else(|| ctx.manifest.package.name.as_str()),
             )?
             .with_extension("mv");
         if output_file_path.exists() {

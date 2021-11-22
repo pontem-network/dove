@@ -109,7 +109,7 @@ impl Call {
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
 pub(crate) fn parse_call(addr_map: &AddressDeclarations, call: &str) -> Result<Call, Error> {
-    let mut lexer = Lexer::new(&call, Symbol::from("call"));
+    let mut lexer = Lexer::new(call, Symbol::from("call"));
     let mut env = CompilationEnv::new(Flags::empty(), Default::default());
     let mut ctx = Context::new(&mut env, &mut lexer);
 
@@ -161,7 +161,7 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
 
     Ok(match tokens.len() {
         1 => {
-            if let Some(_) = address {
+            if address.is_some() {
                 return Err(Error::msg(ERROR_MESSAGE));
             }
             Call::Script {
@@ -178,14 +178,14 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
             args: vec![],
         },
         3 => {
-            if let Some(_) = address {
+            if address.is_some() {
                 return Err(Error::msg(ERROR_MESSAGE));
             }
 
             let named_addr = tokens.remove(0);
             let addr = addr_map
                 .get(&Symbol::from(named_addr.as_str()))
-                .and_then(|a| a.clone())
+                .and_then(|a| *a)
                 .ok_or_else(|| anyhow!("Address {} not found.", named_addr))?;
 
             Call::Function {

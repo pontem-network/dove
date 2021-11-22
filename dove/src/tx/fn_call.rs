@@ -58,8 +58,10 @@ pub(crate) fn make_script_call(
             package: package_name.as_deref(),
             name: Some(name.as_str()),
         },
-    )?.filter_map(|f| f.ok());
-    let (signers, args, info) = select_function(functions, &name, &args, &type_tag, &cfg, addr_map)?;
+    )?
+    .filter_map(|f| f.ok());
+    let (signers, args, info) =
+        select_function(functions, &name, &args, &type_tag, &cfg, addr_map)?;
 
     let (signers, mut tx) = match signers {
         Signers::Explicit(signers) => (
@@ -117,19 +119,18 @@ pub(crate) fn make_function_call(
             package: package_name.as_deref(),
             name: Some(module.as_str()),
         },
-    )?.filter_map(|info| info.ok())
-        .filter(|info| {
-            if address.is_some() {
-                if info.address() != address {
-                    false
-                } else {
-                    true
-                }
-            } else {
-                true
-            }
-        }).filter(|info| &info.name() == module.as_str());
-    let (signers, args, info) = select_function(modules, &func, &args, &type_tag, &cfg, addr_map)?;
+    )?
+    .filter_map(|info| info.ok())
+    .filter(|info| {
+        if address.is_some() {
+            info.address() == address
+        } else {
+            true
+        }
+    })
+    .filter(|info| info.name() == module.as_str());
+    let (signers, args, info) =
+        select_function(modules, &func, &args, &type_tag, &cfg, addr_map)?;
 
     let addr = info.address().unwrap_or(CORE_CODE_ADDRESS);
     let tx_name = format!("{}_{}", module, func);
@@ -150,13 +151,27 @@ pub(crate) fn make_function_call(
             name: tx_name,
         })
     } else {
-        Ok(EnrichedTransaction::Local { bi: info, tx, signers })
+        Ok(EnrichedTransaction::Local {
+            bi: info,
+            tx,
+            signers,
+        })
     }
 }
 
-fn select_function<I>(info_iter: I, name: &Identifier, args: &[String], type_tag: &[TypeTag], cfg: &Config, addr_map: &AddressDeclarations) -> Result<(Signers, Vec<ScriptArg>, BytecodeInfo), Error>
-    where I: Iterator<Item=BytecodeInfo> {
-    let mut functions = info_iter.filter_map(|info| info.find_script_function(name.as_str()).map(|f| (info, f)))
+fn select_function<I>(
+    info_iter: I,
+    name: &Identifier,
+    args: &[String],
+    type_tag: &[TypeTag],
+    cfg: &Config,
+    addr_map: &AddressDeclarations,
+) -> Result<(Signers, Vec<ScriptArg>, BytecodeInfo), Error>
+where
+    I: Iterator<Item = BytecodeInfo>,
+{
+    let mut functions = info_iter
+        .filter_map(|info| info.find_script_function(name.as_str()).map(|f| (info, f)))
         .filter(|(_, f)| type_tag.len() == f.type_params_count())
         .map(|(i, script)| {
             prepare_function_signature(
@@ -165,7 +180,7 @@ fn select_function<I>(info_iter: I, name: &Identifier, args: &[String], type_tag
                 !cfg.deny_signers_definition,
                 addr_map,
             )
-                .map(|(signers, args)| (i, script, signers, args))
+            .map(|(signers, args)| (i, script, signers, args))
         })
         .collect::<Vec<Result<_, _>>>();
     let count = functions.iter().filter(|r| r.is_ok()).count();
@@ -230,14 +245,15 @@ fn prepare_function_signature(
                             Signer::Root => diem_root_address(),
                             Signer::Treasury => treasury_compliance_account_address(),
                             Signer::Placeholder => {
-                                Err(anyhow!("Use explicit signer instead of placeholder"))?
+                                return Err(anyhow!(
+                                    "Use explicit signer instead of placeholder"
+                                ));
                             }
-                            Signer::Name(name) => addr_map
-                                .get(&name)
-                                .and_then(|addr| addr.clone())
-                                .ok_or_else(|| {
+                            Signer::Name(name) => {
+                                addr_map.get(&name).and_then(|addr| *addr).ok_or_else(|| {
                                     anyhow!("Failed to find address with name:{}", arg)
-                                })?,
+                                })?
+                            }
                         })
                     })
                 }
@@ -340,7 +356,7 @@ fn parse_address(
     } else {
         addr_map
             .get(&Symbol::from(arg_value))
-            .and_then(|addr| addr.clone())
+            .and_then(|addr| *addr)
             .ok_or_else(|| anyhow!("Failed to find address with name:{}", arg_value))?
     })
 }
@@ -390,7 +406,7 @@ mod call_tests {
             true,
             &Default::default(),
         )
-            .unwrap();
+        .unwrap();
         assert_eq!(signers.len(), 0);
         assert_eq!(args, vec![ScriptArg::Bool(true), ScriptArg::Bool(false)]);
 
@@ -400,7 +416,7 @@ mod call_tests {
             true,
             &Default::default(),
         )
-            .unwrap();
+        .unwrap();
         assert_eq!(signers.len(), 0);
         assert_eq!(
             args,
@@ -439,7 +455,7 @@ mod call_tests {
             true,
             &Default::default(),
         )
-            .unwrap();
+        .unwrap();
         assert_eq!(signers.len(), 0);
         assert_eq!(
             args,

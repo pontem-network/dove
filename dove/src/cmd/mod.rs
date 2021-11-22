@@ -15,12 +15,8 @@ use std::collections::BTreeMap;
 pub mod build;
 /// Project dependencies loader.
 pub mod clean;
-/// Documentation generator.
-pub mod docgen;
 /// Export Dove.toml => Move.toml
 pub mod export;
-/// Dependencies fetcher.
-pub mod fetch;
 /// Project initializer.
 pub mod init;
 /// Project creator.
