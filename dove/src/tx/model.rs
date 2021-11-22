@@ -5,8 +5,8 @@ use move_core_types::value::MoveValue;
 use std::str::FromStr;
 use move_core_types::account_address::AccountAddress;
 use serde::{Deserialize, Serialize};
-use move_binary_format::CompiledModule;
 use move_symbol_pool::Symbol;
+use lang::bytecode::info::BytecodeInfo;
 
 /// Transaction model.
 #[derive(Serialize, Deserialize, Debug)]
@@ -218,6 +218,8 @@ impl FromStr for Address {
 pub enum EnrichedTransaction {
     /// A transaction intended for execution in the local executor.
     Local {
+        /// Bytecode info.
+        bi: BytecodeInfo,
         /// Transaction.
         tx: Transaction,
         /// Signers.
@@ -225,6 +227,8 @@ pub enum EnrichedTransaction {
     },
     /// A transaction intended for execution in the chain executor.
     Global {
+        /// Bytecode info.
+        bi: BytecodeInfo,
         /// Transaction.
         tx: Transaction,
         /// Transaction name.

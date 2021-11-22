@@ -29,15 +29,15 @@ Examples:
     #[structopt(
         help = r#"Script arguments, e.g. 10 20 30"#,
         name = "Script arguments.",
-        long = "args",
-        short = "a"
+        long = "parameters",
+        short = "p"
     )]
-    args: Option<Vec<String>>,
+    params: Option<Vec<String>>,
     #[structopt(
         help = r#"Move package name"#,
         name = "Move package name.",
         long = "package",
-        short = "p"
+        short = "c"
     )]
     package: Option<String>,
     #[structopt(help = "File name.", long = "file", short = "f")]
@@ -49,7 +49,7 @@ impl CallDeclarationCmd {
         Self {
             call: mem::take(&mut self.call),
             type_parameters: self.type_parameters.take(),
-            args: self.args.take(),
+            params: self.params.take(),
             package: self.package.take(),
             file_name: self.file_name.take(),
         }
@@ -63,7 +63,7 @@ impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
         (addr_map, cmd): (&AddressDeclarations, CallDeclarationCmd),
     ) -> Result<Self, Self::Error> {
         let mut call = parse_call(&addr_map, &cmd.call)?;
-        if let Some(args) = cmd.args {
+        if let Some(args) = cmd.params {
             call.set_args(args);
         }
 
@@ -83,6 +83,7 @@ impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
 }
 
 /// Call declaration.
+#[derive(Debug)]
 pub struct CallDeclaration {
     /// Call declaration.
     pub call: Call,

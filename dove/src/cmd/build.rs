@@ -2,7 +2,7 @@ use std::fs;
 use std::ffi::OsStr;
 use std::io::Write;
 use std::path::{PathBuf, Path};
-use std::fs::{remove_file, create_dir_all};
+use std::fs::{remove_file};
 use anyhow::Error;
 use structopt::StructOpt;
 use move_core_types::errmap::ErrorMapping;

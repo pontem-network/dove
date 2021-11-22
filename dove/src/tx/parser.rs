@@ -1,4 +1,4 @@
-use move_core_types::language_storage::{CORE_CODE_ADDRESS, TypeTag};
+use move_core_types::language_storage::TypeTag;
 use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
@@ -161,7 +161,7 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
 
     Ok(match tokens.len() {
         1 => {
-            if let Some(addr) = address {
+            if let Some(_) = address {
                 return Err(Error::msg(ERROR_MESSAGE));
             }
             Call::Script {
@@ -178,7 +178,7 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
             args: vec![],
         },
         3 => {
-            if let Some(addr) = address {
+            if let Some(_) = address {
                 return Err(Error::msg(ERROR_MESSAGE));
             }
 

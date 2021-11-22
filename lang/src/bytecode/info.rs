@@ -5,8 +5,7 @@ use move_binary_format::file_format::{
     Ability, AbilitySet, SignatureToken, StructHandleIndex, Visibility,
 };
 use move_core_types::account_address::AccountAddress;
-use move_lang::expansion::ast::Address;
-use crate::bytecode::accessor::Bytecode;
+use crate::bytecode::accessor::{Bytecode, BytecodeRef};
 
 #[derive(Debug)]
 pub struct BytecodeInfo {
@@ -20,37 +19,44 @@ impl From<Bytecode> for BytecodeInfo {
 }
 
 impl BytecodeInfo {
+    pub fn bytecode_ref(&self) -> &BytecodeRef {
+        match &self.bytecode {
+            Bytecode::Script(_, _, _, rf) => &rf,
+            Bytecode::Module(_, rf) => &rf,
+        }
+    }
+
     pub fn serialize(&self, binary: &mut Vec<u8>) -> Result<(), Error> {
         match &self.bytecode {
-            Bytecode::Script(_, script, _) => script.serialize(binary),
-            Bytecode::Module(module) => module.serialize(binary),
+            Bytecode::Script(_, script, _, _) => script.serialize(binary),
+            Bytecode::Module(module, _) => module.serialize(binary),
         }
     }
 
     pub fn is_module(&self) -> bool {
         match &self.bytecode {
-            Bytecode::Script(_, _, _) => false,
-            Bytecode::Module(_) => true,
+            Bytecode::Script(_, _, _, _) => false,
+            Bytecode::Module(_, _) => true,
         }
     }
 
     pub fn address(&self) -> Option<AccountAddress> {
         match &self.bytecode {
-            Bytecode::Script(_, _, _) => None,
-            Bytecode::Module(bytecode) => Some(*bytecode.address()),
+            Bytecode::Script(_, _, _, _) => None,
+            Bytecode::Module(bytecode, _) => Some(*bytecode.address()),
         }
     }
 
     pub fn name(&self) -> String {
         match &self.bytecode {
-            Bytecode::Script(name, _, _) => name.to_string(),
-            Bytecode::Module(bytecode) => bytecode.self_id().name().to_string(),
+            Bytecode::Script(name, _, _, _) => name.to_string(),
+            Bytecode::Module(bytecode, _) => bytecode.self_id().name().to_string(),
         }
     }
 
     pub fn find_script_function(&self, name: &str) -> Option<Script> {
         match &self.bytecode {
-            Bytecode::Script(name, script, module) => {
+            Bytecode::Script(name, script, module, _) => {
                 let type_parameters = script
                     .type_parameters
                     .iter()
@@ -65,13 +71,13 @@ impl BytecodeInfo {
                     .collect();
 
                 Some(Script {
-                    name: name.as_str(),
+                    name: name.to_string(),
                     parameters,
                     type_parameters,
                     returns: vec![],
                 })
             }
-            Bytecode::Module(module) => module
+            Bytecode::Module(module, _) => module
                 .function_defs()
                 .iter()
                 .filter(|def| def.visibility == Visibility::Script)
@@ -96,7 +102,7 @@ impl BytecodeInfo {
                     let return_ = &module.signature_at(handle.return_).0;
 
                     Script {
-                        name: module.identifier_at(handle.name).as_str(),
+                        name: module.identifier_at(handle.name).to_string(),
                         parameters,
                         type_parameters,
                         returns: return_.iter().map(|st| make_type(st, module)).collect(),
@@ -107,43 +113,43 @@ impl BytecodeInfo {
 }
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Script<'a> {
-    pub name: &'a str,
-    pub parameters: Vec<Type<'a>>,
+pub struct Script {
+    pub name: String,
+    pub parameters: Vec<Type>,
     pub type_parameters: Vec<TypeAbilities>,
-    pub returns: Vec<Type<'a>>,
+    pub returns: Vec<Type>,
 }
 
-impl<'a> Script<'a> {
+impl Script {
     pub fn type_params_count(&self) -> usize {
         self.type_parameters.len()
     }
 }
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Type<'a> {
+pub enum Type {
     Bool,
     U8,
     U64,
     U128,
     Address,
     Signer,
-    Vector(Box<Type<'a>>),
-    Struct(StructDef<'a>),
-    Reference(Box<Type<'a>>),
-    MutableReference(Box<Type<'a>>),
+    Vector(Box<Type>),
+    Struct(StructDef),
+    Reference(Box<Type>),
+    MutableReference(Box<Type>),
     TypeParameter(u16),
 }
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct StructDef<'a> {
-    pub address: &'a AccountAddress,
-    pub module_name: &'a str,
-    pub name: &'a str,
-    pub type_parameters: Vec<Type<'a>>,
+pub struct StructDef {
+    pub address: AccountAddress,
+    pub module_name: String,
+    pub name: String,
+    pub type_parameters: Vec<Type>,
 }
 
-fn make_type<'a>(tok: &'a SignatureToken, module: &'a CompiledModule) -> Type<'a> {
+fn make_type(tok: &SignatureToken, module: &CompiledModule) -> Type {
     match tok {
         SignatureToken::Bool => Type::Bool,
         SignatureToken::U8 => Type::U8,
@@ -164,19 +170,19 @@ fn make_type<'a>(tok: &'a SignatureToken, module: &'a CompiledModule) -> Type<'a
     }
 }
 
-fn make_struct_def<'a>(
+fn make_struct_def(
     idx: StructHandleIndex,
-    tps: &'a [SignatureToken],
-    module: &'a CompiledModule,
-) -> StructDef<'a> {
+    tps: &[SignatureToken],
+    module: &CompiledModule,
+) -> StructDef {
     let struct_handle = module.struct_handle_at(idx);
     let struct_module_handle = module.module_handle_at(struct_handle.module);
 
     StructDef {
-        address: module.address_identifier_at(struct_module_handle.address),
-        name: module.identifier_at(struct_handle.name).as_str(),
+        address: *module.address_identifier_at(struct_module_handle.address),
+        name: module.identifier_at(struct_handle.name).to_string(),
         type_parameters: tps.iter().map(|tok| make_type(tok, module)).collect(),
-        module_name: module.identifier_at(struct_module_handle.name).as_str(),
+        module_name: module.identifier_at(struct_module_handle.name).to_string(),
     }
 }
 

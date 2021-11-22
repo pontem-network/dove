@@ -10,8 +10,8 @@ pub enum BytecodeType {
 
 #[derive(Debug)]
 pub enum Bytecode {
-    Script(String, CompiledScript, CompiledModule),
-    Module(CompiledModule),
+    Script(String, CompiledScript, CompiledModule, BytecodeRef),
+    Module(CompiledModule, BytecodeRef),
 }
 
 #[derive(Debug)]
@@ -25,5 +25,5 @@ pub trait BytecodeAccess {
         tp: Option<BytecodeType>,
     ) -> Result<Vec<BytecodeRef>, Error>;
 
-    fn load(&self, rf: &BytecodeRef) -> Result<Option<Bytecode>, Error>;
+    fn load(&self, rf: BytecodeRef) -> Result<Option<Bytecode>, Error>;
 }

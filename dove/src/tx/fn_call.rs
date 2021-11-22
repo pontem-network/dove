@@ -1,19 +1,16 @@
-use crate::tx::model::{Signer, ScriptArg, Address, Transaction, Signers, EnrichedTransaction, Call};
+use crate::tx::model::{Signer, ScriptArg, Transaction, Signers, EnrichedTransaction, Call};
 use crate::context::Context;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{CORE_CODE_ADDRESS, TypeTag};
 use anyhow::Error;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::fmt::Debug;
 use crate::tx::parser::parse_vec;
 use diem_types::account_config::{treasury_compliance_account_address, diem_root_address};
-use move_lang::compiled_unit::CompiledUnit;
-use itertools::{Itertools, Either};
 use move_package::source_package::parsed_manifest::AddressDeclarations;
 use move_symbol_pool::Symbol;
-use lang::bytecode::accessor::{BytecodeAccess, BytecodeType};
+use lang::bytecode::accessor::BytecodeType;
 use lang::bytecode::{find, SearchParams};
 use lang::bytecode::info::{BytecodeInfo, Type};
 use crate::tx::bytecode::DoveBytecode;
@@ -54,7 +51,7 @@ pub(crate) fn make_script_call(
     cfg: Config,
 ) -> Result<EnrichedTransaction, Error> {
     let access = DoveBytecode::new(ctx);
-    let mut functions = find(
+    let functions = find(
         access,
         SearchParams {
             tp: Some(BytecodeType::Script),
@@ -62,80 +59,42 @@ pub(crate) fn make_script_call(
             name: Some(name.as_str()),
         },
     )?.filter_map(|f| f.ok());
-    select_function(functions);
+    let (signers, args, info) = select_function(functions, &name, &args, &type_tag, &cfg, addr_map)?;
 
-    todo!()
-    // let scripts = find_script(ctx, &name, file)?;
-    //
-    // let (path, meta) = select_function(scripts, &type_tag, &args, &cfg)?;
-    //
-    // let (signers, args) = prepare_function_signature(
-    //     &meta.value.parameters,
-    //     &args,
-    //     !cfg.deny_signers_definition,
-    //     addr,
-    // )?;
-    //
-    // let (signers, mut tx) = match signers {
-    //     Signers::Explicit(signers) => (
-    //         signers,
-    //         Transaction::new_script_tx(vec![], vec![], args, type_tag)?,
-    //     ),
-    //     Signers::Implicit(signers) => (
-    //         vec![],
-    //         Transaction::new_script_tx(signers, vec![], args, type_tag)?,
-    //     ),
-    // };
-    //
-    //
-    // let (mut modules, script): (Vec<_>, Vec<_>) = move_build(
-    //     ctx,
-    //     &[
-    //         path.to_string_lossy().to_string(),
-    //         ctx.str_path_for(&ctx.manifest.layout.modules_dir)?,
-    //     ],
-    //     &[interface.dir.to_string_lossy().into_owned()],
-    // )?
-    // .into_iter()
-    // .filter_map(|u| match u {
-    //     CompiledUnit::Module { module, .. } => Some(Either::Left(module)),
-    //     CompiledUnit::Script {
-    //         loc, key, script, ..
-    //     } => {
-    //         if loc.file == path.to_string_lossy().as_ref() && key == name.as_str() {
-    //             Some(Either::Right(script))
-    //         } else {
-    //             None
-    //         }
-    //     }
-    // })
-    // .partition_map(|u| u);
-    // if script.is_empty() {
-    //     bail!("The script {:?} could not be compiled", path);
-    // }
-    //
-    // let mut buff = Vec::new();
-    // script[0].serialize(&mut buff)?;
-    // match &mut tx.inner_mut().call {
-    //     Call::Script { code, .. } => *code = buff,
-    //     Call::ScriptFunction { .. } => {
-    //         // no-op
-    //     }
-    // }
-    //
-    // Ok(if cfg.exe_context {
-    //     modules.extend(interface.load_mv()?);
-    //     EnrichedTransaction::Local {
-    //         tx,
-    //         signers,
-    //         deps: modules,
-    //     }
-    // } else {
-    //     EnrichedTransaction::Global {
-    //         tx,
-    //         name: name.into_string(),
-    //     }
-    // })
+    let (signers, mut tx) = match signers {
+        Signers::Explicit(signers) => (
+            signers,
+            Transaction::new_script_tx(vec![], vec![], args, type_tag)?,
+        ),
+        Signers::Implicit(signers) => (
+            vec![],
+            Transaction::new_script_tx(signers, vec![], args, type_tag)?,
+        ),
+    };
+
+    let mut buff = Vec::new();
+    info.serialize(&mut buff)?;
+
+    match &mut tx.inner_mut().call {
+        Call::Script { code, .. } => *code = buff,
+        Call::ScriptFunction { .. } => {
+            // no-op
+        }
+    }
+
+    Ok(if cfg.tx_context {
+        EnrichedTransaction::Global {
+            bi: info,
+            tx,
+            name: name.into_string(),
+        }
+    } else {
+        EnrichedTransaction::Local {
+            bi: info,
+            tx,
+            signers,
+        }
+    })
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -151,7 +110,7 @@ pub(crate) fn make_function_call(
     cfg: Config,
 ) -> Result<EnrichedTransaction, Error> {
     let access = DoveBytecode::new(ctx);
-    let mut modules = find(
+    let modules = find(
         access,
         SearchParams {
             tp: Some(BytecodeType::Module),
@@ -170,42 +129,45 @@ pub(crate) fn make_function_call(
                 true
             }
         }).filter(|info| &info.name() == module.as_str());
-    select_function(modules);
+    let (signers, args, info) = select_function(modules, &func, &args, &type_tag, &cfg, addr_map)?;
 
-
-    let mut functions = find(
-        access,
-        SearchParams {
-            tp: Some(BytecodeType::Module),
-            package: package_name.as_deref(),
-            name: Some(module.as_str()),
-        },
-    )?
-        .filter_map(|info| info.ok())
-        .filter(|info| {
-            if address.is_some() {
-                if info.address() != address {
-                    false
-                } else {
-                    true
-                }
-            } else {
-                true
-            }
+    let addr = info.address().unwrap_or(CORE_CODE_ADDRESS);
+    let tx_name = format!("{}_{}", module, func);
+    let (signers, tx) = match signers {
+        Signers::Explicit(signers) => (
+            signers,
+            Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?,
+        ),
+        Signers::Implicit(signers) => (
+            vec![],
+            Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?,
+        ),
+    };
+    if cfg.tx_context {
+        Ok(EnrichedTransaction::Global {
+            bi: info,
+            tx,
+            name: tx_name,
         })
-        .filter_map(|info| info.find_script_function(func.as_str()).map(|f| (info, f)))
+    } else {
+        Ok(EnrichedTransaction::Local { bi: info, tx, signers })
+    }
+}
+
+fn select_function<I>(info_iter: I, name: &Identifier, args: &[String], type_tag: &[TypeTag], cfg: &Config, addr_map: &AddressDeclarations) -> Result<(Signers, Vec<ScriptArg>, BytecodeInfo), Error>
+    where I: Iterator<Item=BytecodeInfo> {
+    let mut functions = info_iter.filter_map(|info| info.find_script_function(name.as_str()).map(|f| (info, f)))
         .filter(|(_, f)| type_tag.len() == f.type_params_count())
         .map(|(i, script)| {
             prepare_function_signature(
                 &script.parameters,
-                &args,
+                args,
                 !cfg.deny_signers_definition,
                 addr_map,
             )
                 .map(|(signers, args)| (i, script, signers, args))
         })
         .collect::<Vec<Result<_, _>>>();
-
     let count = functions.iter().filter(|r| r.is_ok()).count();
     if count == 0 {
         if functions.is_empty() {
@@ -224,72 +186,10 @@ pub(crate) fn make_function_call(
             .into_iter()
             .find_map(|res| res.ok())
             .ok_or_else(|| anyhow!("Couldn't find a function with given signature."))?;
-        let addr = bytecode_info.address().unwrap_or(CORE_CODE_ADDRESS);
-        let tx_name = format!("{}_{}", module, func);
-        let (signers, tx) = match signers {
-            Signers::Explicit(signers) => (
-                signers,
-                Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?,
-            ),
-            Signers::Implicit(signers) => (
-                vec![],
-                Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?,
-            ),
-        };
-        if cfg.tx_context {
-            Ok(EnrichedTransaction::Global {
-                tx,
-                name: tx_name,
-            })
-        } else {
-            Ok(EnrichedTransaction::Local { tx, signers })
-        }
+        Ok((signers, args, bytecode_info))
     }
 }
 
-fn select_function<I>(info_iter: I) -> Result<(), Error>
-    where I: Iterator<Item=BytecodeInfo> {
-    Ok(())
-}
-
-//
-// fn select_function(
-//     mut func: Vec<(PathBuf, FuncMeta)>,
-//     type_tag: &[TypeTag],
-//     args: &[String],
-//     cfg: &Config,
-// ) -> Result<(PathBuf, FuncMeta), Error> {
-//     if func.is_empty() {
-//         bail!("Couldn't find a function with given signature.");
-//     } else if func.len() > 1 {
-//         let mut func = func
-//             .into_iter()
-//             .filter(|(_, f)| f.value.type_parameters.len() == type_tag.len())
-//             .filter(|(_, f)| {
-//                 prepare_function_signature(
-//                     &f.value.parameters,
-//                     args,
-//                     !cfg.deny_signers_definition,
-//                     addr,
-//                 )
-//                 .is_ok()
-//             })
-//             .collect::<Vec<_>>();
-//         if func.is_empty() {
-//             bail!("Couldn't find a function with given signature.");
-//         } else if func.len() > 1 {
-//             bail!(
-//                 "More than one functions with the given signature was found.\
-//                    Please pass the file path to specify the module. -f FILE_NAME"
-//             );
-//         } else {
-//             Ok(func.remove(0))
-//         }
-//     } else {
-//         Ok(func.remove(0))
-//     }
-// }
-//
 fn prepare_function_signature(
     code_args: &[Type],
     call_args: &[String],
