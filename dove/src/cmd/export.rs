@@ -32,12 +32,14 @@ impl Cmd for Export {
     where
         Self: Sized,
     {
-        self.export(&ctx.project_dir)
+        self.export(ctx)
     }
 }
 
 impl Export {
-    fn export(&self, project_dir: &Path) -> Result<(), Error> {
+    fn export(&self, ctx: &Context) -> Result<(), Error> {
+        let project_dir = ctx.project_dir.clone();
+
         let dove_toml_path = project_dir.join("Dove.toml");
         if !dove_toml_path.exists() {
             anyhow::bail!("file Dove.toml was not found");
@@ -46,7 +48,7 @@ impl Export {
         let dialect = Dialect::from_str(&dove_toml.package.dialect.unwrap_or_default())?;
 
         // Project directories
-        create_project_directories(project_dir)?;
+        create_project_directories(&project_dir)?;
 
         // delete artifacts folder
         let artifacts_path = project_dir.join("artifacts");
@@ -55,13 +57,13 @@ impl Export {
         }
 
         // Move modules to the "source" folder
-        move_modules(project_dir)?;
+        move_modules(&project_dir)?;
 
-        // doc.toml
-        save_as_toml(&project_dir.join("doc.toml"), &dove_toml.doc)?;
-        // boogie_options.toml
+        // <PROJECT_DIR>/doc.toml
+        save_as_toml(&ctx.doc_path(), &dove_toml.doc)?;
+        // <PROJECT_DIR>/boogie_options.toml
         if let Some(boogie) = &dove_toml.boogie_options {
-            save_as_toml(&project_dir.join("boogie_options.toml"), &boogie)?;
+            save_as_toml(&ctx.boogie_options_path(), &boogie)?;
         }
 
         // account_address
