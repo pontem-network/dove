@@ -142,6 +142,7 @@ pub fn create_new_project(project_name: &str, addresses: HashMap<&str, &str>) ->
 pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
     let addresses = [("Demo", "0x2")].into_iter().collect();
     let project_path = create_new_project(&project_name, addresses)?;
+
     // scripts/main.move
     let mut main_script = fs::File::create(project_path.join("scripts").join("main.move"))?;
     main_script.write(b"script { fun main(){} }")?;
@@ -157,6 +158,36 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
     // sources/demo3v.move
     let mut demo3v_script = fs::File::create(project_path.join("sources").join("demo3v.move"))?;
     demo3v_script.write(b"module Demo::Demo3v{ fun run(){ } }")?;
+
+    // tests/test1.move
+    let mut test_1 = fs::File::create(project_path.join("tests").join("test1.move"))?;
+    test_1.write(
+        b"#[test_only]\n\
+        module Demo::Test1{\n\
+            #[test]\n\
+            fun success(){ assert(true,1); }\n\
+        }",
+    )?;
+
+    // tests/test2.move
+    let mut test_2 = fs::File::create(project_path.join("tests").join("test2.move"))?;
+    test_2.write(
+        b"#[test_only]\n\
+        module Demo::Test2{\n\
+            #[test]\n\
+            fun success(){ assert(true,2); }\n\
+        }",
+    )?;
+
+    // tests/test3.move
+    let mut test_3 = fs::File::create(project_path.join("tests").join("test3.move"))?;
+    test_3.write(
+        b"#[test_only]\n\
+        module Demo::Test3{\n\
+            #[test]\n\
+            fun error(){ assert(false,3); }\n\
+        }",
+    )?;
 
     Ok(project_path)
 }
