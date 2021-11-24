@@ -6,7 +6,7 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 
 /// Clean target directory command.
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Clean {
     // Directories will be deleted
@@ -91,4 +91,10 @@ impl FromStr for ClearType {
             _ => ClearType::All,
         })
     }
+}
+
+/// Clean project.
+pub fn run_internal_clean(ctx: &mut Context) -> Result<(), Error> {
+    let mut cmd = Clean::default();
+    cmd.apply(ctx)
 }

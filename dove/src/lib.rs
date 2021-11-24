@@ -29,5 +29,10 @@ pub mod context;
 pub mod export;
 /// StdOut stream
 pub mod stdout;
+// #[doc(hidden)]
+// pub mod tests_helper;
+
+/// Manifest Processing
+pub mod manifest;
 /// Transactions.
 pub mod tx;
