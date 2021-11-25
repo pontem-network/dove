@@ -42,11 +42,6 @@ pub fn set_colorchoice_for_stdout() -> Result<(), Error> {
     set_colorchoice(color_flag)
 }
 
-/// STDOUT_COLOR = colorchoice::Never
-pub fn set_colorchoice_never() -> Result<(), Error> {
-    set_colorchoice(ColorChoice::Never)
-}
-
 /// set print to stdout
 fn set_colorchoice(color: ColorChoice) -> Result<(), Error> {
     STDOUT_COLOR.set(Mutex::new(Box::new(color))).or_else(|mt| {
@@ -59,7 +54,7 @@ fn set_colorchoice(color: ColorChoice) -> Result<(), Error> {
 }
 
 /// colorize text for output
-pub fn colorize_text(text: &str, spec: &mut ColorSpec) -> String {
+fn colorize_text(text: &str, spec: &mut ColorSpec) -> String {
     let mut buffer = BufferWriter::stdout(get_colorchoice_color()).buffer();
     buffer
         .set_color(spec)

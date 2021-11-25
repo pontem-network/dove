@@ -1,6 +1,6 @@
+use std::str::FromStr;
 use std::fs;
 use structopt::StructOpt;
-use std::str::FromStr;
 use anyhow::Error;
 use crate::cmd::Cmd;
 use crate::context::Context;

@@ -4,14 +4,12 @@ use std::fs::read_to_string;
 use toml::Value;
 use toml::map::Map;
 use structopt::StructOpt;
-
 use move_cli::{Move, run_cli};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_package::BuildConfig;
-
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;

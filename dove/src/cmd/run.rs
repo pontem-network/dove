@@ -1,18 +1,18 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
-use crate::cmd::build::run_internal_build;
 use anyhow::{Error, Result};
 use bytecode_source_map::source_map::SourceMap;
+use lang::bytecode::info::BytecodeInfo;
 use move_cli::{Move, run_cli};
 use move_cli::sandbox::cli::SandboxCommand;
+use move_cli::Command;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
-use move_package::compilation::package_layout::CompiledPackageLayout;
-use lang::bytecode::info::BytecodeInfo;
-use move_cli::Command;
 use move_lang::shared::{NumberFormat, NumericalAddress};
+use move_package::compilation::package_layout::CompiledPackageLayout;
 use crate::cmd::Cmd;
+use crate::cmd::build::run_internal_build;
 use crate::context::Context;
 use crate::tx::cmd::CallDeclarationCmd;
 use crate::tx::fn_call::Config;
@@ -46,20 +46,29 @@ pub struct Run {
 
 impl Cmd for Run {
     fn apply(&mut self, ctx: &mut Context) -> Result<()>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         run_internal_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_run())?;
         match tx {
-            EnrichedTransaction::Local { bi, args, type_tag, func_name, signers } => {
+            EnrichedTransaction::Local {
+                bi,
+                args,
+                type_tag,
+                func_name,
+                signers,
+            } => {
                 let natives =
                     move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1")?);
                 let script_file = resolve_script_name(&bi)?;
                 let error_descriptions: ErrorMapping =
                     bcs::from_bytes(move_stdlib::error_descriptions())?;
 
-                let args = args.into_iter().map(|arg| arg.try_into()).collect::<Result<_, Error>>()?;
+                let args = args
+                    .into_iter()
+                    .map(|arg| arg.try_into())
+                    .collect::<Result<_, Error>>()?;
                 let cmd = SandboxCommand::Run {
                     script_file,
                     script_name: func_name,
@@ -70,10 +79,16 @@ impl Cmd for Run {
                     dry_run: self.dry_run,
                 };
 
-                let named_addresses = ctx.named_address()
+                let named_addresses = ctx
+                    .named_address()
                     .into_iter()
                     .filter_map(|(k, v)| v.map(|v| (k, v)))
-                    .map(|(k, v)|(k.to_string(), NumericalAddress::new(v.into_bytes(), NumberFormat::Hex)))
+                    .map(|(k, v)| {
+                        (
+                            k.to_string(),
+                            NumericalAddress::new(v.into_bytes(), NumberFormat::Hex),
+                        )
+                    })
                     .collect();
 
                 let move_args = Move {
@@ -82,7 +97,7 @@ impl Cmd for Run {
                     build_dir: ctx.move_args.build_dir.clone(),
                     mode: ctx.move_args.mode,
                     dialect: ctx.move_args.dialect,
-                    verbose: ctx.move_args.verbose
+                    verbose: ctx.move_args.verbose,
                 };
                 run_cli(
                     natives,
