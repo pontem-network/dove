@@ -1,3 +1,5 @@
+use core::mem;
+use std::collections::HashMap;
 use std::fs;
 use std::ffi::OsStr;
 use std::fs::remove_file;
@@ -5,11 +7,14 @@ use std::path::{PathBuf, Path};
 use anyhow::Error;
 use structopt::StructOpt;
 use anyhow::Result;
+use move_binary_format::access::ModuleAccess;
+use move_binary_format::CompiledModule;
 use move_core_types::errmap::ErrorMapping;
 use move_core_types::account_address::AccountAddress;
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
+use move_core_types::language_storage::ModuleId;
 use move_package::BuildConfig;
 use move_symbol_pool::Symbol;
 use crate::cmd::Cmd;
@@ -174,9 +179,10 @@ impl Build {
             if self.modules_exclude.contains(&module_name) {
                 continue;
             }
-            println!("Packaging '{}'...", module_name);
             pac.put(fs::read(&module)?);
         }
+
+        pac.sort()?;
 
         fs::write(&output_file_path, pac.encode()?)?;
 
@@ -252,6 +258,51 @@ struct ModulePackage {
 impl ModulePackage {
     pub fn put(&mut self, module: Vec<u8>) {
         self.modules.push(module);
+    }
+
+    pub fn sort(&mut self) -> Result<(), Error> {
+        let mut modules = Vec::with_capacity(self.modules.len());
+        mem::swap(&mut self.modules, &mut modules);
+
+        let mut modules = modules
+            .into_iter()
+            .map(|bytecode| {
+                CompiledModule::deserialize(&bytecode)
+                    .map(|unit| (unit.self_id(), (bytecode, unit)))
+                    .map_err(|_| anyhow!("Failed to deserialize move module."))
+            })
+            .collect::<Result<HashMap<_, _>, _>>()?;
+
+        let ids_list: Vec<_> = modules.keys().cloned().collect();
+
+        for id in ids_list {
+            self.write_sub_tree(&id, &mut modules);
+        }
+
+        Ok(())
+    }
+
+    fn write_sub_tree(
+        &mut self,
+        id: &ModuleId,
+        modules: &mut HashMap<ModuleId, (Vec<u8>, CompiledModule)>,
+    ) {
+        if let Some((bytecode, unit)) = modules.remove(id) {
+            let deps = Self::take_deps(id, &unit);
+            for dep in deps {
+                self.write_sub_tree(&dep, modules);
+            }
+            println!("Packing '{}'...", id.name());
+            self.modules.push(bytecode);
+        }
+    }
+
+    fn take_deps(id: &ModuleId, unit: &CompiledModule) -> Vec<ModuleId> {
+        unit.module_handles()
+            .iter()
+            .map(|hdl| unit.module_id_for_handle(hdl))
+            .filter(|dep_id| dep_id != id)
+            .collect()
     }
 
     pub fn encode(&self) -> Result<Vec<u8>, Error> {
