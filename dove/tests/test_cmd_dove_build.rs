@@ -10,7 +10,7 @@ use std::collections::HashMap;
 #[test]
 fn test_cmd_dove_build_without_arguments() {
     let project_name = "project_build_without_arguments";
-    let project_path = new_demo_project(&project_name).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(&["build"], &project_path).unwrap();
 
@@ -22,7 +22,7 @@ fn test_cmd_dove_build_without_arguments() {
 #[test]
 fn test_cmd_dove_build_with_doc() {
     let project_name = "project_build_build_with_doc";
-    let project_path = new_demo_project(&project_name).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(&["build", "-d"], &project_path).unwrap();
 
@@ -40,7 +40,7 @@ fn test_cmd_dove_build_with_doc() {
 #[test]
 fn test_cmd_dove_build_with_package() {
     let project_name = "project_build_build_with_package";
-    let project_path = new_demo_project(&project_name).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(
         &[
@@ -81,7 +81,7 @@ fn test_cmd_dove_build_with_package() {
 #[test]
 fn test_cmd_dove_build_error_map() {
     let project_name = "project_build_build_error_map";
-    let project_path = new_demo_project(&project_name).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(&["build", "--error-map", "error_map"], &project_path).unwrap();
     assert!(project_path.join("error_map.errmap").exists());
@@ -92,7 +92,7 @@ fn test_cmd_dove_build_error_map() {
 #[test]
 fn test_cmd_dove_build_two_times() {
     let project_name = "project_build_two_times";
-    let project_path = create_new_project(&project_name, HashMap::new()).unwrap();
+    let project_path = create_new_project(project_name, HashMap::new()).unwrap();
 
     build(&project_path).unwrap();
     build(&project_path).unwrap();
@@ -101,13 +101,9 @@ fn test_cmd_dove_build_two_times() {
 }
 
 fn find_u8(source: &[u8], need: &[u8]) -> bool {
-    source
-        .iter()
-        .enumerate()
-        .find(|(pos, _)| {
-            need.iter()
-                .enumerate()
-                .all(|(index, byte)| Some(byte) == source.get(index + pos))
-        })
-        .is_some()
+    source.iter().enumerate().any(|(pos, _)| {
+        need.iter()
+            .enumerate()
+            .all(|(index, byte)| Some(byte) == source.get(index + pos))
+    })
 }

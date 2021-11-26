@@ -9,12 +9,12 @@ mod helper;
 #[test]
 fn test_cmd_dove_test() {
     let project_name = "project_test";
-    let project_path = new_demo_project(&project_name).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
     build(&project_path).unwrap();
 
     // Success
     for test_name in ["Test1", "Test2"] {
-        execute_dove_at(&["test", "-f", &test_name], &project_path).unwrap();
+        execute_dove_at(&["test", "-f", test_name], &project_path).unwrap();
     }
     // Error
     assert!(execute_dove_at(&["test", "-f", "Test3"], &project_path).is_err());
@@ -27,7 +27,7 @@ fn test_cmd_dove_test() {
 #[test]
 fn test_cmd_dove_test_list() {
     let project_name = "project_test_list";
-    let project_path = new_demo_project(&project_name).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
     build(&project_path).unwrap();
 
     let output = execute_dove_at(&["test", "-l"], &project_path).unwrap();
