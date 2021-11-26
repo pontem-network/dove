@@ -63,7 +63,6 @@ pub(crate) fn make_script_call(
     let (signers, args, info) =
         select_function(functions, &name, &args, &type_tag, &cfg, addr_map)?;
 
-
     Ok(if cfg.tx_context {
         let (_, mut tx) = match signers {
             Signers::Explicit(signers) => (
@@ -102,7 +101,7 @@ pub(crate) fn make_script_call(
             args,
             signers,
             type_tag,
-            func_name: None
+            func_name: None,
         }
     })
 }
@@ -144,11 +143,13 @@ pub(crate) fn make_function_call(
     let tx_name = format!("{}_{}", module, func);
 
     if cfg.tx_context {
-        let tx= match signers {
-            Signers::Explicit(_) =>
-                Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?,
-            Signers::Implicit(signers) =>
-                Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?,
+        let tx = match signers {
+            Signers::Explicit(_) => {
+                Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?
+            }
+            Signers::Implicit(signers) => {
+                Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?
+            }
         };
         Ok(EnrichedTransaction::Global {
             bi: info,

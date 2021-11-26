@@ -47,8 +47,8 @@ fn test_cmd_dove_build_with_package() {
             "build",
             "-p",
             "--modules_exclude",
-            "demo1v",
-            "demo2v.mv",
+            "Demo1v",
+            "Demo2v",
             "-o",
             "demo",
         ],
@@ -62,7 +62,7 @@ fn test_cmd_dove_build_with_package() {
             .join("build")
             .join(project_name)
             .join("bundles")
-            .join("demo.mv"),
+            .join("demo.pac"),
     )
     .unwrap()
     .read_to_end(&mut content)
