@@ -84,10 +84,10 @@ jobs:
 #          -p=decompiler
 #          -p=move-language-server
 
-      - id: mls
-        name: get version of move-language-server
-        uses: ./.github/actions/crate-version
-        with: { crate: move-language-server }
+#      - id: mls
+#        name: get version of move-language-server
+#        uses: ./.github/actions/crate-version
+#        with: { crate: move-language-server }
 
       - id: dove
         name: get version of dove
@@ -140,8 +140,8 @@ jobs:
           PKG_BIN_DIR=$PKG_DIR/bin
 
           DOVE_NAME=dove$OS_BIN_EXT
-          MLS_NAME=move-language-server$OS_BIN_EXT
-          MRV_NAME=move-resource-viewer$OS_BIN_EXT
+#          MLS_NAME=move-language-server$OS_BIN_EXT
+#          MRV_NAME=move-resource-viewer$OS_BIN_EXT
 #          DECOMPILER_NAME=move-decompiler$OS_BIN_EXT
 
           mkdir -p $PKG_BIN_DIR
@@ -149,8 +149,8 @@ jobs:
 
           set +e
 #          cp $RELEASE_DIR/decompiler$OS_BIN_EXT $PKG_BIN_DIR/$DECOMPILER_NAME
-          cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
-          cp $RELEASE_DIR/move-resource-viewer$OS_BIN_EXT $PKG_BIN_DIR/$MRV_NAME
+#          cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
+#          cp $RELEASE_DIR/move-resource-viewer$OS_BIN_EXT $PKG_BIN_DIR/$MRV_NAME
           cp $RELEASE_DIR/dove$OS_BIN_EXT $PKG_BIN_DIR/$DOVE_NAME
           set -e
 
@@ -170,8 +170,8 @@ jobs:
           ARCH="${{ steps.build-info.outputs.arch }}"
           RELEASE_DIR=${{ steps.dist.outputs.build }}
 
-          MLS_NAME=move-language-server-${{ steps.mls.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
-          MRV_NAME=move-resource-viewer-${{ steps.mrv.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+#          MLS_NAME=move-language-server-${{ steps.mls.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+#          MRV_NAME=move-resource-viewer-${{ steps.mrv.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           DOVE_NAME=dove-${{ steps.dove.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
 #          DECOMPILER_NAME=move-decompiler-${{ steps.decompiler.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           cd $RELEASE_DIR
