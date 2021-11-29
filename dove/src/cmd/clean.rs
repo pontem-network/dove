@@ -1,8 +1,10 @@
 use std::str::FromStr;
 use std::fs;
-use structopt::StructOpt;
+use std::path::PathBuf;
 use anyhow::Error;
-use crate::cmd::Cmd;
+use structopt::StructOpt;
+use move_cli::Move;
+use crate::cmd::{Cmd, default_sourcemanifest};
 use crate::context::Context;
 
 /// Clean target directory command.
@@ -21,16 +23,30 @@ pub struct Clean {
                         state - Clear only the executor state.\n\
                         all - Clear all.")]
     clear_type: Option<ClearType>,
+    // deleting folders:
+    //      PROJECT_DIR/storage
+    //      PROJECT_DIR/build
+    //      ~/.move/*
+    #[structopt(help = "Clear target directory and global cache command", long)]
+    global: bool,
 }
 
 impl Cmd for Clean {
+    fn context(&mut self, project_dir: PathBuf, move_args: Move) -> anyhow::Result<Context> {
+        Ok(Context {
+            project_dir,
+            move_args,
+            manifest: default_sourcemanifest(),
+        })
+    }
+
     fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {
         let clear_type = self.clear_type.unwrap_or_default();
 
-        let folders = match clear_type {
+        let mut folders = match clear_type {
             // Clear only the executor state.
             ClearType::State => {
                 vec![
@@ -47,6 +63,11 @@ impl Cmd for Clean {
                 ]
             }
         };
+
+        // If global cleanup adds directories from ~/.move/*
+        if self.global {
+            folders.extend(move_cache_folders().unwrap_or_default().into_iter());
+        }
 
         for path in folders {
             if !path.exists() {
@@ -94,7 +115,29 @@ impl FromStr for ClearType {
 }
 
 /// Clean project.
-pub fn run_internal_clean(ctx: &mut Context) -> Result<(), Error> {
+pub fn run_internal_clean(ctx: &mut Context) -> anyhow::Result<()> {
     let mut cmd = Clean::default();
     cmd.apply(ctx)
+}
+
+/// adds directories from ~/.move/*
+fn move_cache_folders() -> anyhow::Result<Vec<PathBuf>> {
+    let move_home = std::env::var("MOVE_HOME").unwrap_or_else(|_| {
+        format!(
+            "{}/.move",
+            std::env::var("HOME").expect("env var 'HOME' must be set")
+        )
+    });
+
+    let path = PathBuf::from_str(&move_home)?;
+    if !path.exists() {
+        bail!("MOVE_HOME - path {:?} not found", path.display());
+    }
+
+    let paths = path
+        .read_dir()?
+        .filter_map(|dir| dir.ok())
+        .map(|path| path.path())
+        .collect::<Vec<PathBuf>>();
+    Ok(paths)
 }

@@ -47,9 +47,6 @@ jobs:
           - name: ubuntu
             os: ubuntu-latest
             triplet: x64-linux
-          - name: windows
-            os: windows-latest
-            triplet: x64-windows-static-md
 
     env:
       RUSTFLAGS: -D warnings
@@ -78,6 +75,23 @@ jobs:
 
       - uses: Swatinem/rust-cache@v1
 
+      # Clearing cache "~/.move/" before testing
+      - name: dove clean --global
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: clean --global
+
+      # Download MoveStdlib
+      # Preliminary preparation for the "cargo test" in multithreading
+      # Do not delete it, otherwise the tests will not work in multithreaded mode.
+      - name: Download MoveStdlib
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: test_cmd_dove_build_without_arguments
+
+      # Test All
       - name: Test All
         uses: actions-rs/cargo@v1
         with:
