@@ -84,7 +84,6 @@ pub(crate) fn make_script_call(
                 // no-op
             }
         }
-
         EnrichedTransaction::Global {
             bi: info,
             tx,
@@ -282,7 +281,7 @@ fn prepare_function_signature(
         Ok((Signers::Explicit(signers), params))
     } else {
         let mut signers = (0..signers_count)
-            .take_while(|i| *i < call_args.len())
+            .take_while(|i| *i < args_index)
             .map(|i| Signer::from_str(&call_args[i]).ok())
             .take_while(|s| s.is_some())
             .flatten()

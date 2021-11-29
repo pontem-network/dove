@@ -1,21 +1,27 @@
+use core::mem;
+use std::collections::HashMap;
 use std::fs;
 use std::fs::{remove_file};
 use std::ffi::OsStr;
-use std::io::Write;
+use std::fs::remove_file;
 use std::path::{PathBuf, Path};
 use anyhow::Error;
 use structopt::StructOpt;
 use anyhow::Result;
+use move_binary_format::access::ModuleAccess;
+use move_binary_format::CompiledModule;
 use move_core_types::errmap::ErrorMapping;
 use move_core_types::account_address::AccountAddress;
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
+use move_core_types::language_storage::ModuleId;
 use move_package::BuildConfig;
 use move_symbol_pool::Symbol;
 
 use crate::cmd::Cmd;
 use crate::context::Context;
+use serde::{Serialize, Deserialize};
 
 /// Build dependencies.
 #[derive(StructOpt, Debug, Default)]
@@ -158,47 +164,32 @@ impl Build {
                     .as_deref()
                     .unwrap_or_else(|| ctx.manifest.package.name.as_str()),
             )?
-            .with_extension("mv");
+            .with_extension("pac");
         if output_file_path.exists() {
             remove_file(&output_file_path)?;
         }
 
         // Search for modules
-        let mut bytecode_modules_path =
+        let bytecode_modules_path =
             get_bytecode_modules_path(&ctx.project_dir, &ctx.manifest.package.name)
                 .unwrap_or_default();
 
-        for module_name in self.modules_exclude.iter() {
-            let module_name = if module_name.ends_with(".mv") {
-                module_name.to_lowercase()
-            } else {
-                module_name.to_lowercase() + ".mv"
-            };
+        let mut pac = ModulePackage::default();
 
-            if let Some((finded_index, _)) = bytecode_modules_path
-                .iter()
-                .enumerate()
-                .filter_map(|(index, path)| {
-                    path.file_name()
-                        .map(|file_name| (index, file_name.to_string_lossy().to_lowercase()))
-                })
-                .find(|(_, file_name)| file_name == &module_name)
-            {
-                bytecode_modules_path.remove(finded_index);
+        for module in bytecode_modules_path {
+            let module_name = module.file_name().map(|name| {
+                let name = name.to_string_lossy();
+                name[0..name.len() - ".mv".len()].to_string()
+            }).ok_or_else(|| anyhow!("Failed to package move module: '{:?}'. File with .mv extension was expected.", module))?;
+            if self.modules_exclude.contains(&module_name) {
+                continue;
             }
+            pac.put(fs::read(&module)?);
         }
 
-        // Build into a single file
-        if bytecode_modules_path.is_empty() {
-            println!("NOTE: No modules for packaging");
-            return Ok(());
-        }
+        pac.sort()?;
 
-        let mut file = fs::File::create(&output_file_path)?;
-        for path in bytecode_modules_path.iter() {
-            let content = fs::read(path)?;
-            file.write_all(&content)?;
-        }
+        fs::write(&output_file_path, pac.encode()?)?;
 
         println!(
             "Modules are packed {}",
@@ -262,4 +253,64 @@ fn get_bytecode_modules_path(project_dir: &Path, project_name: &str) -> Result<V
 pub fn run_internal_build(ctx: &mut Context) -> Result<(), Error> {
     let mut cmd = Build::default();
     cmd.apply(ctx)
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+struct ModulePackage {
+    modules: Vec<Vec<u8>>,
+}
+
+impl ModulePackage {
+    pub fn put(&mut self, module: Vec<u8>) {
+        self.modules.push(module);
+    }
+
+    pub fn sort(&mut self) -> Result<(), Error> {
+        let mut modules = Vec::with_capacity(self.modules.len());
+        mem::swap(&mut self.modules, &mut modules);
+
+        let mut modules = modules
+            .into_iter()
+            .map(|bytecode| {
+                CompiledModule::deserialize(&bytecode)
+                    .map(|unit| (unit.self_id(), (bytecode, unit)))
+                    .map_err(|_| anyhow!("Failed to deserialize move module."))
+            })
+            .collect::<Result<HashMap<_, _>, _>>()?;
+
+        let ids_list: Vec<_> = modules.keys().cloned().collect();
+
+        for id in ids_list {
+            self.write_sub_tree(&id, &mut modules);
+        }
+
+        Ok(())
+    }
+
+    fn write_sub_tree(
+        &mut self,
+        id: &ModuleId,
+        modules: &mut HashMap<ModuleId, (Vec<u8>, CompiledModule)>,
+    ) {
+        if let Some((bytecode, unit)) = modules.remove(id) {
+            let deps = Self::take_deps(id, &unit);
+            for dep in deps {
+                self.write_sub_tree(&dep, modules);
+            }
+            println!("Packing '{}'...", id.name());
+            self.modules.push(bytecode);
+        }
+    }
+
+    fn take_deps(id: &ModuleId, unit: &CompiledModule) -> Vec<ModuleId> {
+        unit.module_handles()
+            .iter()
+            .map(|hdl| unit.module_id_for_handle(hdl))
+            .filter(|dep_id| dep_id != id)
+            .collect()
+    }
+
+    pub fn encode(&self) -> Result<Vec<u8>, Error> {
+        bcs::to_bytes(&self).map_err(|err| err.into())
+    }
 }
