@@ -12,3 +12,5 @@ test.sh
 
 # Direnv cache
 .direnv
+
+.idea
