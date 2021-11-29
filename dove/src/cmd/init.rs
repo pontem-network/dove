@@ -1,14 +1,14 @@
-use std::path::PathBuf;
 use std::string::ToString;
+use std::path::PathBuf;
+use std::collections::HashMap;
 use structopt::StructOpt;
 use lazy_static::lazy_static;
 use regex::Regex;
 use move_cli::Move;
+use move_lang::shared::NumericalAddress;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
-use std::collections::HashMap;
-use move_lang::shared::NumericalAddress;
 use crate::cmd::new::dependencies_movestdlib;
 
 /// Init project command.

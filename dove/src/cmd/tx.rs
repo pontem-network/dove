@@ -1,5 +1,3 @@
-use crate::cmd::Cmd;
-use crate::context::Context;
 use structopt::StructOpt;
 use std::fmt::Debug;
 use std::fs;
@@ -7,7 +5,8 @@ use std::path::Path;
 use anyhow::Error;
 use lang::bytecode::accessor::BytecodeRef;
 use crate::cmd::build::run_internal_build;
-use crate::stdoutln;
+use crate::cmd::Cmd;
+use crate::context::Context;
 use crate::tx::cmd::CallDeclarationCmd;
 use crate::tx::fn_call::Config;
 use crate::tx::make_transaction;
@@ -67,7 +66,7 @@ fn store_transaction(
     if tx_file.exists() {
         fs::remove_file(&tx_file)?;
     }
-    stdoutln!("Store transaction:{:?}", tx_file);
+    println!("Store transaction:{:?}", tx_file);
     Ok(fs::write(&tx_file, bcs::to_bytes(&tx)?)?)
 }
 
