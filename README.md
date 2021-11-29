@@ -3,8 +3,6 @@
 Toolset for work with Move language based projects:
 
 * [dove](#dove) - package manager and compiler.
-* [language server](#language-server) - Move language server.
-* [resource viewer](#resource-viewer) - [BCS](https://github.com/diem/bcs) resource viewer.
 
 Supported projects and dialects:
 
@@ -48,20 +46,24 @@ dove -h
 Create new project:
 
 ```shell script
-dove new first_project --dialect pont --address <your address> # Replace <your address> with your SS58 address.
+dove new first_project 
 ```
-
+By default, the Pont dialect is used. You can change the dialect by adding an entry in `Move.toml`.
+```
+[package]
+dialect = "Pont"
+```
 * `dialect` - dialect of the Move language. Default is `pont`. Supported dialects:
-  * `diem` - for original diem version.
-  * `pont` - Polkadot SS58 addresses.
-  * `dfinance` - bech32 addresses.
+* `diem` - for original diem version.
+* `pont` - Polkadot SS58 addresses.
+* `dfinance` - bech32 addresses.
 
 Build project:
 
 ```shell script
 dove build
 ```
-See `./artifacts/` folder to get scripts/modules binaries.
+See `./build/` folder to get scripts/modules binaries.
 
 ### Pallet Transactions
 
@@ -122,57 +124,12 @@ If you look for examples, guidelines how to write modules/scripts or tests, visi
 
 See [documentation](/resource-viewer/README.md).
 
-## Language Server
- 
-**Language server is currently out of date and currently in process of migration in a separate project.**
-
-Implementation of Language Server Protocol for [Move language](https://developers.diem.org/docs/crates/move-language).
-
-```shell script
-RUST_LOG=info cargo run --bin move-language-server
-```
-
-Features:
-* check source code files with the official compiler on-the-fly
-
-For the corresponding VSCode extension, see https://marketplace.visualstudio.com/items?itemName=PontemNetwork.move-language
-
-#### Configuration
-
-`dialect` - dialect of the Move language. Either `diem` (for original diem version) or `pont` (ss58), or `dfinance` (bech32 addresses and some other stuff). Default is `pont`.
-
-`account_address` - address of the user, used for module imports. Default is `0x0`.
-
-`stdlib_folder` - stdlib folder path. Default is `null`, no stdlib is loaded.
-
-`modules_folders` - array of folder paths for module lookup. Default is empty array.
-
 ## Executor
 
 Migrated inside Dove, see help:
 
 ```shell script
 dove run --help
-```
-
-## Decompiler:
-
-Install **decompiler**:
-
-```shell script
-cargo install --path=lang/decompiler --bin decompiler
-```
-
-See help:
-
-```
-decompiler --help
-```
-
-Try to decompile `.mv` file:
-
-```
-decompiler --input <path to compiled module or script>
 ```
 
 ## LICENSE
