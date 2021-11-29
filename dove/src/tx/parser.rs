@@ -364,7 +364,6 @@ where
 #[cfg(test)]
 mod tests_call_parser {
     use std::collections::BTreeMap;
-    use std::str::FromStr;
     use move_core_types::account_address::AccountAddress;
     use move_core_types::identifier::Identifier;
     use move_core_types::language_storage::{StructTag, TypeTag};

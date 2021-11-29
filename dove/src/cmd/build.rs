@@ -92,7 +92,7 @@ impl Cmd for Build {
         checking_build_directories(ctx)?;
 
         // Checking directories in the "build" section, if there are none, then create
-        checking_build_directories(&ctx)?;
+        checking_build_directories(ctx)?;
 
         Ok(())
     }

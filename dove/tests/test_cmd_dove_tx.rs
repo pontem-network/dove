@@ -41,7 +41,7 @@ fn test_cmd_dove_tx_with_params() {
 #[test]
 fn test_cmd_dove_tx_with_type() {
     let project_name = "project_tx_with_type";
-    let project_folder = new_demo_project(&project_name).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for call in [
         vec!["tx", "with_type<u8>(1)"],
@@ -59,7 +59,7 @@ fn test_cmd_dove_tx_with_type() {
 #[test]
 fn test_cmd_dove_tx_output() {
     let project_name = "project_tx_output";
-    let project_folder = new_demo_project(&project_name).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for (name, args) in [
         ("main", vec!["tx", "main()"]),
