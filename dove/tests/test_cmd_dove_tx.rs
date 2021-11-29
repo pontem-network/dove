@@ -8,7 +8,7 @@ use helper::{new_demo_project, execute_dove_at, delete_project};
 #[test]
 fn test_cmd_dove_tx_with_call() {
     let project_name = "project_tx_with_call";
-    let project_folder = new_demo_project(&project_name).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for call in ["main()", "one_param(true)", "two_params(1,1)"] {
         execute_dove_at(&["tx", call], &project_folder).unwrap();
@@ -22,7 +22,7 @@ fn test_cmd_dove_tx_with_call() {
 #[test]
 fn test_cmd_dove_tx_with_params() {
     let project_name = "project_tx_with_params";
-    let project_folder = new_demo_project(&project_name).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for call in [
         vec!["tx", "one_param", "-p", "true"],
