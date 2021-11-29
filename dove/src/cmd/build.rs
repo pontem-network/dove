@@ -1,8 +1,8 @@
 use std::fs;
+use std::fs::{remove_file};
 use std::ffi::OsStr;
 use std::io::Write;
 use std::path::{PathBuf, Path};
-use std::fs::{remove_file};
 use anyhow::Error;
 use structopt::StructOpt;
 use anyhow::Result;
@@ -13,6 +13,7 @@ use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
 use move_package::BuildConfig;
 use move_symbol_pool::Symbol;
+
 use crate::cmd::Cmd;
 use crate::context::Context;
 
@@ -91,7 +92,7 @@ impl Cmd for Build {
         checking_build_directories(ctx)?;
 
         // Checking directories in the "build" section, if there are none, then create
-        checking_build_directories(&ctx)?;
+        checking_build_directories(ctx)?;
 
         Ok(())
     }

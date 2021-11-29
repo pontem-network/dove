@@ -7,10 +7,10 @@ use anyhow::{ensure, Result};
 use structopt::StructOpt;
 use serde::Deserialize;
 use boogie_backend::options::BoogieOptions;
+use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
 use super::Cmd;
 use crate::context::Context;
 use crate::cmd::build::run_internal_build;
-use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
 
 #[cfg(target_family = "unix")]
 const BOOGIE_EXE: &str = "boogie";

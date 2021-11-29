@@ -1,18 +1,18 @@
-use crate::tx::model::{Signer, ScriptArg, Transaction, Signers, EnrichedTransaction, Call};
-use crate::context::Context;
+use std::str::FromStr;
+use std::fmt::Debug;
+use anyhow::Error;
+use move_symbol_pool::Symbol;
+use diem_types::account_config::{treasury_compliance_account_address, diem_root_address};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{CORE_CODE_ADDRESS, TypeTag};
-use anyhow::Error;
-use std::str::FromStr;
-use std::fmt::Debug;
-use crate::tx::parser::parse_vec;
-use diem_types::account_config::{treasury_compliance_account_address, diem_root_address};
 use move_package::source_package::parsed_manifest::AddressDeclarations;
-use move_symbol_pool::Symbol;
 use lang::bytecode::accessor::BytecodeType;
 use lang::bytecode::{find, SearchParams};
 use lang::bytecode::info::{BytecodeInfo, Type};
+use crate::context::Context;
+use crate::tx::model::{Signer, ScriptArg, Transaction, Signers, EnrichedTransaction, Call};
+use crate::tx::parser::parse_vec;
 use crate::tx::bytecode::DoveBytecode;
 
 /// Transaction config.
@@ -63,7 +63,6 @@ pub(crate) fn make_script_call(
     let (signers, args, info) =
         select_function(functions, &name, &args, &type_tag, &cfg, addr_map)?;
 
-
     Ok(if cfg.tx_context {
         let (_, mut tx) = match signers {
             Signers::Explicit(signers) => (
@@ -102,7 +101,7 @@ pub(crate) fn make_script_call(
             args,
             signers,
             type_tag,
-            func_name: None
+            func_name: None,
         }
     })
 }
@@ -144,11 +143,13 @@ pub(crate) fn make_function_call(
     let tx_name = format!("{}_{}", module, func);
 
     if cfg.tx_context {
-        let tx= match signers {
-            Signers::Explicit(_) =>
-                Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?,
-            Signers::Implicit(signers) =>
-                Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?,
+        let tx = match signers {
+            Signers::Explicit(_) => {
+                Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?
+            }
+            Signers::Implicit(signers) => {
+                Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?
+            }
         };
         Ok(EnrichedTransaction::Global {
             bi: info,
@@ -385,10 +386,9 @@ fn parse_err<D: Debug>(tp: &Type, value: &str, err: D) -> Error {
 #[cfg(test)]
 mod call_tests {
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
-    use crate::tx::model::{ScriptArg, Signers, Signer};
     use move_core_types::account_address::AccountAddress;
-    use diem_types::account_config::{diem_root_address, treasury_compliance_account_address};
     use lang::bytecode::info::Type;
+    use crate::tx::model::ScriptArg;
     use crate::tx::fn_call::prepare_function_signature;
 
     fn s(v: &str) -> String {

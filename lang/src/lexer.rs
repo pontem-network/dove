@@ -97,7 +97,7 @@ mod tests {
     use super::*;
 
     fn parse(source: &str) -> Result<TypeTag, Error> {
-        let mut lexer = Lexer::new(&source, Symbol::from("source"));
+        let mut lexer = Lexer::new(source, Symbol::from("source"));
         lexer
             .advance()
             .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;

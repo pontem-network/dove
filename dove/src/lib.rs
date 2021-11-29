@@ -23,11 +23,13 @@ extern crate anyhow;
 pub mod cli;
 /// Dove commands handler.
 pub mod cmd;
+/// CLI color
+pub mod colorize;
 /// Dove execution context.
 pub mod context;
 /// Export Dove.toml => Move.toml
 pub mod export;
-/// StdOut stream
-pub mod stdout;
+/// Manifest Processing
+pub mod manifest;
 /// Transactions.
 pub mod tx;

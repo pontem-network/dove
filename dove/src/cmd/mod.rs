@@ -1,15 +1,13 @@
 use std::fs::read_to_string;
 use std::path::PathBuf;
+use std::collections::BTreeMap;
 use anyhow::Result;
-
 use dialect::init_context;
 use move_cli::Move;
 use move_package::source_package::{layout, manifest_parser};
 use move_package::source_package::parsed_manifest::SourceManifest;
 use move_symbol_pool::symbol::Symbol;
-
 use crate::context::Context;
-use std::collections::BTreeMap;
 
 /// Project builder.
 pub mod build;
@@ -40,11 +38,6 @@ pub trait Cmd {
             read_to_string(project_dir.join(layout::SourcePackageLayout::Manifest.path()))?;
         let toml_manifest = manifest_parser::parse_move_manifest_string(manifest_string)?;
         let manifest = manifest_parser::parse_source_manifest(toml_manifest)?;
-
-        // let mut named_address = manifest.addresses.unwrap_or_default();
-        // for (name, addr) in &move_args.named_addresses {
-        //     named_address.insert(Symbol::from(name), Some(AccountAddress::new(addr.into_bytes())));
-        // }
 
         Ok(Context {
             project_dir,
