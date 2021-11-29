@@ -1,7 +1,6 @@
 use core::mem;
 use std::collections::HashMap;
 use std::fs;
-use std::fs::{remove_file};
 use std::ffi::OsStr;
 use std::fs::remove_file;
 use std::path::{PathBuf, Path};
