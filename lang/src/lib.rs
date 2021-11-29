@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate anyhow;
 
-pub mod compiler;
+pub mod bytecode;
+pub mod file;
 pub mod lexer;

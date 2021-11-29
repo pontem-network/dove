@@ -1,19 +1,16 @@
+use std::str::FromStr;
 use std::ffi::OsStr;
+use std::path::PathBuf;
+use std::{env, fs};
+use std::fs::read_dir;
 use anyhow::{ensure, Result};
-use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
 use structopt::StructOpt;
 use serde::Deserialize;
-use lang::compiler::{file::find_move_files};
-
-use crate::context::Context;
-
-use super::Cmd;
 use boogie_backend::options::BoogieOptions;
-use lang::compiler::preprocessor::BuilderPreprocessor;
-use std::path::PathBuf;
-use std::fs::read_to_string;
-use std::env;
-use std::str::FromStr;
+use move_prover::{cli::Options, run_move_prover_errors_to_stderr};
+use super::Cmd;
+use crate::context::Context;
+use crate::cmd::build::run_internal_build;
 
 #[cfg(target_family = "unix")]
 const BOOGIE_EXE: &str = "boogie";
@@ -45,11 +42,11 @@ pub struct Prove {
 }
 
 impl Cmd for Prove {
-    fn apply(mut self, ctx: Context) -> Result<()>
+    fn apply(&mut self, ctx: &mut Context) -> Result<()>
     where
-        Self: std::marker::Sized,
+        Self: Sized,
     {
-        let (boogie_exe, z3_exe, cvc4_exe) = self.make_config(&ctx).map(|conf| {
+        let (boogie_exe, z3_exe, cvc4_exe) = self.make_config(ctx).map(|conf| {
             (
                 conf.boogie_exe.unwrap_or_default(),
                 conf.z3_exe.unwrap_or_default(),
@@ -64,23 +61,45 @@ impl Cmd for Prove {
             ensure!(is_cvc4_available(&cvc4_exe), "cvc4 executable not found in PATH. Please install it from https://github.com/CVC4/CVC4-archived");
         }
 
-        let move_deps = find_move_files(&ctx.build_index()?.0.into_deps_roots())
-            .map(|p| p.to_string_lossy().to_string())
-            .collect();
+        // Build a project
+        // In order for the dependencies to be loaded
+        run_internal_build(ctx)?;
 
-        let dirs = ctx.paths_for(&[
-            &ctx.manifest.layout.scripts_dir,
-            &ctx.manifest.layout.modules_dir,
-        ]);
-        let move_sources = find_move_files(&dirs)
-            .map(|path| path.to_string_lossy().to_string())
-            .collect::<Vec<_>>();
+        // Get paths to all dependency files
+        let move_deps = get_dependency_paths(ctx)?;
+        // Get all project files "move"
+        let move_sources = get_project_movefile_paths(ctx)?;
 
-        let mut boogie_options = ctx.manifest.boogie_options.clone().unwrap_or_default();
+        let boogie_options_path = ctx.boogie_options_path();
+        let mut boogie_options = if boogie_options_path.exists() {
+            let boogie_options_string = fs::read_to_string(boogie_options_path)?;
+            toml::from_str(&boogie_options_string)?
+        } else {
+            BoogieOptions::default()
+        };
+
         if cvc4_exe.is_empty() && boogie_options.use_cvc4 {
             println!("Warning: cvc4 is not defined.");
             boogie_options.use_cvc4 = false;
         }
+
+        // addresses
+        let mut move_named_address_values: Vec<String> = ctx
+            .manifest
+            .addresses
+            .as_ref()
+            .map(|addresses| {
+                addresses
+                    .iter()
+                    .map(|(name, value)| {
+                        value
+                            .map(|value| format!("{}={}", name, value.to_hex_literal()))
+                            .unwrap_or_else(|| name.to_string())
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        move_named_address_values.extend(Options::default().move_named_address_values);
 
         let options = Options {
             backend: BoogieOptions {
@@ -91,23 +110,22 @@ impl Cmd for Prove {
             },
             move_deps,
             move_sources,
+            move_named_address_values,
             ..Default::default()
         };
-        options.setup_logging();
-        let address = ctx.account_address_str()?;
-        let mut preprocessor = BuilderPreprocessor::new(ctx.dialect.as_ref(), &address);
 
-        run_move_prover_errors_to_stderr(options, &mut preprocessor)
+        options.setup_logging();
+        run_move_prover_errors_to_stderr(options)
     }
 }
 
 impl Prove {
     fn make_config(&mut self, ctx: &Context) -> Result<ProverConfig, anyhow::Error> {
         let mut conf = ProverConfig::new();
-        // prover-env.toml
-        let toml_conf = ctx.path_for(&ctx.manifest.layout.prover_toml);
+        // <PROJECT_DIR>/prover-env.toml
+        let toml_conf = ctx.project_dir.join("prover-env.toml");
         if toml_conf.exists() {
-            let toml_conf = toml::from_str::<ProverConfig>(&read_to_string(&toml_conf)?)?;
+            let toml_conf = toml::from_str::<ProverConfig>(&fs::read_to_string(&toml_conf)?)?;
             if let Some(boogie_exe) = toml_conf.boogie_exe {
                 conf.boogie_exe = Some(boogie_exe);
             }
@@ -238,4 +256,62 @@ impl ProverConfig {
         }
         Ok(())
     }
+}
+
+/// Paths to all dependency files
+///     <PROJECT_PATH>/build/<DEPENDENCE_NAME>/sources/*.move
+fn get_dependency_paths(ctx: &Context) -> Result<Vec<String>> {
+    let build_path = ctx.project_dir.join("build");
+    if !build_path.exists() {
+        return Ok(Vec::new());
+    }
+    let list = fs::read_dir(&build_path)?
+        .filter_map(|path| path.ok())
+        .map(|path| path.path())
+        .filter(|dir| {
+            dir.is_dir()
+                && dir.file_name().and_then(|name| name.to_str())
+                    != Some(ctx.manifest.package.name.as_str())
+        })
+        .map(|dir| dir.join("sources"))
+        .filter(|sources| sources.exists())
+        .filter_map(|dir| {
+            let files: Vec<PathBuf> = read_dir(dir)
+                .ok()?
+                .filter_map(|path| path.ok())
+                .map(|path| path.path())
+                .filter(|path| {
+                    path.is_file() && path.extension().and_then(|ex| ex.to_str()) == Some("move")
+                })
+                .collect();
+            Some(files)
+        })
+        .flatten()
+        .map(|path| path.to_string_lossy().to_string())
+        .collect();
+
+    Ok(list)
+}
+
+/// Get all "move" project files
+///     <PROJECT_PATH>/build/<PROJECT_NAME>/sources/*.move
+fn get_project_movefile_paths(ctx: &Context) -> Result<Vec<String>> {
+    let source_path = ctx
+        .project_dir
+        .join("build")
+        .join(ctx.manifest.package.name.as_str())
+        .join("sources");
+    if !source_path.exists() {
+        return Ok(Vec::new());
+    }
+    let files = fs::read_dir(&source_path)?
+        .filter_map(|path| path.ok())
+        .map(|path| path.path())
+        .filter(|path| {
+            path.is_file() && path.extension().and_then(|ex| ex.to_str()) == Some("move")
+        })
+        .map(|path| path.to_string_lossy().to_string())
+        .collect();
+
+    Ok(files)
 }

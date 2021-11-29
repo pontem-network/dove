@@ -1,9 +1,0 @@
-[package]
-name = "assets"
-dialect = "pont"
-dependencies = [
-    { path = "./stdlib" }
-]
-
-#[layout]
-#tests_dir = "runner_tests"

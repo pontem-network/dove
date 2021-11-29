@@ -1,5 +1,4 @@
 //! Move compiler.
-
 #![deny(missing_docs)]
 
 /// Dove build version
@@ -13,36 +12,24 @@ pub const PONT_STDLIB_VERSION: &str = "v0.3.0";
 pub const PONT_STDLIB_URL: &str = "https://github.com/pontem-network/move-stdlib";
 
 /// DIEM version|branch
-pub const DIEM_VERSION: &str = git_hash::dependency_branch_from_cargo_lock!("move-stdlib");
+pub const DIEM_VERSION: &str = git_hash::dependency_branch_from_cargo_lock!("move-cli");
 /// DIEM short hash of the commit
-pub const DIEM_HASH: &str = git_hash::dependency_git_short_hash_from_cargo_lock!("move-stdlib");
+pub const DIEM_HASH: &str = git_hash::dependency_git_short_hash_from_cargo_lock!("move-cli");
 
 #[macro_use]
 extern crate anyhow;
-#[macro_use]
-extern crate log;
 
 /// Dove cli interface.
 pub mod cli;
 /// Dove commands handler.
 pub mod cmd;
+/// CLI color
+pub mod colorize;
 /// Dove execution context.
 pub mod context;
-/// Docgen.
-pub mod docs;
-/// Move executor.
-pub mod executor;
 /// Export Dove.toml => Move.toml
 pub mod export;
-/// Dove modules index.
-pub mod index;
-/// Dove configuration.
+/// Manifest Processing
 pub mod manifest;
-/// Metadata from project
-pub mod metadata;
-/// StdOut stream
-pub mod stdout;
-#[doc(hidden)]
-pub mod tests_helper;
 /// Transactions.
 pub mod tx;

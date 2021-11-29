@@ -1,129 +1,106 @@
-use crate::tx::model::{Signer, ScriptArg, Address, Transaction, Signers, EnrichedTransaction, Call};
-use crate::context::Context;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::TypeTag;
-use lang::compiler::metadata::FuncMeta;
-use anyhow::Error;
-use std::path::PathBuf;
-use crate::tx::resolver::{find_module_function, find_script};
 use std::str::FromStr;
 use std::fmt::Debug;
-use crate::tx::parser::parse_vec;
+use anyhow::Error;
+use move_symbol_pool::Symbol;
 use diem_types::account_config::{treasury_compliance_account_address, diem_root_address};
-use crate::tx::builder::move_build;
-use move_lang::compiled_unit::CompiledUnit;
-use itertools::{Itertools, Either};
+use move_core_types::account_address::AccountAddress;
+use move_core_types::identifier::Identifier;
+use move_core_types::language_storage::{CORE_CODE_ADDRESS, TypeTag};
+use move_package::source_package::parsed_manifest::AddressDeclarations;
+use lang::bytecode::accessor::BytecodeType;
+use lang::bytecode::{find, SearchParams};
+use lang::bytecode::info::{BytecodeInfo, Type};
+use crate::context::Context;
+use crate::tx::model::{Signer, ScriptArg, Transaction, Signers, EnrichedTransaction, Call};
+use crate::tx::parser::parse_vec;
+use crate::tx::bytecode::DoveBytecode;
 
 /// Transaction config.
 pub struct Config {
-    /// Allow only functions with script visibility to be used.
-    script_func_only: bool,
+    /// Is transaction for chain execution.
+    tx_context: bool,
     /// Prohibit the definition of signers.
     deny_signers_definition: bool,
-    /// Create execution context.
-    exe_context: bool,
 }
 
 impl Config {
     /// Returns transaction config for chain transaction.
     pub fn for_tx() -> Config {
         Config {
-            script_func_only: true,
+            tx_context: true,
             deny_signers_definition: true,
-            exe_context: false,
         }
     }
 
     /// Returns transaction config for local execution.
     pub fn for_run() -> Config {
         Config {
-            script_func_only: false,
+            tx_context: false,
             deny_signers_definition: false,
-            exe_context: true,
         }
     }
 }
 
 pub(crate) fn make_script_call(
     ctx: &Context,
-    addr: AccountAddress,
+    addr_map: &AddressDeclarations,
     name: Identifier,
     type_tag: Vec<TypeTag>,
     args: Vec<String>,
-    file: Option<String>,
+    package_name: Option<String>,
     cfg: Config,
 ) -> Result<EnrichedTransaction, Error> {
-    let scripts = find_script(ctx, &name, file)?;
-
-    let (path, meta) = select_function(scripts, addr, &type_tag, &args, &cfg)?;
-
-    let (signers, args) = prepare_function_signature(
-        &meta.value.parameters,
-        &args,
-        !cfg.deny_signers_definition,
-        addr,
-    )?;
-
-    let (signers, mut tx) = match signers {
-        Signers::Explicit(signers) => (
-            signers,
-            Transaction::new_script_tx(vec![], vec![], args, type_tag)?,
-        ),
-        Signers::Implicit(signers) => (
-            vec![],
-            Transaction::new_script_tx(signers, vec![], args, type_tag)?,
-        ),
-    };
-
-    let (_, interface) = ctx.build_index()?;
-
-    let (mut modules, script): (Vec<_>, Vec<_>) = move_build(
-        ctx,
-        &[
-            path.to_string_lossy().to_string(),
-            ctx.str_path_for(&ctx.manifest.layout.modules_dir)?,
-        ],
-        &[interface.dir.to_string_lossy().into_owned()],
+    let access = DoveBytecode::new(ctx);
+    let functions = find(
+        access,
+        SearchParams {
+            tp: Some(BytecodeType::Script),
+            package: package_name.as_deref(),
+            name: Some(name.as_str()),
+        },
     )?
-    .into_iter()
-    .filter_map(|u| match u {
-        CompiledUnit::Module { module, .. } => Some(Either::Left(module)),
-        CompiledUnit::Script {
-            loc, key, script, ..
-        } => {
-            if loc.file == path.to_string_lossy().as_ref() && key == name.as_str() {
-                Some(Either::Right(script))
-            } else {
-                None
+    .filter_map(|f| f.ok());
+    let (signers, args, info) =
+        select_function(functions, &name, &args, &type_tag, &cfg, addr_map)?;
+
+    Ok(if cfg.tx_context {
+        let (_, mut tx) = match signers {
+            Signers::Explicit(signers) => (
+                signers,
+                Transaction::new_script_tx(vec![], vec![], args, type_tag)?,
+            ),
+            Signers::Implicit(signers) => (
+                vec![],
+                Transaction::new_script_tx(signers, vec![], args, type_tag)?,
+            ),
+        };
+
+        let mut buff = Vec::new();
+        info.serialize(&mut buff)?;
+
+        match &mut tx.inner_mut().call {
+            Call::Script { code, .. } => *code = buff,
+            Call::ScriptFunction { .. } => {
+                // no-op
             }
         }
-    })
-    .partition_map(|u| u);
-    if script.is_empty() {
-        bail!("The script {:?} could not be compiled", path);
-    }
-
-    let mut buff = Vec::new();
-    script[0].serialize(&mut buff)?;
-    match &mut tx.inner_mut().call {
-        Call::Script { code, .. } => *code = buff,
-        Call::ScriptFunction { .. } => {
-            // no-op
-        }
-    }
-
-    Ok(if cfg.exe_context {
-        modules.extend(interface.load_mv()?);
-        EnrichedTransaction::Local {
-            tx,
-            signers,
-            deps: modules,
-        }
-    } else {
         EnrichedTransaction::Global {
+            bi: info,
             tx,
             name: name.into_string(),
+        }
+    } else {
+        let signers = match signers {
+            Signers::Explicit(signers) => signers,
+            Signers::Implicit(_) => vec![],
+        };
+
+        EnrichedTransaction::Local {
+            bi: info,
+            args,
+            signers,
+            type_tag,
+            func_name: None,
         }
     })
 }
@@ -131,109 +108,124 @@ pub(crate) fn make_script_call(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn make_function_call(
     ctx: &Context,
-    address: AccountAddress,
+    addr_map: &AddressDeclarations,
+    address: Option<AccountAddress>,
     module: Identifier,
     func: Identifier,
     type_tag: Vec<TypeTag>,
     args: Vec<String>,
-    file: Option<String>,
+    package_name: Option<String>,
     cfg: Config,
 ) -> Result<EnrichedTransaction, Error> {
-    let functions =
-        find_module_function(ctx, &address, &module, &func, &file, cfg.script_func_only)?;
-
-    let addr = ctx.account_address()?;
-    let (_, meta) = select_function(functions, addr, &type_tag, &args, &cfg)?;
-
-    let (signers, args) = prepare_function_signature(
-        &meta.value.parameters,
-        &args,
-        !cfg.deny_signers_definition,
-        addr,
-    )?;
-
-    let tx_name = format!("{}_{}", module, func);
-    let (signers, tx) = match signers {
-        Signers::Explicit(signers) => (
-            signers,
-            Transaction::new_func_tx(vec![], address, module, func, args, type_tag)?,
-        ),
-        Signers::Implicit(signers) => (
-            vec![],
-            Transaction::new_func_tx(signers, address, module, func, args, type_tag)?,
-        ),
-    };
-
-    Ok(if cfg.exe_context {
-        let modules_dir = ctx.str_path_for(&ctx.manifest.layout.modules_dir)?;
-
-        let (_, interface) = ctx.build_index()?;
-        let mut deps = move_build(
-            ctx,
-            &[modules_dir],
-            &[interface.dir.to_string_lossy().into_owned()],
-        )?
-        .into_iter()
-        .filter_map(|m| match m {
-            CompiledUnit::Module { module, .. } => Some(module),
-            CompiledUnit::Script { .. } => None,
-        })
-        .collect::<Vec<_>>();
-        deps.extend(interface.load_mv()?);
-
-        EnrichedTransaction::Local { tx, signers, deps }
-    } else {
-        EnrichedTransaction::Global { tx, name: tx_name }
+    let access = DoveBytecode::new(ctx);
+    let modules = find(
+        access,
+        SearchParams {
+            tp: Some(BytecodeType::Module),
+            package: package_name.as_deref(),
+            name: Some(module.as_str()),
+        },
+    )?
+    .filter_map(|info| info.ok())
+    .filter(|info| {
+        if address.is_some() {
+            info.address() == address
+        } else {
+            true
+        }
     })
+    .filter(|info| info.name() == module.as_str());
+    let (signers, args, info) =
+        select_function(modules, &func, &args, &type_tag, &cfg, addr_map)?;
+
+    let addr = info.address().unwrap_or(CORE_CODE_ADDRESS);
+    let tx_name = format!("{}_{}", module, func);
+
+    if cfg.tx_context {
+        let tx = match signers {
+            Signers::Explicit(_) => {
+                Transaction::new_func_tx(vec![], addr, module, func, args, type_tag)?
+            }
+            Signers::Implicit(signers) => {
+                Transaction::new_func_tx(signers, addr, module, func, args, type_tag)?
+            }
+        };
+        Ok(EnrichedTransaction::Global {
+            bi: info,
+            tx,
+            name: tx_name,
+        })
+    } else {
+        let signers = match signers {
+            Signers::Explicit(signers) => signers,
+            Signers::Implicit(_) => vec![],
+        };
+
+        Ok(EnrichedTransaction::Local {
+            bi: info,
+            signers,
+            args,
+            type_tag,
+            func_name: Some(func.into_string()),
+        })
+    }
 }
 
-fn select_function(
-    mut func: Vec<(PathBuf, FuncMeta)>,
-    addr: AccountAddress,
-    type_tag: &[TypeTag],
+fn select_function<I>(
+    info_iter: I,
+    name: &Identifier,
     args: &[String],
+    type_tag: &[TypeTag],
     cfg: &Config,
-) -> Result<(PathBuf, FuncMeta), Error> {
-    if func.is_empty() {
-        bail!("Couldn't find a function with given signature.");
-    } else if func.len() > 1 {
-        let mut func = func
-            .into_iter()
-            .filter(|(_, f)| f.value.type_parameters.len() == type_tag.len())
-            .filter(|(_, f)| {
-                prepare_function_signature(
-                    &f.value.parameters,
-                    args,
-                    !cfg.deny_signers_definition,
-                    addr,
-                )
-                .is_ok()
-            })
-            .collect::<Vec<_>>();
-        if func.is_empty() {
+    addr_map: &AddressDeclarations,
+) -> Result<(Signers, Vec<ScriptArg>, BytecodeInfo), Error>
+where
+    I: Iterator<Item = BytecodeInfo>,
+{
+    let mut functions = info_iter
+        .filter_map(|info| info.find_script_function(name.as_str()).map(|f| (info, f)))
+        .filter(|(_, f)| type_tag.len() == f.type_params_count())
+        .map(|(i, script)| {
+            prepare_function_signature(
+                &script.parameters,
+                args,
+                !cfg.deny_signers_definition,
+                addr_map,
+            )
+            .map(|(signers, args)| (i, script, signers, args))
+        })
+        .collect::<Vec<Result<_, _>>>();
+    let count = functions.iter().filter(|r| r.is_ok()).count();
+    if count == 0 {
+        if functions.is_empty() {
             bail!("Couldn't find a function with given signature.");
-        } else if func.len() > 1 {
-            bail!(
-                "More than one functions with the given signature was found.\
-                   Please pass the file path to specify the module. -f FILE_NAME"
-            );
         } else {
-            Ok(func.remove(0))
+            functions.remove(0)?;
+            unreachable!();
         }
+    } else if count > 1 {
+        bail!(
+            "More than one functions with the given signature was found.\
+                   Please pass the package name to specify the package or use unique signatures."
+        );
     } else {
-        Ok(func.remove(0))
+        let (bytecode_info, _, signers, args) = functions
+            .into_iter()
+            .find_map(|res| res.ok())
+            .ok_or_else(|| anyhow!("Couldn't find a function with given signature."))?;
+        Ok((signers, args, bytecode_info))
     }
 }
 
 fn prepare_function_signature(
-    code_args: &[(String, String)],
+    code_args: &[Type],
     call_args: &[String],
     use_explicit_signers: bool,
-    addr: AccountAddress,
+    addr_map: &AddressDeclarations,
 ) -> Result<(Signers, Vec<ScriptArg>), Error> {
     let signers_count = code_args
         .iter()
-        .take_while(|(_, tp)| tp == "signer")
+        .take_while(|tp| **tp == Type::Signer)
         .count();
     let params_count = code_args.len() - signers_count;
 
@@ -249,7 +241,7 @@ fn prepare_function_signature(
     let params = code_args[signers_count..]
         .iter()
         .zip(&call_args[args_index..])
-        .map(|((name, tp), val)| prepare_arg(name, tp, val))
+        .map(|(tp, val)| prepare_arg(tp, val, addr_map))
         .collect::<Result<Vec<_>, Error>>()?;
 
     if use_explicit_signers {
@@ -260,10 +252,21 @@ fn prepare_function_signature(
                     AccountAddress::from_hex_literal(arg)
                         .map_err(|err| anyhow!("Failed to parse signer:{}", err))
                 } else {
-                    Signer::from_str(arg).map(|s| match s {
-                        Signer::Root => diem_root_address(),
-                        Signer::Treasury => treasury_compliance_account_address(),
-                        Signer::Placeholder => addr,
+                    Signer::from_str(arg).and_then(|s| {
+                        Ok(match s {
+                            Signer::Root => diem_root_address(),
+                            Signer::Treasury => treasury_compliance_account_address(),
+                            Signer::Placeholder => {
+                                return Err(anyhow!(
+                                    "Use explicit signer instead of placeholder"
+                                ));
+                            }
+                            Signer::Name(name) => {
+                                addr_map.get(&name).and_then(|addr| *addr).ok_or_else(|| {
+                                    anyhow!("Failed to find address with name:{}", arg)
+                                })?
+                            }
+                        })
                     })
                 }
             })
@@ -278,7 +281,7 @@ fn prepare_function_signature(
         Ok((Signers::Explicit(signers), params))
     } else {
         let mut signers = (0..signers_count)
-            .take_while(|i| *i < call_args.len())
+            .take_while(|i| *i < args_index)
             .map(|i| Signer::from_str(&call_args[i]).ok())
             .take_while(|s| s.is_some())
             .flatten()
@@ -293,83 +296,102 @@ fn prepare_function_signature(
     }
 }
 
-fn prepare_arg(arg_name: &str, arg_type: &str, arg_value: &str) -> Result<ScriptArg, Error> {
-    fn parse_err<D: Debug>(name: &str, tp: &str, value: &str, err: D) -> Error {
-        anyhow!(
-            "Parameter '{}' has type {}. Failed to parse {}. Error:'{:?}'",
-            name,
-            tp,
-            value,
-            err
-        )
-    }
+fn prepare_arg(
+    arg_type: &Type,
+    arg_value: &str,
+    addr_map: &AddressDeclarations,
+) -> Result<ScriptArg, Error> {
     macro_rules! parse_primitive {
         ($script_arg:expr) => {
             $script_arg(
                 arg_value
                     .parse()
-                    .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
+                    .map_err(|err| parse_err(arg_type, arg_value, err))?,
             )
         };
     }
 
     Ok(match arg_type {
-        "bool" => parse_primitive!(ScriptArg::Bool),
-        "u8" => parse_primitive!(ScriptArg::U8),
-        "u64" => parse_primitive!(ScriptArg::U64),
-        "u128" => parse_primitive!(ScriptArg::U128),
-        "address" => ScriptArg::Address(
-            AccountAddress::from_hex_literal(arg_value)
-                .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-        ),
-        "vector<bool>" => ScriptArg::VectorBool(
-            parse_vec(arg_value, "bool")
-                .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-        ),
-        "vector<u8>" => {
-            let vec = if arg_value.contains('[') {
-                parse_vec(arg_value, "u8")
-                    .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
+        Type::Bool => parse_primitive!(ScriptArg::Bool),
+        Type::U8 => parse_primitive!(ScriptArg::U8),
+        Type::U64 => parse_primitive!(ScriptArg::U64),
+        Type::U128 => parse_primitive!(ScriptArg::U128),
+        Type::Address => ScriptArg::Address(parse_address(arg_value, addr_map)?),
+        Type::Vector(tp) => match tp.as_ref() {
+            Type::Bool => ScriptArg::VectorBool(
+                parse_vec(arg_value, "bool")
+                    .map_err(|err| parse_err(arg_type, arg_value, err))?,
+            ),
+            Type::U8 => ScriptArg::VectorU8(if arg_value.contains('[') {
+                parse_vec(arg_value, "u8").map_err(|err| parse_err(arg_type, arg_value, err))?
             } else {
-                hex::decode(arg_value)
-                    .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
-            };
-            ScriptArg::VectorU8(vec)
-        }
-        "vector<u64>" => ScriptArg::VectorU64(
-            parse_vec(arg_value, "u64")
-                .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-        ),
-        "vector<u128>" => ScriptArg::VectorU128(
-            parse_vec(arg_value, "u64")
-                .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?,
-        ),
-        "vector<address>" => {
-            let addresses = parse_vec::<Address>(arg_value, "vector<address>")
-                .map_err(|err| parse_err(arg_name, arg_type, arg_value, err))?
-                .iter()
-                .map(|addr| addr.addr)
-                .collect();
-            ScriptArg::VectorAddress(addresses)
-        }
-        other => anyhow::bail!("Unexpected script parameter: {}", other),
+                hex::decode(arg_value).map_err(|err| parse_err(arg_type, arg_value, err))?
+            }),
+            Type::U64 => ScriptArg::VectorU64(
+                parse_vec(arg_value, "u64").map_err(|err| parse_err(arg_type, arg_value, err))?,
+            ),
+            Type::U128 => ScriptArg::VectorU128(
+                parse_vec(arg_value, "u64").map_err(|err| parse_err(arg_type, arg_value, err))?,
+            ),
+            Type::Address => {
+                let addresses = parse_vec::<String>(arg_value, "vector<address>")
+                    .map_err(|err| parse_err(arg_type, arg_value, err))?
+                    .into_iter()
+                    .map(|addr| parse_address(&addr, addr_map))
+                    .collect::<Result<Vec<_>, Error>>()?;
+                ScriptArg::VectorAddress(addresses)
+            }
+            Type::Signer
+            | Type::Vector(_)
+            | Type::Struct(_)
+            | Type::Reference(_)
+            | Type::MutableReference(_)
+            | Type::TypeParameter(_) => {
+                anyhow::bail!("Unexpected script parameter: {:?}", arg_type)
+            }
+        },
+        Type::Signer
+        | Type::Struct(_)
+        | Type::Reference(_)
+        | Type::MutableReference(_)
+        | Type::TypeParameter(_) => anyhow::bail!("Unexpected script parameter: {:?}", arg_type),
     })
+}
+
+fn parse_address(
+    arg_value: &str,
+    addr_map: &AddressDeclarations,
+) -> Result<AccountAddress, Error> {
+    Ok(if arg_value.starts_with("0x") {
+        AccountAddress::from_hex_literal(arg_value)
+            .map_err(|err| parse_err(&Type::Address, arg_value, err))?
+    } else {
+        addr_map
+            .get(&Symbol::from(arg_value))
+            .and_then(|addr| *addr)
+            .ok_or_else(|| anyhow!("Failed to find address with name:{}", arg_value))?
+    })
+}
+
+fn parse_err<D: Debug>(tp: &Type, value: &str, err: D) -> Error {
+    anyhow!(
+        "Parameter has type {:?}. Failed to parse {}. Error:'{:?}'",
+        tp,
+        value,
+        err
+    )
 }
 
 #[cfg(test)]
 mod call_tests {
-    use crate::tx::fn_call::prepare_function_signature;
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
-    use crate::tx::model::{ScriptArg, Signers, Signer};
     use move_core_types::account_address::AccountAddress;
-    use diem_types::account_config::{diem_root_address, treasury_compliance_account_address};
+    use lang::bytecode::info::Type;
+    use crate::tx::model::ScriptArg;
+    use crate::tx::fn_call::prepare_function_signature;
 
     fn s(v: &str) -> String {
         v.to_string()
-    }
-
-    fn param(n: &str, t: &str) -> (String, String) {
-        (s(n), s(t))
     }
 
     fn addr(v: &str) -> AccountAddress {
@@ -379,31 +401,31 @@ mod call_tests {
     #[test]
     fn test_args_types() {
         let (signers, args) =
-            prepare_function_signature(&[], &[], true, CORE_CODE_ADDRESS).unwrap();
+            prepare_function_signature(&[], &[], true, &Default::default()).unwrap();
         assert_eq!(signers.len(), 0);
         assert_eq!(args.len(), 0);
 
         let (signers, args) =
-            prepare_function_signature(&[param("val", "u8")], &[s("1")], true, CORE_CODE_ADDRESS)
+            prepare_function_signature(&[Type::U8], &[s("1")], true, &Default::default())
                 .unwrap();
         assert_eq!(signers.len(), 0);
         assert_eq!(args, vec![ScriptArg::U8(1)]);
 
         let (signers, args) = prepare_function_signature(
-            &[param("d", "bool"), param("t", "bool")],
+            &[Type::Bool, Type::Bool],
             &[s("true"), s("false")],
             true,
-            CORE_CODE_ADDRESS,
+            &Default::default(),
         )
         .unwrap();
         assert_eq!(signers.len(), 0);
         assert_eq!(args, vec![ScriptArg::Bool(true), ScriptArg::Bool(false)]);
 
         let (signers, args) = prepare_function_signature(
-            &[param("d", "u64"), param("t", "u64"), param("r", "u128")],
+            &[Type::U64, Type::U64, Type::U128],
             &[s("0"), s("1000000000"), s("10000000000000000")],
             true,
-            CORE_CODE_ADDRESS,
+            &Default::default(),
         )
         .unwrap();
         assert_eq!(signers.len(), 0);
@@ -416,25 +438,21 @@ mod call_tests {
             ]
         );
 
-        let (signers, args) = prepare_function_signature(
-            &[param("d", "address")],
-            &[s("0x1")],
-            true,
-            CORE_CODE_ADDRESS,
-        )
-        .unwrap();
+        let (signers, args) =
+            prepare_function_signature(&[Type::Address], &[s("0x1")], true, &Default::default())
+                .unwrap();
         assert_eq!(signers.len(), 0);
         assert_eq!(args, vec![ScriptArg::Address(CORE_CODE_ADDRESS)]);
 
         let (signers, args) = prepare_function_signature(
             &[
-                param("b", "vector<bool>"),
-                param("d", "vector<u8>"),
-                param("q", "vector<u8>"),
-                param("q1", "vector<u8>"),
-                param("w", "vector<u64>"),
-                param("l", "vector<u128>"),
-                param("a", "vector<address>"),
+                Type::Vector(Box::new(Type::Bool)),
+                Type::Vector(Box::new(Type::U8)),
+                Type::Vector(Box::new(Type::U8)),
+                Type::Vector(Box::new(Type::U8)),
+                Type::Vector(Box::new(Type::U64)),
+                Type::Vector(Box::new(Type::U128)),
+                Type::Vector(Box::new(Type::Address)),
             ],
             &[
                 s("[true, false]"),
@@ -446,7 +464,7 @@ mod call_tests {
                 s("[0x1, 0x2]"),
             ],
             true,
-            CORE_CODE_ADDRESS,
+            &Default::default(),
         )
         .unwrap();
         assert_eq!(signers.len(), 0);
@@ -462,109 +480,5 @@ mod call_tests {
                 ScriptArg::VectorAddress(vec![addr("0x1"), addr("0x2")]),
             ]
         );
-    }
-
-    #[test]
-    fn test_signers() {
-        let (signers, args) = prepare_function_signature(
-            &[
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-            ],
-            &[s("_"), s("0x2"), s("root"), s("tr"), s("_")],
-            true,
-            CORE_CODE_ADDRESS,
-        )
-        .unwrap();
-        assert_eq!(
-            signers,
-            Signers::Explicit(vec![
-                addr("0x1"),
-                addr("0x2"),
-                diem_root_address(),
-                treasury_compliance_account_address(),
-                addr("0x1"),
-            ])
-        );
-        assert_eq!(args.len(), 0);
-
-        let (signers, args) = prepare_function_signature(
-            &[
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "u8"),
-            ],
-            &[s("_"), s("0x2"), s("root"), s("tr"), s("_"), s("1")],
-            true,
-            CORE_CODE_ADDRESS,
-        )
-        .unwrap();
-        assert_eq!(
-            signers,
-            Signers::Explicit(vec![
-                addr("0x1"),
-                addr("0x2"),
-                diem_root_address(),
-                treasury_compliance_account_address(),
-                addr("0x1"),
-            ])
-        );
-        assert_eq!(args, vec![ScriptArg::U8(1)]);
-
-        let (signers, args) = prepare_function_signature(
-            &[
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "u8"),
-            ],
-            &[s("_"), s("root"), s("tr"), s("_"), s("1")],
-            false,
-            CORE_CODE_ADDRESS,
-        )
-        .unwrap();
-        assert_eq!(
-            signers,
-            Signers::Implicit(vec![
-                Signer::Placeholder,
-                Signer::Root,
-                Signer::Treasury,
-                Signer::Placeholder,
-            ])
-        );
-        assert_eq!(args, vec![ScriptArg::U8(1)]);
-
-        let (signers, args) = prepare_function_signature(
-            &[
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "signer"),
-                param("val", "u8"),
-            ],
-            &[s("_"), s("root"), s("tr"), s("_"), s("1")],
-            false,
-            CORE_CODE_ADDRESS,
-        )
-        .unwrap();
-        assert_eq!(
-            signers,
-            Signers::Implicit(vec![
-                Signer::Placeholder,
-                Signer::Root,
-                Signer::Treasury,
-                Signer::Placeholder,
-                Signer::Placeholder,
-            ])
-        );
-        assert_eq!(args, vec![ScriptArg::U8(1)]);
     }
 }

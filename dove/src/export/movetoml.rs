@@ -2,7 +2,7 @@ use serde::{Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use move_core_types::account_address::AccountAddress;
-use lang::compiler::dialects::DialectName;
+use dialect::Dialect;
 
 type NamedAddress = String;
 type PackageName = String;
@@ -62,16 +62,33 @@ pub struct PackageInfo {
     /// project license
     pub license: Option<String>,
     /// Dialect of the project. Pont, Diem, DFinance
-    pub dialect: Option<DialectName>,
+    #[serde(serialize_with = "serialize_dialect")]
+    pub dialect: Option<Dialect>,
     /// The minimum version of "Dove"
     pub dove_version: Option<String>,
 }
+
 fn serialize_for_version<S>(version: &Version, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     let s = format!("{}.{}.{}", version.0, version.1, version.2);
     serializer.serialize_str(&s)
+}
+
+fn serialize_dialect<S>(dialect: &Option<Dialect>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let data = dialect.map(|d| match d {
+        Dialect::Diem => "Diem",
+        Dialect::Pont => "Pont",
+        Dialect::DFinance => "DFinance",
+    });
+    match data {
+        Some(list) => serializer.serialize_some(&list),
+        None => serializer.serialize_none(),
+    }
 }
 
 /// Dependency type: local and git

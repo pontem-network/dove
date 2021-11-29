@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use rand::Rng;
 use anyhow::Error;
-use crate::manifest::DepPath;
+use crate::export::dove_manifest::DepPath;
 use crate::export::movetoml::{Dependency, DependencyLocal};
 use crate::export::DependenceExport;
 

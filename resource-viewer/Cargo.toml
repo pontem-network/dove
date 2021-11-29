@@ -1,7 +1,12 @@
 [package]
 name = "move-resource-viewer"
 version = "1.2.0"
-authors = ["Alex Koz. <a@koz.email>"]
+authors = [
+    "Alex Koz. <alexanderkozlovskii@wings.ai>",
+    "Dm. Yakushev <dmitryyakushev@wings.ai>",
+    "Maxim Kurnikov <maximkurnikov@wings.ai>",
+    "Maxim Vladimirov <maxim@pontem.network>"
+]
 edition = "2018"
 
 [dependencies]

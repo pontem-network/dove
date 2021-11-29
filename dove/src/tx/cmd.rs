@@ -1,11 +1,10 @@
-use crate::context::Context;
 use anyhow::Error;
 use structopt::StructOpt;
 use std::fmt::Debug;
 use std::convert::TryFrom;
+use std::mem;
+use move_package::source_package::parsed_manifest::AddressDeclarations;
 use crate::tx::parser::{parse_call, Call, parse_tp_param};
-use lang::compiler::mut_string::MutString;
-use lang::compiler::preprocessor::normalize_source_text;
 
 /// Call declaration.
 #[derive(StructOpt, Debug)]
@@ -17,7 +16,7 @@ Examples:
       'script_name()'
       'Module::function()'
       '0x1::Module::function()'
-      '0x1::Module::function -a [10,10] true 68656c6c6f776f726c64 100 0x1 -type 0x01::Dfinance::USD'
+      '0x1::Module::function --parameters [10,10] true 68656c6c6f776f726c64 100 0x1 --type 0x01::Dfinance::USD'
       "#)]
     call: String,
     #[structopt(
@@ -30,60 +29,62 @@ Examples:
     #[structopt(
         help = r#"Script arguments, e.g. 10 20 30"#,
         name = "Script arguments.",
-        long = "args",
-        short = "a"
+        long = "parameters",
+        short = "p"
     )]
-    args: Option<Vec<String>>,
-    #[structopt(help = "File name.", long = "file", short = "f")]
-    file_name: Option<String>,
+    params: Option<Vec<String>>,
+    #[structopt(
+        help = r#"Move package name"#,
+        name = "Move package name.",
+        long = "package",
+        short = "c"
+    )]
+    package: Option<String>,
 }
 
-impl TryFrom<(&Context, CallDeclarationCmd)> for CallDeclaration {
+impl CallDeclarationCmd {
+    /// Takes call data.
+    pub fn take(&mut self) -> Self {
+        Self {
+            call: mem::take(&mut self.call),
+            type_parameters: self.type_parameters.take(),
+            params: self.params.take(),
+            package: self.package.take(),
+        }
+    }
+}
+
+impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
     type Error = Error;
 
-    fn try_from((ctx, cmd): (&Context, CallDeclarationCmd)) -> Result<Self, Self::Error> {
-        let sender = ctx.account_address_str()?;
-        let mut call = parse_call(ctx.dialect.as_ref(), &sender, &cmd.call)?;
-
-        if let Some(mut cmd_args) = cmd.args {
-            for arg in cmd_args.as_mut_slice() {
-                let mut mut_source = MutString::new(arg);
-                normalize_source_text(ctx.dialect.as_ref(), (arg, &mut mut_source), &sender);
-                let new_arg = mut_source.freeze();
-                *arg = new_arg;
-            }
-
-            call.set_args(cmd_args);
+    fn try_from(
+        (addr_map, cmd): (&AddressDeclarations, CallDeclarationCmd),
+    ) -> Result<Self, Self::Error> {
+        let mut call = parse_call(addr_map, &cmd.call)?;
+        if let Some(args) = cmd.params {
+            call.set_args(args);
         }
 
         if let Some(tp) = cmd.type_parameters {
             call.set_tp_params(
                 tp.iter()
-                    .map(|tp| {
-                        let mut mut_source = MutString::new(tp);
-                        normalize_source_text(
-                            ctx.dialect.as_ref(),
-                            (tp, &mut mut_source),
-                            &sender,
-                        );
-                        let tp = mut_source.freeze();
-                        parse_tp_param(&tp)
-                    })
+                    .map(|tp| parse_tp_param(tp))
                     .collect::<Result<_, _>>()?,
             );
         }
 
         Ok(CallDeclaration {
             call,
-            file_name: cmd.file_name,
+            package: cmd.package,
         })
     }
 }
 
 /// Call declaration.
+#[derive(Debug)]
 pub struct CallDeclaration {
     /// Call declaration.
     pub call: Call,
-    /// Execution unit file name.
-    pub file_name: Option<String>,
+    /// Package
+    pub package: Option<String>,
 }

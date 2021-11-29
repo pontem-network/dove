@@ -1,12 +1,12 @@
-use anyhow::Error;
 use structopt::StructOpt;
-
-use lang::compiler::file::find_move_files;
-
+use move_core_types::errmap::ErrorMapping;
+use move_cli::{run_cli, Command as MoveCommand};
+use move_cli::package::cli::PackageCommand;
+use move_package::BuildConfig;
+use diem_types::account_address::AccountAddress;
 use crate::cmd::Cmd;
+use crate::cmd::build::run_internal_build;
 use crate::context::Context;
-use lang::compiler::preprocessor::BuilderPreprocessor;
-use move_unit_test::UnitTestingConfig;
 
 /// Run tests.
 #[derive(StructOpt, Debug)]
@@ -19,15 +19,14 @@ pub struct Test {
         short = "i",
         long = "instructions"
     )]
-    pub instruction_execution_bound: u64,
-
+    instruction_execution_bound: u64,
     /// A filter string to determine which unit tests to run
     #[structopt(name = "filter", short = "f", long = "filter")]
-    pub filter: Option<String>,
+    filter: Option<String>,
 
     /// List all tests
     #[structopt(name = "list", short = "l", long = "list")]
-    pub list: bool,
+    list: bool,
 
     /// Number of threads to use for running tests.
     #[structopt(
@@ -36,72 +35,64 @@ pub struct Test {
         short = "t",
         long = "threads"
     )]
-    pub num_threads: usize,
-
+    num_threads: usize,
     /// Report test statistics at the end of testing
     #[structopt(name = "report_statistics", short = "s", long = "statistics")]
-    pub report_statistics: bool,
+    report_statistics: bool,
 
     /// Show the storage state at the end of execution of a failing test
     #[structopt(name = "global_state_on_error", short = "g", long = "state_on_error")]
-    pub report_storage_on_error: bool,
+    report_storage_on_error: bool,
 
     /// Use the stackless bytecode interpreter to run the tests and cross check its results with
     /// the execution result from Move VM.
     #[structopt(long = "stackless")]
-    pub check_stackless_vm: bool,
+    check_stackless_vm: bool,
 
     /// Verbose mode
-    #[structopt(short = "v", long = "verbose")]
-    pub verbose: bool,
-
-    /// Color mode.
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
+    #[structopt(long = "verbose")]
+    verbose_mode: bool,
 }
 
 impl Cmd for Test {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
-        let tests_dir = ctx.path_for(&ctx.manifest.layout.tests_dir);
-        if !tests_dir.exists() {
-            return Ok(());
-        }
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    where
+        Self: Sized,
+    {
+        // Build a project
+        // In order for the dependencies to be loaded
+        run_internal_build(ctx)?;
 
-        let mut deps = ctx.build_index()?.0.into_deps_roots();
-        deps.push(tests_dir.to_string_lossy().to_string());
-        deps.push(
-            ctx.path_for(&ctx.manifest.layout.modules_dir)
-                .to_string_lossy()
-                .to_string(),
-        );
+        // for Move-cli
+        let error_descriptions: ErrorMapping =
+            bcs::from_bytes(move_stdlib::error_descriptions())?;
 
-        let source_files = find_move_files(&deps)
-            .into_iter()
-            .map(|p| p.to_string_lossy().to_string())
-            .collect::<Vec<_>>();
-
-        let unit_test_config = UnitTestingConfig {
-            instruction_execution_bound: self.instruction_execution_bound,
-            filter: self.filter,
-            list: self.list,
-            num_threads: self.num_threads,
-            report_statistics: self.report_statistics,
-            report_storage_on_error: self.report_storage_on_error,
-            source_files,
-            check_stackless_vm: self.check_stackless_vm,
-            verbose: self.verbose,
+        let cmd = MoveCommand::Package {
+            cmd: PackageCommand::UnitTest {
+                instruction_execution_bound: self.instruction_execution_bound,
+                filter: self.filter.clone(),
+                list: self.list,
+                num_threads: self.num_threads,
+                report_statistics: self.report_statistics,
+                report_storage_on_error: self.report_storage_on_error,
+                check_stackless_vm: self.check_stackless_vm,
+                verbose_mode: self.verbose_mode,
+            },
+            path: Some(ctx.project_dir.clone()),
+            config: BuildConfig {
+                generate_abis: false,
+                generate_docs: false,
+                test_mode: true,
+                dev_mode: true,
+            },
         };
 
-        let address = ctx.account_address_str()?;
-        let mut preprocessor = BuilderPreprocessor::new(ctx.dialect.as_ref(), &address);
-        let test_plan = unit_test_config.build_test_plan(&mut preprocessor);
-        if let Some(test_plan) = test_plan {
-            let (_, is_ok) =
-                unit_test_config.run_and_report_unit_tests(test_plan, std::io::stdout())?;
-            if !is_ok {
-                bail!("Tests failed: {}", ctx.project_name());
-            }
-        }
+        run_cli(
+            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
+            &error_descriptions,
+            &ctx.move_args,
+            &cmd,
+        )?;
 
         Ok(())
     }

@@ -81,23 +81,11 @@ jobs:
         run: >
           cargo build --release --bins
           -p=dove
-          -p=decompiler
-          -p=move-language-server
-
-      - id: mls
-        name: get version of move-language-server
-        uses: ./.github/actions/crate-version
-        with: { crate: move-language-server }
 
       - id: dove
         name: get version of dove
         uses: ./.github/actions/crate-version
         with: { crate: dove }
-
-      - id: decompiler
-        name: get version of decompiler
-        uses: ./.github/actions/crate-version
-        with: { crate: decompiler }
 
       - id: mrv
         if: matrix.os != 'windows-latest'
@@ -140,17 +128,11 @@ jobs:
           PKG_BIN_DIR=$PKG_DIR/bin
 
           DOVE_NAME=dove$OS_BIN_EXT
-          MLS_NAME=move-language-server$OS_BIN_EXT
-          MRV_NAME=move-resource-viewer$OS_BIN_EXT
-          DECOMPILER_NAME=move-decompiler$OS_BIN_EXT
 
           mkdir -p $PKG_BIN_DIR
           cp build-info.txt $PKG_DIR/
 
           set +e
-          cp $RELEASE_DIR/decompiler$OS_BIN_EXT $PKG_BIN_DIR/$DECOMPILER_NAME
-          cp $RELEASE_DIR/move-language-server$OS_BIN_EXT $PKG_BIN_DIR/$MLS_NAME
-          cp $RELEASE_DIR/move-resource-viewer$OS_BIN_EXT $PKG_BIN_DIR/$MRV_NAME
           cp $RELEASE_DIR/dove$OS_BIN_EXT $PKG_BIN_DIR/$DOVE_NAME
           set -e
 
@@ -170,27 +152,19 @@ jobs:
           ARCH="${{ steps.build-info.outputs.arch }}"
           RELEASE_DIR=${{ steps.dist.outputs.build }}
 
-          MLS_NAME=move-language-server-${{ steps.mls.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
-          MRV_NAME=move-resource-viewer-${{ steps.mrv.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           DOVE_NAME=dove-${{ steps.dove.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
-          DECOMPILER_NAME=move-decompiler-${{ steps.decompiler.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
           cd $RELEASE_DIR
 
           set +e
-          mv decompiler$OS_BIN_EXT $DECOMPILER_NAME
           mv move-language-server$OS_BIN_EXT $MLS_NAME
           mv move-resource-viewer$OS_BIN_EXT $MRV_NAME
           mv dove$OS_BIN_EXT $DOVE_NAME
           set -e
 
-          echo "::set-output name=mls::$MLS_NAME"
           echo "::set-output name=mrv::$MRV_NAME"
           echo "::set-output name=dove::$DOVE_NAME"
-          echo "::set-output name=decompiler::$DECOMPILER_NAME"
-          echo "::set-output name=mls_path::$RELEASE_DIR/$MLS_NAME"
           echo "::set-output name=mrv_path::$RELEASE_DIR/$MRV_NAME"
           echo "::set-output name=dove_path::$RELEASE_DIR/$DOVE_NAME"
-          echo "::set-output name=decompiler_path::$RELEASE_DIR/$DECOMPILER_NAME"
 
       - name: upload Toolchain
         uses: actions/upload-release-asset@v1
@@ -231,14 +205,4 @@ jobs:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ${{ steps.artifact.outputs.dove_path }}
           asset_name: ${{ steps.artifact.outputs.dove }}
-          asset_content_type: application/gzip
-
-      - name: upload Decompiler
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ${{ steps.artifact.outputs.decompiler_path }}
-          asset_name: ${{ steps.artifact.outputs.decompiler }}
           asset_content_type: application/gzip

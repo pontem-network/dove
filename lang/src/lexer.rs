@@ -39,8 +39,8 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
                         };
                         TypeTag::Struct(StructTag {
                             address,
-                            module: Identifier::new(m_name.value)?,
-                            name: Identifier::new(name.value)?,
+                            module: Identifier::new(m_name.value.as_str())?,
+                            name: Identifier::new(name.value.as_str())?,
                             type_params: ty_params
                                 .into_iter()
                                 .map(|ty| unwrap_spanned_ty_(ty, Some(address)))
@@ -61,8 +61,8 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
 
                         TypeTag::Struct(StructTag {
                             address,
-                            module: Identifier::new(m_name.value)?,
-                            name: Identifier::new(name.value)?,
+                            module: Identifier::new(m_name.value.as_str())?,
+                            name: Identifier::new(name.value.as_str())?,
                             type_params: ty_params
                                 .into_iter()
                                 .map(|ty| unwrap_spanned_ty_(ty, Some(address)))
@@ -88,25 +88,23 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
 
 #[cfg(test)]
 mod tests {
+    use move_lang::Flags;
     use move_lang::parser::lexer::Lexer;
-    use move_lang::parser::syntax::parse_type;
-
-    use crate::compiler::address::ss58::replace_ss58_addresses;
-    use crate::compiler::mut_string::MutString;
+    use move_lang::parser::syntax::{Context, parse_type};
+    use move_lang::shared::CompilationEnv;
+    use move_symbol_pool::Symbol;
 
     use super::*;
 
     fn parse(source: &str) -> Result<TypeTag, Error> {
-        let mut mut_string = MutString::new(source);
-        replace_ss58_addresses(source, &mut mut_string, &mut Default::default());
-        let source = mut_string.freeze();
-
-        let mut lexer = Lexer::new(&source, "source", Default::default());
+        let mut lexer = Lexer::new(source, Symbol::from("source"));
         lexer
             .advance()
             .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
-        let ty =
-            parse_type(&mut lexer).map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
+        let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+        let mut context = Context::new(&mut env, &mut lexer);
+        let ty = parse_type(&mut context)
+            .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
         unwrap_spanned_ty(ty)
     }
 
@@ -124,35 +122,6 @@ mod tests {
             "0x1::Foo::Res<Vec<u128>>",
             "0x1::Foo::Res<Vec<u128>>[42]",
             "0x1::Foo::Bar::Ignored<Parts>",
-        ];
-
-        inputs
-            .iter()
-            .cloned()
-            .map(|inp| (inp, parse(inp)))
-            .for_each(|(inp, res)| {
-                assert!(res.is_ok(), "failed on '{}'", inp);
-                println!("{:?}", res.unwrap());
-            });
-    }
-
-    #[test]
-    fn test_parse_ss58() {
-        // //Alice/ pub: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY =>
-        // 0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D
-        const ADDR: &str = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-        assert!(parse("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY::Foo").is_err());
-
-        let inputs = [
-            &format!("{}::Foo::Res", ADDR),
-            &format!("{}::Foo::Res<Bar::Struct>", ADDR),
-            &format!("{}::Foo::Res<{0:}::Bar::Struct>", ADDR),
-            &format!("{}::Foo::Res<{0:}::Bar::T>[42]", ADDR),
-            &format!("{}::Foo::Res<{0:}::Bar::T<u128>>[42]", ADDR),
-            &format!("{}::Foo::Res<Bar::T<u128>>", ADDR),
-            &format!("{}::Foo::Res<Vec<u128>>", ADDR),
-            &format!("{}::Foo::Res<Vec<u128>>[42]", ADDR),
-            &format!("{}::Foo::Bar::Ignored<Parts>", ADDR),
         ];
 
         inputs

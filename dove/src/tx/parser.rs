@@ -3,12 +3,19 @@ use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_lang::parser::lexer::{Lexer, Tok};
-use move_lang::parser::syntax::{parse_type, parse_address_bytes, consume_token};
+use move_lang::parser::syntax::{parse_type, parse_address_bytes, consume_token, Context};
 use lang::lexer::unwrap_spanned_ty;
-use lang::compiler::mut_string::MutString;
-use lang::compiler::dialects::Dialect;
-use lang::compiler::preprocessor::normalize_source_text;
 use std::str::FromStr;
+use move_lang::Flags;
+use move_lang::shared::CompilationEnv;
+use move_package::source_package::parsed_manifest::AddressDeclarations;
+use move_symbol_pool::Symbol;
+
+const ERROR_MESSAGE: &str = "Invalid call format: expected function identifier.\n\n\
+         Use pattern:\n\
+         SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)\n\
+         or\n\
+         ACCOUNT_ADDRESS::MODULE_NAME::FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
 
 /// Call.
 #[derive(Debug)]
@@ -101,89 +108,101 @@ impl Call {
 
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
-pub(crate) fn parse_call(dialect: &dyn Dialect, sender: &str, call: &str) -> Result<Call, Error> {
-    let mut mut_source = MutString::new(call);
-    normalize_source_text(dialect, (call, &mut mut_source), sender);
-    let call = mut_source.freeze();
+pub(crate) fn parse_call(addr_map: &AddressDeclarations, call: &str) -> Result<Call, Error> {
+    let mut lexer = Lexer::new(call, Symbol::from("call"));
+    let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+    let mut ctx = Context::new(&mut env, &mut lexer);
 
-    let mut lexer = Lexer::new(&call, "call", Default::default());
-
-    // Get the name of the function|script
-    let error_message = "Invalid call format: expected function identifier.\n\n\
-         Use pattern:\n\
-         SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)\n\
-         or\n\
-         ACCOUNT_ADDRESS::MODULE_NAME::FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
-
-    lexer
+    ctx.tokens
         .advance()
-        .map_err(|err| anyhow!("{}\n\n{:?}", error_message, err))?;
+        .map_err(|err| anyhow!("{}\n\n{:?}", ERROR_MESSAGE, err))?;
 
-    let address = if lexer.peek() == Tok::NumValue {
+    let mut call = parse_call_body(addr_map, &mut ctx)?;
+    call.set_tp_params(parse_type_params(&mut ctx)?);
+    call.set_args(parse_args(&mut ctx)?);
+    Ok(call)
+}
+
+fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<Call, Error> {
+    let address = if ctx.tokens.peek() == Tok::NumValue {
         let address = AccountAddress::new(
-            parse_address_bytes(&mut lexer)
-                .map_err(|_| anyhow!("{}\n\nInvalid account address.", error_message))?
+            parse_address_bytes(ctx)
+                .map_err(|_| anyhow!("{}\n\nInvalid account address.", ERROR_MESSAGE))?
                 .value
                 .into_bytes(),
         );
-        consume_token(&mut lexer, Tok::ColonColon).map_err(|_| {
+        consume_token(&mut ctx.tokens, Tok::ColonColon).map_err(|_| {
             anyhow!(
                 "{}\n\n A double colon was expected after the module address.",
-                error_message
+                ERROR_MESSAGE
             )
         })?;
         Some(address)
     } else {
         None
     };
+    let mut tokens = vec![];
 
-    if lexer.peek() != Tok::IdentifierValue {
-        anyhow::bail!(
-            "{}\n\nA script name or module module was expected.",
-            error_message
-        );
+    loop {
+        if ctx.tokens.peek() != Tok::IdentifierValue {
+            break;
+        }
+
+        tokens.push(ctx.tokens.content().to_string());
+        ctx.tokens
+            .advance()
+            .map_err(|err| anyhow!("{}\n\n{:?}", ERROR_MESSAGE, err))?;
+        if ctx.tokens.peek() == Tok::ColonColon {
+            ctx.tokens
+                .advance()
+                .map_err(|err| anyhow!("{}\n\n{:?}", ERROR_MESSAGE, err))?;
+        }
     }
-    let name = lexer.content().to_owned();
-    lexer
-        .advance()
-        .map_err(|err| anyhow!("{}\n\n{:?}", error_message, err))?;
 
-    let mut call = if lexer.peek() == Tok::ColonColon {
-        lexer
-            .advance()
-            .map_err(|err| anyhow!("{}\n\n{:?}", error_message, err))?;
-        if lexer.peek() != Tok::IdentifierValue {
-            anyhow::bail!(
-                "{}\n\nA script name or module module was expected.",
-                error_message
-            );
+    Ok(match tokens.len() {
+        1 => {
+            if address.is_some() {
+                return Err(Error::msg(ERROR_MESSAGE));
+            }
+            Call::Script {
+                name: Identifier::new(tokens.remove(0))?,
+                type_tag: vec![],
+                args: vec![],
+            }
         }
-        let func = lexer.content().to_owned();
-        lexer
-            .advance()
-            .map_err(|err| anyhow!("{}\n\n{:?}", error_message, err))?;
-        Call::Function {
+        2 => Call::Function {
             address,
-            module: Identifier::new(name)?,
-            func: Identifier::new(func)?,
+            module: Identifier::new(tokens.remove(0))?,
+            func: Identifier::new(tokens.remove(0))?,
             type_tag: vec![],
             args: vec![],
-        }
-    } else {
-        Call::Script {
-            name: Identifier::new(name)?,
-            type_tag: vec![],
-            args: vec![],
-        }
-    };
+        },
+        3 => {
+            if address.is_some() {
+                return Err(Error::msg(ERROR_MESSAGE));
+            }
 
-    call.set_tp_params(parse_type_params(&mut lexer)?);
-    call.set_args(parse_args(&mut lexer)?);
+            let named_addr = tokens.remove(0);
+            let addr = addr_map
+                .get(&Symbol::from(named_addr.as_str()))
+                .and_then(|a| *a)
+                .ok_or_else(|| anyhow!("Address {} not found.", named_addr))?;
 
-    Ok(call)
+            Call::Function {
+                address: Some(addr),
+                module: Identifier::new(tokens.remove(0))?,
+                func: Identifier::new(tokens.remove(0))?,
+                type_tag: vec![],
+                args: vec![],
+            }
+        }
+        _ => {
+            return Err(Error::msg(ERROR_MESSAGE));
+        }
+    })
 }
 
-fn parse_type_params(lexer: &mut Lexer) -> Result<Vec<TypeTag>, Error> {
+fn parse_type_params(ctx: &mut Context) -> Result<Vec<TypeTag>, Error> {
     let error_message = "Invalid call script format: Invalid type parameters format.\n\n\
          Use pattern:\n\
          SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)\
@@ -191,29 +210,29 @@ fn parse_type_params(lexer: &mut Lexer) -> Result<Vec<TypeTag>, Error> {
          ACCOUNT_ADDRESS::MODULE_NAME::FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
     let map_err = |_| anyhow!("{}", &error_message);
 
-    if lexer.peek() == Tok::Less {
+    if ctx.tokens.peek() == Tok::Less {
         let mut type_parameter = vec![];
 
-        lexer.advance().map_err(map_err)?;
-        while lexer.peek() != Tok::Greater {
-            if lexer.peek() == Tok::EOF {
+        ctx.tokens.advance().map_err(map_err)?;
+        while ctx.tokens.peek() != Tok::Greater {
+            if ctx.tokens.peek() == Tok::EOF {
                 anyhow::bail!(error_message);
             }
 
-            if lexer.peek() == Tok::Comma {
-                lexer
+            if ctx.tokens.peek() == Tok::Comma {
+                ctx.tokens
                     .advance()
-                    .map_err(|err| anyhow!("{}\n\n{}", &error_message, err[0].1))?;
+                    .map_err(|err| anyhow!("{}\n\n{:?}", &error_message, err))?;
                 continue;
             }
 
-            let type_str = lexer.content().to_string();
+            let type_str = ctx.tokens.content().to_string();
             type_parameter.push(
-                parse_type_param(lexer)
+                parse_type_param(ctx)
                     .map_err(|_| anyhow!("{}\n\nUnknown: {}", &error_message, type_str))?,
             );
         }
-        lexer
+        ctx.tokens
             .advance()
             .map_err(|err| anyhow!("{}\n\n{:?}", &error_message, err))?;
         Ok(type_parameter)
@@ -222,7 +241,7 @@ fn parse_type_params(lexer: &mut Lexer) -> Result<Vec<TypeTag>, Error> {
     }
 }
 
-fn parse_args(lexer: &mut Lexer) -> Result<Vec<String>, Error> {
+fn parse_args(ctx: &mut Context) -> Result<Vec<String>, Error> {
     let error_message = "Invalid call script format: Invalid script arguments format.\n\n\
          Use pattern:\n\
          SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)\
@@ -230,42 +249,44 @@ fn parse_args(lexer: &mut Lexer) -> Result<Vec<String>, Error> {
          ACCOUNT_ADDRESS::MODULE_NAME::FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)";
     let map_err = |_| anyhow!("{}", &error_message);
 
-    if lexer.peek() == Tok::LParen {
+    if ctx.tokens.peek() == Tok::LParen {
         let mut arguments = vec![];
-        lexer.advance().map_err(map_err)?;
-        while lexer.peek() != Tok::RParen {
-            if lexer.peek() == Tok::EOF {
+        ctx.tokens.advance().map_err(map_err)?;
+        while ctx.tokens.peek() != Tok::RParen {
+            if ctx.tokens.peek() == Tok::EOF {
                 anyhow::bail!("{}", &error_message);
             }
 
-            if lexer.peek() == Tok::Comma {
-                lexer
+            if ctx.tokens.peek() == Tok::Comma {
+                ctx.tokens
                     .advance()
-                    .map_err(|err| anyhow!("{}\n\n{}", &error_message, err[0].1))?;
+                    .map_err(|err| anyhow!("{}\n\n{:?}", &error_message, err))?;
                 continue;
             }
 
             let mut token = String::new();
-            token.push_str(lexer.content());
-            let sw = lexer.peek() == Tok::LBracket;
-            lexer.advance().map_err(map_err)?;
+            token.push_str(ctx.tokens.content());
+            let sw = ctx.tokens.peek() == Tok::LBracket;
+            ctx.tokens.advance().map_err(map_err)?;
             if sw {
-                while lexer.peek() != Tok::RBracket {
-                    token.push_str(lexer.content());
-                    lexer.advance().map_err(|_| anyhow!("{}", &error_message))?;
+                while ctx.tokens.peek() != Tok::RBracket {
+                    token.push_str(ctx.tokens.content());
+                    ctx.tokens
+                        .advance()
+                        .map_err(|_| anyhow!("{}", &error_message))?;
                 }
-                token.push_str(lexer.content());
+                token.push_str(ctx.tokens.content());
             } else {
-                while lexer.peek() != Tok::Comma && lexer.peek() != Tok::RParen {
-                    token.push_str(lexer.content());
-                    lexer.advance().map_err(map_err)?;
+                while ctx.tokens.peek() != Tok::Comma && ctx.tokens.peek() != Tok::RParen {
+                    token.push_str(ctx.tokens.content());
+                    ctx.tokens.advance().map_err(map_err)?;
                 }
             }
             arguments.push(token);
-            if !sw && lexer.peek() == Tok::RParen {
+            if !sw && ctx.tokens.peek() == Tok::RParen {
                 break;
             }
-            lexer.advance().map_err(map_err)?;
+            ctx.tokens.advance().map_err(map_err)?;
         }
         Ok(arguments)
     } else {
@@ -274,11 +295,14 @@ fn parse_args(lexer: &mut Lexer) -> Result<Vec<String>, Error> {
 }
 
 pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
-    let mut lexer = Lexer::new(tp, "tp", Default::default());
-    lexer
+    let mut lexer = Lexer::new(tp, Symbol::from("tp"));
+    let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+    let mut ctx = Context::new(&mut env, &mut lexer);
+
+    ctx.tokens
         .advance()
         .map_err(|err| Error::msg(format!("{:?}", err)))?;
-    parse_type_param(&mut lexer)
+    parse_type_param(&mut ctx)
 }
 
 /// parse type params
@@ -286,8 +310,8 @@ pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
 /// u8 => TypeTag::U8
 /// u64 => TypeTag::U64
 /// ...
-pub(crate) fn parse_type_param(lexer: &mut Lexer) -> Result<TypeTag, Error> {
-    let ty = parse_type(lexer).map_err(|err| Error::msg(format!("{:?}", err)))?;
+pub(crate) fn parse_type_param(ctx: &mut Context) -> Result<TypeTag, Error> {
+    let ty = parse_type(ctx).map_err(|err| Error::msg(format!("{:?}", err)))?;
     unwrap_spanned_ty(ty)
 }
 
@@ -297,7 +321,8 @@ where
 {
     let map_err = |err| Error::msg(format!("{:?}", err));
 
-    let mut lexer = Lexer::new(tkn, "vec", Default::default());
+    let mut lexer = Lexer::new(tkn, Symbol::from("vec"));
+
     lexer.advance().map_err(map_err)?;
 
     if lexer.peek() != Tok::LBracket {
@@ -332,19 +357,18 @@ where
 
 #[cfg(test)]
 mod tests_call_parser {
+    use std::collections::BTreeMap;
+    use move_core_types::account_address::AccountAddress;
     use move_core_types::identifier::Identifier;
     use move_core_types::language_storage::{StructTag, TypeTag};
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
-    use crate::tx::parser::{parse_call};
-    use lang::compiler::dialects::DialectName;
+    use move_symbol_pool::Symbol;
+    use crate::tx::parser::parse_call;
 
     #[test]
     fn func_call() {
-        let dialect = DialectName::Pont.get_dialect();
-        let sender = "0x1";
-
         let (address, name, func, type_tag, args) =
-            parse_call(dialect.as_ref(), sender, "Account::create_account")
+            parse_call(&Default::default(), "Account::create_account")
                 .unwrap()
                 .func();
         assert_eq!(address, None);
@@ -354,7 +378,7 @@ mod tests_call_parser {
         assert!(args.is_empty());
 
         let (address, name, func, type_tag, args) =
-            parse_call(dialect.as_ref(), sender, "0x1::Account::create_account")
+            parse_call(&Default::default(), "0x1::Account::create_account")
                 .unwrap()
                 .func();
         assert_eq!(address, Some(CORE_CODE_ADDRESS));
@@ -364,8 +388,7 @@ mod tests_call_parser {
         assert!(args.is_empty());
 
         let (address, name, func, type_tag, args) = parse_call(
-            dialect.as_ref(),
-            sender,
+            &Default::default(),
             "0x1::Account::create_account<u8, 0x01::Dfinance::USD>",
         )
         .unwrap()
@@ -388,8 +411,7 @@ mod tests_call_parser {
         assert!(args.is_empty());
 
         let (address, name, func, type_tag, args) = parse_call(
-            dialect.as_ref(),
-            sender,
+            &Default::default(),
             "0x1::Account::create_account(10, 68656c6c6f, [10, 23],)",
         )
         .unwrap()
@@ -408,7 +430,7 @@ mod tests_call_parser {
         );
 
         let (address, name, func, type_tag, args) =
-            parse_call(dialect.as_ref(), sender, "Account::create_account<u8>()")
+            parse_call(&Default::default(), "Account::create_account<u8>()")
                 .unwrap()
                 .func();
         assert_eq!(address, None);
@@ -420,10 +442,12 @@ mod tests_call_parser {
 
     #[test]
     fn script_call() {
-        let dialect = DialectName::Pont.get_dialect();
-        let sender = "0x1";
-
-        let (name, type_tag, args) = parse_call(dialect.as_ref(), sender, "create_account<u8, 0x01::Dfinance::USD<u8>>(10, 68656c6c6f, [10, 23], true, 1exaAg2VJRQbyUBAeXcktChCAqjVP9TUxF3zo23R2T6EGdE)").unwrap().script();
+        let (name, type_tag, args) = parse_call(
+            &Default::default(),
+            "create_account<u8, 0x01::Dfinance::USD<u8>>(10, 68656c6c6f, [10, 23], true, Std)",
+        )
+        .unwrap()
+        .script();
         assert_eq!(name.as_str(), "create_account");
         assert_eq!(
             type_tag,
@@ -444,13 +468,12 @@ mod tests_call_parser {
                 "68656c6c6f".to_owned(),
                 "[10,23]".to_owned(),
                 "true".to_owned(),
-                "0x1CF326C5AAA5AF9F0E2791E66310FE8F044FAADAF12567EAA0976959D1F7731F".to_owned(),
+                "Std".to_owned(),
             ]
         );
 
         let (name, tp, args) = parse_call(
-            dialect.as_ref(),
-            sender,
+            &Default::default(),
             "create_account<0x01::Dfinance::USD>([true, false], [0x01, 0x02])",
         )
         .unwrap()
@@ -470,18 +493,50 @@ mod tests_call_parser {
             vec!["[true,false]".to_owned(), "[0x01,0x02]".to_owned()]
         );
 
-        let (name, tp, args) = parse_call(dialect.as_ref(), sender, "create_account()")
+        let (name, tp, args) = parse_call(&Default::default(), "create_account()")
             .unwrap()
             .script();
         assert_eq!(name.as_str(), "create_account");
         assert_eq!(tp, Vec::<TypeTag>::new());
         assert_eq!(args, Vec::<String>::new());
 
-        let (name, tp, args) = parse_call(dialect.as_ref(), sender, "create_account<>()")
+        let (name, tp, args) = parse_call(&Default::default(), "create_account<>()")
             .unwrap()
             .script();
         assert_eq!(name.as_str(), "create_account");
         assert_eq!(tp, Vec::<TypeTag>::new());
         assert_eq!(args, Vec::<String>::new());
+    }
+
+    #[test]
+    fn named_address() {
+        let mut map = BTreeMap::new();
+        map.insert(
+            Symbol::from("Core"),
+            Some(AccountAddress::from_hex_literal("0x13").unwrap()),
+        );
+        let (address, name, func, type_tag, args) =
+            parse_call(&map, "Core::Diem::create_account(Std)")
+                .unwrap()
+                .func();
+        assert_eq!(
+            address,
+            Some(AccountAddress::from_hex_literal("0x13").unwrap())
+        );
+        assert_eq!(name.as_str(), "Diem");
+        assert_eq!(func.as_str(), "create_account");
+        assert!(type_tag.is_empty());
+        assert_eq!(args, vec!["Std".to_string()]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn named_address_not_found() {
+        let mut map = BTreeMap::new();
+        map.insert(
+            Symbol::from("CoRe"),
+            Some(AccountAddress::from_hex_literal("0x13").unwrap()),
+        );
+        parse_call(&map, "Core::Diem::create_account(Std)").unwrap();
     }
 }

@@ -1,19 +1,18 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::{collections::BTreeMap};
-use anyhow::{Error, Result};
+use std::collections::BTreeMap;
 use structopt::StructOpt;
+use anyhow::{Error, Result};
 use serde::Serialize;
-
-use lang::compiler::dialects::DialectName;
-
+use dialect::Dialect;
+use move_cli::Move;
+use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
-use crate::cmd::Cmd;
-use crate::manifest::read_manifest;
 use crate::export::{
     create_project_directories, move_modules, dependency_create_from, DependenceExport,
 };
 use crate::export::movetoml::{AddressDeclarations, Dependencies, MoveToml, PackageInfo};
+use crate::export::dove_manifest::read_manifest;
 
 /// Export Dove.toml => Move.toml
 #[derive(StructOpt, Debug)]
@@ -24,22 +23,32 @@ pub struct Export {
 }
 
 impl Cmd for Export {
-    fn apply(self, ctx: Context) -> Result<(), Error> {
-        self.export(&ctx.project_dir)
+    /// Redefined. Empty Manifest
+    fn context(&mut self, project_dir: PathBuf, move_args: Move) -> anyhow::Result<Context> {
+        context_with_empty_manifest(project_dir, move_args)
+    }
+
+    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    where
+        Self: Sized,
+    {
+        self.export(ctx)
     }
 }
 
 impl Export {
-    fn export(&self, project_dir: &Path) -> Result<(), Error> {
+    fn export(&self, ctx: &Context) -> Result<(), Error> {
+        let project_dir = ctx.project_dir.clone();
+
         let dove_toml_path = project_dir.join("Dove.toml");
         if !dove_toml_path.exists() {
             anyhow::bail!("file Dove.toml was not found");
         }
         let dove_toml = read_manifest(&dove_toml_path)?;
-        let dialect_name = DialectName::from_str(&dove_toml.package.dialect.unwrap_or_default())?;
+        let dialect = Dialect::from_str(&dove_toml.package.dialect.unwrap_or_default())?;
 
         // Project directories
-        create_project_directories(project_dir)?;
+        create_project_directories(&project_dir)?;
 
         // delete artifacts folder
         let artifacts_path = project_dir.join("artifacts");
@@ -48,24 +57,20 @@ impl Export {
         }
 
         // Move modules to the "source" folder
-        move_modules(project_dir)?;
+        move_modules(&project_dir)?;
 
-        // doc.toml
-        save_as_toml(&project_dir.join("doc.toml"), &dove_toml.doc)?;
-        // boogie_options.toml
+        // <PROJECT_DIR>/doc.toml
+        save_as_toml(&ctx.doc_path(), &dove_toml.doc)?;
+        // <PROJECT_DIR>/boogie_options.toml
         if let Some(boogie) = &dove_toml.boogie_options {
-            save_as_toml(&project_dir.join("boogie_options.toml"), &boogie)?;
+            save_as_toml(&ctx.boogie_options_path(), &boogie)?;
         }
 
         // account_address
         let mut addresses = AddressDeclarations::new();
         addresses.insert(
             "Account".to_string(),
-            Some(
-                dialect_name
-                    .get_dialect()
-                    .parse_address(&dove_toml.package.account_address)?,
-            ),
+            Some(dialect.parse_address(&dove_toml.package.account_address)?),
         );
 
         // Dependencies
@@ -110,7 +115,7 @@ impl Export {
                 authors: Vec::new(),
                 license: None,
                 version: (0, 0, 1),
-                dialect: Some(dialect_name),
+                dialect: Some(dialect),
                 dove_version: dove_toml.package.dove_version,
             },
             addresses: Some(addresses),

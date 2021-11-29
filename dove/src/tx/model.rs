@@ -4,8 +4,10 @@ use anyhow::Error;
 use move_core_types::value::MoveValue;
 use std::str::FromStr;
 use move_core_types::account_address::AccountAddress;
+use move_core_types::transaction_argument::TransactionArgument;
 use serde::{Deserialize, Serialize};
-use move_binary_format::CompiledModule;
+use move_symbol_pool::Symbol;
+use lang::bytecode::info::BytecodeInfo;
 
 /// Transaction model.
 #[derive(Serialize, Deserialize, Debug)]
@@ -156,6 +158,25 @@ impl From<ScriptArg> for MoveValue {
     }
 }
 
+impl TryInto<TransactionArgument> for ScriptArg {
+    type Error = Error;
+
+    fn try_into(self) -> Result<TransactionArgument, Self::Error> {
+        Ok(match self {
+            ScriptArg::U8(val) => TransactionArgument::U8(val),
+            ScriptArg::U64(val) => TransactionArgument::U64(val),
+            ScriptArg::U128(val) => TransactionArgument::U128(val),
+            ScriptArg::Bool(val) => TransactionArgument::Bool(val),
+            ScriptArg::Address(val) => TransactionArgument::Address(val),
+            ScriptArg::VectorU8(val) => TransactionArgument::U8Vector(val),
+            ScriptArg::VectorU64(_)
+            | ScriptArg::VectorU128(_)
+            | ScriptArg::VectorBool(_)
+            | ScriptArg::VectorAddress(_) => bail!("Unssuported transaction args."),
+        })
+    }
+}
+
 /// Signer type.
 #[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Signer {
@@ -165,6 +186,8 @@ pub enum Signer {
     Treasury,
     /// Template to replace.
     Placeholder,
+    /// Named address.
+    Name(Symbol),
 }
 
 impl FromStr for Signer {
@@ -175,12 +198,7 @@ impl FromStr for Signer {
             "root" | "rt" | "dr" => Self::Root,
             "treasury" | "tr" | "tc" => Self::Treasury,
             "_" => Self::Placeholder,
-            _ => {
-                return Err(anyhow!(
-                    "Unexpected signer type: '{}'. Expected one of (root, rt, treasury, tr, _)",
-                    s
-                ));
-            }
+            _ => Self::Name(Symbol::from(s)),
         })
     }
 }
@@ -201,34 +219,26 @@ impl Signers {
     }
 }
 
-pub(crate) struct Address {
-    pub addr: AccountAddress,
-}
-
-impl FromStr for Address {
-    type Err = Error;
-
-    fn from_str(addr: &str) -> Result<Self, Self::Err> {
-        Ok(Address {
-            addr: AccountAddress::from_hex_literal(addr)?,
-        })
-    }
-}
-
 /// Transaction with additional info.
 #[derive(Debug)]
 pub enum EnrichedTransaction {
     /// A transaction intended for execution in the local executor.
     Local {
-        /// Transaction.
-        tx: Transaction,
+        /// Bytecode info.
+        bi: BytecodeInfo,
+        /// Script args.
+        args: Vec<ScriptArg>,
+        /// Type tags.
+        type_tag: Vec<TypeTag>,
+        /// Function name.
+        func_name: Option<String>,
         /// Signers.
         signers: Vec<AccountAddress>,
-        /// Execution dependence.
-        deps: Vec<CompiledModule>,
     },
     /// A transaction intended for execution in the chain executor.
     Global {
+        /// Bytecode info.
+        bi: BytecodeInfo,
         /// Transaction.
         tx: Transaction,
         /// Transaction name.

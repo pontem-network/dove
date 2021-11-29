@@ -1,13 +1,7 @@
 [workspace]
 members = [
-    "language_server",
-    "net",
     "dove",
     "lang",
-    "lang/compat",
-    "lang/decompiler",
-    "resource-viewer",
-    "resources",
     "common/git-hash",
 ]
 
