@@ -102,6 +102,8 @@ struct DependencyInfo {
 impl DependencyInfo {
     /// Get package information from Cargo.lock
     pub fn from_cargo_lock(name: &str) -> DependencyInfo {
+        let name = name.trim_matches('"');
+
         /// return (Branch, Hash)
         fn parse_source(source: &str) -> (Option<String>, Option<String>) {
             let source = source[source.find('"').unwrap_or(9)..].trim_matches('"');

@@ -1,4 +1,5 @@
 use std::env;
+use std::fs;
 use std::ffi::OsString;
 use std::path::{PathBuf, Path};
 
@@ -15,12 +16,16 @@ use crate::{DOVE_VERSION, DOVE_HASH, PONT_STDLIB_VERSION, DIEM_VERSION, DIEM_HAS
 use crate::cmd::Cmd;
 use crate::cmd::new::New;
 use crate::cmd::build::Build;
-use crate::cmd::clean::Clean;
+use crate::cmd::clean::{Clean, run_internal_clean};
 use crate::cmd::export::Export;
 use crate::cmd::init::Init;
 use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::tx::CreateTransactionCmd;
+use crate::manifest::HashU64;
+use crate::context::Context;
+
+const HASH_FILE_NAME: &str = ".version";
 
 #[derive(StructOpt)]
 #[structopt(
@@ -216,11 +221,57 @@ where
         }
         CommonCommand::Dove(mut cmd) => {
             let mut ctx = cmd.context(cwd, move_args)?;
+
+            if move_toml_has_been_updated(&ctx) {
+                run_internal_clean(&mut ctx)?;
+                update_move_toml_hash(&ctx)?;
+            }
             cmd.apply(&mut ctx)
         }
     }
 }
 
+/// Check if Dove version is suitable for this project
+fn check_dove_version(req_ver: &str) -> Result<(), Error> {
+    let act_ver = env!("CARGO_PKG_VERSION");
+    let req = VersionReq::parse(req_ver)
+        .map_err(|err| Error::new(err).context("Failed to parse dove_version from Move.toml"))?;
+    let actual = Version::parse(act_ver).expect("Expected valid dove version");
+    if !req.matches(&actual) {
+        Err(anyhow!("The dove version must meet the conditions '{}'. The current version of dove is '{}'.", req_ver, act_ver))
+    } else {
+        Ok(())
+    }
+}
+
+/// Move.toml has been updated
+fn move_toml_has_been_updated(ctx: &Context) -> bool {
+    let path_version = ctx.project_dir.join("build").join(HASH_FILE_NAME);
+    if !path_version.exists() {
+        return true;
+    }
+    let new_version = ctx.manifest.hash_u64();
+    let old_version = fs::read_to_string(&path_version)
+        .unwrap_or_default()
+        .parse::<u64>()
+        .unwrap_or_default();
+
+    new_version != old_version
+}
+
+/// Writing the hash move.toml to file
+fn update_move_toml_hash(ctx: &Context) -> Result<u64> {
+    let hash = ctx.manifest.hash_u64();
+    let build_path = ctx.project_dir.join("build");
+    if !build_path.exists() {
+        fs::create_dir_all(&build_path)?;
+    }
+    let path_version = build_path.join(HASH_FILE_NAME);
+    fs::write(&path_version, hash.to_string())?;
+    Ok(hash)
+}
+
+/// To display the full version of "Dove"
 fn create_long_version() -> &'static str {
     let dove: String = [DOVE_VERSION, DOVE_HASH]
         .iter()
@@ -244,18 +295,6 @@ fn create_long_version() -> &'static str {
         )
         .into_boxed_str(),
     )
-}
-
-fn check_dove_version(req_ver: &str) -> Result<(), Error> {
-    let act_ver = env!("CARGO_PKG_VERSION");
-    let req = VersionReq::parse(req_ver)
-        .map_err(|err| Error::new(err).context("Failed to parse dove_version from Move.toml"))?;
-    let actual = Version::parse(act_ver).expect("Expected valid dove version");
-    if !req.matches(&actual) {
-        Err(anyhow!("The dove version must meet the conditions '{}'. The current version of dove is '{}'.", req_ver, act_ver))
-    } else {
-        Ok(())
-    }
 }
 
 /// Get minimal version of Dove from Move.toml

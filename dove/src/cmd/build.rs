@@ -1,6 +1,7 @@
 use core::mem;
 use std::collections::HashMap;
 use std::fs;
+use std::fs::{remove_file};
 use std::ffi::OsStr;
 use std::fs::remove_file;
 use std::path::{PathBuf, Path};
@@ -17,6 +18,7 @@ use move_cli::run_cli;
 use move_core_types::language_storage::ModuleId;
 use move_package::BuildConfig;
 use move_symbol_pool::Symbol;
+
 use crate::cmd::Cmd;
 use crate::context::Context;
 use serde::{Serialize, Deserialize};
@@ -91,6 +93,9 @@ impl Cmd for Build {
 
         // packaging of modules
         self.run_package(ctx)?;
+
+        // Checking directories in the "build" section, if there are none, then create
+        checking_build_directories(ctx)?;
 
         // Checking directories in the "build" section, if there are none, then create
         checking_build_directories(ctx)?;

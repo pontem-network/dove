@@ -1,102 +1,43 @@
-// @todo
+use helper::{new_demo_project, delete_project, execute_dove_at, build};
 
-use fs_extra::file::write_all;
-use dove::tests_helper::{execute_dove_at, project_start_new_and_build, project_remove};
+mod helper;
 
-/// $ dove test
+/// Testing with a filter
+///
+/// $ dove test -f Test1 <<- success
+/// $ dove test -f Test3 <<- error
 #[test]
-fn test_cmd_dove_test_run_all_test_in_project() {
-    // Path to dove folder, project and project name
-    let project_name = "project_test_run_all_test_in_project";
-    let project_folder = project_start_new_and_build(project_name, None);
-    // project_folder/modules/mdemo.move
-    write_all(
-        &project_folder.join("modules").join("mdemo.move"),
-        "address 0x1 {
-                module DemoModule {
-                    public fun value(): u8 {
-                        12
-                    }
-                }
-            }",
-    )
-    .unwrap();
-    // project_folder/tests/test_1.move
-    write_all(
-        &project_folder.join("tests").join("test_1.move"),
-        "module 0x1::Tests {
-                    #[test]
-                    fun main() {
-                        assert((3+1)==4,1);
-                    }
-            }",
-    )
-    .unwrap();
-    execute_dove_at(&["dove", "test"], &project_folder).unwrap();
-    project_remove(&project_folder);
+fn test_cmd_dove_test() {
+    let project_name = "project_test";
+    let project_path = new_demo_project(project_name).unwrap();
+    build(&project_path).unwrap();
+
+    // Success
+    for test_name in ["Test1", "Test2"] {
+        execute_dove_at(&["test", "-f", test_name], &project_path).unwrap();
+    }
+    // Error
+    assert!(execute_dove_at(&["test", "-f", "Test3"], &project_path).is_err());
+
+    delete_project(&project_path).unwrap();
 }
 
-/// $ dove test -f test_2
+/// Display a list of tests
+/// $ dove test -l
 #[test]
-fn test_cmd_dove_test_run_one_test_in_project() {
-    // Path to dove folder, project and project name
-    let project_name = "project_test_run_one_test_in_project";
-    let project_folder = project_start_new_and_build(project_name, None);
-    // project_folder/modules/mdemo.move
-    write_all(
-        &project_folder.join("modules").join("mdemo.move"),
-        "address 0x1 {
-                module DemoModule {
-                    public fun value(): u8 {
-                        12
-                    }
-                }
-            }",
-    )
-    .unwrap();
-    // project_folder/tests/test_1.move
-    write_all(
-        &project_folder.join("tests").join("test_1.move"),
-        "module 0x1::Tests {
-                 #[test]
-                fun test_1() {
-                    assert((1+3)==4,1);
-                }
-            }",
-    )
-    .unwrap();
-    // project_folder/tests/test_2.move
-    write_all(
-        &project_folder.join("tests").join("test_2.move"),
-        "module 0x1::Tests_2 {
-                #[test]
-                fun test_2() {
-                    assert((2+2)==4,2);
-                }
-            }",
-    )
-    .unwrap();
-    execute_dove_at(&["dove", "test", "-f", "test_2"], &project_folder).unwrap();
-    project_remove(&project_folder);
-}
+fn test_cmd_dove_test_list() {
+    let project_name = "project_test_list";
+    let project_path = new_demo_project(project_name).unwrap();
+    build(&project_path).unwrap();
 
-/// $ dove test
-#[test]
-fn test_cmd_dove_test_fail_test_in_project() {
-    // Path to dove folder, project and project name
-    let project_name = "project_test_fail_test_in_project";
-    let project_folder = project_start_new_and_build(project_name, None);
-    // project_folder/tests/test_1.move
-    write_all(
-        &project_folder.join("tests").join("test_1.move"),
-        "module 0x1::Tests {
-                #[test]
-                fun main() {
-                    assert((3+2)==4,1);
-                }
-            }",
-    )
-    .unwrap();
-    assert!(execute_dove_at(&["dove", "test"], &project_folder).is_err());
-    project_remove(&project_folder);
+    let output = execute_dove_at(&["test", "-l"], &project_path).unwrap();
+    for name in [
+        "0x2::Test1::success",
+        "0x2::Test2::success",
+        "0x2::Test3::error",
+    ] {
+        assert!(output.contains(name));
+    }
+
+    delete_project(&project_path).unwrap();
 }

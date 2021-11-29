@@ -14,7 +14,7 @@ use dialect::Dialect;
 fn test_cmd_dove_new_without_arguments() {
     // Project name and path
     let project_name = "project_new_without_arguments";
-    let (base_path, project_path) = pre_start_dove_new(&project_name).unwrap();
+    let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
 
     execute_dove_at(&["new", project_name], &base_path).unwrap();
 
@@ -34,7 +34,7 @@ fn test_cmd_dove_new_without_arguments() {
 fn test_cmd_dove_new_with_minimal() {
     // Project name and path
     let project_name = "project_new_with_minimal";
-    let (base_path, project_path) = pre_start_dove_new(&project_name).unwrap();
+    let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
 
     execute_dove_at(&["new", project_name, "--minimal"], &base_path).unwrap();
     assert!(assert_basic_project_dirs_exist(&project_path).is_err());
@@ -48,7 +48,7 @@ fn test_cmd_dove_new_with_minimal() {
 fn test_cmd_dove_new_with_dialect() {
     // Project name and path
     let project_name = "project_new_with_dialect";
-    let (base_path, project_path) = pre_start_dove_new(&project_name).unwrap();
+    let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
 
     for dialect_name in ["pont", "diem", "dfinance"] {
         execute_dove_at(
@@ -71,7 +71,7 @@ fn test_cmd_dove_new_with_dialect() {
 fn test_cmd_dove_new_with_nonexistent_dialect() {
     // Project name and path
     let project_name = "project_new_with_nonexistent_dialect";
-    let (base_path, _) = pre_start_dove_new(&project_name).unwrap();
+    let (base_path, _) = pre_start_dove_new(project_name).unwrap();
 
     assert!(execute_dove_at(&["new", project_name, "--dialect", "noname"], &base_path).is_err());
 }
@@ -83,7 +83,7 @@ fn test_cmd_dove_new_with_address() {
     // Project name and path
     let project_name = "project_new_with_address";
 
-    let (base_path, project_path) = pre_start_dove_new(&project_name).unwrap();
+    let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
 
     for (dialect_name, addresses) in [
         (
@@ -104,7 +104,7 @@ fn test_cmd_dove_new_with_address() {
                     "new",
                     project_name,
                     "--dialect",
-                    &dialect_name,
+                    dialect_name,
                     "-a",
                     &format!("Account={}", &account_address),
                 ],

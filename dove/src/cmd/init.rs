@@ -1,12 +1,15 @@
-use std::path::PathBuf;
 use std::string::ToString;
+use std::path::PathBuf;
+use std::collections::HashMap;
 use structopt::StructOpt;
 use lazy_static::lazy_static;
 use regex::Regex;
 use move_cli::Move;
+use move_lang::shared::NumericalAddress;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
+use crate::cmd::new::dependencies_movestdlib;
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -93,13 +96,21 @@ fn move_toml_new(project_name: &str, move_args: &Move) -> String {
         move_toml_string += format!("dialect = \"{}\"\n", dialect_name).as_str();
     }
 
-    if !move_args.named_addresses.is_empty() {
-        move_toml_string += "\n[addresses]\n";
+    let mut addresses = move_args
+        .named_addresses
+        .iter()
+        .cloned()
+        .collect::<HashMap<String, NumericalAddress>>();
+    addresses.insert(
+        "Std".to_string(),
+        NumericalAddress::parse_str("0x1").unwrap(),
+    );
 
-        for (name, address) in &move_args.named_addresses {
-            move_toml_string += format!("{} = \"{}\"\n", name, address.to_string()).as_str();
-        }
+    move_toml_string += "\n[addresses]\n";
+
+    for (name, address) in &addresses {
+        move_toml_string += format!("{} = \"{}\"\n", name, address.to_string()).as_str();
     }
 
-    move_toml_string
+    move_toml_string + dependencies_movestdlib().as_str()
 }

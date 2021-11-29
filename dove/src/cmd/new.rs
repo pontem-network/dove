@@ -4,17 +4,16 @@ use std::fs::read_to_string;
 use toml::Value;
 use toml::map::Map;
 use structopt::StructOpt;
-
 use move_cli::{Move, run_cli};
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_package::BuildConfig;
-
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
+use crate::DIEM_VERSION;
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -68,7 +67,7 @@ impl Cmd for New {
             bail!("Failed to create a project")
         }
 
-        add_dialect_and_addresses(&project_dir, &ctx.move_args)?;
+        add_dialect_addresses_and_stdlib(&project_dir, &ctx.move_args)?;
 
         if !self.minimal {
             println!(
@@ -91,11 +90,7 @@ impl Cmd for New {
     }
 }
 
-fn add_dialect_and_addresses(project_dir: &Path, move_args: &Move) -> anyhow::Result<()> {
-    if move_args.dialect.is_none() && move_args.named_addresses.is_empty() {
-        return Ok(());
-    }
-
+fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move) -> anyhow::Result<()> {
     let move_toml_path = project_dir.join("Move.toml");
     let mut move_toml = read_to_string(&move_toml_path)?.parse::<Value>()?;
     // add to Move.toml - dialect,
@@ -110,24 +105,36 @@ fn add_dialect_and_addresses(project_dir: &Path, move_args: &Move) -> anyhow::Re
         );
     }
 
-    if !move_args.named_addresses.is_empty() {
-        if move_toml.get_mut("addresses").is_none() {
-            let new_table = Value::Table(Map::new());
-            move_toml
-                .as_table_mut()
-                .unwrap()
-                .insert("addresses".to_string(), new_table);
-        }
-        let address_table = move_toml
-            .get_mut("addresses")
-            .and_then(|value| value.as_table_mut())
-            .ok_or_else(|| anyhow!(r#"Couldn't get the "addresses" section in "Move.toml""#))?;
+    if move_toml.get_mut("addresses").is_none() {
+        let new_table = Value::Table(Map::new());
+        move_toml
+            .as_table_mut()
+            .unwrap()
+            .insert("addresses".to_string(), new_table);
+    }
+    let address_table = move_toml
+        .get_mut("addresses")
+        .and_then(|value| value.as_table_mut())
+        .ok_or_else(|| anyhow!(r#"Couldn't get the "addresses" section in "Move.toml""#))?;
+    address_table.insert("Std".to_string(), Value::String("0x1".to_string()));
 
-        for (name, address) in &move_args.named_addresses {
-            address_table.insert(name.clone(), Value::String(address.to_string()));
-        }
+    for (name, address) in &move_args.named_addresses {
+        address_table.insert(name.clone(), Value::String(address.to_string()));
     }
 
-    fs::write(&move_toml_path, move_toml.to_string())?;
+    let move_toml_string = move_toml.to_string() + dependencies_movestdlib().as_str();
+    fs::write(&move_toml_path, move_toml_string)?;
+
     Ok(())
+}
+
+/// Move.toml: Dependency movestdlib
+pub fn dependencies_movestdlib() -> String {
+    format!(
+        r#"[dependencies.MoveStdlib]
+git = "https://github.com/pontem-network/diem.git"
+rev = "{}"
+subdir = "language/move-stdlib""#,
+        DIEM_VERSION
+    )
 }
