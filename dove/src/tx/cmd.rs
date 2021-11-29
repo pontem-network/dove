@@ -16,7 +16,7 @@ Examples:
       'script_name()'
       'Module::function()'
       '0x1::Module::function()'
-      '0x1::Module::function -a [10,10] true 68656c6c6f776f726c64 100 0x1 -type 0x01::Dfinance::USD'
+      '0x1::Module::function --parameters [10,10] true 68656c6c6f776f726c64 100 0x1 --type 0x01::Dfinance::USD'
       "#)]
     call: String,
     #[structopt(

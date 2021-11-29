@@ -17,8 +17,8 @@ use crate::tx::model::{EnrichedTransaction, Transaction};
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(usage = "dove tx [call] [OPTIONS]\n
     Examples:
-    $ dove tx 'script_name<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)' --f file_name
-    $ dove tx script_name --file file_name -a [10,10] true 68656c6c6f776f726c64 100 0x1 -type 0x01::Dfinance::USD
+    $ dove tx 'script_name<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)'
+    $ dove tx 'script_name()' --parameters [10,10] true 68656c6c6f776f726c64 100 0x1 --type 0x01::Dfinance::USD
     $ dove tx '0x1::Module::script_name<0x01::Dfinance::USD>()'
 ")]
 pub struct CreateTransactionCmd {

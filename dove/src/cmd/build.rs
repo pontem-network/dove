@@ -47,9 +47,9 @@ pub struct Build {
     package: bool,
     // Names of modules to exclude from the package process..
     // Used with the "package" parameter.
-    // Modules are taken from the ./build/NAME_PROJECT/bytecode_modules directory.
+    // Modules are taken from the <PROJECT_PATH>/build/<PROJECT_NAME>/bytecode_modules directory.
     // The names are case-insensitive and can be specified with an extension.mv or without it.
-    // -modules_exclude NAME_1 NAME_2 NAME_3.mv
+    // --modules_exclude NAME_1 NAME_2 NAME_3
     #[structopt(
         help = "Names of modules to exclude from the package process..",
         long = "modules_exclude"

@@ -202,12 +202,6 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
     })
 }
 
-// pub enum CallBody {
-//     Script(String),
-//     Module(String, String),
-//     ModuleWithAddress(AccountAddress, String, String),
-// }
-
 fn parse_type_params(ctx: &mut Context) -> Result<Vec<TypeTag>, Error> {
     let error_message = "Invalid call script format: Invalid type parameters format.\n\n\
          Use pattern:\n\
