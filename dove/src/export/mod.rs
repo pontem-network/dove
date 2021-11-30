@@ -24,7 +24,13 @@ pub fn create_project_directories(project_dir: &Path) -> Result<(), Error> {
     .iter()
     .filter(|path| !path.exists())
     {
-        std::fs::create_dir_all(path)?;
+        std::fs::create_dir_all(path).map_err(|err| {
+            anyhow!(
+                "Failed to create \"DDD\" project directories\nPath:{}\n{:?}",
+                project_dir.display(),
+                err
+            )
+        })?;
     }
     Ok(())
 }
