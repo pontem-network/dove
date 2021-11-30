@@ -1,0 +1,187 @@
+name: Release
+on:
+  push:
+    tags:
+      - v?[0-9]+.[0-9]+.*
+  workflow_call:
+    inputs:
+      tag:
+        description: Target tag
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: page
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Extract the version tag
+        id: version
+        run: |
+          if [ -z "${{ inputs.tag }}" ]; then
+              echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
+          else
+              echo ::set-output name=value::${{ inputs.tag }}
+          fi
+
+      # checkout needed for changelog only
+      - name: Checkout
+        uses: actions/checkout@v2
+        with: { fetch-depth: 0 }
+
+      - id: changelog
+        name: Generate Changelog
+        continue-on-error: true
+        run: |
+          TAG_FIRST=$(git describe --abbrev=0 --tags $(git describe --abbrev=0)^)
+          TAG_SECOND=$(git describe --abbrev=0)
+          echo "Generating changelog between tags: ${{ steps.version.outputs.value }}...$TAG_FIRST...$TAG_SECOND"
+
+          RESULT_FILE=generated-changelog.md
+          RESULT_LOG_ACT="$(git log $TAG_SECOND...${{ steps.version.outputs.value }} --pretty=format:'- %s [·](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
+          RESULT_LOG_POST="$(git log $TAG_FIRST...$TAG_SECOND --pretty=format:'- %s [·](${{ github.event.repository.html_url }}/commit/%H)' --reverse)"
+
+          echo "
+          ## TODO: EDIT ME BEFORE PUBLISH
+
+          [link-tools]: ${{ github.event.repository.html_url }}/actions?query=workflow%3A%22Release%22
+          [badge-tools]: ${{ github.event.repository.html_url }}/workflows/Release/badge.svg?event=push_tag (tools workflow)
+
+          __Please wait build completions for:__
+          - [![Build Release][badge-tools]][link-tools]
+
+          - - -
+
+          __Changelog ${{ steps.version.outputs.value }}__…${TAG_SECOND}
+
+          $RESULT_LOG_ACT
+
+          __Changelog ${TAG_SECOND}__…${TAG_FIRST}
+
+          $RESULT_LOG_POST
+
+          <!-- Built with ♥️. -->
+          " > $RESULT_FILE
+
+          # echo ::set-output name=tag_from::"$TAG_FIRST"
+          # echo ::set-output name=tag_to::"$TAG_SECOND"
+          echo ::set-output name=file::"$RESULT_FILE"
+          # echo ::set-output name=text::$RESULT_LOG
+
+      - id: release
+        name: Create release ${{ steps.version.outputs.value }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          prerelease: true
+          tag_name: ${{ steps.version.outputs.value }}
+          release_name: ${{ steps.version.outputs.value }}
+          body_path: ${{ steps.changelog.outputs.file }}
+
+      - name: Save release assets url for other workflows
+        run: echo "${{ steps.version.outputs.value }} ${{ steps.release.outputs.upload_url }}" > release-upload.url
+
+      - name: Set release assets url as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release assets url
+          path: release-upload.url
+          if-no-files-found: error
+          retention-days: 1
+
+    outputs:
+      tag: ${{ steps.version.outputs.value }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+
+  build:
+    needs: release
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: darwin
+            os: macos-latest
+            triplet: x64-osx
+          - platform: linux
+            os: ubuntu-latest
+            triplet: x64-linux
+          # - platform: win
+          #   os: windows-latest
+          #   triplet: x64-windows-static-md
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout (${{ needs.release.outputs.tag }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: false
+
+      - name: Restore from cache and run vcpkg
+        if: ${{ matrix.platform == 'win' }}
+        uses: lukka/run-vcpkg@v7
+        with:
+          vcpkgArguments: openssl
+          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+          vcpkgTriplet: ${{ matrix.triplet }}
+          vcpkgGitCommitId: 92bbf7b3315172d63ffa58416e7cf3f05d8da8e6
+
+      - name: Build
+        run: cargo build --release --bin=dove
+
+      - id: dove
+        name: version of dove
+        uses: ./.github/actions/crate-version
+        with: { crate: dove }
+
+      - if: ${{ matrix.platform == 'win' }}
+        name: set up standard executable ext for ${{ matrix.platform }}
+        run: echo "OS_BIN_EXT=.exe" >> $GITHUB_ENV
+
+      - name: build info
+        id: build-info
+        run: |
+          uname -a > build-info.txt
+          rustc -V >> build-info.txt
+          echo "::set-output name=arch::$(uname -m)"
+
+      - name: prepare standalone executables
+        id: artifact
+        run: |
+          ARCH="${{ steps.build-info.outputs.arch }}"
+          RELEASE_DIR=target/release
+
+          DOVE_NAME=dove-${{ steps.dove.outputs.version }}-${{ matrix.platform }}-$ARCH$OS_BIN_EXT
+          cd $RELEASE_DIR
+
+          set +e
+          mv dove$OS_BIN_EXT $DOVE_NAME
+          set -e
+
+          echo "::set-output name=dove::$DOVE_NAME"
+          echo "::set-output name=dove_path::$RELEASE_DIR/$DOVE_NAME"
+
+      - name: upload dove
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.artifact.outputs.dove_path }}
+          asset_name: ${{ steps.artifact.outputs.dove }}
+          asset_content_type: application/gzip
