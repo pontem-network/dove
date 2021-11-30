@@ -92,7 +92,22 @@ impl Cmd for New {
 
 fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move) -> anyhow::Result<()> {
     let move_toml_path = project_dir.join("Move.toml");
-    let mut move_toml = read_to_string(&move_toml_path)?.parse::<Value>()?;
+    let mut move_toml = read_to_string(&move_toml_path)
+        .map_err(|err| {
+            anyhow!(
+                "Could not read the file {}\n{:?}",
+                move_toml_path.display(),
+                err
+            )
+        })?
+        .parse::<Value>()
+        .map_err(|err| {
+            anyhow!(
+                "Failed to convert to TOML {}\n{:?}",
+                move_toml_path.display(),
+                err
+            )
+        })?;
     // add to Move.toml - dialect,
     if let Some(dialect) = move_args.dialect.as_ref() {
         let packgage = move_toml

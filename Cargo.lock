@@ -124,18 +124,18 @@ dependencies = [
 
 [[package]]
 name = "ansi_term"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
+checksum = "d52a9bb7ec0cf484c551830a7ce27bd20d67eac647e1befb56b0be4ee39a55d2"
 dependencies = [
  "winapi 0.3.9",
 ]
 
 [[package]]
 name = "anyhow"
-version = "1.0.50"
+version = "1.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecc78c299ae753905840c5d3ba036c51f61ce5a98a83f98d9c9d29dffd427f71"
+checksum = "8b26702f315f53b6071259e15dd9d64528213b44d61de1ec926eca7715d62203"
 dependencies = [
  "backtrace",
 ]
@@ -546,9 +546,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "2.33.3"
+version = "2.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37e58ac78573c40708d45522f0d80fa2f01cc4f9b4e2bf749807255454312002"
+checksum = "a0610544180c38b88101fecf2dd634b174a62eef6946f84dfc6a7127512b381c"
 dependencies = [
  "ansi_term",
  "atty",
@@ -1794,16 +1794,19 @@ dependencies = [
 
 [[package]]
 name = "lang"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
+ "blake2-rfc",
  "codespan-reporting",
  "include_dir",
  "move-binary-format",
+ "move-compat",
  "move-core-types",
  "move-ir-types",
  "move-lang",
  "move-symbol-pool",
+ "rust-base58",
  "serde",
  "tempfile",
  "walkdir",
@@ -2033,6 +2036,16 @@ dependencies = [
  "diem-workspace-hack",
  "difference",
  "walkdir",
+]
+
+[[package]]
+name = "move-compat"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dialect",
+ "move-binary-format",
+ "move-core-types",
 ]
 
 [[package]]
@@ -2352,6 +2365,26 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "net"
+version = "0.1.2"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "dialect",
+ "hex",
+ "http",
+ "lang",
+ "log",
+ "move-binary-format",
+ "move-compat",
+ "move-core-types",
+ "move-vm-runtime",
+ "reqwest 0.10.10",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
