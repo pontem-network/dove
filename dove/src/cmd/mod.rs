@@ -1,6 +1,8 @@
 use std::fs::read_to_string;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use anyhow::Result;
 use dialect::init_context;
 use move_cli::Move;
@@ -36,6 +38,9 @@ pub trait Cmd {
         init_context(move_args.dialect);
         let manifest_string =
             read_to_string(project_dir.join(layout::SourcePackageLayout::Manifest.path()))?;
+        let mut hasher = DefaultHasher::default();
+        manifest_string.hash(&mut hasher);
+        let manifest_hash = hasher.finish();
         let toml_manifest = manifest_parser::parse_move_manifest_string(manifest_string)?;
         let manifest = manifest_parser::parse_source_manifest(toml_manifest)?;
 
@@ -43,6 +48,7 @@ pub trait Cmd {
             project_dir,
             move_args,
             manifest,
+            manifest_hash,
         })
     }
 
@@ -58,6 +64,7 @@ pub fn context_with_empty_manifest(project_dir: PathBuf, move_args: Move) -> Res
         move_args,
         // empty manifest
         manifest: default_sourcemanifest(),
+        manifest_hash: 0,
     })
 }
 
