@@ -1,0 +1,36 @@
+name: Release (Version)
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  push-tag:
+    name: Tag crate version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - id: new_tag
+        name: try create tag
+        uses: pontem-network/tag-crate-version@main
+        with:
+          crate: dove
+          version-to-tag: "$1"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+    outputs:
+      crate: ${{ steps.new_tag.outputs.crate }}
+      version: ${{ steps.new_tag.outputs.current }}
+      tag: ${{ steps.new_tag.outputs.tag }}
+      prev-tag: ${{ steps.new_tag.outputs.previous }}
+      success: ${{ steps.new_tag.outputs.success }}
+
+  release:
+    needs: push-tag
+    if: needs.push-tag.outputs.success
+    uses: fzzr-/move-tools/.github/workflows/release.yml@master
+    # SHOULD uses: ${{ github.event.repository.full_name }}/.github/workflows/release.yml@${{ github.ref }} or ${{ needs.push-tag.outputs.tag }}
+    with:
+      tag: ${{ needs.push-tag.outputs.tag }}
