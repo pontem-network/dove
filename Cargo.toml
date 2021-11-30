@@ -2,6 +2,8 @@
 members = [
     "dove",
     "lang",
+    "lang/compat",
+    "net",
     "common/git-hash",
 ]
 

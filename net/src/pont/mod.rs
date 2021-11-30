@@ -1,8 +1,7 @@
 use std::fmt::{Display, Formatter};
 use anyhow::{bail, Result};
 use serde::{Serialize, Deserialize};
-use lang::compiler::dialects::Dialect;
-use lang::compiler::address::ss58::address_to_ss58;
+use lang::ss58::address_to_ss58;
 use move_core_types::language_storage::{ModuleId, StructTag};
 use move_core_types::account_address::AccountAddress;
 use crate::{Net, BytesForBlock};
@@ -10,7 +9,6 @@ use crate::{Net, BytesForBlock};
 pub type Block = String;
 
 pub struct PontNet {
-    pub(crate) dialect: Box<dyn Dialect>,
     pub(crate) api: String,
 }
 
@@ -109,10 +107,6 @@ impl Net for PontNet {
             Ok(None)
         }
     }
-
-    fn dialect(&self) -> &dyn Dialect {
-        self.dialect.as_ref()
-    }
 }
 
 #[derive(Serialize)]
@@ -151,30 +145,27 @@ impl Display for ErrorMsg {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-    use lang::compiler::dialects::DialectName;
+    use lang::ss58::ss58_to_address;
     use move_core_types::account_address::AccountAddress;
     use move_core_types::identifier::Identifier;
     use move_core_types::language_storage::{ModuleId, StructTag};
     use super::PontNet;
     use crate::Net;
-    use lang::compiler::address::ss58::ss58_to_address;
 
     /// If the node is raised to "localhost:9933".
     #[ignore]
     #[test]
     fn test_get_module() {
-        let dialect_name = DialectName::from_str("pont").unwrap();
         let api = PontNet {
-            dialect: dialect_name.get_dialect(),
             api: "http://localhost:9933".to_string(),
         };
+
         let module = api
             .get_module(
-                &ModuleId {
-                    address: AccountAddress::from_hex_literal("0x1").unwrap(),
-                    name: Identifier::new("Hash").unwrap(),
-                },
+                &ModuleId::new(
+                    AccountAddress::from_hex_literal("0x1").unwrap(),
+                    Identifier::new("Hash").unwrap(),
+                ),
                 &None,
             )
             .unwrap()
@@ -196,9 +187,7 @@ mod tests {
     #[ignore]
     #[test]
     fn test_get_resource() {
-        let dialect_name = DialectName::from_str("pont").unwrap();
         let api = PontNet {
-            dialect: dialect_name.get_dialect(),
             api: "http://localhost:9933".to_string(),
         };
 
