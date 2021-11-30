@@ -4,32 +4,24 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{ModuleId, StructTag};
 use move_core_types::vm_status::StatusCode;
 use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
-
-use lang::compiler::dialects::Dialect as DialectTrait;
-use lang::compiler::dialects::DialectName;
-
+use dialect::Dialect;
 use crate::dnode::DnodeNet;
 use crate::pont::PontNet;
-use move_vm_runtime::data_cache::MoveStorage;
 
 mod dnode;
 mod pont;
 
 pub type Block = String;
 
-pub fn make_net<T>(uri: T, name: DialectName) -> Result<Box<dyn Net>>
+pub fn make_net<T>(uri: T, dialect: Dialect) -> Result<Box<dyn Net>>
 where
     T: Into<Uri>,
 {
     let uri = uri.into();
-    match name {
-        DialectName::Diem => Err(anyhow!("Unexpected dialect")),
-        DialectName::DFinance => Ok(Box::new(DnodeNet {
-            dialect: name.get_dialect(),
-            uri,
-        })),
-        DialectName::Pont => Ok(Box::new(PontNet {
-            dialect: name.get_dialect(),
+    match dialect {
+        Dialect::Diem => Err(anyhow!("Unexpected dialect")),
+        Dialect::DFinance => Ok(Box::new(DnodeNet { dialect, uri })),
+        Dialect::Pont => Ok(Box::new(PontNet {
             api: uri.to_string(),
         })),
     }
@@ -50,7 +42,6 @@ pub trait Net {
         tag: &StructTag,
         height: &Option<Block>,
     ) -> Result<Option<BytesForBlock>>;
-    fn dialect(&self) -> &dyn DialectTrait;
 }
 
 pub struct NetView {
@@ -66,10 +57,8 @@ impl NetView {
     pub fn set_block(&mut self, block: Option<Block>) {
         self.block = block;
     }
-}
 
-impl MoveStorage for NetView {
-    fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
+    pub fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
         self.net
             .get_module(module_id, &self.block)
             .map_err(|err| {
@@ -80,7 +69,7 @@ impl MoveStorage for NetView {
             .map(|bytes| bytes.map(|bytes| bytes.0))
     }
 
-    fn get_resource(
+    pub fn get_resource(
         &self,
         address: &AccountAddress,
         tag: &StructTag,
