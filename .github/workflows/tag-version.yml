@@ -30,7 +30,7 @@ jobs:
   release:
     needs: push-tag
     if: needs.push-tag.outputs.success
-    uses: fzzr-/move-tools/.github/workflows/release.yml@master
+    uses: pontem-network/move-tools/.github/workflows/release.yml@master
     # SHOULD uses: ${{ github.event.repository.full_name }}/.github/workflows/release.yml@${{ github.ref }} or ${{ needs.push-tag.outputs.tag }}
     with:
       tag: ${{ needs.push-tag.outputs.tag }}
