@@ -15,6 +15,8 @@ pub struct Context {
     pub move_args: Move,
     /// Project manifest.
     pub manifest: SourceManifest,
+    /// Manifest hash.
+    pub manifest_hash: u64,
 }
 
 impl Context {

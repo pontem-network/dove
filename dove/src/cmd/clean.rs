@@ -37,6 +37,7 @@ impl Cmd for Clean {
             project_dir,
             move_args,
             manifest: default_sourcemanifest(),
+            manifest_hash: 0,
         })
     }
 
