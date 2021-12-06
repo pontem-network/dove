@@ -13,7 +13,6 @@ use move_package::BuildConfig;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
-use crate::DIEM_VERSION;
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -131,10 +130,9 @@ fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move) -> any
 /// Move.toml: Dependency movestdlib
 pub fn dependencies_movestdlib() -> String {
     format!(
-        r#"[dependencies.MoveStdlib]
-git = "https://github.com/pontem-network/diem.git"
-rev = "{}"
-subdir = "language/move-stdlib""#,
-        DIEM_VERSION
+        r#"[dependencies.PontStdlib]
+git = "https://github.com/pontem-network/pont-stdlib.git"
+rev = "ca73f26f61ade918591c487bbe368459d8446c7d""#,
     )
 }
+

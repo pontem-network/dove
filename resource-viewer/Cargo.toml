@@ -28,7 +28,7 @@ move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch =
 
 # move-lang deps:
 lang = { path = "../lang" }
-git-hash = { path = "../common/git-hash" }
+git-hash = { path = "../git-hash" }
 compat = { path = "../lang/compat", package = "move-compat" }
 net = { path = "../net" }
 
