@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "dove",
+    "cli",
     "lang",
-    "common/git-hash",
+    "git-hash",
 ]
 
 [profile.release]

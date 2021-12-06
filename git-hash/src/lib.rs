@@ -123,7 +123,7 @@ impl DependencyInfo {
             (branch, hash)
         }
 
-        let toml_string = std::fs::read_to_string("Cargo.lock").unwrap_or_default();
+        let toml_string = std::fs::read_to_string("../../Cargo.lock").unwrap_or_default();
         toml_string
             .split("[[package]]")
             .find(|package| package.contains(&format!(r#"name = "{}""#, name)))

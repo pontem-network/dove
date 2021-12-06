@@ -11,7 +11,7 @@ edition = "2021"
 
 [dependencies]
 # LOCAL
-git-hash = { path = "../common/git-hash" }
+git-hash = { path = "../git-hash" }
 lang = { path = "../lang" }
 
 # DIEM
