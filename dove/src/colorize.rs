@@ -16,16 +16,18 @@ fn get_colorchoice_color() -> ColorChoice {
 }
 
 /// set by flag --color=.. auto|always|never|ansi and stdout
-pub fn set_colorchoice_for_stdout() -> Result<(), Error> {
-    let flag = std::env::args()
-        .find_map(|it| {
-            if it.to_lowercase().contains("--color=") {
-                Some((&it[8..]).to_lowercase())
-            } else {
-                None
-            }
-        })
-        .unwrap_or_else(|| "auto".to_string());
+pub fn set_colorchoice_for_stdout(value: Option<&str>) -> Result<(), Error> {
+    let flag = value.map(|v| v.to_string()).unwrap_or_else(|| {
+        std::env::args()
+            .find_map(|it| {
+                if it.to_lowercase().contains("--color=") {
+                    Some((&it[8..]).to_lowercase())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| "auto".to_string())
+    });
 
     let color_flag = match flag.as_str() {
         "always" => ColorChoice::Always,
