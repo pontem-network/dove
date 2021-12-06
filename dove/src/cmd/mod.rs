@@ -29,6 +29,8 @@ pub mod run;
 pub mod test;
 /// Create transaction.
 pub mod tx;
+/// Move Resource Viewer
+pub mod view;
 
 /// Move command.
 pub trait Cmd {
