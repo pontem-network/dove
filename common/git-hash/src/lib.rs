@@ -144,3 +144,11 @@ impl DependencyInfo {
             .unwrap_or_default()
     }
 }
+impl Default for DependencyInfo {
+    fn default() -> Self {
+        DependencyInfo {
+            branch: None,
+            hash: None,
+        }
+    }
+}
