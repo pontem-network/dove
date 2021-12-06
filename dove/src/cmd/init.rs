@@ -9,7 +9,7 @@ use move_lang::shared::NumericalAddress;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
-use crate::cmd::new::dependencies_movestdlib;
+use crate::cmd::new::dependencies_ponstdlib;
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -112,5 +112,5 @@ fn move_toml_new(project_name: &str, move_args: &Move) -> String {
         move_toml_string += format!("{} = \"{}\"\n", name, address.to_string()).as_str();
     }
 
-    move_toml_string + dependencies_movestdlib().as_str()
+    move_toml_string + dependencies_ponstdlib().as_str()
 }
