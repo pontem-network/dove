@@ -94,7 +94,7 @@ fn opt_tokenize(s: Option<String>) -> Result<TokenStream, LexError> {
         .unwrap_or_else(|| "None".to_owned())
         .parse()
 }
-
+#[derive(Default)]
 struct DependencyInfo {
     branch: Option<String>,
     hash: Option<String>,
@@ -141,13 +141,5 @@ impl DependencyInfo {
                 DependencyInfo { branch, hash }
             })
             .unwrap_or_default()
-    }
-}
-impl Default for DependencyInfo {
-    fn default() -> Self {
-        DependencyInfo {
-            branch: None,
-            hash: None,
-        }
     }
 }
