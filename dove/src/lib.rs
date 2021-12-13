@@ -7,9 +7,9 @@ pub const DOVE_VERSION: &str = git_hash::crate_version!();
 pub const DOVE_HASH: &str = git_hash::git_hash_short_as_str!();
 
 /// Version and Tag (v###) for PONT STDLIB
-pub const PONT_STDLIB_VERSION: &str = "v0.3.0";
+pub const PONT_STDLIB_VERSION: &str = "ca73f26f61ade918591c487bbe368459d8446c7d";
 /// GIT URL for PONT STDLIB
-pub const PONT_STDLIB_URL: &str = "https://github.com/pontem-network/move-stdlib";
+pub const PONT_STDLIB_URL: &str = "https://github.com/pontem-network/pont-stdlib";
 
 /// DIEM version|branch
 pub const DIEM_VERSION: &str = git_hash::dependency_branch_from_cargo_lock!("move-cli");

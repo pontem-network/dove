@@ -22,8 +22,8 @@ use crate::cmd::init::Init;
 use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::tx::CreateTransactionCmd;
+use crate::cmd::view::View;
 use crate::colorize::set_colorchoice_for_stdout;
-use crate::manifest::HashU64;
 use crate::context::Context;
 
 const HASH_FILE_NAME: &str = ".version";
@@ -160,6 +160,13 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Export,
     },
+    /// Move Resource Viewer
+    #[structopt(about = "Move Resource Viewer")]
+    View {
+        /// Command.
+        #[structopt(flatten)]
+        cmd: View,
+    },
 }
 
 impl Command {
@@ -192,6 +199,7 @@ impl Command {
             Command::Tx { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Prove { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Export { cmd } => CommonCommand::Dove(Box::new(cmd)),
+            Command::View { cmd } => CommonCommand::Dove(Box::new(cmd)),
         }
     }
 }
@@ -231,9 +239,9 @@ where
         CommonCommand::Dove(mut cmd) => {
             let mut ctx = cmd.context(cwd, move_args)?;
 
-            if move_toml_has_been_updated(&ctx) {
+            if !check_manifest_hash(&ctx) {
                 run_internal_clean(&mut ctx)?;
-                update_move_toml_hash(&ctx)?;
+                store_manifest_checksum(&ctx)?;
             }
             cmd.apply(&mut ctx)
         }
@@ -254,30 +262,32 @@ fn check_dove_version(req_ver: &str) -> Result<(), Error> {
 }
 
 /// Move.toml has been updated
-fn move_toml_has_been_updated(ctx: &Context) -> bool {
+fn check_manifest_hash(ctx: &Context) -> bool {
     let path_version = ctx.project_dir.join("build").join(HASH_FILE_NAME);
     if !path_version.exists() {
-        return true;
+        return false;
     }
-    let new_version = ctx.manifest.hash_u64();
+
     let old_version = fs::read_to_string(&path_version)
         .unwrap_or_default()
         .parse::<u64>()
         .unwrap_or_default();
 
-    new_version != old_version
+    ctx.manifest_hash == old_version
 }
 
 /// Writing the hash move.toml to file
-fn update_move_toml_hash(ctx: &Context) -> Result<u64> {
-    let hash = ctx.manifest.hash_u64();
+fn store_manifest_checksum(ctx: &Context) -> Result<()> {
     let build_path = ctx.project_dir.join("build");
     if !build_path.exists() {
         fs::create_dir_all(&build_path)?;
     }
     let path_version = build_path.join(HASH_FILE_NAME);
-    fs::write(&path_version, hash.to_string())?;
-    Ok(hash)
+    if path_version.exists() {
+        fs::remove_file(&path_version)?;
+    }
+    fs::write(&path_version, ctx.manifest_hash.to_string())?;
+    Ok(())
 }
 
 /// To display the full version of "Dove"
