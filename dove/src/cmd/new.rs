@@ -30,9 +30,9 @@ pub struct New {
     minimal: bool,
 
     #[structopt(
-        help = "Named  address.", 
-        long = "addresses", 
-        short = "a", 
+        help = "Named  address.",
+        long = "addresses",
+        short = "a",
         parse(try_from_str = parse_named_address)
     )]
     addresses: Vec<(String, String)>,
