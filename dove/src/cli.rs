@@ -19,6 +19,7 @@ use crate::cmd::build::Build;
 use crate::cmd::clean::{Clean, run_internal_clean};
 use crate::cmd::export::Export;
 use crate::cmd::init::Init;
+use crate::cmd::publish::Publish;
 use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::tx::CreateTransactionCmd;
@@ -167,6 +168,13 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: View,
     },
+    /// Publishing a module or package
+    #[structopt(about = "Publishing a module or package")]
+    Publish {
+        /// Command.
+        #[structopt(flatten)]
+        cmd: Publish,
+    },
 }
 
 impl Command {
@@ -200,6 +208,8 @@ impl Command {
             Command::Prove { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Export { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::View { cmd } => CommonCommand::Dove(Box::new(cmd)),
+            // Publishing a module or package
+            Command::Publish { cmd } => CommonCommand::Dove(Box::new(cmd)),
         }
     }
 }

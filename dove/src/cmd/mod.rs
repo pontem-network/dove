@@ -23,6 +23,8 @@ pub mod init;
 pub mod new;
 /// Run move prover.
 pub mod prover;
+/// Publishing a module or package
+pub mod publish;
 /// Script executor.
 pub mod run;
 /// Test runner.
