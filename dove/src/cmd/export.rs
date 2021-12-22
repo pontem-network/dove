@@ -18,8 +18,6 @@ use crate::export::dove_manifest::read_manifest;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Export {
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
 }
 
 impl Cmd for Export {

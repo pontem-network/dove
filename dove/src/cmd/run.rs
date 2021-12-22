@@ -4,12 +4,12 @@ use structopt::StructOpt;
 use anyhow::{Error, Result};
 use bytecode_source_map::source_map::SourceMap;
 use lang::bytecode::info::BytecodeInfo;
-use move_cli::{Move, run_cli};
+use move_cli::{DEFAULT_STORAGE_DIR, Move, run_cli};
 use move_cli::sandbox::cli::SandboxCommand;
 use move_cli::Command;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
-use move_lang::shared::{NumberFormat, NumericalAddress};
+use move_package::BuildConfig;
 use move_package::compilation::package_layout::CompiledPackageLayout;
 use crate::cmd::Cmd;
 use crate::cmd::build::run_internal_build;
@@ -33,11 +33,9 @@ use crate::tx::model::EnrichedTransaction;
 pub struct Run {
     #[structopt(flatten)]
     call: CallDeclarationCmd,
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
     /// If set, the effects of executing `script_file` (i.e., published, updated, and
     /// deleted resources) will NOT be committed to disk.
-    #[structopt(long = "dry-run", short = "d")]
+    #[structopt(long = "dry-run")]
     dry_run: bool,
     /// Gas budget.
     #[structopt(long = "gas_budget", short = "g")]
@@ -46,8 +44,8 @@ pub struct Run {
 
 impl Cmd for Run {
     fn apply(&mut self, ctx: &mut Context) -> Result<()>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         run_internal_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_run())?;
@@ -83,27 +81,28 @@ impl Cmd for Run {
                     .named_address()
                     .into_iter()
                     .filter_map(|(k, v)| v.map(|v| (k, v)))
-                    .map(|(k, v)| {
-                        (
-                            k.to_string(),
-                            NumericalAddress::new(v.into_bytes(), NumberFormat::Hex),
-                        )
-                    })
+                    .map(|(k, v)| (k.to_string(), v))
                     .collect();
 
                 let move_args = Move {
-                    named_addresses,
-                    storage_dir: ctx.move_args.storage_dir.clone(),
-                    build_dir: ctx.move_args.build_dir.clone(),
-                    mode: ctx.move_args.mode,
+                    package_path: ctx.project_dir.clone(),
                     dialect: ctx.move_args.dialect,
                     verbose: ctx.move_args.verbose,
+                    build_config: BuildConfig {
+                        dev_mode: true,
+                        test_mode: true,
+                        generate_docs: false,
+                        generate_abis: false,
+                        install_dir: None,
+                        force_recompilation: false,
+                        additional_named_addresses: named_addresses,
+                    },
                 };
                 run_cli(
                     natives,
                     &error_descriptions,
                     &move_args,
-                    &Command::Sandbox { cmd },
+                    &Command::Sandbox { storage_dir: PathBuf::from(DEFAULT_STORAGE_DIR), cmd },
                 )
             }
             EnrichedTransaction::Global { .. } => unreachable!(),
@@ -134,12 +133,12 @@ fn find_loc(source_map: &SourceMap) -> Result<PathBuf> {
     source_map
         .function_map
         .iter()
-        .find_map(|(_, v)| Some(PathBuf::from(v.decl_location.file().as_str())))
+        .find_map(|(_, v)| Some(PathBuf::from(v.definition_location.file_hash().to_string())))
         .or_else(|| {
             source_map
                 .struct_map
                 .iter()
-                .find_map(|(_, v)| Some(PathBuf::from(v.decl_location.file().as_str())))
+                .find_map(|(_, v)| Some(PathBuf::from(v.definition_location.file_hash().to_string())))
         })
         .ok_or_else(|| anyhow!("Script location not found"))
 }

@@ -26,8 +26,6 @@ pub struct CreateTransactionCmd {
     call: CallDeclarationCmd,
     #[structopt(help = "Output file name.", long = "output", short = "o")]
     output: Option<String>,
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
 }
 
 impl Cmd for CreateTransactionCmd {

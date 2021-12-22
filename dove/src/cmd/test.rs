@@ -2,7 +2,6 @@ use structopt::StructOpt;
 use move_core_types::errmap::ErrorMapping;
 use move_cli::{run_cli, Command as MoveCommand};
 use move_cli::package::cli::PackageCommand;
-use move_package::BuildConfig;
 use diem_types::account_address::AccountAddress;
 use crate::cmd::Cmd;
 use crate::cmd::build::run_internal_build;
@@ -52,6 +51,10 @@ pub struct Test {
     /// Verbose mode
     #[structopt(long = "verbose")]
     verbose_mode: bool,
+
+    /// Compute coverage
+    #[structopt(long = "coverage")]
+    compute_coverage: bool,
 }
 
 impl Cmd for Test {
@@ -77,13 +80,7 @@ impl Cmd for Test {
                 report_storage_on_error: self.report_storage_on_error,
                 check_stackless_vm: self.check_stackless_vm,
                 verbose_mode: self.verbose_mode,
-            },
-            path: Some(ctx.project_dir.clone()),
-            config: BuildConfig {
-                generate_abis: false,
-                generate_docs: false,
-                test_mode: true,
-                dev_mode: true,
+                compute_coverage: self.compute_coverage
             },
         };
 

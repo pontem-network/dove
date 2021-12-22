@@ -1,15 +1,13 @@
-use std::string::ToString;
 use std::path::PathBuf;
-use std::collections::HashMap;
 use structopt::StructOpt;
 use lazy_static::lazy_static;
 use regex::Regex;
 use move_cli::Move;
-use move_lang::shared::NumericalAddress;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
 use crate::cmd::new::dependencies_movestdlib;
+use crate::cmd::new::parse_named_address;
 
 /// Init project command.
 #[derive(StructOpt, Debug)]
@@ -22,6 +20,8 @@ pub struct Init {
         short = "m"
     )]
     minimal: bool,
+    #[structopt(help = "Named  address.", long = "addresses", short = "a", parse(try_from_str = parse_named_address))]
+    addresses: Vec<(String, String)>,
 }
 
 impl Cmd for Init {
@@ -50,7 +50,7 @@ impl Cmd for Init {
             project_name
         );
 
-        let move_toml_string = move_toml_new(project_name, &ctx.move_args);
+        let move_toml_string = move_toml_new(project_name, &ctx.move_args, &self.addresses);
         std::fs::write(move_toml_path, move_toml_string)?;
 
         if !self.minimal {
@@ -82,7 +82,7 @@ fn is_valid_name(text: &str) -> bool {
     RE.is_match(text)
 }
 
-fn move_toml_new(project_name: &str, move_args: &Move) -> String {
+fn move_toml_new(project_name: &str, move_args: &Move, addresses: &[(String, String)]) -> String {
     let mut move_toml_string = format!(
         "\
         [package]\n\
@@ -96,19 +96,9 @@ fn move_toml_new(project_name: &str, move_args: &Move) -> String {
         move_toml_string += format!("dialect = \"{}\"\n", dialect_name).as_str();
     }
 
-    let mut addresses = move_args
-        .named_addresses
-        .iter()
-        .cloned()
-        .collect::<HashMap<String, NumericalAddress>>();
-    addresses.insert(
-        "Std".to_string(),
-        NumericalAddress::parse_str("0x1").unwrap(),
-    );
-
     move_toml_string += "\n[addresses]\n";
-
-    for (name, address) in &addresses {
+    move_toml_string += "Std = \"0x1\"\n";
+    for (name, address) in addresses {
         move_toml_string += format!("{} = \"{}\"\n", name, address.to_string()).as_str();
     }
 

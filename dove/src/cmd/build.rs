@@ -15,7 +15,6 @@ use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
 use move_core_types::language_storage::ModuleId;
-use move_package::BuildConfig;
 use move_symbol_pool::Symbol;
 
 use crate::cmd::Cmd;
@@ -26,9 +25,6 @@ use serde::{Serialize, Deserialize};
 #[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Build {
-    #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
-    doc: bool,
-
     /// Generate error map for the package and its dependencies
     /// at path for use by the Move explanation tool.
     #[structopt(long)]
@@ -40,9 +36,9 @@ pub struct Build {
     // Pack the assembled modules into a single file,
     // except for those specified in modules_exclude
     #[structopt(
-        help = "Package modules in a binary file.",
-        short = "p",
-        long = "package"
+        help = "Package modules in a binary bundle file.",
+        short = "b",
+        long = "bundle"
     )]
     package: bool,
     // Names of modules to exclude from the package process..
@@ -71,13 +67,6 @@ impl Cmd for Build {
             bcs::from_bytes(move_stdlib::error_descriptions())?;
         let cmd = MoveCommand::Package {
             cmd: PackageCommand::Build {},
-            path: Some(ctx.project_dir.clone()),
-            config: BuildConfig {
-                generate_abis: false,
-                generate_docs: self.doc,
-                test_mode: false,
-                dev_mode: false,
-            },
         };
 
         run_cli(
@@ -119,13 +108,6 @@ impl Build {
             cmd: PackageCommand::ErrMapGen {
                 error_prefix: None,
                 output_file: path,
-            },
-            path: Some(ctx.project_dir.clone()),
-            config: BuildConfig {
-                generate_abis: false,
-                generate_docs: false,
-                test_mode: false,
-                dev_mode: false,
             },
         };
 

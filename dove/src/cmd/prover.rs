@@ -46,19 +46,19 @@ impl Cmd for Prove {
     where
         Self: Sized,
     {
-        let (boogie_exe, z3_exe, cvc4_exe) = self.make_config(ctx).map(|conf| {
+        let (boogie_exe, z3_exe, cvc5_exe) = self.make_config(ctx).map(|conf| {
             (
                 conf.boogie_exe.unwrap_or_default(),
                 conf.z3_exe.unwrap_or_default(),
-                conf.cvc4_exe.unwrap_or_default(),
+                conf.cvc5_exe.unwrap_or_default(),
             )
         })?;
 
         ensure!(is_boogie_available(&boogie_exe), "boogie executable not found in PATH. Please install it from https://github.com/boogie-org/boogie");
         ensure!(is_z3_available(&z3_exe), "z3 executable not found in PATH. Please install it from https://github.com/Z3Prover/z3");
 
-        if !cvc4_exe.is_empty() {
-            ensure!(is_cvc4_available(&cvc4_exe), "cvc4 executable not found in PATH. Please install it from https://github.com/CVC4/CVC4-archived");
+        if !cvc5_exe.is_empty() {
+            ensure!(is_cvc4_available(&cvc5_exe), "cvc4 executable not found in PATH. Please install it from https://github.com/CVC4/CVC4-archived");
         }
 
         // Build a project
@@ -78,9 +78,9 @@ impl Cmd for Prove {
             BoogieOptions::default()
         };
 
-        if cvc4_exe.is_empty() && boogie_options.use_cvc4 {
+        if cvc5_exe.is_empty() && boogie_options.use_cvc5 {
             println!("Warning: cvc4 is not defined.");
-            boogie_options.use_cvc4 = false;
+            boogie_options.use_cvc5 = false;
         }
 
         // addresses
@@ -105,7 +105,7 @@ impl Cmd for Prove {
             backend: BoogieOptions {
                 boogie_exe,
                 z3_exe,
-                cvc4_exe,
+                cvc5_exe,
                 ..boogie_options
             },
             move_deps,
@@ -132,8 +132,8 @@ impl Prove {
             if let Some(z3_exe) = toml_conf.z3_exe {
                 conf.z3_exe = Some(z3_exe);
             }
-            if let Some(cvc4_exe) = toml_conf.cvc4_exe {
-                conf.cvc4_exe = Some(cvc4_exe);
+            if let Some(cvc4_exe) = toml_conf.cvc5_exe {
+                conf.cvc5_exe = Some(cvc4_exe);
             }
         }
         // cmd
@@ -144,7 +144,7 @@ impl Prove {
             conf.z3_exe = Some(z3_exe);
         }
         if let Some(cvc4_exe) = self.cvc4_exe.take() {
-            conf.cvc4_exe = Some(cvc4_exe);
+            conf.cvc5_exe = Some(cvc4_exe);
         }
         conf.normalize()?;
         Ok(conf)
@@ -212,7 +212,7 @@ struct ProverConfig {
     #[serde(rename = "z3")]
     pub z3_exe: Option<String>,
     #[serde(rename = "cvc4")]
-    pub cvc4_exe: Option<String>,
+    pub cvc5_exe: Option<String>,
 }
 
 impl ProverConfig {
@@ -221,13 +221,13 @@ impl ProverConfig {
             ProverConfig {
                 boogie_exe: find_path(&env_path, BOOGIE_EXE),
                 z3_exe: find_path(&env_path, Z3_EXE),
-                cvc4_exe: find_path(&env_path, CVC4_EXE),
+                cvc5_exe: find_path(&env_path, CVC4_EXE),
             }
         } else {
             ProverConfig {
                 boogie_exe: None,
                 z3_exe: None,
-                cvc4_exe: None,
+                cvc5_exe: None,
             }
         }
     }
@@ -252,7 +252,7 @@ impl ProverConfig {
 
             canonicalize(self.boogie_exe.as_mut(), &home)?;
             canonicalize(self.z3_exe.as_mut(), &home)?;
-            canonicalize(self.cvc4_exe.as_mut(), &home)?;
+            canonicalize(self.cvc5_exe.as_mut(), &home)?;
         }
         Ok(())
     }

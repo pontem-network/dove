@@ -150,47 +150,47 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
     // scripts/one_param.move
     let mut one_param_scripts =
         fs::File::create(project_path.join("scripts").join("one_param.move"))?;
-    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert(a,2); } }")?;
+    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert!(a,2); } }")?;
 
     // scripts/two_params.move
     let mut two_params_scripts =
         fs::File::create(project_path.join("scripts").join("two_params.move"))?;
-    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert(a==b,2); } }")?;
+    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert!(a==b,2); } }")?;
 
     // scripts/with_type.move
     let mut with_type_scripts =
         fs::File::create(project_path.join("scripts").join("with_type.move"))?;
-    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert(true, 3); } }")?;
+    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert!(true, 3); } }")?;
 
     // scripts/multiple_scripts.move
     let mut multiple_scripts =
         fs::File::create(project_path.join("scripts").join("multiple_scripts.move"))?;
     multiple_scripts.write_all(
-        b"script { fun script_1(a:bool){ assert(a, 1); } }\n\
-            script { fun script_2(a:u8, b:u8){ assert(a==b,2); } }",
+        b"script { fun script_1(a:bool){ assert!(a, 1); } }\n\
+            script { fun script_2(a:u8, b:u8){ assert!(a==b,2); } }",
     )?;
 
     // scripts/one_param.move
     let mut one_param_scripts =
         fs::File::create(project_path.join("scripts").join("one_param.move"))?;
-    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert(a,2); } }")?;
+    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert!(a,2); } }")?;
 
     // scripts/two_params.move
     let mut two_params_scripts =
         fs::File::create(project_path.join("scripts").join("two_params.move"))?;
-    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert(a==b,2); } }")?;
+    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert!(a==b,2); } }")?;
 
     // scripts/with_type.move
     let mut with_type_scripts =
         fs::File::create(project_path.join("scripts").join("with_type.move"))?;
-    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert(true, 3); } }")?;
+    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert!(true, 3); } }")?;
 
     // scripts/multiple_scripts.move
     let mut multiple_scripts =
         fs::File::create(project_path.join("scripts").join("multiple_scripts.move"))?;
     multiple_scripts.write_all(
-        b"script { fun script_1(a:bool){ assert(a, 1); } }\n\
-            script { fun script_2(a:u8, b:u8){ assert(a==b,2); } }",
+        b"script { fun script_1(a:bool){ assert!(a, 1); } }\n\
+            script { fun script_2(a:u8, b:u8){ assert!(a==b,2); } }",
     )?;
 
     // sources/demo1v.move
@@ -211,7 +211,7 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
         b"#[test_only]\n\
         module Demo::Test1{\n\
             #[test]\n\
-            fun success(){ assert(true,1); }\n\
+            fun success(){ assert!(true,1); }\n\
         }",
     )?;
 
@@ -221,7 +221,7 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
         b"#[test_only]\n\
         module Demo::Test2{\n\
             #[test]\n\
-            fun success(){ assert(true,2); }\n\
+            fun success(){ assert!(true,2); }\n\
         }",
     )?;
 
@@ -231,7 +231,7 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
         b"#[test_only]\n\
         module Demo::Test3{\n\
             #[test]\n\
-            fun error(){ assert(false,3); }\n\
+            fun error(){ assert!(false,3); }\n\
         }",
     )?;
 

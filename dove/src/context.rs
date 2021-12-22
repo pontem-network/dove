@@ -2,10 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use anyhow::Error;
 use move_cli::Move;
-use move_core_types::account_address::AccountAddress;
 use move_package::compilation::package_layout::CompiledPackageLayout;
 use move_package::source_package::parsed_manifest::{AddressDeclarations, SourceManifest};
-use move_symbol_pool::Symbol;
 
 /// Project context.
 pub struct Context {
@@ -62,14 +60,7 @@ impl Context {
 
     /// Creates and returns map of named addresses.
     pub fn named_address(&self) -> AddressDeclarations {
-        let mut named_address = self.manifest.addresses.clone().unwrap_or_default();
-        for (name, addr) in &self.move_args.named_addresses {
-            named_address.insert(
-                Symbol::from(name.as_str()),
-                Some(AccountAddress::new(addr.into_bytes())),
-            );
-        }
-        named_address
+        self.manifest.addresses.clone().unwrap_or_default()
     }
 
     /// Returns transaction output folder for specified `package` or for the default package.
