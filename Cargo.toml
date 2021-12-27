@@ -5,8 +5,10 @@ members = [
     "lang/compat",
     "net",
     "common/git-hash",
-    "resource-viewer"
+    "resource-viewer",
+    "subxt-client"
 ]
+exclude = [ "libs", "libs/subxt","libs/hash_project"]
 
 [profile.release]
 lto = "thin"

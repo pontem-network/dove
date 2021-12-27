@@ -1,0 +1,19 @@
+[package]
+name = "subxt-client"
+version = "0.15.0"
+edition = "2021"
+
+# the script for building the library "subxt"
+build = "build.rs"
+
+[dependencies]
+anyhow = "1.0"
+libloading = ">=0.6"
+rand = ">=0.3"
+url = ">=2"
+#
+hash_project = { path = "../libs/hash_project" }
+
+[dev-dependencies]
+env_logger = "0.9"
+log = "0.4"

@@ -1,0 +1,26 @@
+[package]
+name = "subxt"
+version = "0.15.0"
+edition = "2021"
+
+[lib]
+crate_type = ["cdylib"]
+
+[workspace]
+name = "subxt"
+
+[dependencies]
+hex = "0.4"
+log = "0.4"
+anyhow = "1.0"
+url = ">=2"
+tokio = "1"
+codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive", "full", "bit-vec"] }
+subxt = { git = "https://github.com/vladimirovmm/subxt", branch = "pontem" }
+sp-keyring = { package = "sp-keyring", git = "https://github.com/paritytech/substrate/", branch = "polkadot-v0.9.12" }
+sp-core = { git = "https://github.com/paritytech/substrate/", branch = "polkadot-v0.9.12" }
+#
+hash_project = { package="hash_project", path = "../hash_project" }
+
+[dev-dependencies]
+env_logger = "0.9"
