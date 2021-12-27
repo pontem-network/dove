@@ -1,13 +1,9 @@
 use std::path::PathBuf;
-use std::process::exit;
 use structopt::StructOpt;
 use anyhow::Result;
-use log::debug;
-use url::Url;
 use move_cli::Move;
 use subxt_client::SubxtClient;
 use crate::cmd::{Cmd, default_sourcemanifest};
-use crate::cmd::publish::Publish::{Module, Package};
 use crate::context::Context;
 
 /// Publishing a module or package.
@@ -33,20 +29,19 @@ pub enum Publish {
     },
 }
 
-/// Parameters for publishing a module, package or transaction
+/// Parameters for publishing a module or package  
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
     usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]\n
     Examples:
     $ dove publish module --file PATH/TO/MODULE.mv  --gas 100 
-    $ dove execute --file /PATH/TO/TRANSACTION.mv  --gas 100
     $ dove publish package --file ./PATH/TO/PACKAGE.mv --gas 100 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
     $ dove publish module --file /PATH/TO/MODULE.mv  --gas 100 --account alice --url ws://127.0.0.1:9944
 "
 )]
 pub struct PublicationParameters {
-    /// The path to the module, transaction or package file.
+    /// The path to the module or package file.
     #[structopt(short, long, parse(from_os_str))]
     file: PathBuf,
     /// Account from whom to publish

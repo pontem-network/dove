@@ -17,6 +17,7 @@ use crate::cmd::Cmd;
 use crate::cmd::new::New;
 use crate::cmd::build::Build;
 use crate::cmd::clean::{Clean, run_internal_clean};
+use crate::cmd::execute::Execute;
 use crate::cmd::export::Export;
 use crate::cmd::init::Init;
 use crate::cmd::publish::Publish;
@@ -31,9 +32,9 @@ const HASH_FILE_NAME: &str = ".version";
 
 #[derive(StructOpt)]
 #[structopt(
-name = "Dove",
-version = git_hash::crate_version_with_git_hash_short ! (),
-long_version = create_long_version(),
+    name = "Dove", 
+    version = git_hash::crate_version_with_git_hash_short ! (),
+    long_version = create_long_version(),
 )]
 struct Opt {
     #[structopt(flatten)]
@@ -175,6 +176,13 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Publish,
     },
+    /// Execute a transaction
+    #[structopt(about = "Execute a transaction")]
+    Execute {
+        /// Command.
+        #[structopt(flatten)]
+        cmd: Execute,
+    },
 }
 
 impl Command {
@@ -210,6 +218,8 @@ impl Command {
             Command::View { cmd } => CommonCommand::Dove(Box::new(cmd)),
             // Publishing a module or package
             Command::Publish { cmd } => CommonCommand::Dove(Box::new(cmd)),
+            // Execute a transaction
+            Command::Execute { cmd } => CommonCommand::Dove(Box::new(cmd)),
         }
     }
 }
