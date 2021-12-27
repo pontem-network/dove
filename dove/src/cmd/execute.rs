@@ -12,9 +12,9 @@ use crate::context::Context;
 #[structopt(
     usage = "$ dove execute --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]\n\
     Examples:
-    $ dove execute --file PATH/TO/MODULE.mv  --gas 100 
-    $ dove execute --file ./PATH/TO/PACKAGE.mv --gas 100 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
-    $ dove execute --file /PATH/TO/MODULE.mv  --gas 100 --account alice --url ws://127.0.0.1:9944"
+    $ dove execute --file PATH/TO/MODULE.mv  --gas 120 
+    $ dove execute --file ./PATH/TO/PACKAGE.mv --gas 220 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
+    $ dove execute --file /PATH/TO/MODULE.mv  --gas 110 --account alice --url ws://127.0.0.1:9944"
 )]
 pub struct Execute {
     /// The path to the transaction.

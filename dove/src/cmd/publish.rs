@@ -36,8 +36,8 @@ pub enum Publish {
     usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]\n
     Examples:
     $ dove publish module --file PATH/TO/MODULE.mv  --gas 100 
-    $ dove publish package --file ./PATH/TO/PACKAGE.mv --gas 100 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
-    $ dove publish module --file /PATH/TO/MODULE.mv  --gas 100 --account alice --url ws://127.0.0.1:9944
+    $ dove publish package --file ./PATH/TO/PACKAGE.mv --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
+    $ dove publish module --file /PATH/TO/MODULE.mv  --gas 200 --account alice --url ws://127.0.0.1:9944
 "
 )]
 pub struct PublicationParameters {
