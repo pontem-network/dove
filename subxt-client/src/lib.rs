@@ -4,8 +4,12 @@ use libloading::Library;
 use url::Url;
 
 /// Path to the compiled library
-#[cfg(not(target_os = "windows"))]
+#[cfg(target_os = "linux")]
 const LIB_SUBXT: &[u8] = include_bytes!("../../libs/subxt/target/release/libsubxt.so");
+
+/// Path to the compiled library
+#[cfg(target_os = "macos")]
+const LIB_SUBXT: &[u8] = include_bytes!("../../libs/subxt/target/release/libsubxt.dylib");
 
 /// Path to the compiled library
 #[cfg(target_os = "windows")]
