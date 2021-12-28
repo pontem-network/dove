@@ -53,7 +53,6 @@ impl Cmd for Execute {
             )
             .map(|address| {
                 println!("Address: {}", address);
-                ()
             })
     }
 }

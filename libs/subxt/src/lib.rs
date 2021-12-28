@@ -64,7 +64,7 @@ pub fn tx_mvm_publish_module_dev(
             path = module_path.display(),
         );
     }
-    module_path = module_path.to_path_buf().canonicalize()?;
+    module_path = module_path.canonicalize()?;
 
     debug!(
         "fn tx_mvm_publish_module_dev:\n\
@@ -112,7 +112,7 @@ pub fn tx_mvm_execute_dev(
             path = transaction_path.display(),
         );
     }
-    transaction_path = transaction_path.to_path_buf().canonicalize()?;
+    transaction_path = transaction_path.canonicalize()?;
 
     debug!(
         "fn tx_mvm_execute_dev:\n\
@@ -160,7 +160,7 @@ pub fn tx_mvm_publish_package_dev(
             path = package_path.display(),
         );
     }
-    package_path = package_path.to_path_buf().canonicalize()?;
+    package_path = package_path.canonicalize()?;
 
     debug!(
         "fn tx_mvm_publish_package_dev:\n\
@@ -385,11 +385,7 @@ async fn pb_package_dev(
 
 /// Converting a test account alias or ss58 address into a keyring
 fn keyring_from_str(signer: &str) -> Result<AccountKeyring> {
-    let signer_lowercase = if signer.starts_with("//") {
-        signer[2..].to_lowercase()
-    } else {
-        signer.to_lowercase()
-    };
+    let signer_lowercase = signer.strip_prefix("//").unwrap_or(signer).to_lowercase();
 
     let keyring = match signer_lowercase.as_str() {
         "alice" => AccountKeyring::Alice,
@@ -402,7 +398,7 @@ fn keyring_from_str(signer: &str) -> Result<AccountKeyring> {
         "two" => AccountKeyring::Two,
         _ => {
             let account_id =
-                AccountId32::from_string(&signer).map_err(|err| anyhow!("{:?}", err))?;
+                AccountId32::from_string(signer).map_err(|err| anyhow!("{:?}", err))?;
             AccountKeyring::from_account_id(&account_id)
                 .ok_or(anyhow!(r#"Failed to get "keyring""#))?
         }

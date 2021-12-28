@@ -7,7 +7,6 @@ edition = "2021"
 proc-macro = true
 
 [workspace]
-name = "hash_project"
 
 [dependencies]
 anyhow = "1.0"

@@ -17,6 +17,12 @@ pub fn version(item: TokenStream) -> TokenStream {
 
 /// Get the project version and a short hash
 fn version_with_shorthash(project_path: &str) -> Result<String> {
+    debug!("project_path: {}", project_path);
+    debug!(
+        "current_path: {}",
+        PathBuf::from_str(".")?.canonicalize()?.display()
+    );
+
     let path = PathBuf::from_str(project_path)?.canonicalize()?;
     debug!("path: {}", path.display());
 
@@ -47,7 +53,8 @@ fn hash_project(path: &Path) -> Result<String> {
 fn version_project(path: &Path) -> Result<String> {
     let file = fs::read_to_string(path.join("Cargo.toml"))?.parse::<Value>()?;
 
-    Ok(file.as_table()
+    Ok(file
+        .as_table()
         .and_then(|value| value.get("package"))
         .and_then(|value| value.get("version"))
         .and_then(|value| value.as_str().map(|v| v.to_string()))

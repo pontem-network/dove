@@ -1,3 +1,4 @@
+#[allow(clippy::all)]
 #[allow(dead_code, unused_imports, non_camel_case_types)]
 pub mod api {
     #[derive(:: subxt :: codec :: Encode, :: subxt :: codec :: Decode)]

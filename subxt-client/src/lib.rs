@@ -12,7 +12,15 @@ const LIB_SUBXT: &[u8] = include_bytes!("../../libs/subxt/target/release/libsubx
 const LIB_SUBXT: &[u8] = include_bytes!("../../libs/subxt/target/release/libsubxt.dll");
 
 /// Library Version subxt
-const LIB_VERSION: &str = hash_project::version!("../subxt");
+#[cfg(not(doc))]
+const LIB_VERSION: &str = hash_project::version!("libs/subxt");
+
+/// Docgen is launched from the current directory
+#[cfg(doc)]
+const LIB_VERSION: &str = hash_project::version!("../libs/subxt");
+
+/// Type of function from the library
+type FnInterface = unsafe fn(&str, &str, u64, &str) -> Result<String>;
 
 /// Client for node
 /// Only for test accounts.
@@ -41,7 +49,7 @@ impl SubxtClient {
     ///     gas: Gas limit for transaction execution.
     pub fn tx_mvm_publish_module_dev(&self, module_path: &str, gas: u64) -> Result<String> {
         unsafe {
-            let func: libloading::Symbol<unsafe fn(&str, &str, u64, &str) -> Result<String>> =
+            let func: libloading::Symbol<FnInterface> =
                 self.lib.get(b"tx_mvm_publish_module_dev")?;
             func(module_path, self.url.as_str(), gas, &self.signer)
         }
@@ -52,8 +60,7 @@ impl SubxtClient {
     ///     gas: Gas limit for transaction execution.
     pub fn tx_mvm_execute_dev(&self, transaction_path: &str, gas: u64) -> Result<String> {
         unsafe {
-            let func: libloading::Symbol<unsafe fn(&str, &str, u64, &str) -> Result<String>> =
-                self.lib.get(b"tx_mvm_execute_dev")?;
+            let func: libloading::Symbol<FnInterface> = self.lib.get(b"tx_mvm_execute_dev")?;
             func(transaction_path, self.url.as_str(), gas, &self.signer)
         }
     }
@@ -63,7 +70,7 @@ impl SubxtClient {
     ///     gas: Gas limit for transaction execution.
     pub fn tx_mvm_publish_package_dev(&self, package_path: &str, gas: u64) -> Result<String> {
         unsafe {
-            let func: libloading::Symbol<unsafe fn(&str, &str, u64, &str) -> Result<String>> =
+            let func: libloading::Symbol<FnInterface> =
                 self.lib.get(b"tx_mvm_publish_package_dev")?;
             func(package_path, self.url.as_str(), gas, &self.signer)
         }
@@ -86,7 +93,7 @@ impl SubxtClient {
         if !path.exists() {
             fs::write(&path, LIB_SUBXT)?;
         }
-        let lib = libloading::Library::new(path.as_os_str())?;
+        let lib = unsafe { libloading::Library::new(path.as_os_str())? };
         Ok(lib)
     }
 }

@@ -87,7 +87,6 @@ impl Cmd for Publish {
         }
         .map(|address| {
             println!("Address: {}", address);
-            ()
         })
     }
 }
