@@ -214,13 +214,6 @@ async fn pb_module_dev(
         .await?
         .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
 
-    // Subscribe to events
-    let sub = api.client.rpc().subscribe_events().await?;
-    let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
-    // It is necessary to decrypt the message
-    let metadata = api.client.metadata();
-
     let hash = api
         .tx()
         .mvm()
@@ -228,6 +221,18 @@ async fn pb_module_dev(
         .sign_and_submit(&signer_pair)
         .await?
         .to_string();
+
+    // Only for Websocket you can get the result of publishing
+    if !is_ws(url) {
+        return Ok(hash);
+    }
+
+    // It is necessary to decrypt the message
+    let metadata = api.client.metadata();
+    // Subscribe to events
+    let sub = api.client.rpc().subscribe_events().await?;
+    let decoder = api.client.events_decoder();
+    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
 
     let mut last = 0;
     loop {
@@ -278,13 +283,6 @@ async fn execute_dev(
         .await?
         .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
 
-    // Subscribe to events
-    let sub = api.client.rpc().subscribe_events().await?;
-    let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
-    // It is necessary to decrypt the message
-    let metadata = api.client.metadata();
-
     let hash = api
         .tx()
         .mvm()
@@ -292,6 +290,18 @@ async fn execute_dev(
         .sign_and_submit(&signer_pair)
         .await?
         .to_string();
+
+    // Only for Websocket you can get the result of publishing
+    if !is_ws(url) {
+        return Ok(hash);
+    }
+
+    // Subscribe to events
+    let sub = api.client.rpc().subscribe_events().await?;
+    let decoder = api.client.events_decoder();
+    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
+    // It is necessary to decrypt the message
+    let metadata = api.client.metadata();
 
     let mut last = 0;
     loop {
@@ -342,13 +352,6 @@ async fn pb_package_dev(
         .await?
         .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
 
-    // Subscribe to events
-    let sub = api.client.rpc().subscribe_events().await?;
-    let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
-    // It is necessary to decrypt the message
-    let metadata = api.client.metadata();
-
     let hash = api
         .tx()
         .mvm()
@@ -356,6 +359,18 @@ async fn pb_package_dev(
         .sign_and_submit(&signer_pair)
         .await?
         .to_string();
+
+    // Only for Websocket you can get the result of publishing
+    if !is_ws(url) {
+        return Ok(hash);
+    }
+
+    // Subscribe to events
+    let sub = api.client.rpc().subscribe_events().await?;
+    let decoder = api.client.events_decoder();
+    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
+    // It is necessary to decrypt the message
+    let metadata = api.client.metadata();
 
     let mut last = 0;
     loop {
@@ -445,6 +460,14 @@ fn dispatcherror_to_string(error: DispatchError, meta: &Metadata) -> String {
     }
 }
 
+fn is_ws(url: &Url) -> bool {
+    use url::Origin;
+
+    match url.origin() {
+        Origin::Tuple(protocol, _, _) => &protocol.to_lowercase() == "ws",
+        _ => false,
+    }
+}
 #[cfg(test)]
 mod tests {
     use log::debug;
@@ -455,7 +478,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_tx_mvm_publish_module_dev() {
+    fn test_tx_mvm_publish_module_dev_ws() {
         env_logger::init();
 
         tx_mvm_publish_module_dev("./0_Store.mv", "ws://127.0.0.1:9944", 100, "alice").unwrap();
@@ -463,7 +486,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_tx_mvm_execute_dev() {
+    fn test_tx_mvm_execute_dev_ws() {
         env_logger::init();
 
         tx_mvm_execute_dev("./main.mvt", "ws://127.0.0.1:9944", 100, "//Alice").unwrap();
@@ -471,7 +494,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_tx_mvm_publish_package_dev() {
+    fn test_tx_mvm_publish_package_dev_ws() {
         env_logger::init();
 
         tx_mvm_publish_package_dev(
