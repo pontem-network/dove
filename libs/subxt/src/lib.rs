@@ -1,11 +1,12 @@
 use std::fs;
 use std::str::FromStr;
-use std::path::{Path, PathBuf};
-use anyhow::{Result, bail, anyhow};
+use std::path::PathBuf;
+use anyhow::{Result, anyhow, ensure};
 use log::debug;
-use url::Url;
-use sp_core::crypto::AccountId32;
-use sp_core::crypto::Ss58Codec;
+use url::{Url, Origin};
+use sp_core::crypto::{AccountId32, Ss58Codec};
+use sp_core::crypto::Pair;
+use sp_core::sr25519::Pair as sr25519Pair;
 use sp_keyring::AccountKeyring;
 use subxt::{ClientBuilder, EventSubscription, Metadata, PairSigner};
 
@@ -14,6 +15,7 @@ const VERSION: &str = hash_project::version!(".");
 
 /// metadata for encoding and decoding
 mod pontem;
+/// Implementation of the missing "traits"
 const _: () = {
     use pontem_api::runtime_types::polkadot_parachain::primitives::Id;
 
@@ -39,52 +41,53 @@ const _: () = {
 };
 
 use pontem::api as pontem_api;
+use crate::pontem_api::DefaultConfig;
 use crate::pontem_api::runtime_types::sp_runtime::DispatchError;
 
 /// Public interface for publishing the module
 ///     module_path: The path to the module file. PATH/TO/MODULE/FILE.mv
 ///     url: Node address. ws://127.0.0.1:9944
 ///     gas: Gas limit for transaction execution.
-///     signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-#[export_name = "tx_mvm_publish_module_dev"]
-pub fn tx_mvm_publish_module_dev(
+///     key_phrase: secret keyphrase
+#[export_name = "tx_mvm_publish_module"]
+pub fn tx_mvm_publish_module(
     module_path: &str,
     url_str: &str,
     gas: u64,
-    signer: &str,
+    key_phrase: &str,
 ) -> Result<String> {
-    let url = Url::from_str(url_str)?;
-    let signer_keyring = keyring_from_str(signer)?;
-
-    let mut module_path = PathBuf::from_str(module_path)?;
-    if !module_path.exists() {
-        bail!(
-            "The module for publication was not found. Wrong way. \n\
-            Path: {path}",
-            path = module_path.display(),
-        );
-    }
-    module_path = module_path.canonicalize()?;
-
-    debug!(
-        "fn tx_mvm_publish_module_dev:\n\
-        module path: {path}\n\
-        Url: {url}\n\
-        Gas: {gas}\n\
-        Signer:{signer}\n\
-        Keyring: {keyring}",
-        path = module_path.display(),
-        gas = &gas,
-        signer = signer,
-        keyring = signer_keyring.to_account_id().to_string(),
-        url = &url
-    );
+    let context = Context::from_keyphrase(module_path, url_str, gas, key_phrase)?;
+    debug!("fn tx_mvm_publish_module:\n{}", context.debug());
 
     let result = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap()
-        .block_on(pb_module_dev(&module_path, &url, gas, &signer_keyring));
+        .block_on(pb_module(context));
+
+    result
+}
+
+/// Public interface for publishing the module
+///     module_path: The path to the module file. PATH/TO/MODULE/FILE.mv
+///     url: Node address. ws://127.0.0.1:9944
+///     gas: Gas limit for transaction execution.
+///     test_signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+#[export_name = "tx_mvm_publish_module_dev"]
+pub fn tx_mvm_publish_module_dev(
+    module_path: &str,
+    url_str: &str,
+    gas: u64,
+    test_signer: &str,
+) -> Result<String> {
+    let context = Context::from_dev(module_path, url_str, gas, test_signer)?;
+    debug!("fn tx_mvm_publish_module_dev:\n{}", context.debug());
+
+    let result = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(pb_module(context));
 
     result
 }
@@ -93,46 +96,22 @@ pub fn tx_mvm_publish_module_dev(
 ///     transaction_path: The path to the transaction file. PATH/TO/TRANSACTION/FILE.mv
 ///     url: Node address. ws://127.0.0.1:9944
 ///     gas: Gas limit for transaction execution.
-///     signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+///     test_signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 #[export_name = "tx_mvm_execute_dev"]
 pub fn tx_mvm_execute_dev(
     transaction_path: &str,
     url_str: &str,
     gas: u64,
-    signer: &str,
+    test_signer: &str,
 ) -> Result<String> {
-    let url = Url::from_str(url_str)?;
-    let signer_keyring = keyring_from_str(signer)?;
-
-    let mut transaction_path = PathBuf::from_str(transaction_path)?;
-    if !transaction_path.exists() {
-        bail!(
-            "The transaction for publication was not found. Wrong way. \n\
-            Path: {path}",
-            path = transaction_path.display(),
-        );
-    }
-    transaction_path = transaction_path.canonicalize()?;
-
-    debug!(
-        "fn tx_mvm_execute_dev:\n\
-        transaction path: {path}\n\
-        Url: {url}\n\
-        Gas: {gas}\n\
-        Signer:{signer}\n\
-        Keyring: {keyring}",
-        path = transaction_path.display(),
-        gas = &gas,
-        signer = signer,
-        keyring = signer_keyring.to_account_id().to_string(),
-        url = &url
-    );
+    let context = Context::from_dev(transaction_path, url_str, gas, test_signer)?;
+    debug!("fn tx_mvm_execute_dev:\n{}", context.debug());
 
     let result = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap()
-        .block_on(execute_dev(&transaction_path, &url, gas, &signer_keyring));
+        .block_on(execute(context));
 
     result
 }
@@ -141,46 +120,22 @@ pub fn tx_mvm_execute_dev(
 ///     package_path: The path to the package file. PATH/TO/PACKAGE/FILE.mv
 ///     url: Node address. ws://127.0.0.1:9944
 ///     gas: Gas limit for transaction execution.
-///     signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+///     test_signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 #[export_name = "tx_mvm_publish_package_dev"]
 pub fn tx_mvm_publish_package_dev(
     package_path: &str,
     url_str: &str,
     gas: u64,
-    signer: &str,
+    test_signer: &str,
 ) -> Result<String> {
-    let url = Url::from_str(url_str)?;
-    let signer_keyring = keyring_from_str(signer)?;
-
-    let mut package_path = PathBuf::from_str(package_path)?;
-    if !package_path.exists() {
-        bail!(
-            "The package for publication was not found. Wrong way. \n\
-            Path: {path}",
-            path = package_path.display(),
-        );
-    }
-    package_path = package_path.canonicalize()?;
-
-    debug!(
-        "fn tx_mvm_publish_package_dev:\n\
-        package path: {path}\n\
-        Url: {url}\n\
-        Gas: {gas}\n\
-        Signer:{signer}\n\
-        Keyring: {keyring}",
-        path = package_path.display(),
-        gas = &gas,
-        signer = signer,
-        keyring = signer_keyring.to_account_id().to_string(),
-        url = &url
-    );
+    let context = Context::from_dev(package_path, url_str, gas, test_signer)?;
+    debug!("fn tx_mvm_publish_package_dev:\n{}", context.debug());
 
     let result = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap()
-        .block_on(pb_package_dev(&package_path, &url, gas, &signer_keyring));
+        .block_on(pb_package_dev(context));
 
     result
 }
@@ -192,24 +147,14 @@ pub fn version() -> String {
 }
 
 /// Publish a module
-///     module_path: The path to the module file. PATH/TO/MODULE/FILE.mv
-///     url: Node address. ws://127.0.0.1:9944
-///     gas: Gas limit for transaction execution.
-///     signer: keyring to the test account
-async fn pb_module_dev(
-    module_path: &Path,
-    url: &Url,
-    gas: u64,
-    signer: &AccountKeyring,
-) -> Result<String> {
-    debug!("Reading a file: {}", module_path.display());
-    let module = fs::read(module_path)?;
-
-    debug!("Getting a key pair");
-    let signer_pair = PairSigner::new(signer.pair());
+async fn pb_module(context: Context) -> Result<String> {
+    debug!("Reading a file: {}", context.path_file.display());
+    let module = fs::read(&context.path_file)?;
+    let pair_signer: PairSigner<DefaultConfig, sr25519Pair> =
+        PairSigner::new(context.pair.clone());
 
     let api = ClientBuilder::new()
-        .set_url(url.to_string())
+        .set_url(context.url.clone())
         .build()
         .await?
         .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
@@ -217,13 +162,13 @@ async fn pb_module_dev(
     let hash = api
         .tx()
         .mvm()
-        .publish_module(module, gas)
-        .sign_and_submit(&signer_pair)
+        .publish_module(module, context.gas)
+        .sign_and_submit(&pair_signer)
         .await?
         .to_string();
 
     // Only for Websocket you can get the result of publishing
-    if !is_ws(url) {
+    if !context.is_connection_ws() {
         return Ok(hash);
     }
 
@@ -260,25 +205,15 @@ async fn pb_module_dev(
     }
 }
 
-/// transaction execution
-///     transaction_path: The path to the transaction file. PATH/TO/TRANSACTION/FILE.mv
-///     url: Node address. ws://127.0.0.1:9944
-///     gas: Gas limit for transaction execution.
-///     signer: keyring to the test account
-async fn execute_dev(
-    transaction_path: &Path,
-    url: &Url,
-    gas: u64,
-    signer: &AccountKeyring,
-) -> Result<String> {
-    debug!("Reading a file: {}", transaction_path.display());
-    let transaction = fs::read(transaction_path)?;
-
-    debug!("Getting a key pair");
-    let signer_pair = PairSigner::new(signer.pair());
+/// Transaction execution
+async fn execute(context: Context) -> Result<String> {
+    debug!("Reading a file: {}", context.path_file.display());
+    let transaction = fs::read(&context.path_file)?;
+    let signer_pair: PairSigner<DefaultConfig, sr25519Pair> =
+        PairSigner::new(context.pair.clone());
 
     let api = ClientBuilder::new()
-        .set_url(url.to_string())
+        .set_url(context.url.clone())
         .build()
         .await?
         .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
@@ -286,13 +221,13 @@ async fn execute_dev(
     let hash = api
         .tx()
         .mvm()
-        .execute(transaction, gas)
+        .execute(transaction, context.gas)
         .sign_and_submit(&signer_pair)
         .await?
         .to_string();
 
     // Only for Websocket you can get the result of publishing
-    if !is_ws(url) {
+    if !context.is_connection_ws() {
         return Ok(hash);
     }
 
@@ -330,24 +265,14 @@ async fn execute_dev(
 }
 
 /// Publish a package
-///     package_path: The path to the package file. PATH/TO/PACKAGE/FILE.mv
-///     url: Node address. ws://127.0.0.1:9944
-///     gas: Gas limit for transaction execution.
-///     signer: keyring to the test account
-async fn pb_package_dev(
-    package_path: &Path,
-    url: &Url,
-    gas: u64,
-    signer: &AccountKeyring,
-) -> Result<String> {
-    debug!("Reading a file: {}", package_path.display());
-    let package = fs::read(package_path)?;
-
-    debug!("Getting a key pair");
-    let signer_pair = PairSigner::new(signer.pair());
+async fn pb_package_dev(context: Context) -> Result<String> {
+    debug!("Reading a file: {}", context.path_file.display());
+    let package = fs::read(&context.path_file)?;
+    let signer_pair: PairSigner<DefaultConfig, sr25519Pair> =
+        PairSigner::new(context.pair.clone());
 
     let api = ClientBuilder::new()
-        .set_url(url.to_string())
+        .set_url(context.url.clone())
         .build()
         .await?
         .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
@@ -355,13 +280,13 @@ async fn pb_package_dev(
     let hash = api
         .tx()
         .mvm()
-        .publish_package(package, gas)
+        .publish_package(package, context.gas)
         .sign_and_submit(&signer_pair)
         .await?
         .to_string();
 
     // Only for Websocket you can get the result of publishing
-    if !is_ws(url) {
+    if !context.is_connection_ws() {
         return Ok(hash);
     }
 
@@ -399,7 +324,7 @@ async fn pb_package_dev(
 }
 
 /// Converting a test account alias or ss58 address into a keyring
-fn keyring_from_str(signer: &str) -> Result<AccountKeyring> {
+fn test_keyring_from_str(signer: &str) -> Result<AccountKeyring> {
     let signer_lowercase = signer.strip_prefix("//").unwrap_or(signer).to_lowercase();
 
     let keyring = match signer_lowercase.as_str() {
@@ -460,20 +385,112 @@ fn dispatcherror_to_string(error: DispatchError, meta: &Metadata) -> String {
     }
 }
 
-fn is_ws(url: &Url) -> bool {
-    use url::Origin;
+struct Context {
+    /// The path to the module|package|transaction file. PATH/TO/FILE.mv
+    pub path_file: PathBuf,
+    /// Node address. ws://127.0.0.1:9944
+    pub url: Url,
+    /// Gas limit for transaction execution.
+    pub gas: u64,
+    /// ss58 address
+    pub signer: String,
+    /// Keypair. An Schnorrkel/Ristretto x25519 ("sr25519") key pair.
+    pub pair: sr25519Pair,
+}
 
-    match url.origin() {
-        Origin::Tuple(protocol, _, _) => &protocol.to_lowercase() == "ws",
-        _ => false,
+impl Context {
+    /// Create Context
+    ///     path_str: The path to the module|package|transaction file. PATH/TO/FILE.mv
+    ///     url_str: Node address. ws://127.0.0.1:9944
+    ///     gas: Gas limit for transaction execution.
+    ///     test_signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+    pub fn from_dev(
+        path_str: &str,
+        url_str: &str,
+        gas: u64,
+        test_signer: &str,
+    ) -> Result<Context> {
+        let pair = test_keyring_from_str(test_signer)?.pair();
+        Self::from_pair(path_str, url_str, gas, pair)
+    }
+
+    /// Create Context
+    ///     path_str: The path to the module file. PATH/TO/FILE.mv
+    ///     url_str: Node address. ws://127.0.0.1:9944
+    ///     gas: Gas limit for transaction execution.
+    ///     key_phrase: secret keyphrase
+    pub fn from_keyphrase(
+        path_str: &str,
+        url_str: &str,
+        gas: u64,
+        key_phrase: &str,
+    ) -> Result<Context> {
+        let pair =
+            sr25519Pair::from_string(key_phrase, None).map_err(|err| anyhow!("{:?}", err))?;
+        Self::from_pair(path_str, url_str, gas, pair)
+    }
+
+    /// Create Context
+    ///     path_str: The path to the module file. PATH/TO/FILE.mv
+    ///     url_str: Node address. ws://127.0.0.1:9944
+    ///     gas: Gas limit for transaction execution.
+    ///     pair: An Schnorrkel/Ristretto x25519 ("sr25519") key pair.
+    pub fn from_pair(
+        path_str: &str,
+        url_str: &str,
+        gas: u64,
+        pair: sr25519Pair,
+    ) -> Result<Context> {
+        let url = Url::from_str(url_str)?;
+        let signer = AccountId32::new(pair.public().0).to_ss58check();
+
+        let mut path_file = PathBuf::from_str(path_str)?;
+        ensure!(
+            path_file.exists(),
+            "File not found for publication. \n\
+            Path: {path}",
+            path = path_file.display(),
+        );
+        path_file = path_file.canonicalize()?;
+
+        Ok(Context {
+            path_file,
+            pair,
+            url,
+            gas,
+            signer,
+        })
+    }
+
+    /// Returns an object as a string
+    pub fn debug(&self) -> String {
+        format!(
+            "path: {path}\n\
+            Url: {url}\n\
+            Gas: {gas}\n\
+            Signer:{signer}",
+            path = self.path_file.display(),
+            gas = self.gas,
+            signer = &self.signer,
+            url = &self.url
+        )
+    }
+
+    /// is the connection via a web socket
+    pub fn is_connection_ws(&self) -> bool {
+        match self.url.origin() {
+            Origin::Tuple(protocol, _, _) => &protocol.to_lowercase() == "ws",
+            _ => false,
+        }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use log::debug;
     use crate::{
-        keyring_from_str, tx_mvm_publish_module_dev, tx_mvm_execute_dev,
-        tx_mvm_publish_package_dev, version,
+        test_keyring_from_str, tx_mvm_publish_module_dev, tx_mvm_execute_dev,
+        tx_mvm_publish_package_dev, version, tx_mvm_publish_module,
     };
 
     #[test]
@@ -481,7 +498,8 @@ mod tests {
     fn test_tx_mvm_publish_module_dev_ws() {
         env_logger::init();
 
-        tx_mvm_publish_module_dev("./0_Store.mv", "ws://127.0.0.1:9944", 100, "alice").unwrap();
+        tx_mvm_publish_module_dev("./Alice_Store.mv", "ws://127.0.0.1:9944", 100, "alice")
+            .unwrap();
     }
 
     #[test]
@@ -489,7 +507,7 @@ mod tests {
     fn test_tx_mvm_execute_dev_ws() {
         env_logger::init();
 
-        tx_mvm_execute_dev("./main.mvt", "ws://127.0.0.1:9944", 100, "//Alice").unwrap();
+        tx_mvm_execute_dev("./Alice_Main.mvt", "ws://127.0.0.1:9944", 100, "//Alice").unwrap();
     }
 
     #[test]
@@ -498,7 +516,7 @@ mod tests {
         env_logger::init();
 
         tx_mvm_publish_package_dev(
-            "./move_store.pac",
+            "./Alice_Store.pac",
             "ws://127.0.0.1:9944",
             1000,
             "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
@@ -510,10 +528,12 @@ mod tests {
     fn test_to_key_pair() {
         env_logger::init();
 
-        assert!(keyring_from_str("alice").is_ok());
-        assert!(keyring_from_str("Alice").is_ok());
-        assert!(keyring_from_str("//Alice").is_ok());
-        assert!(keyring_from_str("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").is_ok());
+        assert!(test_keyring_from_str("alice").is_ok());
+        assert!(test_keyring_from_str("Alice").is_ok());
+        assert!(test_keyring_from_str("//Alice").is_ok());
+        assert!(
+            test_keyring_from_str("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").is_ok()
+        );
     }
 
     #[test]
@@ -521,5 +541,29 @@ mod tests {
         env_logger::init();
 
         debug!("{}", version());
+    }
+
+    // @todo
+    #[test]
+    fn test_key_pair() {
+        env_logger::init();
+        // use sp_core::crypto::Pair;
+
+        // demo account
+        // 5DeyRkpWxXkdDHKqsqtYZLG6M3fHdqpAb55W5DPNQSaZPeg4
+        // net exotic exchange stadium camp mind walk cart infant hospital will address
+        // net … … stadium … … walk … … hospital … …
+        // sr25519
+
+        let result = tx_mvm_publish_module(
+            "./Alice_Store.mv",
+            "ws://127.0.0.1:9944",
+            100,
+            "net exotic exchange stadium camp mind walk cart infant hospital will address",
+        )
+        .unwrap();
+        println!("{}", result);
+
+        println!("demo");
     }
 }
