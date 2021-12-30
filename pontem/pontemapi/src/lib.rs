@@ -73,7 +73,7 @@ pub fn tx_mvm_publish_module(
     result
 }
 
-/// Public interface for publishing the module
+/// (DEV) Public interface for publishing the module
 ///     module_path: The path to the module file. PATH/TO/MODULE/FILE.mv
 ///     url: Node address. ws://127.0.0.1:9944
 ///     gas: Gas limit for transaction execution.
@@ -101,6 +101,30 @@ pub fn tx_mvm_publish_module_dev(
 ///     transaction_path: The path to the transaction file. PATH/TO/TRANSACTION/FILE.mv
 ///     url: Node address. ws://127.0.0.1:9944
 ///     gas: Gas limit for transaction execution.
+///     key_phrase: secret keyphrase
+#[export_name = "tx_mvm_execute"]
+pub fn tx_mvm_execute(
+    transaction_path: &str,
+    url_str: &str,
+    gas: u64,
+    key_phrase: &str,
+) -> Result<String> {
+    let context = Context::from_keyphrase(transaction_path, url_str, gas, key_phrase)?;
+    debug!("fn tx_mvm_execute:\n{}", context.debug());
+
+    let result = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(execute(context));
+
+    result
+}
+
+/// (DEV) Public interface for transaction execution
+///     transaction_path: The path to the transaction file. PATH/TO/TRANSACTION/FILE.mv
+///     url: Node address. ws://127.0.0.1:9944
+///     gas: Gas limit for transaction execution.
 ///     test_signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 #[export_name = "tx_mvm_execute_dev"]
 pub fn tx_mvm_execute_dev(
@@ -122,6 +146,30 @@ pub fn tx_mvm_execute_dev(
 }
 
 /// Public interface for publishing the package
+///     package_path: The path to the package file. PATH/TO/PACKAGE/FILE.mv
+///     url: Node address. ws://127.0.0.1:9944
+///     gas: Gas limit for transaction execution.
+///     key_phrase: secret keyphrase
+#[export_name = "tx_mvm_publish_package"]
+pub fn tx_mvm_publish_package(
+    package_path: &str,
+    url_str: &str,
+    gas: u64,
+    key_phrase: &str,
+) -> Result<String> {
+    let context = Context::from_keyphrase(package_path, url_str, gas, key_phrase)?;
+    debug!("fn tx_mvm_publish_package:\n{}", context.debug());
+
+    let result = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(pb_package_dev(context));
+
+    result
+}
+
+/// (DEV) Public interface for publishing the package
 ///     package_path: The path to the package file. PATH/TO/PACKAGE/FILE.mv
 ///     url: Node address. ws://127.0.0.1:9944
 ///     gas: Gas limit for transaction execution.

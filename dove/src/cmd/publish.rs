@@ -10,7 +10,7 @@ use crate::context::Context;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
-    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]"
+    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret [KEY PHRASE] --account [ADDRESS] --url [URL]"
 )]
 pub enum Publish {
     /// Publishing a module
@@ -33,26 +33,35 @@ pub enum Publish {
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
-    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]\n
+    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --secret [KEY PHRASE] --account [ADDRESS] --url [URL]\n
     Examples:
-    $ dove publish module --file PATH/TO/MODULE.mv  --gas 100 
+    $ dove publish module --file PATH/TO/MODULE.mv --gas 100 
     $ dove publish package --file ./PATH/TO/PACKAGE.pac --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
-    $ dove publish module --file /PATH/TO/MODULE.mv  --gas 200 --account alice --url ws://127.0.0.1:9944
-"
+    $ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --account alice --url ws://127.0.0.1:9944
+    $ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --secret \"net exotic exchange stadium...\"
+    "
 )]
 pub struct PublicationParameters {
-    /// The path to the module or package file.
-    #[structopt(short, long, parse(from_os_str))]
-    file: PathBuf,
-    /// Account from whom to publish
-    #[structopt(long, default_value = "Alice")]
-    account: String,
+    /// The path to the transaction.
+    #[structopt(short, long = "file", parse(from_os_str))]
+    file_path: PathBuf,
+    /// Account from whom to publish. Example: //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+    #[structopt(long = "account", short = "t")]
+    test_account: Option<String>,
+    /// Secret phrase. If a secret phrase is specified, you do not need to specify an account
+    #[structopt(long = "secret", short)]
+    secret_phrase: Option<String>,
     /// The url of the substrate node to query
-    #[structopt(long, parse(try_from_str), default_value = "ws://localhost:9944")]
-    url: url::Url,
+    #[structopt(
+        long = "url",
+        short,
+        parse(try_from_str),
+        default_value = "ws://localhost:9944"
+    )]
+    url_to_node: url::Url,
     /// Limitation of gas consumption per operation
-    #[structopt(long)]
-    gas: u64,
+    #[structopt(long = "gas", short)]
+    gas_limit: u64,
 }
 
 impl Cmd for Publish {
@@ -71,18 +80,28 @@ impl Cmd for Publish {
     {
         match self {
             Publish::Module { params } => {
-                let client = PontemClient::new(params.url.as_str(), &params.account)?;
-                client.tx_mvm_publish_module_dev(
-                    &params.file.as_os_str().to_string_lossy().to_string(),
-                    params.gas,
-                )
+                let client = PontemClient::new(params.url_to_node.as_str())?;
+                let file = &params.file_path.as_os_str().to_string_lossy().to_string();
+
+                if let Some(key_phrase) = &params.secret_phrase {
+                    client.tx_mvm_publish_module(file, params.gas_limit, key_phrase)
+                } else if let Some(test_account) = &params.test_account {
+                    client.tx_mvm_publish_module_dev(file, params.gas_limit, test_account)
+                } else {
+                    bail!("Enter a secret phrase or a test account")
+                }
             }
             Publish::Package { params } => {
-                let client = PontemClient::new(params.url.as_str(), &params.account)?;
-                client.tx_mvm_publish_package_dev(
-                    &params.file.as_os_str().to_string_lossy().to_string(),
-                    params.gas,
-                )
+                let client = PontemClient::new(params.url_to_node.as_str())?;
+                let file = &params.file_path.as_os_str().to_string_lossy().to_string();
+
+                if let Some(key_phrase) = &params.secret_phrase {
+                    client.tx_mvm_publish_package(file, params.gas_limit, key_phrase)
+                } else if let Some(test_account) = &params.test_account {
+                    client.tx_mvm_publish_package_dev(file, params.gas_limit, test_account)
+                } else {
+                    bail!("Enter a secret phrase or a test account")
+                }
             }
         }
         .map(|address| {

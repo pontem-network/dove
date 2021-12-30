@@ -10,25 +10,35 @@ use crate::context::Context;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
-    usage = "$ dove execute --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]\n\
+    usage = "$ dove execute --file [FILE_NAME] --gas [GAS] --secret [KEY PHRASE] --account [ADDRESS] --url [URL]\n
     Examples:
     $ dove execute --file PATH/TO/TRANSACTION.mvt  --gas 120 
     $ dove execute --file ./PATH/TO/TRANSACTION.mvt --gas 220 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
-    $ dove execute --file /PATH/TO/TRANSACTION.mvt  --gas 110 --account alice --url ws://127.0.0.1:9944"
+    $ dove execute --file /PATH/TO/TRANSACTION.mvt --gas 110 --account alice --url ws://127.0.0.1:9944
+    $ dove execute --file /PATH/TO/TRANSACTION.mvt --gas 140 --secret \"net exotic exchange stadium...\"
+    "
 )]
 pub struct Execute {
     /// The path to the transaction.
-    #[structopt(short, long, parse(from_os_str))]
-    file: PathBuf,
-    /// Account from whom to publish
-    #[structopt(long, default_value = "Alice")]
-    account: String,
+    #[structopt(short, long = "file", parse(from_os_str))]
+    file_path: PathBuf,
+    /// Account from whom to publish. Example: //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+    #[structopt(long = "account", short = "t")]
+    test_account: Option<String>,
+    /// Secret phrase. If a secret phrase is specified, you do not need to specify an account
+    #[structopt(long = "secret", short)]
+    secret_phrase: Option<String>,
     /// The url of the substrate node to query
-    #[structopt(long, parse(try_from_str), default_value = "ws://localhost:9944")]
-    url: url::Url,
+    #[structopt(
+        long = "url",
+        short,
+        parse(try_from_str),
+        default_value = "ws://localhost:9944"
+    )]
+    url_to_node: url::Url,
     /// Limitation of gas consumption per operation
-    #[structopt(long)]
-    gas: u64,
+    #[structopt(long = "gas", short)]
+    gas_limit: u64,
 }
 
 impl Cmd for Execute {
@@ -45,14 +55,18 @@ impl Cmd for Execute {
     where
         Self: Sized,
     {
-        let client = PontemClient::new(self.url.as_str(), &self.account)?;
-        client
-            .tx_mvm_execute_dev(
-                &self.file.as_os_str().to_string_lossy().to_string(),
-                self.gas,
-            )
-            .map(|address| {
-                println!("Address: {}", address);
-            })
+        let client = PontemClient::new(self.url_to_node.as_str())?;
+        let file = self.file_path.as_os_str().to_string_lossy().to_string();
+
+        if let Some(key_phrase) = &self.secret_phrase {
+            client.tx_mvm_execute(&file, self.gas_limit, key_phrase)
+        } else if let Some(test_account) = &self.test_account {
+            client.tx_mvm_execute_dev(&file, self.gas_limit, test_account)
+        } else {
+            bail!("Enter a secret phrase or a test account")
+        }
+        .map(|address| {
+            println!("Address: {}", address);
+        })
     }
 }

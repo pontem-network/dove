@@ -30,8 +30,6 @@ type FnInterface = unsafe fn(&str, &str, u64, &str) -> Result<String>;
 /// Only for test accounts.
 pub struct PontemClient {
     lib: Library,
-    /// signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-    signer: String,
     /// url: Node address. ws://127.0.0.1:9944
     url: Url,
 }
@@ -39,44 +37,109 @@ pub struct PontemClient {
 impl PontemClient {
     /// Creating a temporary library file and initializing the library
     ///     url: Node address. ws://127.0.0.1:9944
-    ///     signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-    pub fn new(url: &str, sigrer: &str) -> Result<PontemClient, Error> {
+    pub fn new(url: &str) -> Result<PontemClient, Error> {
         let url = Url::parse(url)?;
-        let signer = sigrer.to_string();
         let lib = PontemClient::load()?;
 
-        Ok(PontemClient { lib, url, signer })
+        Ok(PontemClient { lib, url })
     }
 
     /// Publishing the module.
     ///     package_path: The path to the module file. PATH/TO/MODULE/FILE.mv
     ///     gas: Gas limit for transaction execution.
-    pub fn tx_mvm_publish_module_dev(&self, module_path: &str, gas: u64) -> Result<String> {
+    ///     key_phrase: secret keyphrase
+    pub fn tx_mvm_publish_module(
+        &self,
+        module_path: &str,
+        gas: u64,
+        key_phrase: &str,
+    ) -> Result<String> {
+        unsafe {
+            let func: libloading::Symbol<FnInterface> = self.lib.get(b"tx_mvm_publish_module")?;
+            func(module_path, self.url.as_str(), gas, key_phrase)
+        }
+    }
+
+    /// (DEV) Publishing the module.
+    ///     package_path: The path to the module file. PATH/TO/MODULE/FILE.mv
+    ///     gas: Gas limit for transaction execution.
+    ///     signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+    pub fn tx_mvm_publish_module_dev(
+        &self,
+        module_path: &str,
+        gas: u64,
+        signer: &str,
+    ) -> Result<String> {
         unsafe {
             let func: libloading::Symbol<FnInterface> =
                 self.lib.get(b"tx_mvm_publish_module_dev")?;
-            func(module_path, self.url.as_str(), gas, &self.signer)
+            func(module_path, self.url.as_str(), gas, signer)
         }
     }
 
     /// Transaction execution
     ///     transaction_path: The path to the transaction file. PATH/TO/TRANSACTION/FILE.mv
     ///     gas: Gas limit for transaction execution.
-    pub fn tx_mvm_execute_dev(&self, transaction_path: &str, gas: u64) -> Result<String> {
+    ///     key_phrase: secret keyphrase
+    pub fn tx_mvm_execute(
+        &self,
+        transaction_path: &str,
+        gas: u64,
+        key_phrase: &str,
+    ) -> Result<String> {
+        unsafe {
+            let func: libloading::Symbol<FnInterface> = self.lib.get(b"tx_mvm_execute")?;
+            func(transaction_path, self.url.as_str(), gas, key_phrase)
+        }
+    }
+
+    /// (DEV) Transaction execution
+    ///     transaction_path: The path to the transaction file. PATH/TO/TRANSACTION/FILE.mv
+    ///     gas: Gas limit for transaction execution.
+    ///     test_account: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+    pub fn tx_mvm_execute_dev(
+        &self,
+        transaction_path: &str,
+        gas: u64,
+        test_account: &str,
+    ) -> Result<String> {
         unsafe {
             let func: libloading::Symbol<FnInterface> = self.lib.get(b"tx_mvm_execute_dev")?;
-            func(transaction_path, self.url.as_str(), gas, &self.signer)
+            func(transaction_path, self.url.as_str(), gas, test_account)
         }
     }
 
     /// Publishing the package
     ///     package_path: The path to the package file. PATH/TO/PACKAGE/FILE.mv
     ///     gas: Gas limit for transaction execution.
-    pub fn tx_mvm_publish_package_dev(&self, package_path: &str, gas: u64) -> Result<String> {
+    ///     key_phrase: secret keyphrase
+    pub fn tx_mvm_publish_package(
+        &self,
+        package_path: &str,
+        gas: u64,
+        key_phrase: &str,
+    ) -> Result<String> {
+        unsafe {
+            let func: libloading::Symbol<FnInterface> =
+                self.lib.get(b"tx_mvm_publish_package")?;
+            func(package_path, self.url.as_str(), gas, key_phrase)
+        }
+    }
+
+    /// (DEV) Publishing the package
+    ///     package_path: The path to the package file. PATH/TO/PACKAGE/FILE.mv
+    ///     gas: Gas limit for transaction execution.
+    ///     signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+    pub fn tx_mvm_publish_package_dev(
+        &self,
+        package_path: &str,
+        gas: u64,
+        signer: &str,
+    ) -> Result<String> {
         unsafe {
             let func: libloading::Symbol<FnInterface> =
                 self.lib.get(b"tx_mvm_publish_package_dev")?;
-            func(package_path, self.url.as_str(), gas, &self.signer)
+            func(package_path, self.url.as_str(), gas, signer)
         }
     }
 
@@ -104,7 +167,7 @@ impl PontemClient {
 
 impl Default for PontemClient {
     fn default() -> Self {
-        PontemClient::new("ws://127.0.0.1:9944", "alice").unwrap()
+        PontemClient::new("ws://127.0.0.1:9944").unwrap()
     }
 }
 
@@ -126,7 +189,7 @@ mod tests {
 
         let client = PontemClient::default();
         let result = client
-            .tx_mvm_publish_module_dev("../pontemapi/Alice_Store.mv", 100)
+            .tx_mvm_publish_module_dev("../pontemapi/Alice_Store.mv", 100, "//Alice")
             .unwrap();
         debug!("result: {}", result);
     }
@@ -138,7 +201,7 @@ mod tests {
 
         let client = PontemClient::default();
         let result = client
-            .tx_mvm_execute_dev("../pontemapi/Alice_Main.mvt", 100)
+            .tx_mvm_execute_dev("../pontemapi/Alice_Main.mvt", 100, "alice")
             .unwrap();
         debug!("result: {}", result);
     }
@@ -150,7 +213,11 @@ mod tests {
 
         let client = PontemClient::default();
         let result = client
-            .tx_mvm_publish_package_dev("../pontemapi/Alice_Store.pac", 1000)
+            .tx_mvm_publish_package_dev(
+                "../pontemapi/Alice_Store.pac",
+                1000,
+                "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            )
             .unwrap();
         debug!("result: {}", result);
     }
