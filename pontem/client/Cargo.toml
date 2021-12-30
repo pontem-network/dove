@@ -1,5 +1,5 @@
 [package]
-name = "subxt-client"
+name = "pontem-client"
 version = "0.15.0"
 edition = "2021"
 
@@ -12,7 +12,7 @@ libloading = ">=0.6"
 rand = ">=0.3"
 url = ">=2"
 #
-hash_project = { path = "../libs/hash_project" }
+hash_project = { path = "../hash_project" }
 
 [dev-dependencies]
 env_logger = "0.9"

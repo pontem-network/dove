@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 use anyhow::Result;
 use move_cli::Move;
-use subxt_client::SubxtClient;
+use pontem_client::PontemClient;
 use crate::cmd::{Cmd, default_sourcemanifest};
 use crate::context::Context;
 
@@ -36,7 +36,7 @@ pub enum Publish {
     usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]\n
     Examples:
     $ dove publish module --file PATH/TO/MODULE.mv  --gas 100 
-    $ dove publish package --file ./PATH/TO/PACKAGE.mv --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
+    $ dove publish package --file ./PATH/TO/PACKAGE.pac --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
     $ dove publish module --file /PATH/TO/MODULE.mv  --gas 200 --account alice --url ws://127.0.0.1:9944
 "
 )]
@@ -71,14 +71,14 @@ impl Cmd for Publish {
     {
         match self {
             Publish::Module { params } => {
-                let client = SubxtClient::new(params.url.as_str(), &params.account)?;
+                let client = PontemClient::new(params.url.as_str(), &params.account)?;
                 client.tx_mvm_publish_module_dev(
                     &params.file.as_os_str().to_string_lossy().to_string(),
                     params.gas,
                 )
             }
             Publish::Package { params } => {
-                let client = SubxtClient::new(params.url.as_str(), &params.account)?;
+                let client = PontemClient::new(params.url.as_str(), &params.account)?;
                 client.tx_mvm_publish_package_dev(
                     &params.file.as_os_str().to_string_lossy().to_string(),
                     params.gas,

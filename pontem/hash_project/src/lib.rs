@@ -100,7 +100,7 @@ mod tests {
     fn test_version_with_shorthash() {
         env_logger::init();
 
-        let version = version_with_shorthash("../subxt").unwrap();
+        let version = version_with_shorthash("../pontemapi").unwrap();
         debug!("{:?}", version);
     }
 }

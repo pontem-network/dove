@@ -5,30 +5,30 @@ use url::Url;
 
 /// Path to the compiled library
 #[cfg(target_os = "linux")]
-const LIB_SUBXT: &[u8] = include_bytes!("../../libs/subxt/target/release/libsubxt.so");
+const LIB_PONTEMAPI: &[u8] = include_bytes!("../../pontemapi/target/release/libpontemapi.so");
 
 /// Path to the compiled library
 #[cfg(target_os = "macos")]
-const LIB_SUBXT: &[u8] = include_bytes!("../../libs/subxt/target/release/libsubxt.dylib");
+const LIB_PONTEMAPI: &[u8] = include_bytes!("../../pontemapi/target/release/libpontemapi.dylib");
 
 /// Path to the compiled library
 #[cfg(target_os = "windows")]
-const LIB_SUBXT: &[u8] = include_bytes!("../../libs/subxt/target/release/libsubxt.dll");
+const LIB_PONTEMAPI: &[u8] = include_bytes!("../../pontemapi/target/release/libpontemapi.dll");
 
-/// Library Version subxt
+/// Library Version pontemapi
 #[cfg(not(doc))]
-const LIB_VERSION: &str = hash_project::version!("libs/subxt");
+const LIB_VERSION: &str = hash_project::version!("pontem/pontemapi");
 
 /// Docgen is launched from the current directory
 #[cfg(doc)]
-const LIB_VERSION: &str = hash_project::version!("../libs/subxt");
+const LIB_VERSION: &str = hash_project::version!("../pontemapi");
 
 /// Type of function from the library
 type FnInterface = unsafe fn(&str, &str, u64, &str) -> Result<String>;
 
 /// Client for node
 /// Only for test accounts.
-pub struct SubxtClient {
+pub struct PontemClient {
     lib: Library,
     /// signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
     signer: String,
@@ -36,16 +36,16 @@ pub struct SubxtClient {
     url: Url,
 }
 
-impl SubxtClient {
+impl PontemClient {
     /// Creating a temporary library file and initializing the library
     ///     url: Node address. ws://127.0.0.1:9944
     ///     signer: alias or ss58 address of the test account. //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-    pub fn new(url: &str, sigrer: &str) -> Result<SubxtClient, Error> {
+    pub fn new(url: &str, sigrer: &str) -> Result<PontemClient, Error> {
         let url = Url::parse(url)?;
         let signer = sigrer.to_string();
-        let lib = SubxtClient::load()?;
+        let lib = PontemClient::load()?;
 
-        Ok(SubxtClient { lib, url, signer })
+        Ok(PontemClient { lib, url, signer })
     }
 
     /// Publishing the module.
@@ -90,32 +90,32 @@ impl SubxtClient {
     }
 
     /// Create a library in a temporary folder
-    /// <TMP_PATH>/libsubxt.so
+    /// <TMP_PATH>/libpontemapi.so
     fn load() -> Result<Library> {
-        let name_file = format!("libsubxt_{}", LIB_VERSION);
+        let name_file = format!("libpontemapi_{}", LIB_VERSION);
         let path = std::env::temp_dir().join(name_file);
         if !path.exists() {
-            fs::write(&path, LIB_SUBXT)?;
+            fs::write(&path, LIB_PONTEMAPI)?;
         }
         let lib = unsafe { libloading::Library::new(path.as_os_str())? };
         Ok(lib)
     }
 }
 
-impl Default for SubxtClient {
+impl Default for PontemClient {
     fn default() -> Self {
-        SubxtClient::new("ws://127.0.0.1:9944", "alice").unwrap()
+        PontemClient::new("ws://127.0.0.1:9944", "alice").unwrap()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use log::debug;
-    use crate::SubxtClient;
+    use crate::PontemClient;
 
     #[test]
     fn test_version() {
-        let version = SubxtClient::default().version().unwrap();
+        let version = PontemClient::default().version().unwrap();
         println!("version: {}", &version);
     }
 
@@ -124,9 +124,9 @@ mod tests {
     fn test_tx_mvm_publish_module_dev() {
         env_logger::init();
 
-        let client = SubxtClient::default();
+        let client = PontemClient::default();
         let result = client
-            .tx_mvm_publish_module_dev("../libs/subxt/0_Store.mv", 100)
+            .tx_mvm_publish_module_dev("../pontemapi/Alice_Store.mv", 100)
             .unwrap();
         debug!("result: {}", result);
     }
@@ -136,9 +136,9 @@ mod tests {
     fn test_tx_mvm_execute_dev() {
         env_logger::init();
 
-        let client = SubxtClient::default();
+        let client = PontemClient::default();
         let result = client
-            .tx_mvm_execute_dev("../libs/subxt/main.mvt", 100)
+            .tx_mvm_execute_dev("../pontemapi/Alice_Main.mvt", 100)
             .unwrap();
         debug!("result: {}", result);
     }
@@ -148,9 +148,9 @@ mod tests {
     fn test_tx_mvm_publish_package_dev() {
         env_logger::init();
 
-        let client = SubxtClient::default();
+        let client = PontemClient::default();
         let result = client
-            .tx_mvm_publish_package_dev("../libs/subxt/move_store.pac", 1000)
+            .tx_mvm_publish_package_dev("../pontemapi/Alice_Store.pac", 1000)
             .unwrap();
         debug!("result: {}", result);
     }

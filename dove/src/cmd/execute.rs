@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 use anyhow::Result;
 use move_cli::Move;
-use subxt_client::SubxtClient;
+use pontem_client::PontemClient;
 use crate::cmd::{Cmd, default_sourcemanifest};
 use crate::context::Context;
 
@@ -12,9 +12,9 @@ use crate::context::Context;
 #[structopt(
     usage = "$ dove execute --file [FILE_NAME] --gas [GAS] --account [ADDRESS] --url [URL]\n\
     Examples:
-    $ dove execute --file PATH/TO/MODULE.mv  --gas 120 
-    $ dove execute --file ./PATH/TO/PACKAGE.mv --gas 220 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
-    $ dove execute --file /PATH/TO/MODULE.mv  --gas 110 --account alice --url ws://127.0.0.1:9944"
+    $ dove execute --file PATH/TO/TRANSACTION.mvt  --gas 120 
+    $ dove execute --file ./PATH/TO/TRANSACTION.mvt --gas 220 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
+    $ dove execute --file /PATH/TO/TRANSACTION.mvt  --gas 110 --account alice --url ws://127.0.0.1:9944"
 )]
 pub struct Execute {
     /// The path to the transaction.
@@ -45,7 +45,7 @@ impl Cmd for Execute {
     where
         Self: Sized,
     {
-        let client = SubxtClient::new(self.url.as_str(), &self.account)?;
+        let client = PontemClient::new(self.url.as_str(), &self.account)?;
         client
             .tx_mvm_execute_dev(
                 &self.file.as_os_str().to_string_lossy().to_string(),

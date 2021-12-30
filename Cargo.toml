@@ -6,9 +6,9 @@ members = [
     "net",
     "common/git-hash",
     "resource-viewer",
-    "subxt-client"
+    "pontem/client"
 ]
-exclude = [ "libs", "libs/subxt","libs/hash_project"]
+exclude = [ "pontem/hash_project", "pontem/pontemapi"]
 
 [profile.release]
 lto = "thin"

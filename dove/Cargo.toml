@@ -15,7 +15,7 @@ git-hash = { path = "../common/git-hash" }
 lang = { path = "../lang" }
 move-resource-viewer = { path = "../resource-viewer" }
 net = { path = "../net" }
-subxt-client = { path = "../subxt-client" }
+pontem-client = { path = "../pontem/client" }
 
 # DIEM
 dialect = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
