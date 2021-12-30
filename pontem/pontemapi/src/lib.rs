@@ -14,10 +14,16 @@ use subxt::{ClientBuilder, EventSubscription, Metadata, PairSigner};
 const VERSION: &str = hash_project::version!(".");
 
 /// metadata for encoding and decoding
-mod pontem;
+#[subxt::subxt(
+    runtime_metadata_path = "metadata/pontem.scale",
+    generated_type_derives = "Clone, Debug"
+)]
+pub mod pontem {}
+// mod pontem;
+
 /// Implementation of the missing "traits"
 const _: () = {
-    use pontem_api::runtime_types::polkadot_parachain::primitives::Id;
+    use pontem::runtime_types::polkadot_parachain::primitives::Id;
 
     impl PartialEq for Id {
         fn eq(&self, other: &Self) -> bool {
@@ -40,9 +46,8 @@ const _: () = {
     }
 };
 
-use pontem::api as pontem_api;
-use crate::pontem_api::DefaultConfig;
-use crate::pontem_api::runtime_types::sp_runtime::DispatchError;
+use crate::pontem::DefaultConfig;
+use crate::pontem::runtime_types::sp_runtime::DispatchError;
 
 /// Public interface for publishing the module
 ///     module_path: The path to the module file. PATH/TO/MODULE/FILE.mv
@@ -157,7 +162,7 @@ async fn pb_module(context: Context) -> Result<String> {
         .set_url(context.url.clone())
         .build()
         .await?
-        .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
+        .to_runtime_api::<pontem::RuntimeApi<pontem::DefaultConfig>>();
 
     let hash = api
         .tx()
@@ -177,7 +182,7 @@ async fn pb_module(context: Context) -> Result<String> {
     // Subscribe to events
     let sub = api.client.rpc().subscribe_events().await?;
     let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
+    let mut sub = EventSubscription::<pontem::DefaultConfig>::new(sub, decoder);
 
     let mut last = 0;
     loop {
@@ -192,10 +197,9 @@ async fn pb_module(context: Context) -> Result<String> {
             }
             // Called when a module publishing error occurs
             "ExtrinsicFailed" => {
-                let answer =
-                    <pontem_api::system::events::ExtrinsicFailed as codec::Decode>::decode(
-                        &mut &raw.data[..],
-                    )?;
+                let answer = <pontem::system::events::ExtrinsicFailed as codec::Decode>::decode(
+                    &mut &raw.data[..],
+                )?;
                 return Err(anyhow!(dispatcherror_to_string(answer.0, metadata)));
             }
             // The module is published. Not the last event
@@ -216,7 +220,7 @@ async fn execute(context: Context) -> Result<String> {
         .set_url(context.url.clone())
         .build()
         .await?
-        .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
+        .to_runtime_api::<pontem::RuntimeApi<pontem::DefaultConfig>>();
 
     let hash = api
         .tx()
@@ -234,7 +238,7 @@ async fn execute(context: Context) -> Result<String> {
     // Subscribe to events
     let sub = api.client.rpc().subscribe_events().await?;
     let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
+    let mut sub = EventSubscription::<pontem::DefaultConfig>::new(sub, decoder);
     // It is necessary to decrypt the message
     let metadata = api.client.metadata();
 
@@ -253,10 +257,9 @@ async fn execute(context: Context) -> Result<String> {
             }
             // Called when a module execute error occurs
             "ExtrinsicFailed" => {
-                let answer =
-                    <pontem_api::system::events::ExtrinsicFailed as codec::Decode>::decode(
-                        &mut &raw.data[..],
-                    )?;
+                let answer = <pontem::system::events::ExtrinsicFailed as codec::Decode>::decode(
+                    &mut &raw.data[..],
+                )?;
                 return Err(anyhow!(dispatcherror_to_string(answer.0, metadata)));
             }
             _ => {}
@@ -275,7 +278,7 @@ async fn pb_package_dev(context: Context) -> Result<String> {
         .set_url(context.url.clone())
         .build()
         .await?
-        .to_runtime_api::<pontem_api::RuntimeApi<pontem_api::DefaultConfig>>();
+        .to_runtime_api::<pontem::RuntimeApi<pontem::DefaultConfig>>();
 
     let hash = api
         .tx()
@@ -293,7 +296,7 @@ async fn pb_package_dev(context: Context) -> Result<String> {
     // Subscribe to events
     let sub = api.client.rpc().subscribe_events().await?;
     let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem_api::DefaultConfig>::new(sub, decoder);
+    let mut sub = EventSubscription::<pontem::DefaultConfig>::new(sub, decoder);
     // It is necessary to decrypt the message
     let metadata = api.client.metadata();
 
@@ -312,10 +315,9 @@ async fn pb_package_dev(context: Context) -> Result<String> {
             }
             // Called when a module publishing error occurs
             "ExtrinsicFailed" => {
-                let answer =
-                    <pontem_api::system::events::ExtrinsicFailed as codec::Decode>::decode(
-                        &mut &raw.data[..],
-                    )?;
+                let answer = <pontem::system::events::ExtrinsicFailed as codec::Decode>::decode(
+                    &mut &raw.data[..],
+                )?;
                 return Err(anyhow!(dispatcherror_to_string(answer.0, metadata)));
             }
             _ => {}
@@ -348,7 +350,7 @@ fn test_keyring_from_str(signer: &str) -> Result<AccountKeyring> {
 
 /// Converting an error to a string. Error when calling an external function in the node
 fn dispatcherror_to_string(error: DispatchError, meta: &Metadata) -> String {
-    use crate::pontem_api::runtime_types::sp_runtime::{ArithmeticError, TokenError};
+    use crate::pontem::runtime_types::sp_runtime::{ArithmeticError, TokenError};
     match error {
         DispatchError::Other => "Other".to_string(),
         DispatchError::CannotLookup => "CannotLookup".to_string(),
@@ -543,8 +545,8 @@ mod tests {
         debug!("{}", version());
     }
 
-    // @todo
     #[test]
+    #[ignore]
     fn test_key_pair() {
         env_logger::init();
         // use sp_core::crypto::Pair;
@@ -556,14 +558,12 @@ mod tests {
         // sr25519
 
         let result = tx_mvm_publish_module(
-            "./Alice_Store.mv",
+            "./Demo_Store.mv",
             "ws://127.0.0.1:9944",
             100,
             "net exotic exchange stadium camp mind walk cart infant hospital will address",
         )
         .unwrap();
         println!("{}", result);
-
-        println!("demo");
     }
 }
