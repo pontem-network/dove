@@ -9,7 +9,7 @@ mod helper;
 #[test]
 fn test_cmd_dove_test() {
     let project_name = "project_test";
-    let project_path = new_demo_project(project_name).unwrap();
+    let project_path = new_demo_project(project_name, true).unwrap();
     build(&project_path).unwrap();
 
     // Success
@@ -27,7 +27,7 @@ fn test_cmd_dove_test() {
 #[test]
 fn test_cmd_dove_test_list() {
     let project_name = "project_test_list";
-    let project_path = new_demo_project(project_name).unwrap();
+    let project_path = new_demo_project(project_name, true).unwrap();
     build(&project_path).unwrap();
 
     let output = execute_dove_at(&["test", "-l"], &project_path).unwrap();
