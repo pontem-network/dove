@@ -21,7 +21,7 @@ fn test_cmd_dove_build_without_arguments() {
 /// $ dove build -d
 #[test]
 fn test_cmd_dove_build_with_doc() {
-    let project_name = "project_build_build_with_doc";
+    let project_name = "project_build_with_doc";
     let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(&["build", "-d"], &project_path).unwrap();
@@ -39,7 +39,7 @@ fn test_cmd_dove_build_with_doc() {
 /// $ dove build -p --modules_exclude NAME_1 NAME_2 ... NAME_N -o PACKAGE_NAME.mv
 #[test]
 fn test_cmd_dove_build_with_package() {
-    let project_name = "project_build_build_with_package";
+    let project_name = "project_build_with_package";
     let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(
@@ -80,7 +80,7 @@ fn test_cmd_dove_build_with_package() {
 /// $ dove build --error-map OUTPUT_NAME
 #[test]
 fn test_cmd_dove_build_error_map() {
-    let project_name = "project_build_build_error_map";
+    let project_name = "project_build_error_map";
     let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(&["build", "--error-map", "error_map"], &project_path).unwrap();
