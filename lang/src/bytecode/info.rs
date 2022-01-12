@@ -54,9 +54,13 @@ impl BytecodeInfo {
         }
     }
 
-    pub fn find_script_function(&self, name: &str) -> Option<Script> {
+    pub fn find_script_function(&self, need_name: &str) -> Option<Script> {
         match &self.bytecode {
             Bytecode::Script(name, script, module, _) => {
+                if name != need_name {
+                    return None;
+                }
+
                 let type_parameters = script
                     .type_parameters
                     .iter()
@@ -83,7 +87,7 @@ impl BytecodeInfo {
                 .filter(|def| def.visibility == Visibility::Script)
                 .find(|def| {
                     let handle = module.function_handle_at(def.function);
-                    module.identifier_at(handle.name).as_str() == name
+                    module.identifier_at(handle.name).as_str() == need_name
                 })
                 .map(|def| {
                     let handle = module.function_handle_at(def.function);
