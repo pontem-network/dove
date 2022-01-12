@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
@@ -7,6 +8,7 @@ use lang::bytecode::info::BytecodeInfo;
 use move_cli::{DEFAULT_STORAGE_DIR, Move, run_cli};
 use move_cli::sandbox::cli::SandboxCommand;
 use move_cli::Command;
+use move_command_line_common::files::FileHash;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 use move_package::BuildConfig;
@@ -44,8 +46,8 @@ pub struct Run {
 
 impl Cmd for Run {
     fn apply(&mut self, ctx: &mut Context) -> Result<()>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         run_internal_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_run())?;
@@ -102,7 +104,10 @@ impl Cmd for Run {
                     natives,
                     &error_descriptions,
                     &move_args,
-                    &Command::Sandbox { storage_dir: PathBuf::from(DEFAULT_STORAGE_DIR), cmd },
+                    &Command::Sandbox {
+                        storage_dir: PathBuf::from(DEFAULT_STORAGE_DIR),
+                        cmd,
+                    },
                 )
             }
             EnrichedTransaction::Global { .. } => unreachable!(),
@@ -125,20 +130,57 @@ fn resolve_script_name(bi: &BytecodeInfo) -> Result<PathBuf> {
         .join(CompiledPackageLayout::SourceMaps.path())
         .join(name);
     source_map.set_extension("mvsm");
-    let source_map = bcs::from_bytes(&fs::read(source_map)?)?;
-    find_loc(&source_map)
+    let source_map: SourceMap = bcs::from_bytes(&fs::read(source_map)?)?;
+
+    let project_path = path
+        .parent()
+        .and_then(|parent| parent.parent())
+        .and_then(|parent| parent.parent())
+        .and_then(|parent| parent.parent())
+        .ok_or_else(|| anyhow!("Failed to get project dir: {:?}", path))?;
+
+    find_loc(project_path, &source_map)
 }
 
-fn find_loc(source_map: &SourceMap) -> Result<PathBuf> {
-    source_map
-        .function_map
-        .iter()
-        .find_map(|(_, v)| Some(PathBuf::from(v.definition_location.file_hash().to_string())))
-        .or_else(|| {
-            source_map
-                .struct_map
-                .iter()
-                .find_map(|(_, v)| Some(PathBuf::from(v.definition_location.file_hash().to_string())))
-        })
+fn find_loc(project_path: &Path, source_map: &SourceMap) -> Result<PathBuf> {
+    let map = find_move_files_in_project(project_path);
+    let hash = source_map.definition_location.file_hash();
+
+    map.get(&hash)
+        .cloned()
         .ok_or_else(|| anyhow!("Script location not found"))
+}
+
+/// Search "move" files in the project
+/// Search is carried out in the directories: scripts, sources
+///
+fn find_move_files_in_project(project_path: &Path) -> HashMap<FileHash, PathBuf> {
+    ["scripts", "sources"]
+        .iter()
+        .filter_map(|dir| find_move_files_in_dir(&project_path.join(dir)).ok())
+        .flatten()
+        .collect()
+}
+
+/// Search "move" files in directory
+/// Recursive search
+fn find_move_files_in_dir(dir_path: &Path) -> Result<Vec<(FileHash, PathBuf)>> {
+    let list = fs::read_dir(dir_path)?
+        .filter_map(|dir| dir.ok())
+        .map(|r| r.path())
+        .filter_map(|path| {
+            if path.is_dir() {
+                find_move_files_in_dir(&path).ok()
+            } else if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("move")
+            {
+                let file = fs::read_to_string(&path).ok()?;
+                let hash = FileHash::new(&file);
+                Some(vec![(hash, path)])
+            } else {
+                None
+            }
+        })
+        .flatten()
+        .collect();
+    Ok(list)
 }
