@@ -12,7 +12,7 @@ use move_cli::package::cli::PackageCommand;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
-use crate::DIEM_VERSION;
+use crate::{PONT_STDLIB_URL, PONT_STDLIB_VERSION};
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -84,7 +84,11 @@ impl Cmd for New {
     }
 }
 
-fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move, named_addresses: &[(String, String)]) -> anyhow::Result<()> {
+fn add_dialect_addresses_and_stdlib(
+    project_dir: &Path,
+    move_args: &Move,
+    named_addresses: &[(String, String)],
+) -> anyhow::Result<()> {
     let move_toml_path = project_dir.join("Move.toml");
     let mut move_toml = read_to_string(&move_toml_path)?.parse::<Value>()?;
     // add to Move.toml - dialect,
@@ -126,10 +130,9 @@ fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move, named_
 pub fn dependencies_movestdlib() -> String {
     format!(
         r#"[dependencies.MoveStdlib]
-git = "https://github.com/pontem-network/diem.git"
-rev = "{}"
-subdir = "language/move-stdlib""#,
-        DIEM_VERSION
+        git = "{}"
+        rev = "{}""#,
+        PONT_STDLIB_URL, PONT_STDLIB_VERSION
     )
 }
 
