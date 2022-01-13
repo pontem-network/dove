@@ -90,7 +90,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: test_cmd_dove_build_without_arguments
+          args: test_cmd_dove_run_with_params
 
       # Test All
       - name: Test All
