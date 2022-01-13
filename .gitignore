@@ -14,3 +14,4 @@ test.sh
 .direnv
 
 .idea
+/subxt-client/subxt/target/
