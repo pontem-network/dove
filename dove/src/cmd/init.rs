@@ -112,5 +112,5 @@ fn move_toml_new(project_name: &str, move_args: &Move) -> String {
         move_toml_string += format!("{} = \"{}\"\n", name, address.to_string()).as_str();
     }
 
-    move_toml_string + dependencies_movestdlib().as_str()
+    move_toml_string + dependencies_movestdlib()
 }
