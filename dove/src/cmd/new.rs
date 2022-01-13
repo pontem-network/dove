@@ -129,7 +129,7 @@ fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move) -> any
 
 /// Move.toml: Dependency movestdlib
 pub fn dependencies_movestdlib() -> &'static str {
-        r#"[dependencies.MoveStdlib]
+    r#"[dependencies.MoveStdlib]
 git = "https://github.com/pontem-network/move-stdlib.git"
 rev = "79ed97fc1f98fefab16fbb54988bdc7defb09578"
 "#
