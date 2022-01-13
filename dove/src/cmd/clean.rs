@@ -78,7 +78,7 @@ impl Cmd for Clean {
                 println!(
                     "Warning: failed to delete directory {}\n{}",
                     path.display(),
-                    err.to_string()
+                    err
                 );
             }
         }

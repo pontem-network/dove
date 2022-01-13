@@ -33,8 +33,6 @@ use crate::tx::model::EnrichedTransaction;
 pub struct Run {
     #[structopt(flatten)]
     call: CallDeclarationCmd,
-    #[structopt(long, hidden = true)]
-    color: Option<String>,
     /// If set, the effects of executing `script_file` (i.e., published, updated, and
     /// deleted resources) will NOT be committed to disk.
     #[structopt(long = "dry-run", short = "d")]
