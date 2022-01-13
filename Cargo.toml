@@ -5,8 +5,10 @@ members = [
     "lang/compat",
     "net",
     "common/git-hash",
-    "resource-viewer"
+    "resource-viewer",
+    "pontem/client"
 ]
+exclude = [ "pontem/hash_project", "pontem/pontemapi"]
 
 [profile.release]
 lto = "thin"
