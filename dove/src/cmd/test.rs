@@ -80,7 +80,7 @@ impl Cmd for Test {
                 report_storage_on_error: self.report_storage_on_error,
                 check_stackless_vm: self.check_stackless_vm,
                 verbose_mode: self.verbose_mode,
-                compute_coverage: self.compute_coverage
+                compute_coverage: self.compute_coverage,
             },
         };
 
