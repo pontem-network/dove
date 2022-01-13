@@ -15,6 +15,8 @@ use crate::context::Context;
 pub mod build;
 /// Project dependencies loader.
 pub mod clean;
+/// Execute a transaction
+pub mod execute;
 /// Export Dove.toml => Move.toml
 pub mod export;
 /// Project initializer.
@@ -23,6 +25,8 @@ pub mod init;
 pub mod new;
 /// Run move prover.
 pub mod prover;
+/// Publishing a module or package
+pub mod publish;
 /// Script executor.
 pub mod run;
 /// Test runner.
