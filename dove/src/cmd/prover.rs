@@ -33,9 +33,11 @@ pub struct Prove {
     /// Override path to boogie executable.
     #[structopt(long)]
     boogie_exe: Option<String>,
+
     /// Override path to z3 executable.
     #[structopt(long)]
     z3_exe: Option<String>,
+
     /// Override path to cvc4 executable.
     #[structopt(long)]
     cvc4_exe: Option<String>,

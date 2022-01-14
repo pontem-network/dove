@@ -23,6 +23,7 @@ pub struct Clean {
                         state - Clear only the executor state.\n\
                         all - Clear all.")]
     clear_type: Option<ClearType>,
+
     // deleting folders:
     //      PROJECT_DIR/storage
     //      PROJECT_DIR/build

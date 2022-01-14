@@ -19,6 +19,7 @@ pub struct Test {
         long = "instructions"
     )]
     instruction_execution_bound: u64,
+
     /// A filter string to determine which unit tests to run
     #[structopt(name = "filter", short = "f", long = "filter")]
     filter: Option<String>,
@@ -35,6 +36,7 @@ pub struct Test {
         long = "threads"
     )]
     num_threads: usize,
+
     /// Report test statistics at the end of testing
     #[structopt(name = "report_statistics", short = "s", long = "statistics")]
     report_statistics: bool,
