@@ -100,6 +100,7 @@ struct DependencyInfo {
     branch: Option<String>,
     hash: Option<String>,
 }
+
 impl DependencyInfo {
     /// Get package information from Cargo.lock
     pub fn from_cargo_lock(name: &str) -> DependencyInfo {
@@ -142,13 +143,5 @@ impl DependencyInfo {
                 DependencyInfo { branch, hash }
             })
             .unwrap_or_default()
-    }
-}
-impl Default for DependencyInfo {
-    fn default() -> Self {
-        DependencyInfo {
-            branch: None,
-            hash: None,
-        }
     }
 }
