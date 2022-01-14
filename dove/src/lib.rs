@@ -29,7 +29,5 @@ pub mod colorize;
 pub mod context;
 /// Export Dove.toml => Move.toml
 pub mod export;
-/// Manifest Processing
-pub mod manifest;
 /// Transactions.
 pub mod tx;
