@@ -120,7 +120,7 @@ fn add_dialect_addresses_and_stdlib(
         address_table.insert(name.clone(), Value::String(address.to_string()));
     }
 
-    let move_toml_string = move_toml.to_string() + dependencies_movestdlib().as_str();
+    let move_toml_string = move_toml.to_string() + dependencies_movestdlib();
     fs::write(&move_toml_path, move_toml_string)?;
 
     Ok(())

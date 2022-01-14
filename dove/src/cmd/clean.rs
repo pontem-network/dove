@@ -7,7 +7,7 @@ use move_cli::Move;
 use crate::cmd::{Cmd, default_sourcemanifest};
 use crate::context::Context;
 
-/// Clean target directory command.
+/// Clean build directory command.
 #[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Clean {
@@ -27,7 +27,7 @@ pub struct Clean {
     //      PROJECT_DIR/storage
     //      PROJECT_DIR/build
     //      ~/.move/*
-    #[structopt(help = "Clear target directory and global cache command", long)]
+    #[structopt(help = "Clean build directory and global cache command", long)]
     global: bool,
 }
 
@@ -78,7 +78,7 @@ impl Cmd for Clean {
                 println!(
                     "Warning: failed to delete directory {}\n{}",
                     path.display(),
-                    err.to_string()
+                    err
                 );
             }
         }
