@@ -11,7 +11,7 @@ use move_cli::{Command as DiemCommand, experimental, Move, package, run_cli, san
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 
-use crate::{DOVE_VERSION, DOVE_HASH, PONT_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
+use crate::{DOVE_VERSION, DOVE_HASH, MOVE_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
 use crate::cmd::Cmd;
 use crate::cmd::new::New;
 use crate::cmd::build::Build;
@@ -272,7 +272,7 @@ fn create_long_version() -> &'static str {
             "{}\n\
             Diem {}\n\
             Move-Stdlib {}",
-            dove, diem, PONT_STDLIB_VERSION
+            dove, diem, MOVE_STDLIB_VERSION
         )
         .into_boxed_str(),
     )

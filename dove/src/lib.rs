@@ -6,10 +6,10 @@ pub const DOVE_VERSION: &str = git_hash::crate_version!();
 /// Dove short hash of the commit
 pub const DOVE_HASH: &str = git_hash::git_hash_short_as_str!();
 
-/// Version and Tag (v###) for PONT STDLIB
-pub const PONT_STDLIB_VERSION: &str = "v1.5.2";
-/// GIT URL for PONT STDLIB
-pub const PONT_STDLIB_URL: &str = "https://github.com/pontem-network/move-stdlib";
+/// Version and Tag (v###) for MOVE STDLIB
+pub const MOVE_STDLIB_VERSION: &str = "25b211f0129afd5b511eb27412bf0d8aaba39eb0";
+/// GIT URL for MOVE STDLIB
+pub const MOVE_STDLIB_URL: &str = "https://github.com/pontem-network/move-stdlib";
 
 /// DIEM version|branch
 pub const DIEM_VERSION: &str = git_hash::dependency_branch_from_cargo_lock!("move-cli");

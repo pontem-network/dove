@@ -12,7 +12,7 @@ use move_cli::package::cli::PackageCommand;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
-use crate::{PONT_STDLIB_URL, PONT_STDLIB_VERSION};
+use crate::{MOVE_STDLIB_URL, MOVE_STDLIB_VERSION};
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -120,7 +120,7 @@ fn add_dialect_addresses_and_stdlib(
         address_table.insert(name.clone(), Value::String(address.to_string()));
     }
 
-    let move_toml_string = move_toml.to_string() + dependencies_movestdlib();
+    let move_toml_string = move_toml.to_string() + &dependencies_movestdlib();
     fs::write(&move_toml_path, move_toml_string)?;
 
     Ok(())
@@ -132,7 +132,7 @@ pub fn dependencies_movestdlib() -> String {
         r#"[dependencies.MoveStdlib]
         git = "{}"
         rev = "{}""#,
-        PONT_STDLIB_URL, PONT_STDLIB_VERSION
+        MOVE_STDLIB_URL, MOVE_STDLIB_VERSION
     )
 }
 
