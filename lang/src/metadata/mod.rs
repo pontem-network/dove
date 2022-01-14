@@ -1,3 +1,4 @@
+// @todo remove?
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use anyhow::Error;
@@ -152,9 +153,7 @@ impl From<LeadingNameAccess_> for AddressMeta {
             LeadingNameAccess_::AnonymousAddress(addr) => {
                 AddressMeta::Anonymous(AccountAddress::new(addr.into_bytes()))
             }
-            LeadingNameAccess_::Name(name) => {
-                AddressMeta::Name(name.value.to_string())
-            }
+            LeadingNameAccess_::Name(name) => AddressMeta::Name(name.value.to_string()),
         }
     }
 }
@@ -173,8 +172,7 @@ pub fn parse(script_path: &str) -> Result<Vec<Unit>, Error> {
     let mut files: FilesSourceText = HashMap::new();
     let mut compilation_env = CompilationEnv::new(Flags::empty(), Default::default());
     let symbol = Symbol::from(script_path);
-    let (defs, mut docs, errors) =
-        parse_file(&mut compilation_env, &mut files, symbol)?;
+    let (defs, mut docs, errors) = parse_file(&mut compilation_env, &mut files, symbol)?;
 
     if !errors.is_empty() {
         let mut writer = StandardStream::stderr(ColorChoice::Auto);
@@ -212,7 +210,10 @@ fn make_script_meta(script: Script, docs: &MatchedFileCommentMap) -> Result<Func
         .signature
         .type_parameters
         .into_iter()
-        .map(|(name, ab)| FunctionTypeParameterMeta { name: name.value.to_string(), constraints: ab.iter().map(|ab| ab.value.to_string()).collect() })
+        .map(|(name, ab)| FunctionTypeParameterMeta {
+            name: name.value.to_string(),
+            constraints: ab.iter().map(|ab| ab.value.to_string()).collect(),
+        })
         .collect();
     let parameters = func
         .signature
@@ -303,7 +304,6 @@ fn parse_module_definition(
         ..
     } = module;
 
-
     let address = address.map(|addr| AddressMeta::from(addr.value)).or_else(|| adds.clone())
         .ok_or_else(|| anyhow!("Failed to parse module definition. The module {} does not contain an address definition.", name.0.value))?;
 
@@ -315,7 +315,10 @@ fn parse_module_definition(
                     .signature
                     .type_parameters
                     .iter()
-                    .map(|(name, ab)| FunctionTypeParameterMeta { name: name.value.to_string(), constraints: ab.iter().map(|ab| ab.value.to_string()).collect() })
+                    .map(|(name, ab)| FunctionTypeParameterMeta {
+                        name: name.value.to_string(),
+                        constraints: ab.iter().map(|ab| ab.value.to_string()).collect(),
+                    })
                     .collect();
                 let parameters = func
                     .signature
@@ -379,12 +382,14 @@ fn parse_module_definition(
                 let type_parameters = struc
                     .type_parameters
                     .iter()
-                    .map(|tp| {
-                        StructTypeParameterMeta {
-                            is_phantom: tp.is_phantom,
-                            name: tp.name.value.to_string(),
-                            constraints: tp.constraints.iter().map(|ab| ab.value.to_string()).collect(),
-                        }
+                    .map(|tp| StructTypeParameterMeta {
+                        is_phantom: tp.is_phantom,
+                        name: tp.name.value.to_string(),
+                        constraints: tp
+                            .constraints
+                            .iter()
+                            .map(|ab| ab.value.to_string())
+                            .collect(),
                     })
                     .collect();
 
@@ -392,7 +397,8 @@ fn parse_module_definition(
                 Some(Spanned::new(
                     struc.loc.into(),
                     StructMeta_ {
-                        name: Identifier::new(struc.name.0.value.to_string()).expect("Valid identifier"),
+                        name: Identifier::new(struc.name.0.value.to_string())
+                            .expect("Valid identifier"),
                         abilities,
                         type_parameters,
                         fields,
@@ -426,11 +432,21 @@ mod metadata_tests {
     use move_core_types::account_address::AccountAddress;
     use move_ir_types::location::{ByteIndex, Loc};
     use move_symbol_pool::Symbol;
-    use crate::metadata::{AddressMeta, FuncMeta_, FunctionTypeParameterMeta, module_meta, ModuleMeta_, script_meta, StructMeta_, StructMetaField, StructMetaField_, StructTypeParameterMeta, Visibility};
+    use crate::metadata::{
+        AddressMeta, FuncMeta_, FunctionTypeParameterMeta, module_meta, ModuleMeta_, script_meta,
+        StructMeta_, StructMetaField, StructMetaField_, StructTypeParameterMeta, Visibility,
+    };
     use crate::metadata::spanned::Spanned;
 
     fn spanned_wrap<T>(value: T) -> Spanned<T> {
-        Spanned::new(Loc::new(Symbol::from("none"), ByteIndex::from(0u32), ByteIndex::from(0u32)), value)
+        Spanned::new(
+            Loc::new(
+                Symbol::from("none"),
+                ByteIndex::from(0u32),
+                ByteIndex::from(0u32),
+            ),
+            value,
+        )
     }
 
     fn create_field(name: &str, tp: &str, doc: Option<&str>) -> StructMetaField {
@@ -443,8 +459,8 @@ mod metadata_tests {
 
     trait ToSpannded {
         fn to_spanned(self) -> Spanned<Self>
-            where
-                Self: Sized,
+        where
+            Self: Sized,
         {
             spanned_wrap(self)
         }
@@ -511,9 +527,7 @@ mod metadata_tests {
         let mut module = NamedTempFile::new().unwrap();
         module.write_all(source.as_bytes()).unwrap();
 
-        let defs = module_meta(
-            module.path().to_string_lossy().as_ref(),
-        ).unwrap();
+        let defs = module_meta(module.path().to_string_lossy().as_ref()).unwrap();
 
         assert_eq!(
             defs,
@@ -525,7 +539,7 @@ mod metadata_tests {
                     structs: vec![],
                     doc: None,
                 }
-                    .to_spanned(),
+                .to_spanned(),
                 ModuleMeta_ {
                     address: AddressMeta::Anonymous(CORE_CODE_ADDRESS),
                     name: Identifier::new("StructsModule").unwrap(),
@@ -538,7 +552,7 @@ mod metadata_tests {
                             fields: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         StructMeta_ {
                             name: Identifier::new("Example").unwrap(),
                             abilities: vec![],
@@ -552,27 +566,26 @@ mod metadata_tests {
                             ],
                             doc: Some("doc for stucture".to_string()),
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         StructMeta_ {
                             name: Identifier::new("Example2").unwrap(),
                             abilities: vec!["copy".to_string(), "drop".to_string()],
-                            type_parameters: vec![
-                                StructTypeParameterMeta {
-                                    is_phantom: false,
-                                    name: "T".to_string(),
-                                    constraints: vec!["copy".to_string(), "drop".to_string()],
-                                }],
+                            type_parameters: vec![StructTypeParameterMeta {
+                                is_phantom: false,
+                                name: "T".to_string(),
+                                constraints: vec!["copy".to_string(), "drop".to_string()],
+                            }],
                             fields: vec![
                                 create_field("field1", "bool", None),
                                 create_field("field2", "T", None),
                             ],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                     ],
                     doc: Some("doc for module".to_string()),
                 }
-                    .to_spanned(),
+                .to_spanned(),
                 ModuleMeta_ {
                     address: AddressMeta::Anonymous(CORE_CODE_ADDRESS),
                     name: Identifier::new("FuncsVisability").unwrap(),
@@ -584,7 +597,7 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: Some("doc for function".to_string()),
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         FuncMeta_ {
                             name: Identifier::new("f2").unwrap(),
                             visibility: Visibility::Public,
@@ -592,7 +605,7 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         FuncMeta_ {
                             name: Identifier::new("f3").unwrap(),
                             visibility: Visibility::Script,
@@ -600,7 +613,7 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         FuncMeta_ {
                             name: Identifier::new("f4").unwrap(),
                             visibility: Visibility::Friend,
@@ -608,7 +621,7 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         FuncMeta_ {
                             name: Identifier::new("f5").unwrap(),
                             visibility: Visibility::Internal,
@@ -616,7 +629,7 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         FuncMeta_ {
                             name: Identifier::new("f6").unwrap(),
                             visibility: Visibility::Public,
@@ -624,7 +637,7 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                     ],
                     structs: vec![StructMeta_ {
                         name: Identifier::new("MyStruct").unwrap(),
@@ -633,22 +646,33 @@ mod metadata_tests {
                         fields: vec![create_field("field1", "bool", None)],
                         doc: None,
                     }
-                        .to_spanned()],
+                    .to_spanned()],
                     doc: None,
                 }
-                    .to_spanned(),
+                .to_spanned(),
                 ModuleMeta_ {
-                    address: AddressMeta::Anonymous(AccountAddress::from_hex_literal("0x2").unwrap()),
+                    address: AddressMeta::Anonymous(
+                        AccountAddress::from_hex_literal("0x2").unwrap()
+                    ),
                     name: Identifier::new("FuncsTp").unwrap(),
                     funs: vec![
                         FuncMeta_ {
                             name: Identifier::new("f1").unwrap(),
                             visibility: Visibility::Script,
-                            type_parameters: vec![FunctionTypeParameterMeta { name: "T".to_string(), constraints: vec![] }, FunctionTypeParameterMeta { name: "D".to_string(), constraints: vec![] }],
+                            type_parameters: vec![
+                                FunctionTypeParameterMeta {
+                                    name: "T".to_string(),
+                                    constraints: vec![]
+                                },
+                                FunctionTypeParameterMeta {
+                                    name: "D".to_string(),
+                                    constraints: vec![]
+                                }
+                            ],
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         FuncMeta_ {
                             name: Identifier::new("f2").unwrap(),
                             visibility: Visibility::Script,
@@ -656,14 +680,16 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                     ],
                     structs: vec![],
                     doc: None,
                 }
-                    .to_spanned(),
+                .to_spanned(),
                 ModuleMeta_ {
-                    address: AddressMeta::Anonymous(AccountAddress::from_hex_literal("0x3").unwrap()),
+                    address: AddressMeta::Anonymous(
+                        AccountAddress::from_hex_literal("0x3").unwrap()
+                    ),
                     name: Identifier::new("FuncsArgs").unwrap(),
                     funs: vec![
                         FuncMeta_ {
@@ -673,23 +699,23 @@ mod metadata_tests {
                             parameters: vec![],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                         FuncMeta_ {
                             name: Identifier::new("f2").unwrap(),
                             visibility: Visibility::Script,
                             type_parameters: vec![],
                             parameters: vec![
-                                ("_d".to_string(), "signer".to_string(), ),
-                                ("d".to_string(), "u8".to_string(), ),
+                                ("_d".to_string(), "signer".to_string(),),
+                                ("d".to_string(), "u8".to_string(),),
                             ],
                             doc: None,
                         }
-                            .to_spanned(),
+                        .to_spanned(),
                     ],
                     structs: vec![],
                     doc: None,
                 }
-                    .to_spanned(),
+                .to_spanned(),
             ]
         );
     }
@@ -719,8 +745,7 @@ mod metadata_tests {
         let mut module = NamedTempFile::new().unwrap();
         module.write_all(source.as_bytes()).unwrap();
 
-        let defs = script_meta(module.path().to_string_lossy().as_ref())
-            .unwrap();
+        let defs = script_meta(module.path().to_string_lossy().as_ref()).unwrap();
         assert_eq!(
             defs,
             vec![
@@ -731,23 +756,26 @@ mod metadata_tests {
                     parameters: vec![],
                     doc: Some("doc for function".to_string()),
                 }
-                    .to_spanned(),
+                .to_spanned(),
                 FuncMeta_ {
                     name: Identifier::new("main_1").unwrap(),
                     visibility: Visibility::Script,
                     type_parameters: vec![],
-                    parameters: vec![("_d".to_string(), "signer".to_string(), )],
+                    parameters: vec![("_d".to_string(), "signer".to_string(),)],
                     doc: None,
                 }
-                    .to_spanned(),
+                .to_spanned(),
                 FuncMeta_ {
                     name: Identifier::new("main_2").unwrap(),
                     visibility: Visibility::Script,
-                    type_parameters: vec![FunctionTypeParameterMeta { name: "T".to_string(), constraints: vec![] }],
-                    parameters: vec![("_d".to_string(), "signer".to_string(), )],
+                    type_parameters: vec![FunctionTypeParameterMeta {
+                        name: "T".to_string(),
+                        constraints: vec![]
+                    }],
+                    parameters: vec![("_d".to_string(), "signer".to_string(),)],
                     doc: None,
                 }
-                    .to_spanned(),
+                .to_spanned(),
             ]
         );
     }

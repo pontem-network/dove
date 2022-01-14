@@ -24,6 +24,8 @@ anyhow = "1.0.45"
 serde = { version = "1.0.130", features = ["derive"] }
 codespan-reporting = "0.11.1"
 walkdir = "2.3.1"
+rust-base58 = "0.0.4"
+blake2-rfc = "0.2"
 
 [dev-dependencies]
 include_dir = "0.6.0"

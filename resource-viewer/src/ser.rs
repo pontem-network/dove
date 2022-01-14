@@ -24,7 +24,6 @@ pub struct AnnotatedMoveStructWrapper {
     #[serde(with = "AnnotatedMoveStructExt")]
     pub result: AnnotatedMoveStruct,
 }
-
 #[derive(Serialize)]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(remote = "resource_viewer::AnnotatedMoveStruct")]
