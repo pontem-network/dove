@@ -14,7 +14,7 @@ use crate::cmd::new::parse_named_address;
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Init {
     #[structopt(
-        help = "Creates only Dove.toml.",
+        help = "Creates only Move.toml.",
         name = "minimal",
         long = "minimal",
         short = "m"
