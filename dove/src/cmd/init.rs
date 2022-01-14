@@ -99,7 +99,7 @@ fn move_toml_new(project_name: &str, move_args: &Move, addresses: &[(String, Str
     move_toml_string += "\n[addresses]\n";
     move_toml_string += "Std = \"0x1\"\n";
     for (name, address) in addresses {
-        move_toml_string += format!("{} = \"{}\"\n", name, address.to_string()).as_str();
+        move_toml_string += format!("{} = \"{}\"\n", name, address).as_str();
     }
 
     move_toml_string + &dependencies_movestdlib()

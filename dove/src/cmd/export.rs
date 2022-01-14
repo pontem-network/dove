@@ -122,7 +122,7 @@ impl Export {
         let mut move_toml_string = toml::to_string(&move_toml)?;
         // add/output errors
         for (name, error) in dependencies_errors.iter() {
-            let error = error.replace("\n", "\n# \t").to_string();
+            let error = error.replace('\n', "\n# \t").to_string();
             println!("\nWarning:\n# {}", &error);
             if let Some(pos) = move_toml_string
                 .find(name)

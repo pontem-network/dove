@@ -236,7 +236,7 @@ impl ProverConfig {
         fn canonicalize(path: Option<&mut String>, home: &str) -> Result<(), anyhow::Error> {
             if let Some(path) = path {
                 if path.starts_with("~/") {
-                    *path = path.replacen("~", home, 1);
+                    *path = path.replacen('~', home, 1);
                 }
                 let mut path_buff = PathBuf::from_str(path)?;
                 if path_buff.exists() {

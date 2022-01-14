@@ -44,6 +44,7 @@ Examples:
 
 impl CallDeclarationCmd {
     /// Takes call data.
+    #[must_use]
     pub fn take(&mut self) -> Self {
         Self {
             call: mem::take(&mut self.call),
