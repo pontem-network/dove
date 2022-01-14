@@ -5,11 +5,11 @@ use structopt::StructOpt;
 use http::Uri;
 use log::{error, info};
 use move_cli::Move;
+use move_command_line_common::files::FileHash;
 use move_core_types::language_storage::TypeTag;
-use move_lang::Flags;
-use move_lang::parser::lexer::Lexer;
-use move_lang::shared::CompilationEnv;
-use move_symbol_pool::Symbol;
+use move_compiler::Flags;
+use move_compiler::parser::lexer::Lexer;
+use move_compiler::shared::CompilationEnv;
 use move_resource_viewer::ser;
 use net::{make_net, NetView};
 
@@ -153,9 +153,9 @@ fn write_output(path: &Path, result: &str, name: &str) {
 }
 
 fn parse_query(query: &str) -> Result<TypeTag, Error> {
-    use move_lang::parser::syntax::Context;
+    use move_compiler::parser::syntax::Context;
 
-    let mut lexer = Lexer::new(query, Symbol::from("query"));
+    let mut lexer = Lexer::new(query, FileHash::new(query));
     let mut env = CompilationEnv::new(Flags::empty(), Default::default());
     let mut ctx = Context::new(&mut env, &mut lexer);
 

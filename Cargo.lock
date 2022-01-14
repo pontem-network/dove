@@ -871,6 +871,7 @@ dependencies = [
  "diem-types",
  "git-hash",
  "hex",
+ "http",
  "itertools 0.9.0",
  "lang",
  "lazy_static 1.4.0",
@@ -884,20 +885,32 @@ dependencies = [
  "move-package",
  "move-prover",
  "move-prover-boogie-backend",
+ "move-resource-viewer 0.1.0",
+ "move-resource-viewer 1.2.0",
  "move-stdlib",
  "move-symbol-pool",
  "move-vm-runtime",
+ "net",
  "once_cell",
+ "pontem-client",
  "rand 0.7.3",
  "regex",
  "reqwest 0.10.10",
  "semver",
  "serde 1.0.133",
+ "serde_json",
  "structopt",
  "termcolor",
  "toml",
  "twox-hash",
+ "url",
 ]
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee2626afccd7561a06cf1367e2950c4718ea04565e20fb5029b6c7d8ad09abcf"
 
 [[package]]
 name = "ed25519"
@@ -937,6 +950,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7896dc8abb250ffdda33912550faa54c88ec8b998dec0b2c55ab224921ce11df"
 dependencies = [
  "cfg-if 1.0.0",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
+dependencies = [
+ "atty",
+ "humantime",
+ "log",
+ "regex",
+ "termcolor",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b2cf0344971ee6c64c31be0d530793fba457d322dfec2810c453d0ef228f9c3"
+dependencies = [
+ "atty",
+ "humantime",
+ "log",
+ "regex",
+ "termcolor",
 ]
 
 [[package]]
@@ -1261,6 +1300,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "hash_project"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "sha256",
+ "toml",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1399,6 +1448,12 @@ name = "humansize"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02296996cb8796d7c6e3bc2d9211b7802812d36999a51bb754123ead7d37d026"
+
+[[package]]
+name = "humantime"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
 name = "hyper"
@@ -1549,6 +1604,7 @@ checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
 dependencies = [
  "autocfg",
  "hashbrown 0.11.2",
+ "serde 1.0.133",
 ]
 
 [[package]]
@@ -1654,9 +1710,10 @@ dependencies = [
 
 [[package]]
 name = "lang"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
+ "blake2-rfc",
  "codespan-reporting",
  "include_dir",
  "move-binary-format",
@@ -1665,6 +1722,7 @@ dependencies = [
  "move-core-types",
  "move-ir-types",
  "move-symbol-pool",
+ "rust-base58",
  "serde 1.0.133",
  "tempfile",
  "walkdir",
@@ -1700,6 +1758,16 @@ name = "libc"
 version = "0.2.112"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b03d17f364a3a042d5e5d46b053bbbf82c92c9430c592dd4c064dc6ee997125"
+
+[[package]]
+name = "libloading"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afe203d669ec979b7128619bae5a63b7b42e9203c1b29146079ee05e2f604b52"
+dependencies = [
+ "cfg-if 1.0.0",
+ "winapi 0.3.9",
+]
 
 [[package]]
 name = "linked-hash-map"
@@ -1977,7 +2045,7 @@ dependencies = [
  "move-ir-types",
  "move-package",
  "move-prover",
- "move-resource-viewer",
+ "move-resource-viewer 0.1.0",
  "move-stdlib",
  "move-symbol-pool",
  "move-unit-test",
@@ -2005,6 +2073,16 @@ dependencies = [
  "serde 1.0.133",
  "sha2",
  "walkdir",
+]
+
+[[package]]
+name = "move-compat"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dialect",
+ "move-binary-format",
+ "move-core-types",
 ]
 
 [[package]]
@@ -2336,6 +2414,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "move-resource-viewer"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "env_logger 0.8.4",
+ "git-hash",
+ "hex",
+ "http",
+ "lang",
+ "log",
+ "move-binary-format",
+ "move-compat",
+ "move-compiler",
+ "move-core-types",
+ "move-ir-types",
+ "move-resource-viewer 0.1.0",
+ "move-vm-runtime",
+ "net",
+ "schemars",
+ "serde 1.0.133",
+ "serde_json",
+ "structopt",
+]
+
+[[package]]
 name = "move-stackless-bytecode"
 version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#661c17af25be967c937048aa4f3d3c241ae03b93"
@@ -2428,7 +2531,7 @@ dependencies = [
  "move-compiler",
  "move-core-types",
  "move-model",
- "move-resource-viewer",
+ "move-resource-viewer 0.1.0",
  "move-stackless-bytecode-interpreter",
  "move-stdlib",
  "move-vm-runtime",
@@ -2519,6 +2622,26 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "net"
+version = "0.1.2"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "dialect",
+ "hex",
+ "http",
+ "lang",
+ "log",
+ "move-binary-format",
+ "move-compat",
+ "move-core-types",
+ "move-vm-runtime",
+ "reqwest 0.10.10",
+ "serde 1.0.133",
+ "serde_json",
 ]
 
 [[package]]
@@ -2980,6 +3103,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pontem-client"
+version = "0.15.0"
+dependencies = [
+ "anyhow",
+ "env_logger 0.9.0",
+ "hash_project",
+ "libloading",
+ "log",
+ "rand 0.8.4",
+ "url",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3280,7 +3416,7 @@ dependencies = [
  "move-core-types",
  "move-model",
  "move-read-write-set-types",
- "move-resource-viewer",
+ "move-resource-viewer 0.1.0",
  "move-stackless-bytecode",
  "read-write-set-dynamic",
 ]
@@ -3554,6 +3690,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "schemars"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6b5a3c80cea1ab61f4260238409510e814e38b4b563c06044edf91e7dc070e3"
+dependencies = [
+ "dyn-clone",
+ "indexmap",
+ "schemars_derive",
+ "serde 1.0.133",
+ "serde_json",
+]
+
+[[package]]
+name = "schemars_derive"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41ae4dce13e8614c46ac3c38ef1c0d668b101df6ac39817aebdaa26642ddae9b"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.14",
+ "serde_derive_internals",
+ "syn 1.0.85",
+]
+
+[[package]]
 name = "scoped-tls"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3672,6 +3833,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_derive_internals"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1dbab34ca63057a1f15280bdf3c39f2b1eb1b54c17e98360e511637aef7418c6"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.14",
+ "syn 1.0.85",
+]
+
+[[package]]
 name = "serde_json"
 version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3743,6 +3915,16 @@ dependencies = [
  "cpufeatures",
  "digest 0.9.0",
  "opaque-debug 0.3.0",
+]
+
+[[package]]
+name = "sha256"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e84a7f596c081d359de5e06a83877138bc3c4483591e1af1916e1472e6e146e"
+dependencies = [
+ "hex",
+ "sha2",
 ]
 
 [[package]]

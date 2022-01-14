@@ -32,6 +32,8 @@ move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "v1
 move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
 bytecode-source-map = { git = "https://github.com/pontem-network/diem.git", package = "move-bytecode-source-map", branch = "v1.5.1-pre" }
 move-command-line-common = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+resource-viewer = { package = "move-resource-viewer", git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+
 
 # third-party dependencies
 log = "0.4.14"
