@@ -2,7 +2,7 @@ use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{StructTag, TypeTag};
-use move_lang::parser::ast::{LeadingNameAccess_, NameAccessChain_, Type, Type_};
+use move_compiler::parser::ast::{LeadingNameAccess_, NameAccessChain_, Type, Type_};
 
 pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
     fn unwrap_spanned_ty_(ty: Type, this: Option<AccountAddress>) -> Result<TypeTag, Error> {
@@ -88,16 +88,16 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
 
 #[cfg(test)]
 mod tests {
-    use move_lang::Flags;
-    use move_lang::parser::lexer::Lexer;
-    use move_lang::parser::syntax::{Context, parse_type};
-    use move_lang::shared::CompilationEnv;
-    use move_symbol_pool::Symbol;
+    use move_command_line_common::files::FileHash;
+    use move_compiler::Flags;
+    use move_compiler::parser::lexer::Lexer;
+    use move_compiler::parser::syntax::{Context, parse_type};
+    use move_compiler::shared::CompilationEnv;
 
     use super::*;
 
     fn parse(source: &str) -> Result<TypeTag, Error> {
-        let mut lexer = Lexer::new(source, Symbol::from("source"));
+        let mut lexer = Lexer::new(source, FileHash::new("source"));
         lexer
             .advance()
             .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;

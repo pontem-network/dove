@@ -6,7 +6,7 @@ use crate::helper::{new_demo_project, delete_project, build, execute_dove_at};
 #[test]
 fn test_cmd_dove_clean() {
     let project_name = "project_clean";
-    let project_dir = new_demo_project(project_name).unwrap();
+    let project_dir = new_demo_project(project_name, false).unwrap();
     build(&project_dir).unwrap();
 
     assert!(project_dir.join("build").exists());

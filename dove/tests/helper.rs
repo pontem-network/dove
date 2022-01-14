@@ -52,6 +52,7 @@ pub fn execute_dove_at(args: &[&str], project_path: &Path) -> Result<String> {
         output.status,
         String::from_utf8(output.stderr).unwrap_or_default()
     );
+
     Ok(String::from_utf8(output.stdout)?)
 }
 
@@ -120,8 +121,12 @@ pub fn assert_basic_project_dirs_exist(project_dir: &Path) -> Result<()> {
 
 /// Create a new project in a temporary directory
 /// Returns the path to the project
-pub fn create_new_project(project_name: &str, addresses: HashMap<&str, &str>) -> Result<PathBuf> {
-    let (base_dir, project_dir) = pre_start_dove_new(project_name)?;
+pub fn create_new_project(
+    project_name: &str,
+    addresses: HashMap<&str, &str>,
+    move_stdlib: bool,
+) -> Result<PathBuf> {
+    let (base_dir, project_path) = pre_start_dove_new(project_name)?;
     let mut args = vec!["new", project_name];
 
     let addresses: Vec<String> = addresses
@@ -135,13 +140,25 @@ pub fn create_new_project(project_name: &str, addresses: HashMap<&str, &str>) ->
     }
 
     execute_dove_at(&args, &base_dir)?;
-    Ok(project_dir)
+
+    if !move_stdlib {
+        let move_toml_path = project_path.join("Move.toml");
+        let move_toml_content = fs::read_to_string(&move_toml_path)?;
+        let mut move_toml = toml::from_str::<toml::Value>(&move_toml_content)?;
+        move_toml
+            .get_mut("dependencies")
+            .and_then(|dep| dep.as_table_mut())
+            .and_then(|dep| dep.remove("MoveStdlib"));
+        fs::write(&move_toml_path, move_toml.to_string())?;
+    }
+
+    Ok(project_path)
 }
 
 /// Create a test project
-pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
+pub fn new_demo_project(project_name: &str, move_stdlib: bool) -> Result<PathBuf> {
     let addresses = [("Demo", "0x2")].into_iter().collect();
-    let project_path = create_new_project(project_name, addresses)?;
+    let project_path = create_new_project(project_name, addresses, move_stdlib)?;
 
     // scripts/main.move
     let mut main_script = fs::File::create(project_path.join("scripts").join("main.move"))?;
@@ -150,47 +167,47 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
     // scripts/one_param.move
     let mut one_param_scripts =
         fs::File::create(project_path.join("scripts").join("one_param.move"))?;
-    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert(a,2); } }")?;
+    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert!(a,2); } }")?;
 
     // scripts/two_params.move
     let mut two_params_scripts =
         fs::File::create(project_path.join("scripts").join("two_params.move"))?;
-    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert(a==b,2); } }")?;
+    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert!(a==b,2); } }")?;
 
     // scripts/with_type.move
     let mut with_type_scripts =
         fs::File::create(project_path.join("scripts").join("with_type.move"))?;
-    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert(true, 3); } }")?;
+    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert!(true, 3); } }")?;
 
     // scripts/multiple_scripts.move
     let mut multiple_scripts =
         fs::File::create(project_path.join("scripts").join("multiple_scripts.move"))?;
     multiple_scripts.write_all(
-        b"script { fun script_1(a:bool){ assert(a, 1); } }\n\
-            script { fun script_2(a:u8, b:u8){ assert(a==b,2); } }",
+        b"script { fun script_1(a:bool){ assert!(a, 1); } }\n\
+            script { fun script_2(a:u8, b:u8){ assert!(a==b,2); } }",
     )?;
 
     // scripts/one_param.move
     let mut one_param_scripts =
         fs::File::create(project_path.join("scripts").join("one_param.move"))?;
-    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert(a,2); } }")?;
+    one_param_scripts.write_all(b"script { fun one_param(a:bool){ assert!(a,2); } }")?;
 
     // scripts/two_params.move
     let mut two_params_scripts =
         fs::File::create(project_path.join("scripts").join("two_params.move"))?;
-    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert(a==b,2); } }")?;
+    two_params_scripts.write_all(b"script { fun two_params(a:u8, b:u8){ assert!(a==b,2); } }")?;
 
     // scripts/with_type.move
     let mut with_type_scripts =
         fs::File::create(project_path.join("scripts").join("with_type.move"))?;
-    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert(true, 3); } }")?;
+    with_type_scripts.write_all(b"script { fun with_type<T>(_a:u8){ assert!(true, 3); } }")?;
 
     // scripts/multiple_scripts.move
     let mut multiple_scripts =
         fs::File::create(project_path.join("scripts").join("multiple_scripts.move"))?;
     multiple_scripts.write_all(
-        b"script { fun script_1(a:bool){ assert(a, 1); } }\n\
-            script { fun script_2(a:u8, b:u8){ assert(a==b,2); } }",
+        b"script { fun script_1(a:bool){ assert!(a, 1); } }\n\
+            script { fun script_2(a:u8, b:u8){ assert!(a==b,2); } }",
     )?;
 
     // sources/demo1v.move
@@ -211,7 +228,7 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
         b"#[test_only]\n\
         module Demo::Test1{\n\
             #[test]\n\
-            fun success(){ assert(true,1); }\n\
+            fun success(){ assert!(true,1); }\n\
         }",
     )?;
 
@@ -221,7 +238,7 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
         b"#[test_only]\n\
         module Demo::Test2{\n\
             #[test]\n\
-            fun success(){ assert(true,2); }\n\
+            fun success(){ assert!(true,2); }\n\
         }",
     )?;
 
@@ -231,7 +248,7 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
         b"#[test_only]\n\
         module Demo::Test3{\n\
             #[test]\n\
-            fun error(){ assert(false,3); }\n\
+            fun error(){ assert!(false,3); }\n\
         }",
     )?;
 

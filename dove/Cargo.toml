@@ -15,19 +15,20 @@ git-hash = { path = "../common/git-hash" }
 lang = { path = "../lang" }
 
 # DIEM
-move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-lang = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-symbol-pool = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-cli = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-package = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-stdlib = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-dialect = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-boogie-backend = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-diem-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-binary-format = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
-bytecode-source-map = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5-pre" }
+move-core-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-compiler = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-symbol-pool = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-cli = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-package = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-stdlib = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+dialect = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+boogie-backend = { git = "https://github.com/pontem-network/diem.git", package = "move-prover-boogie-backend", branch = "v1.5.1-pre" }
+diem-types = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-binary-format = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+bytecode-source-map = { git = "https://github.com/pontem-network/diem.git", package = "move-bytecode-source-map", branch = "v1.5.1-pre" }
+move-command-line-common = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
 
 # third-party dependencies
 log = "0.4.14"

@@ -29,8 +29,8 @@ Examples:
     #[structopt(
         help = r#"Script arguments, e.g. 10 20 30"#,
         name = "Script arguments.",
-        long = "parameters",
-        short = "p"
+        long = "args",
+        short = "a"
     )]
     params: Option<Vec<String>>,
     #[structopt(
@@ -44,6 +44,7 @@ Examples:
 
 impl CallDeclarationCmd {
     /// Takes call data.
+    #[must_use]
     pub fn take(&mut self) -> Self {
         Self {
             call: mem::take(&mut self.call),

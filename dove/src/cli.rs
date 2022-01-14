@@ -8,11 +8,10 @@ use structopt::StructOpt;
 use semver::{Version, VersionReq};
 
 use move_cli::{Command as DiemCommand, experimental, Move, package, run_cli, sandbox};
-use move_cli::DEFAULT_SOURCE_DIR;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 
-use crate::{DOVE_VERSION, DOVE_HASH, PONT_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
+use crate::{DOVE_VERSION, DOVE_HASH, MOVE_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
 use crate::cmd::Cmd;
 use crate::cmd::new::New;
 use crate::cmd::build::Build;
@@ -23,6 +22,7 @@ use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::tx::CreateTransactionCmd;
 use crate::context::Context;
+use move_cli::DEFAULT_STORAGE_DIR;
 
 const HASH_FILE_NAME: &str = ".version";
 
@@ -50,49 +50,37 @@ pub enum CommonCommand {
 /// Move cli and dove commands.
 #[derive(StructOpt)]
 pub enum Command {
-    /// Package option.
+    /// Execute a package command. Executed in the current directory or the closest containing Move
+    /// package.
     #[structopt(name = "package")]
     Package {
-        /// Path to package. If none is supplied the current directory will be used.
-        #[structopt(long = "path", short = "p", global = true, parse(from_os_str))]
-        path: Option<PathBuf>,
-        /// Build config.
-        #[structopt(flatten)]
-        config: move_package::BuildConfig,
-        /// Package sub commands.
+        /// cmd.
         #[structopt(subcommand)]
         cmd: package::cli::PackageCommand,
-    },
-    /// Compile and emit Move bytecode for the specified scripts and/or modules.
-    #[structopt(name = "compile")]
-    Compile {
-        /// The source files to check.
-        #[structopt(
-        name = "PATH_TO_SOURCE_FILE",
-        default_value = DEFAULT_SOURCE_DIR,
-        )]
-        source_files: Vec<String>,
-        /// Do not emit source map information along with the compiled bytecode.
-        #[structopt(long = "no-source-maps")]
-        no_source_maps: bool,
-        /// Type check and verify the specified scripts and/or modules. Does not emit bytecode.
-        #[structopt(long = "check")]
-        check: bool,
     },
     /// Execute a sandbox command.
     #[structopt(name = "sandbox")]
     Sandbox {
-        /// Sandbox command.
+        /// Directory storing Move resources, events, and module bytecodes produced by module publishing
+        /// and script execution.
+        #[structopt(long, default_value = DEFAULT_STORAGE_DIR, parse(from_os_str))]
+        storage_dir: PathBuf,
+        /// cmd
         #[structopt(subcommand)]
         cmd: sandbox::cli::SandboxCommand,
     },
     /// (Experimental) Run static analyses on Move source or bytecode.
     #[structopt(name = "experimental")]
     Experimental {
-        /// Experimental commands.
+        /// Directory storing Move resources, events, and module bytecodes produced by module publishing
+        /// and script execution.
+        #[structopt(long, default_value = DEFAULT_STORAGE_DIR, parse(from_os_str))]
+        storage_dir: PathBuf,
+        /// cmd
         #[structopt(subcommand)]
         cmd: experimental::cli::ExperimentalCommand,
     },
+
     /// Init new project with existing folder.
     #[structopt(about = "Init directory as move project")]
     Init {
@@ -163,22 +151,14 @@ impl Command {
     /// Split commands to two different execution backend (move-cli, dove).
     pub fn select_backend(self) -> CommonCommand {
         match self {
-            Command::Package { path, config, cmd } => {
-                CommonCommand::Diem(DiemCommand::Package { path, config, cmd })
+            Command::Package { cmd } => CommonCommand::Diem(DiemCommand::Package { cmd }),
+            Command::Sandbox { storage_dir, cmd } => {
+                CommonCommand::Diem(DiemCommand::Sandbox { storage_dir, cmd })
             }
-            Command::Compile {
-                source_files,
-                no_source_maps,
-                check,
-            } => CommonCommand::Diem(DiemCommand::Compile {
-                source_files,
-                no_source_maps,
-                check,
-            }),
-            Command::Sandbox { cmd } => CommonCommand::Diem(DiemCommand::Sandbox { cmd }),
-            Command::Experimental { cmd } => {
-                CommonCommand::Diem(DiemCommand::Experimental { cmd })
+            Command::Experimental { storage_dir, cmd } => {
+                CommonCommand::Diem(DiemCommand::Experimental { storage_dir, cmd })
             }
+
             Command::New { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Init { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Build { cmd } => CommonCommand::Dove(Box::new(cmd)),
@@ -292,7 +272,7 @@ fn create_long_version() -> &'static str {
             "{}\n\
             Diem {}\n\
             Move-Stdlib {}",
-            dove, diem, PONT_STDLIB_VERSION
+            dove, diem, MOVE_STDLIB_VERSION
         )
         .into_boxed_str(),
     )

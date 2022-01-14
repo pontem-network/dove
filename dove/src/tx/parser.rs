@@ -2,12 +2,13 @@ use move_core_types::language_storage::TypeTag;
 use anyhow::Error;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
-use move_lang::parser::lexer::{Lexer, Tok};
-use move_lang::parser::syntax::{parse_type, parse_address_bytes, consume_token, Context};
+use move_compiler::parser::lexer::{Lexer, Tok};
+use move_compiler::parser::syntax::{parse_type, parse_address_bytes, consume_token, Context};
 use lang::lexer::unwrap_spanned_ty;
 use std::str::FromStr;
-use move_lang::Flags;
-use move_lang::shared::CompilationEnv;
+use move_command_line_common::files::FileHash;
+use move_compiler::Flags;
+use move_compiler::shared::CompilationEnv;
 use move_package::source_package::parsed_manifest::AddressDeclarations;
 use move_symbol_pool::Symbol;
 
@@ -109,7 +110,7 @@ impl Call {
 /// Parse call
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
 pub(crate) fn parse_call(addr_map: &AddressDeclarations, call: &str) -> Result<Call, Error> {
-    let mut lexer = Lexer::new(call, Symbol::from("call"));
+    let mut lexer = Lexer::new(call, FileHash::new("call"));
     let mut env = CompilationEnv::new(Flags::empty(), Default::default());
     let mut ctx = Context::new(&mut env, &mut lexer);
 
@@ -144,7 +145,7 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
     let mut tokens = vec![];
 
     loop {
-        if ctx.tokens.peek() != Tok::IdentifierValue {
+        if ctx.tokens.peek() != Tok::Identifier {
             break;
         }
 
@@ -295,7 +296,7 @@ fn parse_args(ctx: &mut Context) -> Result<Vec<String>, Error> {
 }
 
 pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
-    let mut lexer = Lexer::new(tp, Symbol::from("tp"));
+    let mut lexer = Lexer::new(tp, FileHash::new("tp"));
     let mut env = CompilationEnv::new(Flags::empty(), Default::default());
     let mut ctx = Context::new(&mut env, &mut lexer);
 
@@ -321,7 +322,7 @@ where
 {
     let map_err = |err| Error::msg(format!("{:?}", err));
 
-    let mut lexer = Lexer::new(tkn, Symbol::from("vec"));
+    let mut lexer = Lexer::new(tkn, FileHash::new("vec"));
 
     lexer.advance().map_err(map_err)?;
 

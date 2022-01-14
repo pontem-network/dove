@@ -9,10 +9,10 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
-use move_package::BuildConfig;
 use crate::cmd::{Cmd, context_with_empty_manifest};
 use crate::context::Context;
 use crate::export::create_project_directories;
+use crate::{MOVE_STDLIB_URL, MOVE_STDLIB_VERSION};
 
 /// Create project command.
 #[derive(StructOpt, Debug)]
@@ -20,6 +20,7 @@ use crate::export::create_project_directories;
 pub struct New {
     #[structopt(help = "Project name.")]
     project_name: String,
+
     #[structopt(
         help = "Creates only Move.toml without dependencies.",
         name = "minimal",
@@ -27,6 +28,14 @@ pub struct New {
         short = "m"
     )]
     minimal: bool,
+
+    #[structopt(
+        help = "Named  address.", 
+        long = "addresses", 
+        short = "a", 
+        parse(try_from_str = parse_named_address)
+    )]
+    addresses: Vec<(String, String)>,
 }
 
 impl Cmd for New {
@@ -45,13 +54,6 @@ impl Cmd for New {
             cmd: PackageCommand::New {
                 name: self.project_name.clone(),
             },
-            path: Some(ctx.project_dir.clone()),
-            config: BuildConfig {
-                generate_abis: false,
-                generate_docs: false,
-                test_mode: false,
-                dev_mode: false,
-            },
         };
 
         run_cli(
@@ -66,7 +68,7 @@ impl Cmd for New {
             bail!("Failed to create a project")
         }
 
-        add_dialect_addresses_and_stdlib(&project_dir, &ctx.move_args)?;
+        add_dialect_addresses_and_stdlib(&project_dir, &ctx.move_args, &self.addresses)?;
 
         if !self.minimal {
             println!(
@@ -89,7 +91,11 @@ impl Cmd for New {
     }
 }
 
-fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move) -> anyhow::Result<()> {
+fn add_dialect_addresses_and_stdlib(
+    project_dir: &Path,
+    move_args: &Move,
+    named_addresses: &[(String, String)],
+) -> anyhow::Result<()> {
     let move_toml_path = project_dir.join("Move.toml");
     let mut move_toml = read_to_string(&move_toml_path)?.parse::<Value>()?;
     // add to Move.toml - dialect,
@@ -117,20 +123,34 @@ fn add_dialect_addresses_and_stdlib(project_dir: &Path, move_args: &Move) -> any
         .ok_or_else(|| anyhow!(r#"Couldn't get the "addresses" section in "Move.toml""#))?;
     address_table.insert("Std".to_string(), Value::String("0x1".to_string()));
 
-    for (name, address) in &move_args.named_addresses {
+    for (name, address) in named_addresses {
         address_table.insert(name.clone(), Value::String(address.to_string()));
     }
 
-    let move_toml_string = move_toml.to_string() + dependencies_movestdlib();
+    let move_toml_string = move_toml.to_string() + &dependencies_movestdlib();
     fs::write(&move_toml_path, move_toml_string)?;
 
     Ok(())
 }
 
 /// Move.toml: Dependency movestdlib
-pub fn dependencies_movestdlib() -> &'static str {
-    r#"[dependencies.MoveStdlib]
-git = "https://github.com/pontem-network/move-stdlib.git"
-rev = "79ed97fc1f98fefab16fbb54988bdc7defb09578"
-"#
+pub fn dependencies_movestdlib() -> String {
+    format!(
+        r#"[dependencies.MoveStdlib]
+git = "{}"
+rev = "{}""#,
+        MOVE_STDLIB_URL, MOVE_STDLIB_VERSION
+    )
+}
+
+/// Address.
+pub fn parse_named_address(s: &str) -> anyhow::Result<(String, String)> {
+    let before_after = s.split('=').collect::<Vec<_>>();
+
+    if before_after.len() != 2 {
+        anyhow::bail!("Invalid named address assignment. Must be of the form <address_name>=<address>, but found '{}'", s);
+    }
+    let name = before_after[0].to_string();
+    let addr = before_after[1].to_string();
+    Ok((name, addr))
 }

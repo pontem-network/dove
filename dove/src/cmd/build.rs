@@ -15,7 +15,6 @@ use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
 use move_core_types::language_storage::ModuleId;
-use move_package::BuildConfig;
 use move_symbol_pool::Symbol;
 
 use crate::cmd::Cmd;
@@ -26,13 +25,11 @@ use serde::{Serialize, Deserialize};
 #[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Build {
-    #[structopt(help = "Generate documentation.", long = "doc", short = "d")]
-    doc: bool,
-
     /// Generate error map for the package and its dependencies
     /// at path for use by the Move explanation tool.
     #[structopt(long)]
     error_map: Option<String>,
+
     /// Address. Used as an additional parameter in error_map
     #[structopt(long)]
     address: Option<String>,
@@ -40,11 +37,12 @@ pub struct Build {
     // Pack the assembled modules into a single file,
     // except for those specified in modules_exclude
     #[structopt(
-        help = "Package modules in a binary file.",
-        short = "p",
-        long = "package"
+        help = "Package modules in a binary bundle file.",
+        short = "b",
+        long = "bundle"
     )]
     package: bool,
+
     // Names of modules to exclude from the package process..
     // Used with the "package" parameter.
     // Modules are taken from the <PROJECT_PATH>/build/<PROJECT_NAME>/bytecode_modules directory.
@@ -55,6 +53,7 @@ pub struct Build {
         long = "modules_exclude"
     )]
     modules_exclude: Vec<String>,
+
     // File name of module package.
     // Used with the "package" parameter.
     #[structopt(help = "File name of module package.", short = "o", long = "output")]
@@ -71,13 +70,6 @@ impl Cmd for Build {
             bcs::from_bytes(move_stdlib::error_descriptions())?;
         let cmd = MoveCommand::Package {
             cmd: PackageCommand::Build {},
-            path: Some(ctx.project_dir.clone()),
-            config: BuildConfig {
-                generate_abis: false,
-                generate_docs: self.doc,
-                test_mode: false,
-                dev_mode: false,
-            },
         };
 
         run_cli(
@@ -92,9 +84,6 @@ impl Cmd for Build {
 
         // packaging of modules
         self.run_package(ctx)?;
-
-        // Checking directories in the "build" section, if there are none, then create
-        checking_build_directories(ctx)?;
 
         // Checking directories in the "build" section, if there are none, then create
         checking_build_directories(ctx)?;
@@ -119,13 +108,6 @@ impl Build {
             cmd: PackageCommand::ErrMapGen {
                 error_prefix: None,
                 output_file: path,
-            },
-            path: Some(ctx.project_dir.clone()),
-            config: BuildConfig {
-                generate_abis: false,
-                generate_docs: false,
-                test_mode: false,
-                dev_mode: false,
             },
         };
 
@@ -212,12 +194,13 @@ fn checking_build_directories(ctx: &Context) -> Result<()> {
         .project_dir
         .join("build")
         .join(ctx.manifest.package.name.as_str());
-    for path in [
-        build_path.join("bytecode_modules"),
-        build_path.join("bytecode_scripts"),
-        build_path.join("source_maps"),
-        build_path.join("sources"),
+    for name_dir in [
+        "bytecode_modules",
+        "bytecode_scripts",
+        "source_maps",
+        "sources",
     ] {
+        let path = build_path.join(name_dir);
         if path.exists() {
             continue;
         }

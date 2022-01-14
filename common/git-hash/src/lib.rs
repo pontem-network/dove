@@ -94,7 +94,6 @@ fn opt_tokenize(s: Option<String>) -> Result<TokenStream, LexError> {
         .unwrap_or_else(|| "None".to_owned())
         .parse()
 }
-
 #[derive(Default)]
 struct DependencyInfo {
     branch: Option<String>,

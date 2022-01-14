@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::fmt::Debug;
 use anyhow::Error;
 use move_symbol_pool::Symbol;
-use diem_types::account_config::{treasury_compliance_account_address, diem_root_address};
+use diem_types::account_config::diem_root_address;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{CORE_CODE_ADDRESS, TypeTag};
@@ -255,7 +255,6 @@ fn prepare_function_signature(
                     Signer::from_str(arg).and_then(|s| {
                         Ok(match s {
                             Signer::Root => diem_root_address(),
-                            Signer::Treasury => treasury_compliance_account_address(),
                             Signer::Placeholder => {
                                 return Err(anyhow!(
                                     "Use explicit signer instead of placeholder"
