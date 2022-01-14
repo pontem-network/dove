@@ -36,8 +36,8 @@ pub fn convert_git_dependency(git: &Git) -> DependenceExport {
 fn git_rev(git: &Git) -> Option<&String> {
     git.rev
         .as_ref()
-        .or(git.tag.as_ref())
-        .or(git.branch.as_ref())
+        .or_else(|| git.tag.as_ref())
+        .or_else(|| git.branch.as_ref())
 }
 
 /// Get the package name
