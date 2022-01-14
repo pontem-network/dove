@@ -132,7 +132,7 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
                 .value
                 .into_bytes(),
         );
-        consume_token(&mut ctx.tokens, Tok::ColonColon).map_err(|_| {
+        consume_token(ctx.tokens, Tok::ColonColon).map_err(|_| {
             anyhow!(
                 "{}\n\n A double colon was expected after the module address.",
                 ERROR_MESSAGE

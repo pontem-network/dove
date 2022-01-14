@@ -81,7 +81,6 @@ pub enum Command {
         cmd: experimental::cli::ExperimentalCommand,
     },
 
-
     /// Init new project with existing folder.
     #[structopt(about = "Init directory as move project")]
     Init {
@@ -152,11 +151,13 @@ impl Command {
     /// Split commands to two different execution backend (move-cli, dove).
     pub fn select_backend(self) -> CommonCommand {
         match self {
-            Command::Package { cmd } => {
-                CommonCommand::Diem(DiemCommand::Package { cmd })
+            Command::Package { cmd } => CommonCommand::Diem(DiemCommand::Package { cmd }),
+            Command::Sandbox { storage_dir, cmd } => {
+                CommonCommand::Diem(DiemCommand::Sandbox { storage_dir, cmd })
             }
-            Command::Sandbox { storage_dir, cmd } => CommonCommand::Diem(DiemCommand::Sandbox { storage_dir, cmd }),
-            Command::Experimental { storage_dir, cmd } => CommonCommand::Diem(DiemCommand::Experimental { storage_dir, cmd }),
+            Command::Experimental { storage_dir, cmd } => {
+                CommonCommand::Diem(DiemCommand::Experimental { storage_dir, cmd })
+            }
 
             Command::New { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Init { cmd } => CommonCommand::Dove(Box::new(cmd)),
@@ -173,9 +174,9 @@ impl Command {
 
 /// Public interface for the CLI (useful for testing).
 pub fn execute<Args>(args: Args, cwd: PathBuf) -> Result<()>
-    where
-        Args: IntoIterator,
-        Args::Item: Into<OsString> + Clone,
+where
+    Args: IntoIterator,
+    Args::Item: Into<OsString> + Clone,
 {
     let Opt { move_args, cmd } = Opt::from_iter(args);
     let commands = cmd.select_backend();
@@ -273,7 +274,7 @@ fn create_long_version() -> &'static str {
             Move-Stdlib {}",
             dove, diem, PONT_STDLIB_VERSION
         )
-            .into_boxed_str(),
+        .into_boxed_str(),
     )
 }
 

@@ -52,6 +52,7 @@ pub fn execute_dove_at(args: &[&str], project_path: &Path) -> Result<String> {
         output.status,
         String::from_utf8(output.stderr).unwrap_or_default()
     );
+
     Ok(String::from_utf8(output.stdout)?)
 }
 
@@ -120,8 +121,12 @@ pub fn assert_basic_project_dirs_exist(project_dir: &Path) -> Result<()> {
 
 /// Create a new project in a temporary directory
 /// Returns the path to the project
-pub fn create_new_project(project_name: &str, addresses: HashMap<&str, &str>) -> Result<PathBuf> {
-    let (base_dir, project_dir) = pre_start_dove_new(project_name)?;
+pub fn create_new_project(
+    project_name: &str,
+    addresses: HashMap<&str, &str>,
+    move_stdlib: bool,
+) -> Result<PathBuf> {
+    let (base_dir, project_path) = pre_start_dove_new(project_name)?;
     let mut args = vec!["new", project_name];
 
     let addresses: Vec<String> = addresses
@@ -135,13 +140,25 @@ pub fn create_new_project(project_name: &str, addresses: HashMap<&str, &str>) ->
     }
 
     execute_dove_at(&args, &base_dir)?;
-    Ok(project_dir)
+
+    if !move_stdlib {
+        let move_toml_path = project_path.join("Move.toml");
+        let move_toml_content = fs::read_to_string(&move_toml_path)?;
+        let mut move_toml = toml::from_str::<toml::Value>(&move_toml_content)?;
+        move_toml
+            .get_mut("dependencies")
+            .and_then(|dep| dep.as_table_mut())
+            .and_then(|dep| dep.remove("MoveStdlib"));
+        fs::write(&move_toml_path, move_toml.to_string())?;
+    }
+
+    Ok(project_path)
 }
 
 /// Create a test project
-pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
+pub fn new_demo_project(project_name: &str, move_stdlib: bool) -> Result<PathBuf> {
     let addresses = [("Demo", "0x2")].into_iter().collect();
-    let project_path = create_new_project(project_name, addresses)?;
+    let project_path = create_new_project(project_name, addresses, move_stdlib)?;
 
     // scripts/main.move
     let mut main_script = fs::File::create(project_path.join("scripts").join("main.move"))?;

@@ -10,7 +10,7 @@ pub enum BytecodeType {
 
 #[derive(Debug)]
 pub enum Bytecode {
-    Script(String, CompiledScript, CompiledModule, BytecodeRef),
+    Script(String, CompiledScript, Box<CompiledModule>, BytecodeRef),
     Module(CompiledModule, BytecodeRef),
 }
 

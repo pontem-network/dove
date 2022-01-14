@@ -140,7 +140,7 @@ impl BytecodeAccess for DoveBytecode {
                 Bytecode::Script(
                     name,
                     CompiledScript::deserialize(&bytecode)?,
-                    empty_module(),
+                    Box::new(empty_module()),
                     rf,
                 )
             }

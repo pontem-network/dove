@@ -17,8 +17,7 @@ use crate::export::dove_manifest::read_manifest;
 /// Export Dove.toml => Move.toml
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-pub struct Export {
-}
+pub struct Export {}
 
 impl Cmd for Export {
     /// Redefined. Empty Manifest
