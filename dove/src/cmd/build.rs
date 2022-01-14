@@ -29,6 +29,7 @@ pub struct Build {
     /// at path for use by the Move explanation tool.
     #[structopt(long)]
     error_map: Option<String>,
+
     /// Address. Used as an additional parameter in error_map
     #[structopt(long)]
     address: Option<String>,
@@ -41,6 +42,7 @@ pub struct Build {
         long = "bundle"
     )]
     package: bool,
+
     // Names of modules to exclude from the package process..
     // Used with the "package" parameter.
     // Modules are taken from the <PROJECT_PATH>/build/<PROJECT_NAME>/bytecode_modules directory.
@@ -51,6 +53,7 @@ pub struct Build {
         long = "modules_exclude"
     )]
     modules_exclude: Vec<String>,
+
     // File name of module package.
     // Used with the "package" parameter.
     #[structopt(help = "File name of module package.", short = "o", long = "output")]
@@ -81,9 +84,6 @@ impl Cmd for Build {
 
         // packaging of modules
         self.run_package(ctx)?;
-
-        // Checking directories in the "build" section, if there are none, then create
-        checking_build_directories(ctx)?;
 
         // Checking directories in the "build" section, if there are none, then create
         checking_build_directories(ctx)?;
@@ -194,12 +194,13 @@ fn checking_build_directories(ctx: &Context) -> Result<()> {
         .project_dir
         .join("build")
         .join(ctx.manifest.package.name.as_str());
-    for path in [
-        build_path.join("bytecode_modules"),
-        build_path.join("bytecode_scripts"),
-        build_path.join("source_maps"),
-        build_path.join("sources"),
+    for name_dir in [
+        "bytecode_modules",
+        "bytecode_scripts",
+        "source_maps",
+        "sources",
     ] {
+        let path = build_path.join(name_dir);
         if path.exists() {
             continue;
         }
