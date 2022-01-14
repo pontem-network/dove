@@ -35,10 +35,12 @@ use crate::tx::model::EnrichedTransaction;
 pub struct Run {
     #[structopt(flatten)]
     call: CallDeclarationCmd,
+
     /// If set, the effects of executing `script_file` (i.e., published, updated, and
     /// deleted resources) will NOT be committed to disk.
     #[structopt(long = "dry-run")]
     dry_run: bool,
+
     /// Gas budget.
     #[structopt(long = "gas_budget", short = "g")]
     gas_budget: Option<u64>,
@@ -116,8 +118,7 @@ impl Cmd for Run {
 }
 
 fn resolve_script_name(bi: &BytecodeInfo) -> Result<PathBuf> {
-    let path: &Path = bi.bytecode_ref().0.as_ref();
-    let path = path.to_path_buf();
+    let path = PathBuf::from(&bi.bytecode_ref().0);
     let name = path
         .file_name()
         .map(|name| name.to_string_lossy().to_string())

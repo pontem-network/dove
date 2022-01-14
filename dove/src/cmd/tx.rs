@@ -24,6 +24,7 @@ use crate::tx::model::{EnrichedTransaction, Transaction};
 pub struct CreateTransactionCmd {
     #[structopt(flatten)]
     call: CallDeclarationCmd,
+
     #[structopt(help = "Output file name.", long = "output", short = "o")]
     output: Option<String>,
 }
@@ -64,7 +65,7 @@ fn store_transaction(
     if tx_file.exists() {
         fs::remove_file(&tx_file)?;
     }
-    println!("Store transaction:{:?}", tx_file);
+    println!("Store transaction: {:?}", tx_file);
     Ok(fs::write(&tx_file, bcs::to_bytes(&tx)?)?)
 }
 
