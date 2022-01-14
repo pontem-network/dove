@@ -182,8 +182,6 @@ impl TryInto<TransactionArgument> for ScriptArg {
 pub enum Signer {
     /// Root signer.
     Root,
-    /// Treasury signer.
-    Treasury,
     /// Template to replace.
     Placeholder,
     /// Named address.
@@ -196,7 +194,6 @@ impl FromStr for Signer {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s.to_lowercase().as_str() {
             "root" | "rt" | "dr" => Self::Root,
-            "treasury" | "tr" | "tc" => Self::Treasury,
             "_" => Self::Placeholder,
             _ => Self::Name(Symbol::from(s)),
         })
