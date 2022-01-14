@@ -15,7 +15,7 @@ anyhow = "1.0"
 url = ">=2"
 tokio = "1"
 codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive", "full", "bit-vec"] }
-subxt = { git = "https://github.com/vladimirovmm/subxt", branch = "pontem" }
+subxt = { git = "https://github.com/pontem-network/subxt", branch = "pontem" }
 sp-keyring = { package = "sp-keyring", git = "https://github.com/paritytech/substrate/", branch = "polkadot-v0.9.12" }
 sp-core = { git = "https://github.com/paritytech/substrate/", branch = "polkadot-v0.9.12" }
 #
