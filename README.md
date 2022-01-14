@@ -37,13 +37,13 @@ Regular installation:
 cargo install --path dove
 ```
 
-See help:
+##### See help:
 
 ```shell script
 dove -h
 ```
 
-Create new project:
+##### Create new project:
 
 ```shell script
 dove new first_project 
@@ -58,12 +58,29 @@ dialect = "Pont"
 * `pont` - Polkadot SS58 addresses.
 * `dfinance` - bech32 addresses.
 
-Build project:
+##### Build project:
 
 ```shell script
 dove build
 ```
 See `./build/` folder to get scripts/modules binaries.
+
+##### Clean build directory:
+```shell script
+dove clean
+```
+The contents of the directories will be deleted:
+- `<PROJECT_DIR>/storage`
+- `<PROJECT_DIR>/build`
+
+##### Clear build directory and global cache:
+```shell script
+dove clean --global
+```
+The contents of the directories will be deleted:
+- `<PROJECT_DIR>/storage`
+- `<PROJECT_DIR>/build`
+- `~/.move/`
 
 ### Pallet Transactions
 
