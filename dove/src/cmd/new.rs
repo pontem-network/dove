@@ -20,6 +20,7 @@ use crate::{MOVE_STDLIB_URL, MOVE_STDLIB_VERSION};
 pub struct New {
     #[structopt(help = "Project name.")]
     project_name: String,
+
     #[structopt(
         help = "Creates only Move.toml without dependencies.",
         name = "minimal",
@@ -27,7 +28,13 @@ pub struct New {
         short = "m"
     )]
     minimal: bool,
-    #[structopt(help = "Named  address.", long = "addresses", short = "a", parse(try_from_str = parse_named_address))]
+
+    #[structopt(
+        help = "Named  address.", 
+        long = "addresses", 
+        short = "a", 
+        parse(try_from_str = parse_named_address)
+    )]
     addresses: Vec<(String, String)>,
 }
 
@@ -130,8 +137,8 @@ fn add_dialect_addresses_and_stdlib(
 pub fn dependencies_movestdlib() -> String {
     format!(
         r#"[dependencies.MoveStdlib]
-        git = "{}"
-        rev = "{}""#,
+git = "{}"
+rev = "{}""#,
         MOVE_STDLIB_URL, MOVE_STDLIB_VERSION
     )
 }

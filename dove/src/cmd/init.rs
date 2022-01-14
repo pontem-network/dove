@@ -14,13 +14,19 @@ use crate::cmd::new::parse_named_address;
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Init {
     #[structopt(
-        help = "Creates only Dove.toml.",
+        help = "Creates only Move.toml.",
         name = "minimal",
         long = "minimal",
         short = "m"
     )]
     minimal: bool,
-    #[structopt(help = "Named  address.", long = "addresses", short = "a", parse(try_from_str = parse_named_address))]
+
+    #[structopt(
+        help = "Named  address.", 
+        long = "addresses", 
+        short = "a", 
+        parse(try_from_str = parse_named_address)
+    )]
     addresses: Vec<(String, String)>,
 }
 
