@@ -26,8 +26,8 @@ use crate::tx::model::EnrichedTransaction;
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(usage = "dove run [call] [OPTIONS]\n
     Examples:
-    $ dove run 'script_name([10,10], true, 68656c6c6f776f726c64, 100, 0x1)'
-    $ dove run script_name --parameters [10,10] true 68656c6c6f776f726c64 100 0x1
+    $ dove run 'script_name([10,10], true, 100, 0x1, ADDRESS_ALIAS)'
+    $ dove run script_name --parameters [10,10] true 100 0x1 ADDRESS_ALIAS
     $ dove run 'script_name()'
     $ dove run 'Module::function()'
     $ dove run '0x1::Module::function()'
