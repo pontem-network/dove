@@ -122,9 +122,9 @@ Supported types:
 
 * Numbers (u8, u64, u128)
 * Boolean
-* Addresses in hexadecimal format
 * Vectors
 * Type parameters (generics).
+* Addresses in hexadecimal format
 * ADDRESS_ALIAS - Address alias. Specified in the "addresses" section of Move.toml
 
 For more commands and parameters look at help:
