@@ -12,7 +12,7 @@ crate_type = ["cdylib"]
 hex = "0.4"
 log = "0.4"
 anyhow = "1.0"
-url = ">=2"
+url = "2"
 tokio = "1"
 codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive", "full", "bit-vec"] }
 subxt = { git = "https://github.com/pontem-network/subxt", branch = "pontem" }
