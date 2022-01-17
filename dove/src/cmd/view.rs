@@ -37,6 +37,7 @@ pub struct View {
     /// "0x1::Account::Balance<0x1::Coins::ETH>"
     #[structopt(long, short)]
     query: String,
+
     /// Time: maximum block number
     #[structopt(long, short)]
     height: Option<String>,
