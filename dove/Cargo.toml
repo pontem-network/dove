@@ -1,6 +1,6 @@
 [package]
 name = "dove"
-version = "1.5.2"
+version = "1.5.3"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
     "Dm. Yakushev <dmitryyakushev@wings.ai>",
@@ -29,6 +29,7 @@ move-prover = { git = "https://github.com/pontem-network/diem.git", branch = "v1
 move-vm-runtime = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
 bytecode-source-map = { git = "https://github.com/pontem-network/diem.git", package = "move-bytecode-source-map", branch = "v1.5.1-pre" }
 move-command-line-common = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
+diem-vm = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
 
 # third-party dependencies
 log = "0.4.14"

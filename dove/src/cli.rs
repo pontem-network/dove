@@ -4,11 +4,11 @@ use std::ffi::OsString;
 use std::path::{PathBuf, Path};
 
 use anyhow::{Result, Error};
+use diem_vm::natives::diem_natives;
 use structopt::StructOpt;
 use semver::{Version, VersionReq};
 
 use move_cli::{Command as DiemCommand, experimental, Move, package, run_cli, sandbox};
-use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 
 use crate::{DOVE_VERSION, DOVE_HASH, MOVE_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
@@ -189,14 +189,7 @@ where
         CommonCommand::Diem(cmd) => {
             let error_descriptions: ErrorMapping =
                 bcs::from_bytes(move_stdlib::error_descriptions())?;
-            run_cli(
-                move_stdlib::natives::all_natives(
-                    AccountAddress::from_hex_literal("0x1").unwrap(),
-                ),
-                &error_descriptions,
-                &move_args,
-                &cmd,
-            )
+            run_cli(diem_natives(), &error_descriptions, &move_args, &cmd)
         }
         CommonCommand::Dove(mut cmd) => {
             let mut ctx = cmd.context(cwd, move_args)?;
