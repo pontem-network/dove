@@ -3,9 +3,14 @@ use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{StructTag, TypeTag};
 use move_compiler::parser::ast::{LeadingNameAccess_, NameAccessChain_, Type, Type_};
+use move_package::source_package::parsed_manifest::AddressDeclarations;
 
-pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
-    fn unwrap_spanned_ty_(ty: Type, this: Option<AccountAddress>) -> Result<TypeTag, Error> {
+pub fn unwrap_spanned_ty(addr_map: &AddressDeclarations, ty: Type) -> Result<TypeTag, Error> {
+    fn unwrap_spanned_ty_(
+        addr_map: &AddressDeclarations,
+        ty: Type,
+        this: Option<AccountAddress>,
+    ) -> Result<TypeTag, Error> {
         let st = match ty.value {
             Type_::Apply(ma, mut ty_params) => {
                 match (ma.value, this) {
@@ -18,7 +23,7 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
                         "address" => TypeTag::Address,
                         "signer" => TypeTag::Signer,
                         "Vec" if ty_params.len() == 1 => TypeTag::Vector(
-                            unwrap_spanned_ty_(ty_params.pop().unwrap(), this)
+                            unwrap_spanned_ty_(addr_map, ty_params.pop().unwrap(), this)
                                 .unwrap()
                                 .into(),
                         ),
@@ -29,12 +34,14 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
                     (NameAccessChain_::Two(_, _), None) => {
                         bail!("Could not parse input: type without module address");
                     }
-                    (NameAccessChain_::Three(access, name), this) => {
+                    (NameAccessChain_::Three(access, name), _this) => {
                         let (addr, m_name) = access.value;
                         let address = match addr.value {
                             LeadingNameAccess_::AnonymousAddress(addr) => AccountAddress::new(addr.into_bytes()),
                             LeadingNameAccess_::Name(name) => {
-                                this.ok_or_else(|| anyhow!("Could not parse input: unsupported named address. Name '{}'.", name))?
+                                addr_map.get(&name.value)
+                                    .and_then(|addr|addr.to_owned())
+                                    .ok_or_else(|| anyhow!("Could not parse input: unsupported named address. Name '{}'.", name))?
                             }
                         };
                         TypeTag::Struct(StructTag {
@@ -43,7 +50,7 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
                             name: Identifier::new(name.value.as_str())?,
                             type_params: ty_params
                                 .into_iter()
-                                .map(|ty| unwrap_spanned_ty_(ty, Some(address)))
+                                .map(|ty| unwrap_spanned_ty_(addr_map, ty, Some(address)))
                                 .map(|res| match res {
                                     Ok(st) => st,
                                     Err(err) => panic!("{:?}", err),
@@ -65,7 +72,7 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
                             name: Identifier::new(name.value.as_str())?,
                             type_params: ty_params
                                 .into_iter()
-                                .map(|ty| unwrap_spanned_ty_(ty, Some(address)))
+                                .map(|ty| unwrap_spanned_ty_(addr_map, ty, Some(address)))
                                 .map(|res| match res {
                                     Ok(st) => st,
                                     Err(err) => panic!("{:?}", err),
@@ -83,7 +90,7 @@ pub fn unwrap_spanned_ty(ty: Type) -> Result<TypeTag, Error> {
         Ok(st)
     }
 
-    unwrap_spanned_ty_(ty, None)
+    unwrap_spanned_ty_(addr_map, ty, None)
 }
 
 #[cfg(test)]
@@ -105,7 +112,7 @@ mod tests {
         let mut context = Context::new(&mut env, &mut lexer);
         let ty = parse_type(&mut context)
             .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
-        unwrap_spanned_ty(ty)
+        unwrap_spanned_ty(&Default::default(), ty)
     }
 
     #[test]

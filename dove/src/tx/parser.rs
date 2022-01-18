@@ -119,7 +119,7 @@ pub(crate) fn parse_call(addr_map: &AddressDeclarations, call: &str) -> Result<C
         .map_err(|err| anyhow!("{}\n\n{:?}", ERROR_MESSAGE, err))?;
 
     let mut call = parse_call_body(addr_map, &mut ctx)?;
-    call.set_tp_params(parse_type_params(&mut ctx)?);
+    call.set_tp_params(parse_type_params(addr_map, &mut ctx)?);
     call.set_args(parse_args(&mut ctx)?);
     Ok(call)
 }
@@ -203,7 +203,10 @@ fn parse_call_body(addr_map: &AddressDeclarations, ctx: &mut Context) -> Result<
     })
 }
 
-fn parse_type_params(ctx: &mut Context) -> Result<Vec<TypeTag>, Error> {
+fn parse_type_params(
+    addr_map: &AddressDeclarations,
+    ctx: &mut Context,
+) -> Result<Vec<TypeTag>, Error> {
     let error_message = "Invalid call script format: Invalid type parameters format.\n\n\
          Use pattern:\n\
          SCRIPT_FUNCTION_NAME<TYPE1, TYPE2, ...>(PARAM1, PARAM2, ...)\
@@ -229,7 +232,7 @@ fn parse_type_params(ctx: &mut Context) -> Result<Vec<TypeTag>, Error> {
 
             let type_str = ctx.tokens.content().to_string();
             type_parameter.push(
-                parse_type_param(ctx)
+                parse_type_param(addr_map, ctx)
                     .map_err(|_| anyhow!("{}\n\nUnknown: {}", &error_message, type_str))?,
             );
         }
@@ -295,7 +298,7 @@ fn parse_args(ctx: &mut Context) -> Result<Vec<String>, Error> {
     }
 }
 
-pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
+pub(crate) fn parse_tp_param(addr_map: &AddressDeclarations, tp: &str) -> Result<TypeTag, Error> {
     let mut lexer = Lexer::new(tp, FileHash::new("tp"));
     let mut env = CompilationEnv::new(Flags::empty(), Default::default());
     let mut ctx = Context::new(&mut env, &mut lexer);
@@ -303,7 +306,7 @@ pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
     ctx.tokens
         .advance()
         .map_err(|err| Error::msg(format!("{:?}", err)))?;
-    parse_type_param(&mut ctx)
+    parse_type_param(addr_map, &mut ctx)
 }
 
 /// parse type params
@@ -311,9 +314,12 @@ pub(crate) fn parse_tp_param(tp: &str) -> Result<TypeTag, Error> {
 /// u8 => TypeTag::U8
 /// u64 => TypeTag::U64
 /// ...
-pub(crate) fn parse_type_param(ctx: &mut Context) -> Result<TypeTag, Error> {
+pub(crate) fn parse_type_param(
+    addr_map: &AddressDeclarations,
+    ctx: &mut Context,
+) -> Result<TypeTag, Error> {
     let ty = parse_type(ctx).map_err(|err| Error::msg(format!("{:?}", err)))?;
-    unwrap_spanned_ty(ty)
+    unwrap_spanned_ty(addr_map, ty)
 }
 
 pub(crate) fn parse_vec<E>(tkn: &str, tp_name: &str) -> Result<Vec<E>, Error>

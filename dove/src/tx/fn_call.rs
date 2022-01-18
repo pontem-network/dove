@@ -1,6 +1,7 @@
 use std::str::FromStr;
 use std::fmt::Debug;
 use anyhow::Error;
+use dialect::get_context;
 use move_symbol_pool::Symbol;
 use diem_types::account_config::diem_root_address;
 use move_core_types::account_address::AccountAddress;
@@ -361,15 +362,14 @@ fn parse_address(
     arg_value: &str,
     addr_map: &AddressDeclarations,
 ) -> Result<AccountAddress, Error> {
-    Ok(if arg_value.starts_with("0x") {
-        AccountAddress::from_hex_literal(arg_value)
-            .map_err(|err| parse_err(&Type::Address, arg_value, err))?
-    } else {
-        addr_map
+    let ctx = get_context();
+    match ctx.parse_address(arg_value) {
+        Ok(addr) => Ok(addr),
+        Err(_) => addr_map
             .get(&Symbol::from(arg_value))
             .and_then(|addr| *addr)
-            .ok_or_else(|| anyhow!("Failed to find address with name:{}", arg_value))?
-    })
+            .ok_or_else(|| anyhow!("Failed to find address with name:{}", arg_value)),
+    }
 }
 
 fn parse_err<D: Debug>(tp: &Type, value: &str, err: D) -> Error {

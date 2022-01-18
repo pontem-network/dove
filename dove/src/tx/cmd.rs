@@ -69,7 +69,7 @@ impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
         if let Some(tp) = cmd.type_parameters {
             call.set_tp_params(
                 tp.iter()
-                    .map(|tp| parse_tp_param(tp))
+                    .map(|tp| parse_tp_param(addr_map, tp))
                     .collect::<Result<_, _>>()?,
             );
         }
