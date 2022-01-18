@@ -260,7 +260,8 @@ impl ModulePackage {
             })
             .collect::<Result<HashMap<_, _>, _>>()?;
 
-        let ids_list: Vec<_> = modules.keys().cloned().collect();
+        let mut ids_list: Vec<_> = modules.keys().cloned().collect();
+        ids_list.sort();
 
         for id in ids_list {
             self.write_sub_tree(&id, &mut modules);
