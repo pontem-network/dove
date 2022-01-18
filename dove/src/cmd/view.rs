@@ -10,6 +10,7 @@ use move_core_types::language_storage::TypeTag;
 use move_compiler::Flags;
 use move_compiler::parser::lexer::Lexer;
 use move_compiler::shared::CompilationEnv;
+use move_package::source_package::parsed_manifest::AddressDeclarations;
 use move_resource_viewer::ser;
 use net::{make_net, NetView};
 
@@ -94,7 +95,8 @@ impl Cmd for View {
             }
         }
 
-        let query = parse_query(&query_string)?;
+        let address_map = ctx.manifest.addresses.clone().unwrap_or_default();
+        let query = parse_query(&address_map, &query_string)?;
         let addr = dialect.parse_address(&self.address)?;
 
         match query {
@@ -153,7 +155,10 @@ fn write_output(path: &Path, result: &str, name: &str) {
     }
 }
 
-fn parse_query(query: &str) -> Result<TypeTag, Error> {
+/// Query parsing
+///     addr_map:&AddressDeclarations - To check alias addresses and replace with a hexadecimal address
+///     qyery - Query string for parsing
+fn parse_query(addr_map: &AddressDeclarations, query: &str) -> Result<TypeTag, Error> {
     use move_compiler::parser::syntax::Context;
 
     let mut lexer = Lexer::new(query, FileHash::new(query));
@@ -162,5 +167,5 @@ fn parse_query(query: &str) -> Result<TypeTag, Error> {
 
     ctx.tokens.advance().map_err(|err| anyhow!("{:?}", &err))?;
 
-    parse_type_param(&mut ctx)
+    parse_type_param(addr_map, &mut ctx)
 }

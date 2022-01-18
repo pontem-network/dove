@@ -310,6 +310,8 @@ pub(crate) fn parse_tp_param(addr_map: &AddressDeclarations, tp: &str) -> Result
 }
 
 /// parse type params
+///     addr_map:&AddressDeclarations - To check alias addresses and replace with a hexadecimal address
+///     cts
 ///
 /// u8 => TypeTag::U8
 /// u64 => TypeTag::U64
