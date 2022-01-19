@@ -198,9 +198,7 @@ where
                 run_internal_clean(&mut ctx)?;
             }
             cmd.apply(&mut ctx)
-                .and_then(|_| {
-                    store_manifest_checksum(&ctx)
-                })
+                .and_then(|_| store_manifest_checksum(&ctx))
         }
     }
 }
