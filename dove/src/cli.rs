@@ -196,9 +196,9 @@ where
 
             if !check_manifest_hash(&ctx) {
                 run_internal_clean(&mut ctx)?;
-                store_manifest_checksum(&ctx)?;
             }
             cmd.apply(&mut ctx)
+                .and_then(|_| store_manifest_checksum(&ctx))
         }
     }
 }
@@ -241,7 +241,7 @@ fn store_manifest_checksum(ctx: &Context) -> Result<()> {
     if path_version.exists() {
         fs::remove_file(&path_version)?;
     }
-    fs::write(&path_version, ctx.manifest_hash.to_string())?;
+    fs::write(dbg!(&path_version), dbg!(ctx.manifest_hash.to_string()))?;
     Ok(())
 }
 
