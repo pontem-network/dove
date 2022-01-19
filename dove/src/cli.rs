@@ -198,7 +198,9 @@ where
                 run_internal_clean(&mut ctx)?;
             }
             cmd.apply(&mut ctx)
-                .and_then(|_| store_manifest_checksum(&ctx))
+                .and_then(|_| {
+                    store_manifest_checksum(&ctx)
+                })
         }
     }
 }
@@ -235,7 +237,7 @@ fn check_manifest_hash(ctx: &Context) -> bool {
 fn store_manifest_checksum(ctx: &Context) -> Result<()> {
     let build_path = ctx.project_dir.join("build");
     if !build_path.exists() {
-        fs::create_dir_all(&build_path)?;
+        return Ok(());
     }
     let path_version = build_path.join(HASH_FILE_NAME);
     if path_version.exists() {
