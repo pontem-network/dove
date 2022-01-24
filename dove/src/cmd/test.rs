@@ -2,7 +2,7 @@ use structopt::StructOpt;
 use move_core_types::errmap::ErrorMapping;
 use move_cli::{run_cli, Command as MoveCommand};
 use move_cli::package::cli::PackageCommand;
-use diem_types::account_address::AccountAddress;
+use diem_vm::natives::diem_natives;
 use crate::cmd::Cmd;
 use crate::cmd::build::run_internal_build;
 use crate::context::Context;
@@ -86,12 +86,7 @@ impl Cmd for Test {
             },
         };
 
-        run_cli(
-            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
-            &error_descriptions,
-            &ctx.move_args,
-            &cmd,
-        )?;
+        run_cli(diem_natives(), &error_descriptions, &ctx.move_args, &cmd)?;
 
         Ok(())
     }
