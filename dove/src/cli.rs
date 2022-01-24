@@ -21,6 +21,7 @@ use crate::cmd::init::Init;
 use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::tx::CreateTransactionCmd;
+use crate::cmd::view::View;
 use crate::context::Context;
 use move_cli::DEFAULT_STORAGE_DIR;
 
@@ -144,6 +145,13 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Export,
     },
+    /// Move Resource Viewer
+    #[structopt(about = "Move Resource Viewer")]
+    View {
+        /// Command.
+        #[structopt(flatten)]
+        cmd: View,
+    },
 }
 
 impl Command {
@@ -168,6 +176,7 @@ impl Command {
             Command::Tx { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Prove { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Export { cmd } => CommonCommand::Dove(Box::new(cmd)),
+            Command::View { cmd } => CommonCommand::Dove(Box::new(cmd)),
         }
     }
 }

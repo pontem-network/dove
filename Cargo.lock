@@ -303,6 +303,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
+name = "borrow-graph"
+version = "0.0.1"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "mirai-annotations",
+]
+
+[[package]]
 name = "bstr"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -343,10 +352,40 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "curve25519-dalek-fiat",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "ed25519-dalek-fiat",
  "sha2",
  "sha3",
+]
+
+[[package]]
+name = "bytecode-source-map"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "codespan-reporting",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-binary-format 0.1.0",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "serde 1.0.134",
+]
+
+[[package]]
+name = "bytecode-verifier"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "borrow-graph",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "mirai-annotations",
+ "move-binary-format 0.1.0",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "petgraph 0.5.1",
 ]
 
 [[package]]
@@ -676,13 +715,29 @@ checksum = "850878694b7933ca4c9569d30a34b55031b9b139ee1fc7b94a527c4ef960d690"
 [[package]]
 name = "dialect"
 version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "bech32",
+ "blake2-rfc",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-binary-format 0.1.0",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "regex",
+ "rust-base58",
+]
+
+[[package]]
+name = "dialect"
+version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
  "bech32",
  "blake2-rfc",
- "move-binary-format",
- "move-core-types",
+ "move-binary-format 0.0.3",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "regex",
  "rust-base58",
@@ -699,7 +754,7 @@ dependencies = [
  "bytes 1.1.0",
  "curve25519-dalek-fiat",
  "diem-crypto-derive",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "digest 0.9.0",
  "ed25519-dalek-fiat",
  "hex",
@@ -723,7 +778,7 @@ name = "diem-crypto-derive"
 version = "0.0.3"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "proc-macro2 1.0.36",
  "quote 1.0.15",
  "syn 1.0.86",
@@ -739,24 +794,24 @@ dependencies = [
  "clap",
  "diem-crypto",
  "diem-types",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "include_dir",
  "log",
  "move-abigen",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-bytecode-utils",
  "move-bytecode-verifier",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-docgen",
  "move-errmapgen",
  "move-package",
  "move-prover",
  "move-stdlib",
- "move-symbol-pool",
- "move-vm-runtime",
- "move-vm-types",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "rayon",
  "sha2",
@@ -771,7 +826,7 @@ name = "diem-infallible"
 version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
 ]
 
 [[package]]
@@ -779,7 +834,7 @@ name = "diem-log-derive"
 version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "proc-macro2 1.0.36",
  "quote 1.0.15",
  "syn 1.0.86",
@@ -794,7 +849,7 @@ dependencies = [
  "chrono",
  "diem-infallible",
  "diem-log-derive",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "erased-serde",
  "hostname",
  "once_cell",
@@ -813,7 +868,7 @@ dependencies = [
  "anyhow",
  "diem-logger",
  "diem-metrics-core",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "futures",
  "hyper 0.14.16",
  "once_cell",
@@ -827,7 +882,7 @@ name = "diem-metrics-core"
 version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "prometheus",
 ]
 
@@ -838,7 +893,7 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "crossbeam-queue",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "mvhashmap",
  "num_cpus",
  "once_cell",
@@ -853,7 +908,7 @@ dependencies = [
  "anyhow",
  "diem-crypto",
  "diem-types",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
 ]
 
 [[package]]
@@ -868,11 +923,11 @@ dependencies = [
  "chrono",
  "diem-crypto",
  "diem-crypto-derive",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "hex",
  "itertools 0.10.3",
  "mirai-annotations",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-read-write-set-types",
  "once_cell",
  "rand 0.8.4",
@@ -897,15 +952,15 @@ dependencies = [
  "diem-parallel-executor",
  "diem-state-view",
  "diem-types",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "fail",
  "mirai-annotations",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-bytecode-utils",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-stdlib",
- "move-vm-runtime",
- "move-vm-types",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "mvhashmap",
  "once_cell",
  "rayon",
@@ -913,6 +968,73 @@ dependencies = [
  "serde 1.0.134",
  "serde_json",
  "tracing",
+]
+
+[[package]]
+name = "diem-workspace-hack"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "Inflector",
+ "anyhow",
+ "backtrace",
+ "bitvec",
+ "block-buffer 0.9.0",
+ "bstr",
+ "byteorder",
+ "bytes 1.1.0",
+ "cc",
+ "chrono",
+ "clap",
+ "codespan-reporting",
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-queue",
+ "crossbeam-utils",
+ "either",
+ "futures",
+ "futures-channel",
+ "futures-core",
+ "futures-io",
+ "futures-sink",
+ "futures-util",
+ "getrandom 0.2.4",
+ "hyper 0.14.16",
+ "indexmap",
+ "itertools 0.10.3",
+ "itoa 0.4.8",
+ "libc",
+ "log",
+ "memchr",
+ "num-integer",
+ "num-traits 0.2.14",
+ "petgraph 0.5.1",
+ "plotters",
+ "proc-macro2 0.4.30",
+ "prost",
+ "quote 0.6.13",
+ "rand 0.8.4",
+ "rand_core 0.5.1",
+ "regex",
+ "regex-automata",
+ "regex-syntax",
+ "reqwest 0.11.9",
+ "rusty-fork",
+ "serde 1.0.134",
+ "serde_json",
+ "standback",
+ "subtle",
+ "syn 0.15.44",
+ "syn 1.0.86",
+ "tiny-keccak",
+ "tokio 1.15.0",
+ "tokio-util 0.6.9",
+ "toml",
+ "tracing",
+ "tracing-core",
+ "url",
+ "warp",
+ "zeroize",
 ]
 
 [[package]]
@@ -1035,7 +1157,7 @@ dependencies = [
  "atty",
  "bcs",
  "codespan-reporting",
- "dialect",
+ "dialect 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "diem-types",
  "diem-vm",
  "git-hash",
@@ -1044,18 +1166,18 @@ dependencies = [
  "lang",
  "lazy_static 1.4.0",
  "log",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
  "move-cli",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-package",
  "move-prover",
  "move-prover-boogie-backend",
  "move-stdlib",
- "move-symbol-pool",
- "move-vm-runtime",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "rand 0.7.3",
  "regex",
@@ -1067,6 +1189,12 @@ dependencies = [
  "toml",
  "twox-hash",
 ]
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee2626afccd7561a06cf1367e2950c4718ea04565e20fb5029b6c7d8ad09abcf"
 
 [[package]]
 name = "ed25519"
@@ -1106,6 +1234,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7896dc8abb250ffdda33912550faa54c88ec8b998dec0b2c55ab224921ce11df"
 dependencies = [
  "cfg-if 1.0.0",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
+dependencies = [
+ "atty",
+ "humantime",
+ "log",
+ "regex",
+ "termcolor",
 ]
 
 [[package]]
@@ -1590,6 +1731,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02296996cb8796d7c6e3bc2d9211b7802812d36999a51bb754123ead7d37d026"
 
 [[package]]
+name = "humantime"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
+
+[[package]]
 name = "hyper"
 version = "0.13.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1738,6 +1885,7 @@ checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
 dependencies = [
  "autocfg",
  "hashbrown 0.11.2",
+ "serde 1.0.134",
 ]
 
 [[package]]
@@ -1776,6 +1924,39 @@ name = "ipnet"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68f2d64f2edebec4ce84ad108148e67e1064789bee435edc5b60ad398714a3a9"
+
+[[package]]
+name = "ir-to-bytecode"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "bytecode-source-map",
+ "codespan-reporting",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "ir-to-bytecode-syntax",
+ "log",
+ "move-binary-format 0.1.0",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "ouroboros",
+ "thiserror",
+]
+
+[[package]]
+name = "ir-to-bytecode-syntax"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "hex",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+]
 
 [[package]]
 name = "itertools"
@@ -1843,18 +2024,18 @@ dependencies = [
 
 [[package]]
 name = "lang"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "codespan-reporting",
  "include_dir",
- "move-binary-format",
- "move-command-line-common",
+ "move-binary-format 0.0.3",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
- "move-ir-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-package",
- "move-symbol-pool",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "serde 1.0.134",
  "tempfile",
  "walkdir",
@@ -2050,12 +2231,12 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "bcs",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "heck",
  "log",
  "move-bytecode-verifier",
- "move-command-line-common",
- "move-core-types",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-model",
  "serde 1.0.134",
 ]
@@ -2066,12 +2247,26 @@ version = "0.0.3"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "mirai-annotations",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "ref-cast",
  "serde 1.0.134",
+ "variant_count",
+]
+
+[[package]]
+name = "move-binary-format"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "mirai-annotations",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "ref-cast",
  "variant_count",
 ]
 
@@ -2080,7 +2275,7 @@ name = "move-borrow-graph"
 version = "0.0.1"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "mirai-annotations",
 ]
 
@@ -2092,12 +2287,12 @@ dependencies = [
  "anyhow",
  "bcs",
  "codespan-reporting",
- "diem-workspace-hack",
- "move-binary-format",
- "move-command-line-common",
- "move-core-types",
- "move-ir-types",
- "move-symbol-pool",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "serde 1.0.134",
 ]
 
@@ -2107,9 +2302,9 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
- "move-binary-format",
- "move-core-types",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "petgraph 0.5.1",
 ]
 
@@ -2119,11 +2314,11 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "mirai-annotations",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-borrow-graph",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "petgraph 0.5.1",
 ]
 
@@ -2133,12 +2328,12 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
- "move-binary-format",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-disassembler",
- "move-ir-types",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "regex",
  "structopt",
  "termion",
@@ -2154,32 +2349,32 @@ dependencies = [
  "bcs",
  "codespan-reporting",
  "colored",
- "dialect",
+ "dialect 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "diem-vm",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "difference",
  "include_dir",
  "itertools 0.10.3",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
  "move-bytecode-utils",
  "move-bytecode-verifier",
  "move-bytecode-viewer",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-coverage",
  "move-disassembler",
  "move-errmapgen",
- "move-ir-types",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-package",
  "move-prover",
- "move-resource-viewer",
+ "move-resource-viewer 0.1.0",
  "move-stdlib",
- "move-symbol-pool",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-unit-test",
- "move-vm-runtime",
- "move-vm-types",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "read-write-set",
  "read-write-set-dynamic",
@@ -2193,15 +2388,36 @@ dependencies = [
 [[package]]
 name = "move-command-line-common"
 version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "difference",
+ "walkdir",
+]
+
+[[package]]
+name = "move-command-line-common"
+version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "difference",
  "hex",
  "serde 1.0.134",
  "sha2",
  "walkdir",
+]
+
+[[package]]
+name = "move-compat"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dialect 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-binary-format 0.1.0",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
 ]
 
 [[package]]
@@ -2212,19 +2428,19 @@ dependencies = [
  "anyhow",
  "bcs",
  "codespan-reporting",
- "dialect",
- "diem-workspace-hack",
+ "dialect 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "difference",
  "hex",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-borrow-graph",
  "move-bytecode-source-map",
  "move-bytecode-verifier",
- "move-command-line-common",
- "move-core-types",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-ir-to-bytecode",
- "move-ir-types",
- "move-symbol-pool",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "petgraph 0.5.1",
  "regex",
@@ -2237,11 +2453,27 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.3"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "hex",
+ "mirai-annotations",
+ "once_cell",
+ "rand 0.8.4",
+ "ref-cast",
+ "serde 1.0.134",
+ "serde_bytes",
+]
+
+[[package]]
+name = "move-core-types"
+version = "0.0.3"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
  "bcs",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "hex",
  "mirai-annotations",
  "once_cell",
@@ -2260,13 +2492,13 @@ dependencies = [
  "bcs",
  "codespan",
  "colored",
- "diem-workspace-hack",
- "move-binary-format",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
  "move-bytecode-verifier",
- "move-command-line-common",
- "move-core-types",
- "move-ir-types",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "petgraph 0.5.1",
  "serde 1.0.134",
@@ -2280,15 +2512,15 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "colored",
- "diem-workspace-hack",
- "move-binary-format",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
  "move-bytecode-verifier",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-coverage",
- "move-ir-types",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "structopt",
 ]
 
@@ -2300,7 +2532,7 @@ dependencies = [
  "anyhow",
  "codespan",
  "codespan-reporting",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "itertools 0.10.3",
  "log",
  "move-compiler",
@@ -2319,10 +2551,10 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "bcs",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "log",
- "move-command-line-common",
- "move-core-types",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-model",
  "serde 1.0.134",
 ]
@@ -2334,15 +2566,15 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "codespan-reporting",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "log",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
- "move-command-line-common",
- "move-core-types",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-ir-to-bytecode-syntax",
- "move-ir-types",
- "move-symbol-pool",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "ouroboros",
  "thiserror",
 ]
@@ -2353,12 +2585,26 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "hex",
- "move-command-line-common",
- "move-core-types",
- "move-ir-types",
- "move-symbol-pool",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+]
+
+[[package]]
+name = "move-ir-types"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "hex",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "serde 1.0.134",
 ]
 
 [[package]]
@@ -2367,13 +2613,43 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "hex",
- "move-command-line-common",
- "move-core-types",
- "move-symbol-pool",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "serde 1.0.134",
+]
+
+[[package]]
+name = "move-lang"
+version = "0.0.1"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "borrow-graph",
+ "bytecode-source-map",
+ "bytecode-verifier",
+ "codespan-reporting",
+ "dialect 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "difference",
+ "hex",
+ "ir-to-bytecode",
+ "move-binary-format 0.1.0",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "petgraph 0.5.1",
+ "regex",
+ "structopt",
+ "tempfile",
+ "uint",
+ "walkdir",
 ]
 
 [[package]]
@@ -2384,19 +2660,19 @@ dependencies = [
  "anyhow",
  "codespan",
  "codespan-reporting",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "internment",
  "itertools 0.10.3",
  "log",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
  "move-bytecode-verifier",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-disassembler",
- "move-ir-types",
- "move-symbol-pool",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "num",
  "once_cell",
  "regex",
@@ -2411,19 +2687,19 @@ dependencies = [
  "anyhow",
  "bcs",
  "colored",
- "dialect",
- "diem-workspace-hack",
+ "dialect 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-abigen",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-bytecode-source-map",
  "move-bytecode-utils",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-docgen",
  "move-errmapgen",
  "move-model",
- "move-symbol-pool",
+ "move-symbol-pool 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "petgraph 0.5.1",
  "ptree",
  "regex",
@@ -2447,19 +2723,19 @@ dependencies = [
  "clap",
  "codespan",
  "codespan-reporting",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "futures",
  "hex",
  "itertools 0.10.3",
  "log",
  "move-abigen",
- "move-binary-format",
- "move-command-line-common",
+ "move-binary-format 0.0.3",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-docgen",
  "move-errmapgen",
- "move-ir-types",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-model",
  "move-prover-boogie-backend",
  "move-stackless-bytecode",
@@ -2484,13 +2760,13 @@ dependencies = [
  "async-trait",
  "codespan",
  "codespan-reporting",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "futures",
  "itertools 0.10.3",
  "log",
- "move-binary-format",
- "move-command-line-common",
- "move-core-types",
+ "move-binary-format 0.0.3",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-model",
  "move-stackless-bytecode",
  "num",
@@ -2510,9 +2786,9 @@ version = "0.0.3"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
- "move-binary-format",
- "move-core-types",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "serde 1.0.134",
 ]
 
@@ -2523,13 +2799,38 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "bcs",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "hex",
- "move-binary-format",
- "move-core-types",
- "move-vm-types",
+ "move-binary-format 0.0.3",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "serde 1.0.134",
+]
+
+[[package]]
+name = "move-resource-viewer"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "env_logger",
+ "git-hash",
+ "hex",
+ "http",
+ "lang",
+ "log",
+ "move-binary-format 0.1.0",
+ "move-compat",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-ir-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-lang",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "net",
+ "resource-viewer",
+ "schemars",
+ "serde 1.0.134",
+ "serde_json",
+ "structopt",
 ]
 
 [[package]]
@@ -2539,15 +2840,15 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "codespan",
  "codespan-reporting",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "im",
  "itertools 0.10.3",
  "log",
- "move-binary-format",
+ "move-binary-format 0.0.3",
  "move-borrow-graph",
  "move-bytecode-verifier",
- "move-command-line-common",
- "move-core-types",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-ir-to-bytecode",
  "move-model",
  "move-read-write-set-types",
@@ -2567,13 +2868,13 @@ dependencies = [
  "anyhow",
  "bytecode-interpreter-crypto",
  "codespan-reporting",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "itertools 0.10.3",
- "move-binary-format",
- "move-core-types",
+ "move-binary-format 0.0.3",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-model",
  "move-stackless-bytecode",
- "move-vm-runtime",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "num",
  "serde 1.0.134",
  "structopt",
@@ -2584,17 +2885,17 @@ name = "move-stdlib"
 version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "log",
- "move-binary-format",
- "move-command-line-common",
+ "move-binary-format 0.0.3",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-docgen",
  "move-errmapgen",
  "move-prover",
- "move-vm-runtime",
- "move-vm-types",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "sha2",
  "sha3",
  "smallvec",
@@ -2604,9 +2905,19 @@ dependencies = [
 [[package]]
 name = "move-symbol-pool"
 version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "serde 1.0.134",
+]
+
+[[package]]
+name = "move-symbol-pool"
+version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "serde 1.0.134",
 ]
@@ -2618,19 +2929,19 @@ source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c205
 dependencies = [
  "anyhow",
  "colored",
- "diem-workspace-hack",
- "move-binary-format",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
  "move-bytecode-utils",
- "move-command-line-common",
+ "move-command-line-common 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-model",
- "move-resource-viewer",
+ "move-resource-viewer 0.1.0",
  "move-stackless-bytecode-interpreter",
  "move-stdlib",
- "move-vm-runtime",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-vm-test-utils",
- "move-vm-types",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "rayon",
  "regex",
  "structopt",
@@ -2639,15 +2950,33 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
 dependencies = [
- "diem-workspace-hack",
+ "bytecode-verifier",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
  "fail",
  "mirai-annotations",
- "move-binary-format",
+ "move-binary-format 0.1.0",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "parking_lot",
+ "sha3",
+ "tracing",
+]
+
+[[package]]
+name = "move-vm-runtime"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
+dependencies = [
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "fail",
+ "mirai-annotations",
+ "move-binary-format 0.0.3",
  "move-bytecode-verifier",
- "move-core-types",
- "move-vm-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "parking_lot",
  "sha3",
@@ -2660,10 +2989,26 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
- "move-binary-format",
- "move-core-types",
- "move-vm-runtime",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+]
+
+[[package]]
+name = "move-vm-types"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "bcs",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "mirai-annotations",
+ "move-binary-format 0.1.0",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "serde 1.0.134",
+ "sha2",
+ "smallvec",
 ]
 
 [[package]]
@@ -2672,10 +3017,10 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "bcs",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "mirai-annotations",
- "move-binary-format",
- "move-core-types",
+ "move-binary-format 0.0.3",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "once_cell",
  "serde 1.0.134",
  "sha2",
@@ -2705,7 +3050,7 @@ name = "mvhashmap"
 version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "num_cpus",
  "once_cell",
  "rayon",
@@ -2727,6 +3072,26 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "net"
+version = "0.1.2"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "dialect 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "hex",
+ "http",
+ "lang",
+ "log",
+ "move-binary-format 0.1.0",
+ "move-compat",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-vm-runtime 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "reqwest 0.10.10",
+ "serde 1.0.134",
+ "serde_json",
 ]
 
 [[package]]
@@ -3496,13 +3861,13 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
- "move-binary-format",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
  "move-bytecode-utils",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-model",
  "move-read-write-set-types",
- "move-resource-viewer",
+ "move-resource-viewer 0.1.0",
  "move-stackless-bytecode",
  "read-write-set-dynamic",
 ]
@@ -3513,10 +3878,10 @@ version = "0.1.0"
 source = "git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre#9c2053a8c711348b4314b8336b0298232dfe26e1"
 dependencies = [
  "anyhow",
- "diem-workspace-hack",
- "move-binary-format",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
+ "move-binary-format 0.0.3",
  "move-bytecode-utils",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "move-read-write-set-types",
 ]
 
@@ -3678,6 +4043,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "resource-viewer"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/diem.git?branch=v1.5-pre#2312f95e36d931814a88378c7117d3a6bb1f3809"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "hex",
+ "move-binary-format 0.1.0",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "move-vm-types 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5-pre)",
+ "once_cell",
+ "serde 1.0.134",
+]
+
+[[package]]
 name = "ring"
 version = "0.16.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3773,6 +4154,31 @@ checksum = "8f05ba609c234e60bee0d547fe94a4c7e9da733d1c962cf6e59efa4cd9c8bc75"
 dependencies = [
  "lazy_static 1.4.0",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "schemars"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6b5a3c80cea1ab61f4260238409510e814e38b4b563c06044edf91e7dc070e3"
+dependencies = [
+ "dyn-clone",
+ "indexmap",
+ "schemars_derive",
+ "serde 1.0.134",
+ "serde_json",
+]
+
+[[package]]
+name = "schemars_derive"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41ae4dce13e8614c46ac3c38ef1c0d668b101df6ac39817aebdaa26642ddae9b"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.15",
+ "serde_derive_internals",
+ "syn 1.0.86",
 ]
 
 [[package]]
@@ -3917,6 +4323,17 @@ name = "serde_derive"
 version = "1.0.134"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "784ed1fbfa13fe191077537b0d70ec8ad1e903cfe04831da608aa36457cb653d"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.15",
+ "syn 1.0.86",
+]
+
+[[package]]
+name = "serde_derive_internals"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1dbab34ca63057a1f15280bdf3c39f2b1eb1b54c17e98360e511637aef7418c6"
 dependencies = [
  "proc-macro2 1.0.36",
  "quote 1.0.15",
@@ -4587,9 +5004,9 @@ dependencies = [
  "anyhow",
  "bcs",
  "diem-types",
- "diem-workspace-hack",
+ "diem-workspace-hack 0.1.0 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "heck",
- "move-core-types",
+ "move-core-types 0.0.3 (git+https://github.com/pontem-network/diem.git?branch=v1.5.1-pre)",
  "regex",
  "serde-generate",
  "serde-reflection",
