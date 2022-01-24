@@ -195,6 +195,7 @@ where
             let mut ctx = cmd.context(cwd, move_args)?;
 
             if !check_manifest_hash(&ctx) {
+                // dove clean
                 run_internal_clean(&mut ctx)?;
             }
             cmd.apply(&mut ctx)
@@ -234,12 +235,9 @@ fn check_manifest_hash(ctx: &Context) -> bool {
 /// Writing the hash move.toml to file
 fn store_manifest_checksum(ctx: &Context) -> Result<()> {
     let build_path = ctx.project_dir.join("build");
-    if !build_path.exists() {
-        return Ok(());
-    }
     let path_version = build_path.join(HASH_FILE_NAME);
-    if path_version.exists() {
-        fs::remove_file(&path_version)?;
+    if !build_path.exists() || path_version.exists() {
+        return Ok(());
     }
     fs::write(&path_version, ctx.manifest_hash.to_string())?;
     Ok(())
