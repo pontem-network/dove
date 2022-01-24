@@ -10,7 +10,7 @@ use crate::context::Context;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
-    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret [KEY PHRASE] --account [ADDRESS] --url [URL]"
+    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret --account [ADDRESS] --url [URL]"
 )]
 pub enum Publish {
     /// Publishing a module
@@ -20,6 +20,7 @@ pub enum Publish {
         #[structopt(flatten)]
         params: PublicationParameters,
     },
+
     /// Publishing a package
     #[structopt(name = "package")]
     Package {
@@ -33,12 +34,12 @@ pub enum Publish {
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
-    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --secret [KEY PHRASE] --account [ADDRESS] --url [URL]\n
+    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS] --secret --account [ADDRESS] --url [URL]\n
     Examples:
     $ dove publish module --file PATH/TO/MODULE.mv --gas 100 
     $ dove publish package --file ./PATH/TO/PACKAGE.pac --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
     $ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --account alice --url ws://127.0.0.1:9944
-    $ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --secret \"net exotic exchange stadium...\"
+    $ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --secret
     "
 )]
 pub struct PublicationParameters {
@@ -50,7 +51,7 @@ pub struct PublicationParameters {
     test_account: Option<String>,
     /// Secret phrase. If a secret phrase is specified, you do not need to specify an account
     #[structopt(long = "secret", short)]
-    secret_phrase: Option<String>,
+    secret_phrase: bool,
     /// The url of the substrate node to query
     #[structopt(
         long = "url",
@@ -83,8 +84,9 @@ impl Cmd for Publish {
                 let client = PontemClient::new(params.url_to_node.as_str())?;
                 let file = &params.file_path.as_os_str().to_string_lossy().to_string();
 
-                if let Some(key_phrase) = &params.secret_phrase {
-                    client.tx_mvm_publish_module(file, params.gas_limit, key_phrase)
+                if params.secret_phrase {
+                    let key_phrase = cli_entering_a_secret_phrase()?;
+                    client.tx_mvm_publish_module(file, params.gas_limit, &key_phrase)
                 } else if let Some(test_account) = &params.test_account {
                     client.tx_mvm_publish_module_dev(file, params.gas_limit, test_account)
                 } else {
@@ -95,8 +97,9 @@ impl Cmd for Publish {
                 let client = PontemClient::new(params.url_to_node.as_str())?;
                 let file = &params.file_path.as_os_str().to_string_lossy().to_string();
 
-                if let Some(key_phrase) = &params.secret_phrase {
-                    client.tx_mvm_publish_package(file, params.gas_limit, key_phrase)
+                if params.secret_phrase {
+                    let key_phrase = cli_entering_a_secret_phrase()?;
+                    client.tx_mvm_publish_package(file, params.gas_limit, &key_phrase)
                 } else if let Some(test_account) = &params.test_account {
                     client.tx_mvm_publish_package_dev(file, params.gas_limit, test_account)
                 } else {
@@ -108,4 +111,29 @@ impl Cmd for Publish {
             println!("Address: {}", address);
         })
     }
+}
+
+/// CLI: Entering a secret phrase
+pub fn cli_entering_a_secret_phrase() -> Result<String> {
+    println!("Enter the secret phrase:");
+
+    let mut buffer = String::new();
+    let stdin = std::io::stdin();
+    stdin.read_line(&mut buffer)?;
+
+    let key_phrase: Vec<&str> = buffer
+        .trim()
+        .split(' ')
+        .map(|s| s.trim())
+        .filter(|s| s.is_empty())
+        .collect();
+    if key_phrase.is_empty() {
+        bail!("Secret phrase cannot be empty");
+    }
+
+    if ![12, 18, 24].into_iter().any(|num| num == key_phrase.len()) {
+        bail!("Wrong number of words");
+    }
+
+    Ok(key_phrase.join(" "))
 }
