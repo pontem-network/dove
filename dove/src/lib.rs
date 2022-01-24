@@ -7,7 +7,7 @@ pub const DOVE_VERSION: &str = git_hash::crate_version!();
 pub const DOVE_HASH: &str = git_hash::git_hash_short_as_str!();
 
 /// Version and Tag (v###) for MOVE STDLIB
-pub const MOVE_STDLIB_VERSION: &str = "670135efefd82b24d86ad4370ffc65fdfe8e483c";
+pub const MOVE_STDLIB_VERSION: &str = "ccd25dfc85c812f56b4a7120bce793edd5f19064";
 /// GIT URL for MOVE STDLIB
 pub const MOVE_STDLIB_URL: &str = "https://github.com/pontem-network/move-stdlib";
 
