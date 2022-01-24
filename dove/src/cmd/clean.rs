@@ -140,6 +140,7 @@ fn move_cache_folders() -> anyhow::Result<Vec<PathBuf>> {
         .read_dir()?
         .filter_map(|dir| dir.ok())
         .map(|path| path.path())
+        .filter(|dir| dir.is_dir())
         .collect::<Vec<PathBuf>>();
     Ok(paths)
 }
