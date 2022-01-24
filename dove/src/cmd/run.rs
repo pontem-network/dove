@@ -4,12 +4,12 @@ use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use anyhow::{Error, Result};
 use bytecode_source_map::source_map::SourceMap;
+use diem_vm::natives::diem_natives;
 use lang::bytecode::info::BytecodeInfo;
 use move_cli::{DEFAULT_STORAGE_DIR, Move, run_cli};
 use move_cli::sandbox::cli::SandboxCommand;
 use move_cli::Command;
 use move_command_line_common::files::FileHash;
-use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 use move_package::BuildConfig;
 use move_package::compilation::package_layout::CompiledPackageLayout;
@@ -61,8 +61,7 @@ impl Cmd for Run {
                 func_name,
                 signers,
             } => {
-                let natives =
-                    move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1")?);
+                let natives = diem_natives();
                 let script_file = resolve_script_name(&bi)?;
                 let error_descriptions: ErrorMapping =
                     bcs::from_bytes(move_stdlib::error_descriptions())?;

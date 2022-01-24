@@ -1,11 +1,11 @@
 use std::fs;
 use std::path::{PathBuf, Path};
 use std::fs::read_to_string;
+use diem_vm::natives::diem_natives;
 use toml::Value;
 use toml::map::Map;
 use structopt::StructOpt;
 use move_cli::{Move, run_cli};
-use move_core_types::account_address::AccountAddress;
 use move_core_types::errmap::ErrorMapping;
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
@@ -56,12 +56,7 @@ impl Cmd for New {
             },
         };
 
-        run_cli(
-            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
-            &error_descriptions,
-            &ctx.move_args,
-            &cmd,
-        )?;
+        run_cli(diem_natives(), &error_descriptions, &ctx.move_args, &cmd)?;
 
         let project_dir = ctx.project_dir.join(&self.project_name);
         if !project_dir.exists() {

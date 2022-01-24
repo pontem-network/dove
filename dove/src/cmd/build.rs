@@ -7,15 +7,14 @@ use std::path::{PathBuf, Path};
 use anyhow::Error;
 use structopt::StructOpt;
 use anyhow::Result;
+use diem_vm::natives::diem_natives;
 use move_binary_format::access::ModuleAccess;
 use move_binary_format::CompiledModule;
 use move_core_types::errmap::ErrorMapping;
-use move_core_types::account_address::AccountAddress;
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
 use move_core_types::language_storage::ModuleId;
-use move_symbol_pool::Symbol;
 
 use crate::cmd::Cmd;
 use crate::context::Context;
@@ -29,11 +28,6 @@ pub struct Build {
     /// at path for use by the Move explanation tool.
     #[structopt(long)]
     error_map: Option<String>,
-
-    /// Address. Used as an additional parameter in error_map
-    #[structopt(long)]
-    address: Option<String>,
-
     // Pack the assembled modules into a single file,
     // except for those specified in modules_exclude
     #[structopt(
@@ -72,12 +66,7 @@ impl Cmd for Build {
             cmd: PackageCommand::Build {},
         };
 
-        run_cli(
-            move_stdlib::natives::all_natives(AccountAddress::from_hex_literal("0x1").unwrap()),
-            &error_descriptions,
-            &ctx.move_args,
-            &cmd,
-        )?;
+        run_cli(diem_natives(), &error_descriptions, &ctx.move_args, &cmd)?;
 
         // Move-cli error map
         self.run_error_map(ctx)?;
@@ -111,24 +100,7 @@ impl Build {
             },
         };
 
-        let address = self.address.clone().unwrap_or_else(|| "0x1".to_string());
-        let account = if !address.starts_with("0x") {
-            ctx.manifest
-                .addresses
-                .as_ref()
-                .and_then(|list| list.get(&Symbol::from(address.as_str())).cloned())
-                .and_then(|add| add)
-                .unwrap_or(AccountAddress::from_hex_literal("0x1")?)
-        } else {
-            AccountAddress::from_hex_literal(&address)?
-        };
-
-        run_cli(
-            move_stdlib::natives::all_natives(account),
-            &error_descriptions,
-            &ctx.move_args,
-            &cmd,
-        )?;
+        run_cli(diem_natives(), &error_descriptions, &ctx.move_args, &cmd)?;
         Ok(())
     }
 
