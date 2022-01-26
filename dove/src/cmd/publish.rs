@@ -115,7 +115,7 @@ impl Cmd for Publish {
 
 /// CLI: Entering a secret phrase
 pub fn cli_entering_a_secret_phrase() -> Result<String> {
-    println!("Enter the secret phrase:");
+    println!("Please enter secret phrase:");
 
     let mut buffer = String::new();
     let stdin = std::io::stdin();

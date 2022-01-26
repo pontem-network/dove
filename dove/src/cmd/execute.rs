@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 use anyhow::Result;
+use log::debug;
 use move_cli::Move;
 use pontem_client::PontemClient;
+use crate::secret_phrase;
 use crate::cmd::{Cmd, default_sourcemanifest};
 use crate::cmd::publish::cli_entering_a_secret_phrase;
 use crate::context::Context;
@@ -11,11 +13,12 @@ use crate::context::Context;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
-    usage = "$ dove execute --file [FILE_NAME] --gas [GAS] --secret --account [ADDRESS] --url [URL]\n
+    usage = "$ dove execute --file [FILE_NAME] --gas [GAS] --secret --account [NAME_OR_ADDRESS] --url [URL]\n
     Examples:
     $ dove execute --file PATH/TO/TRANSACTION.mvt  --gas 120 
     $ dove execute --file ./PATH/TO/TRANSACTION.mvt --gas 220 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
     $ dove execute --file /PATH/TO/TRANSACTION.mvt --gas 110 --account alice --url ws://127.0.0.1:9944
+    $ dove execute --file /PATH/TO/TRANSACTION.mvt --gas 130 --account NAME_SECRET_KEY
     $ dove execute --file /PATH/TO/TRANSACTION.mvt --gas 140 --secret
     "
 )]
@@ -24,9 +27,9 @@ pub struct Execute {
     #[structopt(short, long = "file", parse(from_os_str))]
     file_path: PathBuf,
 
-    /// Account from whom to publish. Example: //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+    /// Account from whom to publish. Address or test account name or name secret key. Example: //Alice, alice, bob, NAME_SECRET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
     #[structopt(long = "account", short = "t")]
-    test_account: Option<String>,
+    account: Option<String>,
 
     /// Secret phrase. If a secret phrase is specified, you do not need to specify an account
     #[structopt(long = "secret", short)]
@@ -40,6 +43,7 @@ pub struct Execute {
         default_value = "ws://localhost:9944"
     )]
     url_to_node: url::Url,
+
     /// Limitation of gas consumption per operation
     #[structopt(long = "gas", short)]
     gas_limit: u64,
@@ -60,15 +64,37 @@ impl Cmd for Execute {
         Self: Sized,
     {
         let client = PontemClient::new(self.url_to_node.as_str())?;
-        let file = self.file_path.as_os_str().to_string_lossy().to_string();
+        let transaction_path = self.file_path.as_os_str().to_string_lossy().to_string();
 
         if self.secret_phrase {
-            let key_phrase = cli_entering_a_secret_phrase()?;
-            client.tx_mvm_execute(&file, self.gas_limit, &key_phrase)
-        } else if let Some(test_account) = &self.test_account {
-            client.tx_mvm_execute_dev(&file, self.gas_limit, test_account)
+            // Request secret phrases
+            let phrase = cli_entering_a_secret_phrase()?;
+            // Transaction execution (secret phrase)
+            client.tx_mvm_execute(&transaction_path, self.gas_limit, &phrase)
+        } else if let Some(account_or_name_key) = &self.account {
+            // Checking for a saved key with this name
+            if secret_phrase::isset(account_or_name_key) {
+                // Trying to get secret phrases without a password
+                let mut phrase = secret_phrase::get(account_or_name_key, None);
+                if phrase.is_err() {
+                    // Password required
+                    println!("Please enter password for key:");
+                    let password = rpassword::read_password()?.trim().to_string();
+                    phrase =
+                        secret_phrase::get(account_or_name_key, Some(&password)).map_err(|err| {
+                            debug!("{:?}", err);
+                            anyhow!("Invalid password")
+                        })
+                }
+
+                // Transaction execution (secret phrase)
+                client.tx_mvm_execute(&transaction_path, self.gas_limit, &phrase?)
+            } else {
+                // Transaction execution (test account)
+                client.tx_mvm_execute_dev(&transaction_path, self.gas_limit, account_or_name_key)
+            }
         } else {
-            bail!("Enter a secret phrase or a test account")
+            bail!("Specify name of key or name of test account or secret phrase")
         }
         .map(|address| {
             println!("Address: {}", address);

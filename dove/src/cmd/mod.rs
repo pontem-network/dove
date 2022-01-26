@@ -21,6 +21,8 @@ pub mod execute;
 pub mod export;
 /// Project initializer.
 pub mod init;
+/// Managing secret phrases
+pub mod login;
 /// Project creator.
 pub mod new;
 /// Run move prover.

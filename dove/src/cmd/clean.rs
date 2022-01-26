@@ -1,11 +1,12 @@
 use std::str::FromStr;
 use std::fs;
 use std::path::PathBuf;
-use anyhow::Error;
+use anyhow::{Error, Result};
 use structopt::StructOpt;
 use move_cli::Move;
 use crate::cmd::{Cmd, default_sourcemanifest};
 use crate::context::Context;
+use crate::move_folder;
 
 /// Clean build directory command.
 #[derive(StructOpt, Debug, Default)]
@@ -33,7 +34,7 @@ pub struct Clean {
 }
 
 impl Cmd for Clean {
-    fn context(&mut self, project_dir: PathBuf, move_args: Move) -> anyhow::Result<Context> {
+    fn context(&mut self, project_dir: PathBuf, move_args: Move) -> Result<Context> {
         Ok(Context {
             project_dir,
             move_args,
@@ -42,7 +43,7 @@ impl Cmd for Clean {
         })
     }
 
-    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
+    fn apply(&mut self, ctx: &mut Context) -> Result<()>
     where
         Self: Sized,
     {
@@ -117,26 +118,14 @@ impl FromStr for ClearType {
 }
 
 /// Clean project.
-pub fn run_internal_clean(ctx: &mut Context) -> anyhow::Result<()> {
+pub fn run_internal_clean(ctx: &mut Context) -> Result<()> {
     let mut cmd = Clean::default();
     cmd.apply(ctx)
 }
 
 /// adds directories from ~/.move/*
-fn move_cache_folders() -> anyhow::Result<Vec<PathBuf>> {
-    let move_home = std::env::var("MOVE_HOME").unwrap_or_else(|_| {
-        format!(
-            "{}/.move",
-            std::env::var("HOME").expect("env var 'HOME' must be set")
-        )
-    });
-
-    let path = PathBuf::from_str(&move_home)?;
-    if !path.exists() {
-        bail!("MOVE_HOME - path {:?} not found", path.display());
-    }
-
-    let paths = path
+fn move_cache_folders() -> Result<Vec<PathBuf>> {
+    let paths = move_folder()?
         .read_dir()?
         .filter_map(|dir| dir.ok())
         .map(|path| path.path())

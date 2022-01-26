@@ -24,6 +24,7 @@ use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::tx::CreateTransactionCmd;
 use crate::cmd::view::View;
+use crate::cmd::login::Login;
 use crate::context::Context;
 use move_cli::DEFAULT_STORAGE_DIR;
 
@@ -61,6 +62,7 @@ pub enum Command {
         #[structopt(subcommand)]
         cmd: package::cli::PackageCommand,
     },
+
     /// Execute a sandbox command.
     #[structopt(name = "sandbox")]
     Sandbox {
@@ -72,6 +74,7 @@ pub enum Command {
         #[structopt(subcommand)]
         cmd: sandbox::cli::SandboxCommand,
     },
+
     /// (Experimental) Run static analyses on Move source or bytecode.
     #[structopt(name = "experimental")]
     Experimental {
@@ -91,6 +94,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Init,
     },
+
     /// Creates new project.
     #[structopt(about = "Create a new move project(Dove)")]
     New {
@@ -98,6 +102,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: New,
     },
+
     /// Build package.
     #[structopt(about = "Build project")]
     Build {
@@ -105,6 +110,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Build,
     },
+
     /// Clean project.
     #[structopt(about = "Remove the target directory")]
     Clean {
@@ -112,6 +118,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Clean,
     },
+
     /// Test package.
     #[structopt(about = "Run move tests")]
     Test {
@@ -119,6 +126,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Test,
     },
+
     /// Run script and modules script function.
     #[structopt(about = "Run move script")]
     Run {
@@ -126,6 +134,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Run,
     },
+
     /// Create transaction.
     #[structopt(about = "Create transaction")]
     Tx {
@@ -133,6 +142,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: CreateTransactionCmd,
     },
+
     /// Run move prover.
     #[structopt(about = "Run move prover")]
     Prove {
@@ -140,6 +150,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: crate::cmd::prover::Prove,
     },
+
     /// Migrate from Dove project to the Move cli project.
     #[structopt(about = "Export dove.toml => move .toml")]
     Export {
@@ -147,6 +158,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Export,
     },
+
     /// Move Resource Viewer
     #[structopt(about = "Move Resource Viewer")]
     View {
@@ -154,6 +166,7 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: View,
     },
+
     /// Publishing a module or package
     #[structopt(about = "Publishing a module or package")]
     Publish {
@@ -161,12 +174,21 @@ pub enum Command {
         #[structopt(flatten)]
         cmd: Publish,
     },
+
     /// Execute a transaction
     #[structopt(about = "Execute a transaction")]
     Execute {
         /// Command.
         #[structopt(flatten)]
         cmd: Execute,
+    },
+
+    /// Managing secret phrases
+    #[structopt(about = "Managing secret phrases")]
+    Login {
+        /// Command.
+        #[structopt(flatten)]
+        cmd: Login,
     },
 }
 
@@ -182,7 +204,6 @@ impl Command {
             Command::Experimental { storage_dir, cmd } => {
                 CommonCommand::Diem(DiemCommand::Experimental { storage_dir, cmd })
             }
-
             Command::New { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Init { cmd } => CommonCommand::Dove(Box::new(cmd)),
             Command::Build { cmd } => CommonCommand::Dove(Box::new(cmd)),
@@ -197,6 +218,8 @@ impl Command {
             Command::Publish { cmd } => CommonCommand::Dove(Box::new(cmd)),
             // Execute a transaction
             Command::Execute { cmd } => CommonCommand::Dove(Box::new(cmd)),
+            // Managing secret phrases
+            Command::Login { cmd } => CommonCommand::Dove(Box::new(cmd)),
         }
     }
 }
