@@ -1,10 +1,12 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 use anyhow::Result;
+use log::debug;
 use move_cli::Move;
 use pontem_client::PontemClient;
 use crate::cmd::{Cmd, default_sourcemanifest};
 use crate::context::Context;
+use crate::secret_phrase;
 
 /// Publishing a module or package.
 #[derive(StructOpt, Debug)]
@@ -39,19 +41,23 @@ pub enum Publish {
     $ dove publish module --file PATH/TO/MODULE.mv --gas 100 
     $ dove publish package --file ./PATH/TO/PACKAGE.pac --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
     $ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --account alice --url ws://127.0.0.1:9944
-    $ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --secret
+    $ dove publish module --file /PATH/TO/MODULE.mv --gas 130 --account NAME_SECRET_KEY
+    $ dove publish module --file /PATH/TO/MODULE.mv --gas 220 --secret
     "
 )]
 pub struct PublicationParameters {
     /// The path to the transaction.
     #[structopt(short, long = "file", parse(from_os_str))]
     file_path: PathBuf,
-    /// Account from whom to publish. Example: //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+
+    /// Account from whom to publish. Address or test account name or name secret key. Example: //Alice, alice, bob, NAME_SECRET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
     #[structopt(long = "account", short = "t")]
-    test_account: Option<String>,
+    account: Option<String>,
+
     /// Secret phrase. If a secret phrase is specified, you do not need to specify an account
     #[structopt(long = "secret", short)]
     secret_phrase: bool,
+
     /// The url of the substrate node to query
     #[structopt(
         long = "url",
@@ -60,6 +66,7 @@ pub struct PublicationParameters {
         default_value = "ws://localhost:9944"
     )]
     url_to_node: url::Url,
+
     /// Limitation of gas consumption per operation
     #[structopt(long = "gas", short)]
     gas_limit: u64,
@@ -79,31 +86,39 @@ impl Cmd for Publish {
     where
         Self: Sized,
     {
-        match self {
+        match &self {
             Publish::Module { params } => {
-                let client = PontemClient::new(params.url_to_node.as_str())?;
-                let file = &params.file_path.as_os_str().to_string_lossy().to_string();
+                let request = DataRequest::try_from(params)?;
 
-                if params.secret_phrase {
-                    let key_phrase = cli_entering_a_secret_phrase()?;
-                    client.tx_mvm_publish_module(file, params.gas_limit, &key_phrase)
-                } else if let Some(test_account) = &params.test_account {
-                    client.tx_mvm_publish_module_dev(file, params.gas_limit, test_account)
-                } else {
-                    bail!("Enter a secret phrase or a test account")
+                match &request.access {
+                    // Publish Module (secret phrase)
+                    AccessType::SecretPhrase(secret) => {
+                        request
+                            .client
+                            .tx_mvm_publish_module(&request.file, request.gas, secret)
+                    }
+
+                    // publishing a module (test account)
+                    AccessType::TestAccount(test_account) => request
+                        .client
+                        .tx_mvm_publish_module_dev(&request.file, request.gas, test_account),
                 }
             }
             Publish::Package { params } => {
-                let client = PontemClient::new(params.url_to_node.as_str())?;
-                let file = &params.file_path.as_os_str().to_string_lossy().to_string();
+                let request = DataRequest::try_from(params)?;
 
-                if params.secret_phrase {
-                    let key_phrase = cli_entering_a_secret_phrase()?;
-                    client.tx_mvm_publish_package(file, params.gas_limit, &key_phrase)
-                } else if let Some(test_account) = &params.test_account {
-                    client.tx_mvm_publish_package_dev(file, params.gas_limit, test_account)
-                } else {
-                    bail!("Enter a secret phrase or a test account")
+                match &request.access {
+                    // Publishing a package (secret phrase)
+                    AccessType::SecretPhrase(secret) => {
+                        request
+                            .client
+                            .tx_mvm_publish_package(&request.file, request.gas, secret)
+                    }
+
+                    // Publishing a package (test account)
+                    AccessType::TestAccount(test_account) => request
+                        .client
+                        .tx_mvm_publish_package_dev(&request.file, request.gas, test_account),
                 }
             }
         }
@@ -136,4 +151,73 @@ pub fn cli_entering_a_secret_phrase() -> Result<String> {
     }
 
     Ok(key_phrase.join(" "))
+}
+
+/// Checking for a key with this name and getting the content
+pub fn cli_name_to_key(key_name: &str) -> Result<Option<String>> {
+    // Checking for a saved key with this name
+    if !secret_phrase::isset(key_name) {
+        return Ok(None);
+    }
+
+    // Trying to get secret phrases without a password
+    let mut phrase = secret_phrase::get(key_name, None);
+    if phrase.is_err() {
+        // Password required
+        println!("Please enter password for key:");
+        let password = rpassword::read_password()?.trim().to_string();
+        phrase = secret_phrase::get(key_name, Some(&password)).map_err(|err| {
+            debug!("{:?}", err);
+            anyhow!("Invalid password")
+        })
+    }
+    phrase.map(Some)
+}
+
+struct DataRequest {
+    /// Client for connecting to "Pontem"
+    client: PontemClient,
+
+    /// Path to the file to be published
+    file: String,
+
+    /// Limitation of gas consumption per operation
+    gas: u64,
+
+    /// Access type - by secret phrase or through a test account
+    access: AccessType,
+}
+
+impl TryFrom<&PublicationParameters> for DataRequest {
+    type Error = anyhow::Error;
+
+    fn try_from(params: &PublicationParameters) -> std::result::Result<Self, Self::Error> {
+        let client = PontemClient::new(params.url_to_node.as_str())?;
+        let file = params.file_path.as_os_str().to_string_lossy().to_string();
+        let access = if params.secret_phrase {
+            // Request secret phrases
+            let secret = cli_entering_a_secret_phrase()?;
+            AccessType::SecretPhrase(secret)
+        } else if let Some(test_account_or_name_key) = &params.account {
+            match cli_name_to_key(test_account_or_name_key)? {
+                Some(secret) => AccessType::SecretPhrase(secret),
+                None => AccessType::TestAccount(test_account_or_name_key.to_owned()),
+            }
+        } else {
+            bail!("Specify name of key or name of test account or secret phrase")
+        };
+
+        Ok(DataRequest {
+            client,
+            file,
+            access,
+            gas: params.gas_limit,
+        })
+    }
+}
+
+/// Access type - by secret phrase or through a test account
+enum AccessType {
+    SecretPhrase(String),
+    TestAccount(String),
 }

@@ -1,12 +1,10 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 use anyhow::Result;
-use log::debug;
 use move_cli::Move;
 use pontem_client::PontemClient;
-use crate::secret_phrase;
 use crate::cmd::{Cmd, default_sourcemanifest};
-use crate::cmd::publish::cli_entering_a_secret_phrase;
+use crate::cmd::publish::{cli_entering_a_secret_phrase, cli_name_to_key};
 use crate::context::Context;
 
 /// Execute a transaction
@@ -72,26 +70,19 @@ impl Cmd for Execute {
             // Transaction execution (secret phrase)
             client.tx_mvm_execute(&transaction_path, self.gas_limit, &phrase)
         } else if let Some(account_or_name_key) = &self.account {
-            // Checking for a saved key with this name
-            if secret_phrase::isset(account_or_name_key) {
-                // Trying to get secret phrases without a password
-                let mut phrase = secret_phrase::get(account_or_name_key, None);
-                if phrase.is_err() {
-                    // Password required
-                    println!("Please enter password for key:");
-                    let password = rpassword::read_password()?.trim().to_string();
-                    phrase =
-                        secret_phrase::get(account_or_name_key, Some(&password)).map_err(|err| {
-                            debug!("{:?}", err);
-                            anyhow!("Invalid password")
-                        })
+            match cli_name_to_key(account_or_name_key)? {
+                Some(phrase) => {
+                    // Transaction execution (secret phrase)
+                    client.tx_mvm_execute(&transaction_path, self.gas_limit, &phrase)
                 }
-
-                // Transaction execution (secret phrase)
-                client.tx_mvm_execute(&transaction_path, self.gas_limit, &phrase?)
-            } else {
-                // Transaction execution (test account)
-                client.tx_mvm_execute_dev(&transaction_path, self.gas_limit, account_or_name_key)
+                None => {
+                    // Transaction execution (test account)
+                    client.tx_mvm_execute_dev(
+                        &transaction_path,
+                        self.gas_limit,
+                        account_or_name_key,
+                    )
+                }
             }
         } else {
             bail!("Specify name of key or name of test account or secret phrase")
