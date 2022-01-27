@@ -10,7 +10,7 @@ use crate::secret_phrase;
 /// Secret Key Management
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-pub enum Login {
+pub enum Key {
     /// Save the secret key for access under a alias
     #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
     #[structopt(name = "add")]
@@ -43,7 +43,7 @@ pub enum Login {
     },
 }
 
-impl Cmd for Login {
+impl Cmd for Key {
     fn context(&mut self, project_dir: PathBuf, move_args: Move) -> Result<Context> {
         Ok(Context {
             project_dir,
@@ -59,16 +59,16 @@ impl Cmd for Login {
     {
         match &self {
             // Save the secret key for access under a alias
-            Login::Add {
+            Key::Add {
                 alias,
                 without_password,
             } => add(alias, *without_password),
 
             // Displaying a list of saved secret keys
-            Login::List {} => list(),
+            Key::List {} => list(),
 
             // Deleting secret keys
-            Login::Delete { alias, all } => {
+            Key::Delete { alias, all } => {
                 if *all {
                     secret_phrase::delete_all()?;
                     println!("All stored secret keys have been successfully deleted");

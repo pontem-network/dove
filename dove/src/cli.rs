@@ -24,7 +24,7 @@ use crate::cmd::run::Run;
 use crate::cmd::test::Test;
 use crate::cmd::tx::CreateTransactionCmd;
 use crate::cmd::view::View;
-use crate::cmd::login::Login;
+use crate::cmd::key::Key;
 use crate::context::Context;
 use move_cli::DEFAULT_STORAGE_DIR;
 
@@ -185,10 +185,10 @@ pub enum Command {
 
     /// Managing secret phrases
     #[structopt(about = "Managing secret phrases")]
-    Login {
+    Key {
         /// Command.
         #[structopt(flatten)]
-        cmd: Login,
+        cmd: Key,
     },
 }
 
@@ -219,7 +219,7 @@ impl Command {
             // Execute a transaction
             Command::Execute { cmd } => CommonCommand::Dove(Box::new(cmd)),
             // Managing secret phrases
-            Command::Login { cmd } => CommonCommand::Dove(Box::new(cmd)),
+            Command::Key { cmd } => CommonCommand::Dove(Box::new(cmd)),
         }
     }
 }
