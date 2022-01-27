@@ -107,8 +107,8 @@ fn add(alias: &str, without_password: bool) -> Result<()> {
 
         Some(enter_password.as_str())
     };
-    let phrase = cli_entering_a_secret_phrase()?;
 
+    let phrase = cli_entering_a_secret_phrase()?;
     secret_phrase::save(&phrase, &alias, password)?;
 
     Ok(())

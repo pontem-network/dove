@@ -4,6 +4,8 @@ use dove::cli::execute;
 use dove::colorize::error;
 
 fn main() {
+    env_logger::init();
+
     let args = std::env::args_os();
     let cwd = std::env::current_dir().expect("Current directory exists and accessible");
     let res = execute(args, cwd);

@@ -12,7 +12,7 @@ use crate::secret_phrase;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(
-    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret --account [ADDRESS] --url [URL]"
+    usage = "$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret --account [NAME_OR_ADDRESS] --url [URL]"
 )]
 pub enum Publish {
     /// Publishing a module
@@ -140,7 +140,7 @@ pub fn cli_entering_a_secret_phrase() -> Result<String> {
         .trim()
         .split(' ')
         .map(|s| s.trim())
-        .filter(|s| s.is_empty())
+        .filter(|s| !s.is_empty())
         .collect();
     if key_phrase.is_empty() {
         bail!("Secret phrase cannot be empty");
@@ -193,7 +193,19 @@ impl TryFrom<&PublicationParameters> for DataRequest {
 
     fn try_from(params: &PublicationParameters) -> std::result::Result<Self, Self::Error> {
         let client = PontemClient::new(params.url_to_node.as_str())?;
-        let file = params.file_path.as_os_str().to_string_lossy().to_string();
+        let file = params
+            .file_path
+            .canonicalize()
+            .map_err(|err| {
+                anyhow!(
+                    r#"Path "{}" - {}"#,
+                    params.file_path.display(),
+                    err.to_string()
+                )
+            })?
+            .to_string_lossy()
+            .to_string();
+
         let access = if params.secret_phrase {
             // Request secret phrases
             let secret = cli_entering_a_secret_phrase()?;

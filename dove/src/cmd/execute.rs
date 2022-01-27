@@ -62,7 +62,18 @@ impl Cmd for Execute {
         Self: Sized,
     {
         let client = PontemClient::new(self.url_to_node.as_str())?;
-        let transaction_path = self.file_path.as_os_str().to_string_lossy().to_string();
+        let transaction_path = self
+            .file_path
+            .canonicalize()
+            .map_err(|err| {
+                anyhow!(
+                    r#"Path "{}" - {}"#,
+                    self.file_path.display(),
+                    err.to_string()
+                )
+            })?
+            .to_string_lossy()
+            .to_string();
 
         if self.secret_phrase {
             // Request secret phrases

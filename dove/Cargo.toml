@@ -36,6 +36,7 @@ resource-viewer = { package = "move-resource-viewer", git = "https://github.com/
 diem-vm = { git = "https://github.com/pontem-network/diem.git", branch = "v1.5.1-pre" }
 
 # third-party dependencies
+env_logger = "0.9"
 log = "0.4.14"
 anyhow = "1.0.45"
 structopt = "0.3.25"

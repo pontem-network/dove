@@ -5,6 +5,7 @@ use std::path::{PathBuf, Path};
 
 use anyhow::{Result, Error};
 use diem_vm::natives::diem_natives;
+use log::debug;
 use structopt::StructOpt;
 use semver::{Version, VersionReq};
 
@@ -303,6 +304,7 @@ fn store_manifest_checksum(ctx: &Context) -> Result<()> {
         return Ok(());
     }
     fs::write(&path_version, ctx.manifest_hash.to_string())?;
+
     Ok(())
 }
 
