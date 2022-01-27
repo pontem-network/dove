@@ -2,7 +2,6 @@ use std::str::FromStr;
 use std::fs;
 use std::path::PathBuf;
 use anyhow::{Error, Result};
-use log::debug;
 use structopt::StructOpt;
 use move_cli::Move;
 use crate::cmd::{Cmd, default_sourcemanifest};

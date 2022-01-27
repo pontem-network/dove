@@ -5,7 +5,6 @@ use std::path::{PathBuf, Path};
 
 use anyhow::{Result, Error};
 use diem_vm::natives::diem_natives;
-use log::debug;
 use structopt::StructOpt;
 use semver::{Version, VersionReq};
 
