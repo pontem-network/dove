@@ -257,10 +257,49 @@ resource 00000000::Account::Balance<00000000::Coins::BTC> {
 }
 ```
 
+### Secret Key Management
+
+Command `key` allows you to save the secret keys to the wallet on your computer and access them under an alias.
+Saved key can be used when publishing a module `$ dove publish module --accaunt <NAME_KEY> ...` or package `$ dove publish package --accaunt <NAME_KEY> ...`, as well as when execute a transaction `$ dove execute --accaunt <NAME_KEY> ...`.
+Keys are stored on your computer in the `~/.move/` directory. Before saving, they are encrypted with the aes + password.
+
+#### Adding a key:
+
+```shell
+dove key add --alias <NAME_KEY>
+```
+After executing this command, you will be prompted to enter a password and a secret phrase from your wallet.
+
+If you don't want to protect the key with a password, use the `--nopassword` flag(**Not recommended**):
+
+```shell
+dove key add --alias <NAME_KEY> --nopassword
+```
+
+#### View list of saved keys
+
+```shell
+dove key list
+```
+
+#### Deleting a key
+
+Deleting a key by name:
+
+```shell
+dove key delete --alias <NAME_KEY>
+```
+
+Deleting all saved keys:
+
+```shell
+dove key delete --all
+```
+
 ## Publishing a module or package
 
 ```bash
-$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret [KEY PHRASE] --account [ADDRESS] --url [URL]
+$ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret --account [NAME_OR_ADDRESS] --url [URL]
 ```
 ### Input parameters
 - [TYPE] file type
@@ -269,35 +308,37 @@ $ dove publish [TYPE] --file [FILE_NAME] --gas [GAS]  --secret [KEY PHRASE] --ac
 - `-f` / `--file` Path to the transaction
 - `-g` / `--gas` Limitation of gas consumption per operation. A positive integer is expected
 -  `-u` / `--url` The url of the substrate node to query [default: ws://localhost:9944]. HTTP, HTTPS, WS protocols are supported. It is recommended to use WS. When using HTTP or HTTPS, you cannot get the publication status.  
-- `-t` / `--account` Test account from who to publish. Example: //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY. Only for text publications. When used in combination with `--secret` is ignored. 
+- `--account` Account from whom to publish. Address or test account name or name secret key. Example: //Alice, alice, bob, NAME_SECRET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY. When used in combination with `--secret` is ignored. 
 - `-s` / `--secret` Secret phrase. If a secret phrase is specified, you do not need to specify.
 
 ### Examples:
 ```bash
-$ dove publish module --file PATH/TO/MODULE.mv --gas 100
-$ dove publish package --file ./PATH/TO/PACKAGE.pac --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-$ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --account alice --url ws://127.0.0.1:9944
-$ dove publish module --file /PATH/TO/MODULE.mv --gas 200 --secret "net exotic exchange stadium..."
+dove publish module --file PATH/TO/MODULE.mv --gas 100
+dove publish module --file /PATH/TO/MODULE.mv --gas 200 --account alice --url ws://127.0.0.1:9944
+dove publish package --file ./PATH/TO/PACKAGE.pac --gas 300 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+dove publish module --file /PATH/TO/MODULE.mv --gas 500 --account NAME_KEY
+dove publish module --file /PATH/TO/MODULE.mv --gas 400 --secret
 ```
 
 ## Execute a transaction
 
 ```bash
-$ dove execute --file [FILE_NAME] --gas [GAS] --secret [KEY PHRASE] --account [ADDRESS] --url [URL]
+dove execute --file [FILE_NAME] --gas [GAS] --secret [KEY PHRASE] --account [ADDRESS] --url [URL]
 ```
 ### Input parameters
 - `-f` / `--file` Path to the transaction
 - `-g` / `--gas` Limitation of gas consumption per operation. A positive integer is expected
 -  `-u` / `--url` The url of the substrate node to query [default: ws://localhost:9944]. HTTP, HTTPS, WS protocols are supported. It is recommended to use WS. When using HTTP or HTTPS, you cannot get the publication status.
-- `-t` / `--account` Test account from who to publish. Example: //Alice, alice, bob... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY. Only for text publications. When used in combination with `--secret` is ignored.
+- `--account` Account from whom to publish. Address or test account name or name secret key. Example: //Alice, alice, bob, NAME_SECRET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY. When used in combination with `--secret` is ignored.
 - `-s` / `--secret` Secret phrase. If a secret phrase is specified, you do not need to specify.
 
 ### Examples:
 ```bash
-$ dove execute --file PATH/TO/TRANSACTION.mvt  --gas 120 
-$ dove execute --file ./PATH/TO/TRANSACTION.mvt --gas 220 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
-$ dove execute --file /PATH/TO/TRANSACTION.mvt --gas 110 --account alice --url ws://127.0.0.1:9944
-$ dove execute --file /PATH/TO/TRANSACTION.mvt --gas 140 --secret "net exotic exchange stadium..."
+dove execute --file PATH/TO/TRANSACTION.mvt  --gas 120 
+dove execute --file /PATH/TO/TRANSACTION.mvt --gas 110 --account alice --url ws://127.0.0.1:9944
+dove execute --file ./PATH/TO/TRANSACTION.mvt --gas 220 --account 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 
+dove execute --file /PATH/TO/TRANSACTION.mvt --gas 150 --account NAME_KEY
+dove execute --file /PATH/TO/TRANSACTION.mvt --gas 140 --secret
 ```
 
 ## LICENSE

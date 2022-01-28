@@ -26,7 +26,7 @@ pub struct Execute {
     file_path: PathBuf,
 
     /// Account from whom to publish. Address or test account name or name secret key. Example: //Alice, alice, bob, NAME_SECRET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-    #[structopt(long = "account", short = "t")]
+    #[structopt(long = "account")]
     account: Option<String>,
 
     /// Secret phrase. If a secret phrase is specified, you do not need to specify an account
