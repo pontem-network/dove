@@ -323,7 +323,7 @@ dove publish module --file /PATH/TO/MODULE.mv --gas 400 --secret
 ## Execute a transaction
 
 ```bash
-dove execute --file [FILE_NAME] --gas [GAS] --secret [KEY PHRASE] --account [ADDRESS] --url [URL]
+dove execute --file [FILE_NAME] --gas [GAS] --secret --account [ADDRESS] --url [URL]
 ```
 ### Input parameters
 - `-f` / `--file` Path to the transaction
