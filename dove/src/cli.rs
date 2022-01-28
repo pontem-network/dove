@@ -219,6 +219,11 @@ fn check_dove_version(req_ver: &str) -> Result<(), Error> {
 
 /// Move.toml has been updated
 fn check_manifest_hash(ctx: &Context) -> bool {
+    // no manifest
+    if ctx.manifest_hash == 0 {
+        return true;
+    }
+
     let path_version = ctx.project_dir.join("build").join(HASH_FILE_NAME);
     if !path_version.exists() {
         return false;
@@ -234,8 +239,14 @@ fn check_manifest_hash(ctx: &Context) -> bool {
 
 /// Writing the hash move.toml to file
 fn store_manifest_checksum(ctx: &Context) -> Result<()> {
+    // no manifest
+    if ctx.manifest_hash == 0 {
+        return Ok(());
+    }
+
     let build_path = ctx.project_dir.join("build");
     let path_version = build_path.join(HASH_FILE_NAME);
+
     if !build_path.exists() || path_version.exists() {
         return Ok(());
     }
