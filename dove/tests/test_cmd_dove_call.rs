@@ -2,31 +2,31 @@ mod helper;
 
 use helper::{new_demo_project, execute_dove_at, delete_project};
 
-/// $ dove tx 'main()'
-/// $ dove tx 'one_param(true)'
-/// $ dove tx 'two_params(1,1)'
+/// $ dove call 'main()'
+/// $ dove call 'one_param(true)'
+/// $ dove call 'two_params(1,1)'
 #[test]
-fn test_cmd_dove_tx_with_call() {
-    let project_name = "project_tx_with_call";
+fn test_cmd_dove_call() {
+    let project_name = "project_call";
     let project_folder = new_demo_project(project_name, false).unwrap();
 
     for call in ["main()", "one_param(true)", "two_params(1,1)"] {
-        execute_dove_at(&["tx", call], &project_folder).unwrap();
+        execute_dove_at(&["call", call], &project_folder).unwrap();
     }
     delete_project(&project_folder).unwrap();
 }
 
-/// $ dove tx 'main()'
-/// $ dove tx 'one_param' -a true
-/// $ dove tx 'two_params' --args 1 1
+/// $ dove call 'main()'
+/// $ dove call 'one_param' -a true
+/// $ dove call 'two_params' --args 1 1
 #[test]
-fn test_cmd_dove_tx_with_params() {
-    let project_name = "project_tx_with_params";
+fn test_cmd_dove_call_with_params() {
+    let project_name = "project_call_with_params";
     let project_folder = new_demo_project(project_name, false).unwrap();
 
     for call in [
-        vec!["tx", "one_param", "-a", "true"],
-        vec!["tx", "two_params", "--args", "1", "1"],
+        vec!["call", "one_param", "-a", "true"],
+        vec!["call", "two_params", "--args", "1", "1"],
     ] {
         execute_dove_at(&call, &project_folder).unwrap();
     }
@@ -35,18 +35,18 @@ fn test_cmd_dove_tx_with_params() {
 }
 
 /// With type
-/// $ dove tx 'with_type<u8>(1)'
-/// $ dove tx 'with_type(1)' -t u8
-/// $ dove tx 'with_type' -a 1 -t u8
+/// $ dove call 'with_type<u8>(1)'
+/// $ dove call 'with_type(1)' -t u8
+/// $ dove call 'with_type' -a 1 -t u8
 #[test]
-fn test_cmd_dove_tx_with_type() {
-    let project_name = "project_tx_with_type";
+fn test_cmd_dove_call_with_type() {
+    let project_name = "project_call_with_type";
     let project_folder = new_demo_project(project_name, false).unwrap();
 
     for call in [
-        vec!["tx", "with_type<u8>(1)"],
-        vec!["tx", "with_type(1)", "-t", "u8"],
-        vec!["tx", "with_type", "-a", "1", "-t", "u8"],
+        vec!["call", "with_type<u8>(1)"],
+        vec!["call", "with_type(1)", "-t", "u8"],
+        vec!["call", "with_type", "-a", "1", "-t", "u8"],
     ] {
         execute_dove_at(&call, &project_folder).unwrap();
     }
@@ -55,15 +55,15 @@ fn test_cmd_dove_tx_with_type() {
 }
 
 /// Output path
-/// $ dove tx 'main()' -o tmpname
+/// $ dove call 'main()' -o tmpname
 #[test]
-fn test_cmd_dove_tx_output() {
-    let project_name = "project_tx_output";
+fn test_cmd_dove_call_output() {
+    let project_name = "project_call_output";
     let project_folder = new_demo_project(project_name, false).unwrap();
 
     for (name, args) in [
-        ("main", vec!["tx", "main()"]),
-        ("tmpname", vec!["tx", "main()", "-o", "tmpname"]),
+        ("main", vec!["call", "main()"]),
+        ("tmpname", vec!["call", "main()", "-o", "tmpname"]),
     ] {
         execute_dove_at(&args, &project_folder).unwrap();
         let tx_path = project_folder
