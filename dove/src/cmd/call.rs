@@ -13,11 +13,11 @@ use crate::call::model::{EnrichedTransaction, Transaction};
 
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-#[structopt(usage = "dove tx [call] [OPTIONS]\n
+#[structopt(usage = "dove call [call] [OPTIONS]\n
     Examples:
-    $ dove tx 'script_name<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)'
-    $ dove tx 'script_name()' --parameters [10,10] true 68656c6c6f776f726c64 100 0x1 --type 0x01::Dfinance::USD
-    $ dove tx '0x1::Module::script_name<0x01::Dfinance::USD>()'
+    $ dove call 'script_name<0x01::Dfinance::USD>([10,10], true, ADDRESS_ALIAS, 100, 0x1)'
+    $ dove call 'script_name()' --parameters [10,10] true ADDRESS_ALIAS 100 0x1 --type 0x01::Dfinance::USD
+    $ dove call '0x1::Module::script_name<0x01::Dfinance::USD>()'
 ")]
 pub struct ExecuteTransaction {
     #[structopt(flatten)]
