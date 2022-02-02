@@ -7,13 +7,16 @@ export async function run() {
 
 
     // @todo remove dev
-    // setTimeout(() => {
-    //     document.querySelector(".project").click();
-    //     setTimeout(() => {
-    //         document.querySelector(".tx_script button").click();
-    //         document.querySelector("#tx_list .item button").click();
-    //     }, 50)
-    // }, 100);
+    setTimeout(() => {
+        document.querySelector(".project").click();
+        setTimeout(() => {
+            document.querySelector("#explorer .file-name").click();
+            document.querySelector("#navigation .explorer button").click();
+            // document.querySelector(".tx_script button").click();
+
+            // document.querySelector("#tx_list .item button").click();
+        }, 50)
+    }, 100);
 
     // @todo remove
     // let sources = new Map();

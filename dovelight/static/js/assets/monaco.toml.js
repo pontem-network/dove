@@ -1,9 +1,7 @@
-window.addEventListener("load", function() {
+window.addEventListener("load", function () {
     // Register a new language
     monaco.languages.register({ id: 'toml' });
 
-    // @todo 
-    console.log(monaco.languages);
 
     // Register a tokens provider for the language
     monaco.languages.setMonarchTokensProvider('toml', {
