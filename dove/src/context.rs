@@ -3,7 +3,6 @@ use std::fs;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 use anyhow::Error;
-use dialect::init_context;
 use move_cli::Move;
 use move_package::compilation::package_layout::CompiledPackageLayout;
 use move_package::source_package::{layout, manifest_parser};
@@ -65,7 +64,6 @@ impl Context {
         native_functions: NativeFunctionTable,
         cost_table: CostTable,
     ) -> Result<Self> {
-        init_context(move_args.dialect);
         let manifest_string =
             read_to_string(project_root_dir.join(layout::SourcePackageLayout::Manifest.path()))?;
         let mut hasher = DefaultHasher::default();

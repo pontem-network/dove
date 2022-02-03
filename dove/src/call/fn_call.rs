@@ -1,7 +1,6 @@
 use std::str::FromStr;
 use std::fmt::Debug;
 use anyhow::Error;
-use dialect::get_context;
 use move_symbol_pool::Symbol;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
@@ -366,8 +365,7 @@ fn parse_address(
     arg_value: &str,
     addr_map: &AddressDeclarations,
 ) -> Result<AccountAddress, Error> {
-    let ctx = get_context();
-    match ctx.parse_address(arg_value) {
+    match pontem::parse_address(arg_value) {
         Ok(addr) => Ok(addr),
         Err(_) => addr_map
             .get(&Symbol::from(arg_value))

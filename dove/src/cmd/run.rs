@@ -84,7 +84,6 @@ impl Cmd for Run {
 
                 let move_args = Move {
                     package_path: ctx.project_root_dir.clone(),
-                    dialect: ctx.move_args.dialect,
                     verbose: ctx.move_args.verbose,
                     build_config: BuildConfig {
                         dev_mode: true,
