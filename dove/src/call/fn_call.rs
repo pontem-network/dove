@@ -3,7 +3,6 @@ use std::fmt::Debug;
 use anyhow::Error;
 use dialect::get_context;
 use move_symbol_pool::Symbol;
-use diem_types::account_config::diem_root_address;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
 use move_core_types::language_storage::{CORE_CODE_ADDRESS, TypeTag};
@@ -12,9 +11,14 @@ use lang::bytecode::accessor::BytecodeType;
 use lang::bytecode::{find, SearchParams};
 use lang::bytecode::info::{BytecodeInfo, Type};
 use crate::context::Context;
-use crate::tx::model::{Signer, ScriptArg, Transaction, Signers, EnrichedTransaction, Call};
-use crate::tx::parser::parse_vec;
-use crate::tx::bytecode::DoveBytecode;
+use crate::call::model::{Signer, ScriptArg, Transaction, Signers, EnrichedTransaction, Call};
+use crate::call::parser::parse_vec;
+use crate::call::bytecode::DoveBytecode;
+
+fn diem_root_address() -> AccountAddress {
+    AccountAddress::from_hex_literal("0xA550C18")
+        .expect("Parsing valid hex literal should always succeed")
+}
 
 /// Transaction config.
 pub struct Config {
@@ -386,8 +390,8 @@ mod call_tests {
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_core_types::account_address::AccountAddress;
     use lang::bytecode::info::Type;
-    use crate::tx::model::ScriptArg;
-    use crate::tx::fn_call::prepare_function_signature;
+    use crate::call::model::ScriptArg;
+    use crate::call::fn_call::prepare_function_signature;
 
     fn s(v: &str) -> String {
         v.to_string()

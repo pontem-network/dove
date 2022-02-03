@@ -1,28 +1,95 @@
+use std::collections::BTreeMap;
 use std::fs;
+use std::fs::read_to_string;
 use std::path::PathBuf;
 use anyhow::Error;
+use dialect::init_context;
 use move_cli::Move;
 use move_package::compilation::package_layout::CompiledPackageLayout;
+use move_package::source_package::{layout, manifest_parser};
 use move_package::source_package::parsed_manifest::{AddressDeclarations, SourceManifest};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+use anyhow::Result;
+use move_core_types::errmap::ErrorMapping;
+use move_core_types::gas_schedule::CostTable;
+use move_symbol_pool::symbol::Symbol;
+use move_vm_runtime::native_functions::NativeFunctionTable;
+use crate::natives::pontem_cost_table;
 
-/// Project context.
+fn default_manifest() -> SourceManifest {
+    use move_package::source_package::parsed_manifest::PackageInfo;
+
+    SourceManifest {
+        package: PackageInfo {
+            name: Symbol::from("Default"),
+            version: (0, 0, 0),
+            license: None,
+            authors: Vec::new(),
+        },
+        addresses: None,
+        dependencies: BTreeMap::new(),
+        dev_address_assignments: None,
+        dev_dependencies: BTreeMap::new(),
+        build: None,
+    }
+}
+
 pub struct Context {
-    /// Project root directory.
-    pub project_dir: PathBuf,
-    /// Move args.
+    pub project_root_dir: PathBuf,
     pub move_args: Move,
-    /// Project manifest.
     pub manifest: SourceManifest,
-    /// Manifest hash.
     pub manifest_hash: u64,
+    pub error_descriptions: ErrorMapping,
+    pub native_functions: NativeFunctionTable,
+    pub cost_table: CostTable,
 }
 
 impl Context {
+    pub fn empty(project_root_dir: PathBuf, move_args: Move) -> Self {
+        Context {
+            project_root_dir,
+            move_args,
+            manifest: default_manifest(),
+            manifest_hash: 0,
+            error_descriptions: Default::default(),
+            native_functions: NativeFunctionTable::default(),
+            cost_table: pontem_cost_table(),
+        }
+    }
+
+    pub fn new(
+        project_root_dir: PathBuf,
+        move_args: Move,
+        error_descriptions: ErrorMapping,
+        native_functions: NativeFunctionTable,
+        cost_table: CostTable,
+    ) -> Result<Self> {
+        init_context(move_args.dialect);
+        let manifest_string =
+            read_to_string(project_root_dir.join(layout::SourcePackageLayout::Manifest.path()))?;
+        let mut hasher = DefaultHasher::default();
+        manifest_string.hash(&mut hasher);
+        let manifest_hash = hasher.finish();
+        let toml_manifest = manifest_parser::parse_move_manifest_string(manifest_string)?;
+        let manifest = manifest_parser::parse_source_manifest(toml_manifest)?;
+
+        Ok(Context {
+            project_root_dir,
+            move_args,
+            manifest,
+            manifest_hash,
+            error_descriptions,
+            native_functions,
+            cost_table,
+        })
+    }
+
     /// Path for bundle
     ///     ./build/<package name>/bundles
     pub fn bundles_output_path(&self, package_name: &str) -> Result<PathBuf, Error> {
         let dir = self
-            .project_dir
+            .project_root_dir
             .join("build")
             .join(self.manifest.package.name.as_str())
             .join("bundles");
@@ -32,21 +99,11 @@ impl Context {
         Ok(dir.join(package_name))
     }
 
-    /// Path to boogie_options.toml
-    ///     <PROJECT_DIR>/boogie_options.toml
-    pub fn boogie_options_path(&self) -> PathBuf {
-        self.project_dir.join("boogie_options.toml")
-    }
-
-    /// Path to doc.toml
-    ///     <PROJECT_DIR>/doc.toml
-    pub fn doc_path(&self) -> PathBuf {
-        self.project_dir.join("doc.toml")
-    }
-
     /// Creates path to the move cli build folder.
     pub fn path_for_build(&self, pac_name: Option<&str>, path: CompiledPackageLayout) -> PathBuf {
-        let build = self.project_dir.join(CompiledPackageLayout::Root.path());
+        let build = self
+            .project_root_dir
+            .join(CompiledPackageLayout::Root.path());
         if CompiledPackageLayout::Root != path {
             if let Some(pac_name) = pac_name {
                 build.join(pac_name).join(path.path())
@@ -59,13 +116,15 @@ impl Context {
     }
 
     /// Creates and returns map of named addresses.
-    pub fn named_address(&self) -> AddressDeclarations {
+    pub fn address_declarations(&self) -> AddressDeclarations {
         self.manifest.addresses.clone().unwrap_or_default()
     }
 
     /// Returns transaction output folder for specified `package` or for the default package.
     pub fn tx_output_path(&self, pac: Option<String>) -> PathBuf {
-        let mut build = self.project_dir.join(CompiledPackageLayout::Root.path());
+        let mut build = self
+            .project_root_dir
+            .join(CompiledPackageLayout::Root.path());
         if let Some(pac) = pac {
             build = build.join(pac);
         } else {

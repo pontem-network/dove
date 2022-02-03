@@ -7,10 +7,9 @@ use std::path::{PathBuf, Path};
 use anyhow::Error;
 use structopt::StructOpt;
 use anyhow::Result;
-use diem_vm::natives::diem_natives;
 use move_binary_format::access::ModuleAccess;
 use move_binary_format::CompiledModule;
-use move_core_types::errmap::ErrorMapping;
+
 use move_cli::Command as MoveCommand;
 use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
@@ -20,96 +19,44 @@ use crate::cmd::Cmd;
 use crate::context::Context;
 use serde::{Serialize, Deserialize};
 
-/// Build dependencies.
 #[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-pub struct Build {
-    /// Generate error map for the package and its dependencies
-    /// at path for use by the Move explanation tool.
-    #[structopt(long)]
-    error_map: Option<String>,
-    // Pack the assembled modules into a single file,
-    // except for those specified in modules_exclude
-    #[structopt(
-        help = "Package modules in a binary bundle file.",
-        short = "b",
-        long = "bundle"
-    )]
-    package: bool,
-
-    // Names of modules to exclude from the package process..
-    // Used with the "package" parameter.
+pub struct Deploy {
+    // Names of modules to exclude from the package process.
     // Modules are taken from the <PROJECT_PATH>/build/<PROJECT_NAME>/bytecode_modules directory.
     // The names are case-insensitive and can be specified with an extension.mv or without it.
     // --modules_exclude NAME_1 NAME_2 NAME_3
     #[structopt(
-        help = "Names of modules to exclude from the package process..",
+        help = "Names of modules to exclude from the package process.",
         long = "modules_exclude"
     )]
     modules_exclude: Vec<String>,
 
-    // File name of module package.
-    // Used with the "package" parameter.
-    #[structopt(help = "File name of module package.", short = "o", long = "output")]
+    #[structopt(
+        help = "File name of the resulting .pac file.",
+        short = "o",
+        long = "output"
+    )]
     output: Option<String>,
 }
 
-impl Cmd for Build {
+impl Cmd for Deploy {
     fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {
-        // Move-cli build
-        let error_descriptions: ErrorMapping =
-            bcs::from_bytes(move_stdlib::error_descriptions())?;
-        let cmd = MoveCommand::Package {
-            cmd: PackageCommand::Build {},
-        };
-
-        run_cli(diem_natives(), &error_descriptions, &ctx.move_args, &cmd)?;
-
-        // Move-cli error map
-        self.run_error_map(ctx)?;
+        // Run `dove package build` first to build all necessary artifacts.
+        run_dove_package_build(ctx)?;
 
         // packaging of modules
-        self.run_package(ctx)?;
-
-        // Checking directories in the "build" section, if there are none, then create
-        checking_build_directories(ctx)?;
+        self.bundle_modules_into_pac(ctx)?;
 
         Ok(())
     }
 }
 
-impl Build {
-    /// Generate error map for the package and its dependencies
-    /// at path for use by the Move explanation tool.
-    fn run_error_map(&self, ctx: &Context) -> Result<()> {
-        if self.error_map.is_none() {
-            return Ok(());
-        }
-
-        let path = PathBuf::from(self.error_map.clone().unwrap_or_default());
-
-        let error_descriptions: ErrorMapping =
-            bcs::from_bytes(move_stdlib::error_descriptions())?;
-        let cmd = MoveCommand::Package {
-            cmd: PackageCommand::ErrMapGen {
-                error_prefix: None,
-                output_file: path,
-            },
-        };
-
-        run_cli(diem_natives(), &error_descriptions, &ctx.move_args, &cmd)?;
-        Ok(())
-    }
-
-    /// Names of modules to exclude from the package process..
-    fn run_package(&self, ctx: &Context) -> Result<()> {
-        if !self.package {
-            return Ok(());
-        }
-
+impl Deploy {
+    fn bundle_modules_into_pac(&self, ctx: &Context) -> Result<()> {
         // Path to the output file
         let output_file_path = ctx
             .bundles_output_path(
@@ -124,7 +71,7 @@ impl Build {
 
         // Search for modules
         let bytecode_modules_path =
-            get_bytecode_modules_path(&ctx.project_dir, &ctx.manifest.package.name)
+            get_bytecode_modules_path(&ctx.project_root_dir, &ctx.manifest.package.name)
                 .unwrap_or_default();
 
         let mut pac = ModulePackage::default();
@@ -155,32 +102,6 @@ impl Build {
     }
 }
 
-/// Checking directories in the "build" section, if there are none, then create
-/// Fixes an error when reassembling an empty project
-///     <PROJECT_DIR>/build/<PROJECT_NAME>/bytecode_modules
-///     <PROJECT_DIR>/build/<PROJECT_NAME>/bytecode_scripts
-///     <PROJECT_DIR>/build/<PROJECT_NAME>/source_maps
-///     <PROJECT_DIR>/build/<PROJECT_NAME>/sources
-fn checking_build_directories(ctx: &Context) -> Result<()> {
-    let build_path = ctx
-        .project_dir
-        .join("build")
-        .join(ctx.manifest.package.name.as_str());
-    for name_dir in [
-        "bytecode_modules",
-        "bytecode_scripts",
-        "source_maps",
-        "sources",
-    ] {
-        let path = build_path.join(name_dir);
-        if path.exists() {
-            continue;
-        }
-        fs::create_dir_all(&path)?;
-    }
-    Ok(())
-}
-
 /// Return file paths from ./PROJECT_FOLDER/build/PROJECT_NAME/bytecode_modules
 /// Only with the .mv extension
 fn get_bytecode_modules_path(project_dir: &Path, project_name: &str) -> Result<Vec<PathBuf>> {
@@ -203,10 +124,17 @@ fn get_bytecode_modules_path(project_dir: &Path, project_name: &str) -> Result<V
     Ok(list)
 }
 
-/// Build project.
-pub fn run_internal_build(ctx: &mut Context) -> Result<(), Error> {
-    let mut cmd = Build::default();
-    cmd.apply(ctx)
+pub fn run_dove_package_build(ctx: &mut Context) -> Result<()> {
+    let build_cmd = MoveCommand::Package {
+        cmd: PackageCommand::Build {},
+    };
+    run_cli(
+        ctx.native_functions.clone(),
+        &ctx.cost_table,
+        &ctx.error_descriptions,
+        &ctx.move_args,
+        &build_cmd,
+    )
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]

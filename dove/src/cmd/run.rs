@@ -3,25 +3,24 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use anyhow::{Error, Result};
-use bytecode_source_map::source_map::SourceMap;
-use diem_vm::natives::diem_natives;
+use move_bytecode_source_map::source_map::SourceMap;
 use lang::bytecode::info::BytecodeInfo;
 use move_cli::{DEFAULT_STORAGE_DIR, Move, run_cli};
 use move_cli::sandbox::cli::SandboxCommand;
 use move_cli::Command;
 use move_command_line_common::files::FileHash;
-use move_core_types::errmap::ErrorMapping;
+
 use move_package::BuildConfig;
 use move_package::compilation::package_layout::CompiledPackageLayout;
 use crate::cmd::Cmd;
-use crate::cmd::build::run_internal_build;
+use crate::cmd::deploy::run_dove_package_build;
 use crate::context::Context;
-use crate::tx::cmd::CallDeclarationCmd;
-use crate::tx::fn_call::Config;
-use crate::tx::make_transaction;
-use crate::tx::model::EnrichedTransaction;
 
-/// Run move script
+use crate::call::cmd::CallDeclarationCmd;
+use crate::call::fn_call::Config;
+use crate::call::make_transaction;
+use crate::call::model::EnrichedTransaction;
+
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(usage = "dove run [call] [OPTIONS]\n
@@ -41,7 +40,6 @@ pub struct Run {
     #[structopt(long = "dry-run")]
     dry_run: bool,
 
-    /// Gas budget.
     #[structopt(long = "gas_budget", short = "g")]
     gas_budget: Option<u64>,
 }
@@ -51,7 +49,7 @@ impl Cmd for Run {
     where
         Self: Sized,
     {
-        run_internal_build(ctx)?;
+        run_dove_package_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_run())?;
         match tx {
             EnrichedTransaction::Local {
@@ -61,10 +59,7 @@ impl Cmd for Run {
                 func_name,
                 signers,
             } => {
-                let natives = diem_natives();
                 let script_file = resolve_script_name(&bi)?;
-                let error_descriptions: ErrorMapping =
-                    bcs::from_bytes(move_stdlib::error_descriptions())?;
 
                 let args = args
                     .into_iter()
@@ -81,14 +76,14 @@ impl Cmd for Run {
                 };
 
                 let named_addresses = ctx
-                    .named_address()
+                    .address_declarations()
                     .into_iter()
                     .filter_map(|(k, v)| v.map(|v| (k, v)))
                     .map(|(k, v)| (k.to_string(), v))
                     .collect();
 
                 let move_args = Move {
-                    package_path: ctx.project_dir.clone(),
+                    package_path: ctx.project_root_dir.clone(),
                     dialect: ctx.move_args.dialect,
                     verbose: ctx.move_args.verbose,
                     build_config: BuildConfig {
@@ -102,8 +97,9 @@ impl Cmd for Run {
                     },
                 };
                 run_cli(
-                    natives,
-                    &error_descriptions,
+                    ctx.native_functions.clone(),
+                    &ctx.cost_table,
+                    &ctx.error_descriptions,
                     &move_args,
                     &Command::Sandbox {
                         storage_dir: PathBuf::from(DEFAULT_STORAGE_DIR),

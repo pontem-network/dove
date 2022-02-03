@@ -4,9 +4,8 @@ use std::fmt::Debug;
 use std::convert::TryFrom;
 use std::mem;
 use move_package::source_package::parsed_manifest::AddressDeclarations;
-use crate::tx::parser::{parse_call, Call, parse_tp_param};
+use crate::call::parser::{parse_call, Call, parse_tp_param};
 
-/// Call declaration.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct CallDeclarationCmd {

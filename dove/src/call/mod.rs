@@ -1,9 +1,9 @@
 use anyhow::Error;
 use crate::context::Context;
-use crate::tx::cmd::{CallDeclaration, CallDeclarationCmd};
-use crate::tx::fn_call::{Config, make_function_call, make_script_call};
-use crate::tx::model::EnrichedTransaction;
-use crate::tx::parser::Call;
+use crate::call::cmd::{CallDeclaration, CallDeclarationCmd};
+use crate::call::fn_call::{Config, make_function_call, make_script_call};
+use crate::call::model::EnrichedTransaction;
+use crate::call::parser::Call;
 
 /// Bytecode.
 pub mod bytecode;
@@ -22,7 +22,7 @@ pub fn make_transaction(
     cmd: CallDeclarationCmd,
     cfg: Config,
 ) -> Result<EnrichedTransaction, Error> {
-    let address_decl = ctx.named_address();
+    let address_decl = ctx.address_declarations();
     let declaration = CallDeclaration::try_from((&address_decl, cmd))?;
     match declaration.call {
         Call::Function {

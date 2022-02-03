@@ -1,6 +1,3 @@
-//! Move compiler.
-#![deny(missing_docs)]
-
 /// Dove build version
 pub const DOVE_VERSION: &str = git_hash::crate_version!();
 /// Dove short hash of the commit
@@ -16,6 +13,8 @@ pub const DIEM_VERSION: &str = git_hash::dependency_branch_from_cargo_lock!("mov
 /// DIEM short hash of the commit
 pub const DIEM_HASH: &str = git_hash::dependency_git_short_hash_from_cargo_lock!("move-cli");
 
+const ERROR_DESCRIPTIONS: &[u8] = include_bytes!("./error_description.errmap");
+
 #[macro_use]
 extern crate anyhow;
 
@@ -23,11 +22,11 @@ extern crate anyhow;
 pub mod cli;
 /// Dove commands handler.
 pub mod cmd;
-/// CLI color
-pub mod colorize;
 /// Dove execution context.
 pub mod context;
-/// Export Dove.toml => Move.toml
-pub mod export;
+
+/// Native functions.
+pub mod natives;
+
 /// Transactions.
-pub mod tx;
+pub mod call;

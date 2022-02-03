@@ -4,15 +4,14 @@ use std::fs;
 use std::path::Path;
 use anyhow::Error;
 use lang::bytecode::accessor::BytecodeRef;
-use crate::cmd::build::run_internal_build;
+use crate::cmd::deploy::run_dove_package_build;
 use crate::cmd::Cmd;
 use crate::context::Context;
-use crate::tx::cmd::CallDeclarationCmd;
-use crate::tx::fn_call::Config;
-use crate::tx::make_transaction;
-use crate::tx::model::{EnrichedTransaction, Transaction};
+use crate::call::cmd::CallDeclarationCmd;
+use crate::call::fn_call::Config;
+use crate::call::make_transaction;
+use crate::call::model::{EnrichedTransaction, Transaction};
 
-/// Create transaction.
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(usage = "dove tx [call] [OPTIONS]\n
@@ -21,7 +20,7 @@ use crate::tx::model::{EnrichedTransaction, Transaction};
     $ dove tx 'script_name()' --parameters [10,10] true 68656c6c6f776f726c64 100 0x1 --type 0x01::Dfinance::USD
     $ dove tx '0x1::Module::script_name<0x01::Dfinance::USD>()'
 ")]
-pub struct CreateTransactionCmd {
+pub struct ExecuteTransaction {
     #[structopt(flatten)]
     call: CallDeclarationCmd,
 
@@ -29,12 +28,12 @@ pub struct CreateTransactionCmd {
     output: Option<String>,
 }
 
-impl Cmd for CreateTransactionCmd {
+impl Cmd for ExecuteTransaction {
     fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
     {
-        run_internal_build(ctx)?;
+        run_dove_package_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_tx())?;
         let output_filename = self.output.as_ref().take();
         match tx {

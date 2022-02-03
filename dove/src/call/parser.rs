@@ -370,7 +370,7 @@ mod tests_call_parser {
     use move_core_types::language_storage::{StructTag, TypeTag};
     use move_core_types::language_storage::CORE_CODE_ADDRESS;
     use move_symbol_pool::Symbol;
-    use crate::tx::parser::parse_call;
+    use crate::call::parser::parse_call;
 
     #[test]
     fn func_call() {

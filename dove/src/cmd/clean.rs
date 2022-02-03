@@ -3,11 +3,10 @@ use std::fs;
 use std::path::PathBuf;
 use anyhow::Error;
 use structopt::StructOpt;
-use move_cli::Move;
-use crate::cmd::{Cmd, default_sourcemanifest};
+
+use crate::cmd::Cmd;
 use crate::context::Context;
 
-/// Clean build directory command.
 #[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct Clean {
@@ -33,15 +32,6 @@ pub struct Clean {
 }
 
 impl Cmd for Clean {
-    fn context(&mut self, project_dir: PathBuf, move_args: Move) -> anyhow::Result<Context> {
-        Ok(Context {
-            project_dir,
-            move_args,
-            manifest: default_sourcemanifest(),
-            manifest_hash: 0,
-        })
-    }
-
     fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
     where
         Self: Sized,
@@ -52,16 +42,16 @@ impl Cmd for Clean {
             // Clear only the executor state.
             ClearType::State => {
                 vec![
-                    ctx.project_dir.join("storage"),
-                    ctx.project_dir.join("build").join("mv_interfaces"),
-                    ctx.project_dir.join("build").join("package"),
+                    ctx.project_root_dir.join("storage"),
+                    ctx.project_root_dir.join("build").join("mv_interfaces"),
+                    ctx.project_root_dir.join("build").join("package"),
                 ]
             }
             // Clear all.
             ClearType::All => {
                 vec![
-                    ctx.project_dir.join("storage"),
-                    ctx.project_dir.join("build"),
+                    ctx.project_root_dir.join("storage"),
+                    ctx.project_root_dir.join("build"),
                 ]
             }
         };
@@ -87,15 +77,12 @@ impl Cmd for Clean {
     }
 }
 
-/// The type of cleaning.
 #[derive(StructOpt, Debug, Copy, Clone)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub enum ClearType {
-    /// Clear only the executor state.
-    #[structopt(help = "Clear only the executor state.")]
+    #[structopt(help = "Clear only the executor state")]
     State,
-    /// Clear all.
-    #[structopt(help = "Clear all.")]
+    #[structopt(help = "Clear all")]
     All,
 }
 
@@ -116,8 +103,7 @@ impl FromStr for ClearType {
     }
 }
 
-/// Clean project.
-pub fn run_internal_clean(ctx: &mut Context) -> anyhow::Result<()> {
+pub fn run_dove_clean(ctx: &mut Context) -> anyhow::Result<()> {
     let mut cmd = Clean::default();
     cmd.apply(ctx)
 }
