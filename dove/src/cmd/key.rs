@@ -6,7 +6,7 @@ use crate::access;
 
 const DEFAULT_NODE_ADDRESS: &str = "ws://127.0.0.1:9944";
 
-/// Secret Key Management
+/// Manage wallet keys
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub enum Key {

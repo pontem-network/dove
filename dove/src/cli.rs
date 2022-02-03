@@ -90,7 +90,7 @@ pub enum DoveCommands {
         #[structopt(flatten)]
         cmd: Deploy,
     },
-    #[structopt(about = "Managing secret phrases")]
+    #[structopt(about = "Manage wallet keys")]
     Key {
         /// Command.
         #[structopt(flatten)]
