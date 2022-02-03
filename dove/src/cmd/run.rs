@@ -12,7 +12,6 @@ use move_command_line_common::files::FileHash;
 
 use move_package::BuildConfig;
 use move_package::compilation::package_layout::CompiledPackageLayout;
-use crate::cmd::Cmd;
 use crate::cmd::deploy::run_dove_package_build;
 use crate::context::Context;
 
@@ -44,11 +43,8 @@ pub struct Run {
     gas_budget: Option<u64>,
 }
 
-impl Cmd for Run {
-    fn apply(&mut self, ctx: &mut Context) -> Result<()>
-    where
-        Self: Sized,
-    {
+impl Run {
+    pub fn apply(&mut self, ctx: &mut Context) -> Result<()> {
         run_dove_package_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_run())?;
         match tx {

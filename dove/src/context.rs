@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::fs;
 use std::fs::read_to_string;
 use std::path::PathBuf;
@@ -12,27 +11,8 @@ use std::hash::{Hash, Hasher};
 use anyhow::Result;
 use move_core_types::errmap::ErrorMapping;
 use move_core_types::gas_schedule::CostTable;
-use move_symbol_pool::symbol::Symbol;
+
 use move_vm_runtime::native_functions::NativeFunctionTable;
-use crate::natives::pontem_cost_table;
-
-fn default_manifest() -> SourceManifest {
-    use move_package::source_package::parsed_manifest::PackageInfo;
-
-    SourceManifest {
-        package: PackageInfo {
-            name: Symbol::from("Default"),
-            version: (0, 0, 0),
-            license: None,
-            authors: Vec::new(),
-        },
-        addresses: None,
-        dependencies: BTreeMap::new(),
-        dev_address_assignments: None,
-        dev_dependencies: BTreeMap::new(),
-        build: None,
-    }
-}
 
 pub struct Context {
     pub project_root_dir: PathBuf,
@@ -45,18 +25,6 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn empty(project_root_dir: PathBuf, move_args: Move) -> Self {
-        Context {
-            project_root_dir,
-            move_args,
-            manifest: default_manifest(),
-            manifest_hash: 0,
-            error_descriptions: Default::default(),
-            native_functions: NativeFunctionTable::default(),
-            cost_table: pontem_cost_table(),
-        }
-    }
-
     pub fn new(
         project_root_dir: PathBuf,
         move_args: Move,

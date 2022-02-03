@@ -15,7 +15,6 @@ use move_cli::package::cli::PackageCommand;
 use move_cli::run_cli;
 use move_core_types::language_storage::ModuleId;
 
-use crate::cmd::Cmd;
 use crate::context::Context;
 use serde::{Serialize, Deserialize};
 
@@ -40,11 +39,8 @@ pub struct Deploy {
     output: Option<String>,
 }
 
-impl Cmd for Deploy {
-    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
-    where
-        Self: Sized,
-    {
+impl Deploy {
+    pub fn apply(&mut self, ctx: &mut Context) -> Result<()> {
         // Run `dove package build` first to build all necessary artifacts.
         run_dove_package_build(ctx)?;
 

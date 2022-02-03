@@ -1,10 +1,9 @@
 use std::str::FromStr;
 use std::fs;
-use std::path::PathBuf;
-use anyhow::Error;
+use std::path::{Path, PathBuf};
+use anyhow::{Error, Result};
 use structopt::StructOpt;
 
-use crate::cmd::Cmd;
 use crate::context::Context;
 
 #[derive(StructOpt, Debug, Default)]
@@ -31,27 +30,24 @@ pub struct Clean {
     global: bool,
 }
 
-impl Cmd for Clean {
-    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
-    where
-        Self: Sized,
-    {
+impl Clean {
+    pub fn apply(&mut self, project_root_dir: &Path) {
         let clear_type = self.clear_type.unwrap_or_default();
 
         let mut folders = match clear_type {
             // Clear only the executor state.
             ClearType::State => {
                 vec![
-                    ctx.project_root_dir.join("storage"),
-                    ctx.project_root_dir.join("build").join("mv_interfaces"),
-                    ctx.project_root_dir.join("build").join("package"),
+                    project_root_dir.join("storage"),
+                    project_root_dir.join("build").join("mv_interfaces"),
+                    project_root_dir.join("build").join("package"),
                 ]
             }
             // Clear all.
             ClearType::All => {
                 vec![
-                    ctx.project_root_dir.join("storage"),
-                    ctx.project_root_dir.join("build"),
+                    project_root_dir.join("storage"),
+                    project_root_dir.join("build"),
                 ]
             }
         };
@@ -73,7 +69,6 @@ impl Cmd for Clean {
                 );
             }
         }
-        Ok(())
     }
 }
 
@@ -103,9 +98,9 @@ impl FromStr for ClearType {
     }
 }
 
-pub fn run_dove_clean(ctx: &mut Context) -> anyhow::Result<()> {
+pub fn run_dove_clean(ctx: &mut Context) {
     let mut cmd = Clean::default();
-    cmd.apply(ctx)
+    cmd.apply(&ctx.project_root_dir);
 }
 
 /// adds directories from ~/.move/*

@@ -1,12 +1,10 @@
 mod helper;
 
-use std::str::FromStr;
 use crate::helper::{
     pre_start_dove_new, execute_dove_at, delete_project, get_project_name_from_toml,
     get_project_dialect_from_toml, assert_basic_project_dirs_exist,
     get_account_address_from_toml,
 };
-use dialect::Dialect;
 
 /// Creating a default project without additional parameters
 /// $ dove new project_new_without_arguments
@@ -96,9 +94,8 @@ fn test_cmd_dove_new_with_address() {
             vec!["0x1", "5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"],
         ),
     ] {
-        let dialect = Dialect::from_str(dialect_name).unwrap();
         for address in addresses {
-            let account_address = dialect.parse_address(address).unwrap().to_hex_literal();
+            let account_address = pontem::parse_address(address).unwrap().to_hex_literal();
             execute_dove_at(
                 &[
                     "new",

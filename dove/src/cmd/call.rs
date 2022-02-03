@@ -2,10 +2,9 @@ use structopt::StructOpt;
 use std::fmt::Debug;
 use std::fs;
 use std::path::Path;
-use anyhow::Error;
+use anyhow::{Error, Result};
 use lang::bytecode::accessor::BytecodeRef;
 use crate::cmd::deploy::run_dove_package_build;
-use crate::cmd::Cmd;
 use crate::context::Context;
 use crate::call::cmd::CallDeclarationCmd;
 use crate::call::fn_call::Config;
@@ -28,11 +27,8 @@ pub struct ExecuteTransaction {
     output: Option<String>,
 }
 
-impl Cmd for ExecuteTransaction {
-    fn apply(&mut self, ctx: &mut Context) -> anyhow::Result<()>
-    where
-        Self: Sized,
-    {
+impl ExecuteTransaction {
+    pub fn apply(&mut self, ctx: &mut Context) -> Result<()> {
         run_dove_package_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_tx())?;
         let output_filename = self.output.as_ref().take();

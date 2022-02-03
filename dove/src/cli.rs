@@ -14,7 +14,6 @@ use crate::{
     DOVE_VERSION, DOVE_HASH, MOVE_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH, ERROR_DESCRIPTIONS,
 };
 use crate::cmd::clean::{Clean, run_dove_clean};
-use crate::cmd::Cmd;
 use crate::cmd::run::Run;
 use crate::cmd::call::ExecuteTransaction;
 use crate::context::Context;
@@ -114,10 +113,10 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
     let args = preprocess_args(args);
     let DoveOpt { move_args, cmd } = DoveOpt::from_iter(args);
 
-    // `dove clean` needs empty context and no preparation, so try it before other commands
+    // `dove clean` doesn't need any preparation or context, run before any other command
     if let DoveCommands::Clean { mut cmd } = cmd {
-        let mut ctx = Context::empty(cwd, move_args);
-        return cmd.apply(&mut ctx);
+        cmd.apply(&cwd);
+        return Ok(());
     }
 
     let error_descriptions: ErrorMapping = bcs::from_bytes(ERROR_DESCRIPTIONS)?;
@@ -144,7 +143,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
     )?;
     if is_manifest_changed_since_last_command(&ctx) {
         // Executes `dove clean` to remove artifacts from previous runs
-        run_dove_clean(&mut ctx)?;
+        run_dove_clean(&mut ctx);
     }
     match cmd {
         DoveCommands::Run { mut cmd } => cmd.apply(&mut ctx),
