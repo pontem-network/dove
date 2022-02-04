@@ -129,28 +129,42 @@ pub fn delete_all() -> Result<()> {
 }
 
 fn encrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
+    println!("fn encrypt");
     let key = aes_key(password)?;
+    println!("key");
     let iv = pkcs7_key()?;
+    println!("iv");
 
     let cipher = Aes256Cbc::new_from_slices(&key, &iv)?;
+    println!("cipher");
     let mut buffer = vec![0; data.len() + PADDING_SIZE];
+    println!("buffer");
     let pos = data.len();
+    println!("pos");
     buffer[..pos].copy_from_slice(data);
+    println!("buffer");
 
     let result = cipher
         .encrypt(&mut buffer, pos)
         .map(|result| result.to_vec())?;
+    println!("result");
     Ok(result)
 }
 
 fn decrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
+    println!("fn decrypt");
     let key = aes_key(password)?;
+    println!("key");
     let iv = pkcs7_key()?;
+    println!("iv");
 
     let cipher = Aes256Cbc::new_from_slices(&key, &iv)?;
+    println!("cipher");
     let mut buffer = data.to_vec();
+    println!("buffer");
 
     let result = cipher.decrypt(&mut buffer).map(|result| result.to_vec())?;
+    println!("result");
     Ok(result)
 }
 
