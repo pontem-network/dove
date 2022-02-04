@@ -33,7 +33,8 @@ impl Context {
         cost_table: CostTable,
     ) -> Result<Self> {
         let manifest_string =
-            read_to_string(project_root_dir.join(layout::SourcePackageLayout::Manifest.path()))?;
+            read_to_string(project_root_dir.join(layout::SourcePackageLayout::Manifest.path()))
+                .map_err(|_| anyhow!("Move.toml not found. Path: {:?}", &project_root_dir))?;
         let mut hasher = DefaultHasher::default();
         manifest_string.hash(&mut hasher);
         let manifest_hash = hasher.finish();

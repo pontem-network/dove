@@ -35,9 +35,11 @@ fn test_cmd_dove_build_with_doc() {
     delete_project(&project_path).unwrap();
 }
 
+/// @todo move to $ dove deploy PACKAGE
 /// Build a project and package
 /// $ dove build --bundle --modules_exclude NAME_1 NAME_2 ... NAME_N -o PACKAGE_NAME.mv
 #[test]
+#[ignore]
 fn test_cmd_dove_build_with_package() {
     let project_name = "project_build_with_package";
     let project_path = new_demo_project(project_name, false).unwrap();
@@ -72,19 +74,6 @@ fn test_cmd_dove_build_with_package() {
     assert!(!find_u8(&content, b"Demo2v"));
     assert!(!find_u8(&content, b"Demo1v"));
     assert!(!find_u8(&content, b"main"));
-
-    delete_project(&project_path).unwrap();
-}
-
-/// Build a project and package
-/// $ dove build --error-map OUTPUT_NAME
-#[test]
-fn test_cmd_dove_build_error_map() {
-    let project_name = "project_build_error_map";
-    let project_path = new_demo_project(project_name, false).unwrap();
-
-    execute_dove_at(&["build", "--error-map", "error_map"], &project_path).unwrap();
-    assert!(project_path.join("error_map.errmap").exists());
 
     delete_project(&project_path).unwrap();
 }

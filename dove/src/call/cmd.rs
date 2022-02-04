@@ -11,11 +11,11 @@ use crate::call::parser::{parse_call, Call, parse_tp_param};
 pub struct CallDeclarationCmd {
     #[structopt(help = r#"Call declaration
 Examples:
-      'create_balance<0x01::Dfinance::USD>([10,10], true, 68656c6c6f776f726c64, 100)'
+      'create_balance<0x01::Dfinance::USD>([10,10], true, ALIAS_ADDRESSES, 100, 0x1)'
       'script_name()'
       'Module::function()'
-      '0x1::Module::function()'
-      '0x1::Module::function --parameters [10,10] true 68656c6c6f776f726c64 100 0x1 --type 0x01::Dfinance::USD'
+      'ALIAS_ADDRESSES::Module::function()'
+      '0x1::Module::function' --parameters [10,10] true ALIAS_ADDRESSES 100 0x1 --type 0x01::Dfinance::USD
       "#)]
     call: String,
     #[structopt(
@@ -80,7 +80,6 @@ impl TryFrom<(&AddressDeclarations, CallDeclarationCmd)> for CallDeclaration {
     }
 }
 
-/// Call declaration.
 #[derive(Debug)]
 pub struct CallDeclaration {
     /// Call declaration.
