@@ -1,19 +1,10 @@
 use std::process::exit;
-use anyhow::Error;
+use anyhow::Result;
 
 use dove::cli::execute;
 
 fn main() {
-    let args = std::env::args_os()
-        .map(|arg| arg.into_string().unwrap())
-        .collect::<Vec<_>>();
-    let cwd = std::env::current_dir().expect("Current directory exists and accessible");
-
-    let res = execute(args, cwd);
-    handle_error(res)
-}
-
-fn handle_error<T>(res: Result<T, Error>) -> T {
+    let res = try_main();
     match res {
         Ok(t) => t,
         Err(err) => {
@@ -21,4 +12,11 @@ fn handle_error<T>(res: Result<T, Error>) -> T {
             exit(1);
         }
     }
+}
+
+fn try_main() -> Result<()> {
+    let args = std::env::args().collect();
+    let cwd = std::env::current_dir()?;
+
+    execute(args, cwd)
 }
