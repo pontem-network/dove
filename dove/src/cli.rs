@@ -92,7 +92,6 @@ pub enum DoveCommands {
     },
     #[structopt(about = "Manage wallet keys")]
     Key {
-        /// Command.
         #[structopt(flatten)]
         cmd: Key,
     },

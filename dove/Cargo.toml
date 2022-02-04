@@ -56,6 +56,8 @@ aes = "0.7"
 block-modes = "0.8"
 ring = "0.16"
 rpassword = "5.0"
+# Used to wait for key generation
+lockfile = "0.3"
 
 # node address
 url = { version = "2.2.2", features = ["serde"] }

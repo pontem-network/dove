@@ -689,6 +689,7 @@ dependencies = [
  "itertools 0.9.0",
  "lang",
  "lazy_static 1.4.0",
+ "lockfile",
  "log",
  "move-binary-format",
  "move-bytecode-source-map",
@@ -1438,6 +1439,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88943dd7ef4a2e5a4bfa2753aaab3013e34ce2533d1996fb18ef591e315e2b3b"
 dependencies = [
  "scopeguard",
+]
+
+[[package]]
+name = "lockfile"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0adecf427f5b6ac140a0d1c5bc9dd0eb81b6f462486b78402c0a689a317b55dc"
+dependencies = [
+ "log",
 ]
 
 [[package]]

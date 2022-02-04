@@ -5,7 +5,7 @@ use anyhow::{Error, Result};
 use structopt::StructOpt;
 
 use crate::context::Context;
-use crate::move_folder;
+use crate::dot_move_folder;
 
 #[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
@@ -106,7 +106,7 @@ pub fn run_dove_clean(ctx: &mut Context) {
 
 /// adds directories from ~/.move/*
 fn move_cache_folders() -> Result<Vec<PathBuf>> {
-    let paths = move_folder()?
+    let paths = dot_move_folder()?
         .read_dir()?
         .filter_map(|dir| dir.ok())
         .map(|path| path.path())

@@ -1,16 +1,17 @@
 use std::fs;
 use std::num::NonZeroU32;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::{Serialize, Deserialize};
 use anyhow::{anyhow, Result};
 use aes::Aes256;
 use block_modes::block_padding::Pkcs7;
 use block_modes::{BlockMode, Cbc};
+use lockfile::Lockfile;
 use ring::rand::SecureRandom;
 use ring::{digest, pbkdf2, rand};
 use url::Url;
-use crate::move_folder;
+use crate::dot_move_folder;
 
 /// The name of the file with salt for generating the key by password
 const SALT_FILE_NAME: &str = "salt.aes";
@@ -19,16 +20,15 @@ const IV_FILE_NAME: &str = "iv.p7s";
 const PADDING_SIZE: usize = 20;
 type Aes256Cbc = Cbc<Aes256, Pkcs7>;
 
-/// Account accesses
 #[derive(Serialize, Deserialize)]
-pub struct Key {
+pub struct WalletKey {
     pub node_address: Url,
     pub secret_phrase: String,
 }
 
-impl From<(Url, String)> for Key {
+impl From<(Url, String)> for WalletKey {
     fn from(value: (Url, String)) -> Self {
-        Key {
+        WalletKey {
             node_address: value.0,
             secret_phrase: value.1,
         }
@@ -38,7 +38,7 @@ impl From<(Url, String)> for Key {
 /// Saving a "secret phrase" + URL
 /// "Secret phrase" + URL will be stored encrypted in the directory "~/.move/" with the alias name and the extension "*.key".
 /// ~/.move/<ALIAS>.key
-pub fn save(alias: &str, password: Option<&str>, key: Key) -> Result<()> {
+pub fn save(alias: &str, password: Option<&str>, key: WalletKey) -> Result<()> {
     let path = path(alias)?;
     if path.exists() {
         bail!(r#"A key with name "{}" already exists"#, alias);
@@ -52,7 +52,7 @@ pub fn save(alias: &str, password: Option<&str>, key: Key) -> Result<()> {
 
 /// Get saved "secret phrase" + URL
 /// Decrypted from ~/.move/<ALIAS>.key
-pub fn get(alias: &str, password: Option<&str>) -> Result<Key> {
+pub fn get(alias: &str, password: Option<&str>) -> Result<WalletKey> {
     let path = path(alias)?;
     if !path.exists() {
         bail!(r#"A key with name "{}" not exists"#, alias);
@@ -60,7 +60,7 @@ pub fn get(alias: &str, password: Option<&str>) -> Result<Key> {
 
     let file_contents = fs::read(&path)?;
     let dec = decrypt(file_contents.as_slice(), password)?;
-    let key: Key = bcs::from_bytes(&dec)?;
+    let key: WalletKey = bcs::from_bytes(&dec)?;
 
     Ok(key)
 }
@@ -76,7 +76,7 @@ pub fn isset(alias: &str) -> bool {
 /// Returns names of files with the extension "*.key" from directory "~/.move/"
 /// ~/.move/*.key
 pub fn list() -> Result<Vec<String>> {
-    let list = move_folder()?
+    let list = dot_move_folder()?
         .read_dir()?
         .filter_map(|dir| dir.ok())
         .map(|path| path.path())
@@ -95,7 +95,7 @@ pub fn list() -> Result<Vec<String>> {
 /// ~/.move/<ALIAS>.key
 fn path(alias: &str) -> Result<PathBuf> {
     let alias = valid_alias(alias)?;
-    move_folder().map(|path| path.join(&alias).with_extension("key"))
+    dot_move_folder().map(|path| path.join(&alias).with_extension("key"))
 }
 
 /// Checking and processing the key name
@@ -128,31 +128,43 @@ pub fn delete_all() -> Result<()> {
     Ok(())
 }
 
-/// Encrypt data
 fn encrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
+    println!("fn encrypt");
     let key = aes_key(password)?;
+    println!("key");
     let iv = pkcs7_key()?;
+    println!("iv");
 
     let cipher = Aes256Cbc::new_from_slices(&key, &iv)?;
+    println!("cipher");
     let mut buffer = vec![0; data.len() + PADDING_SIZE];
+    println!("buffer");
     let pos = data.len();
+    println!("pos");
     buffer[..pos].copy_from_slice(data);
+    println!("buffer");
 
     let result = cipher
         .encrypt(&mut buffer, pos)
         .map(|result| result.to_vec())?;
+    println!("result");
     Ok(result)
 }
 
-/// Decrypt data
 fn decrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
+    println!("fn decrypt");
     let key = aes_key(password)?;
+    println!("key");
     let iv = pkcs7_key()?;
+    println!("iv");
 
     let cipher = Aes256Cbc::new_from_slices(&key, &iv)?;
+    println!("cipher");
     let mut buffer = data.to_vec();
+    println!("buffer");
 
     let result = cipher.decrypt(&mut buffer).map(|result| result.to_vec())?;
+    println!("result");
     Ok(result)
 }
 
@@ -160,10 +172,12 @@ fn decrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
 /// It is created based on the password + "salt.aes"
 /// If "~/.move/salt.aes" does not exist, then it will be created
 fn aes_key(password: Option<&str>) -> Result<[u8; 32]> {
-    let salt_path = move_folder()?.join(SALT_FILE_NAME);
-    let salt = if !salt_path.exists() {
-        let salt = gen_key()?;
+    let salt_path = dot_move_folder()?.join(SALT_FILE_NAME);
+
+    let salt = if let Some(lock) = exist_or_lock(&salt_path)? {
+        let salt = generate_key()?;
         fs::write(salt_path, salt)?;
+        lock.release()?;
         salt
     } else {
         let key = fs::read(salt_path)?;
@@ -192,10 +206,11 @@ fn aes_key(password: Option<&str>) -> Result<[u8; 32]> {
 /// Get the pkcs7 key value
 /// If the key is not in "~/.move/iv.p7s", it will be created
 fn pkcs7_key() -> Result<[u8; 16]> {
-    let key_path = move_folder()?.join(IV_FILE_NAME);
-    let key = if !key_path.exists() {
-        let salt = gen_key()?;
+    let key_path = dot_move_folder()?.join(IV_FILE_NAME);
+    let key = if let Some(lock) = exist_or_lock(&key_path)? {
+        let salt = generate_key()?;
         fs::write(key_path, salt)?;
+        lock.release()?;
         salt
     } else {
         let buf = fs::read(key_path)?;
@@ -207,14 +222,46 @@ fn pkcs7_key() -> Result<[u8; 16]> {
     Ok(key)
 }
 
-/// Generate a key
 #[inline]
-fn gen_key<const N: usize>() -> Result<[u8; N]> {
+fn generate_key<const N: usize>() -> Result<[u8; N]> {
     let mut random = [0; N];
     let rng = rand::SystemRandom::new();
     rng.fill(&mut random)
         .map_err(|_| anyhow!("Failed to generate a key"))?;
     Ok(random.to_owned())
+}
+
+/// Checking for the presence of a file, if there is no file, we get a lock. Return Ok(Some(Lockfile))
+/// If the lock is on, then wait for the removal. Return: Ok(None)
+/// If the file exists, then no action is required.. Return: Ok(None)
+fn exist_or_lock(path_key: &Path) -> Result<Option<Lockfile>> {
+    let lock_path = path_key.with_extension("lock");
+
+    if path_key.exists() {
+        if lock_path.exists() {
+            let mut time_limit = 300;
+            let sleep_time = std::time::Duration::from_secs(1);
+            loop {
+                std::thread::sleep(sleep_time);
+                if !lock_path.exists() {
+                    break;
+                }
+                time_limit -= 1;
+                if time_limit == 0 {
+                    bail!("Waiting time has expired");
+                }
+            }
+        }
+        return Ok(None);
+    }
+
+    match Lockfile::create(&lock_path) {
+        Ok(lock) => Ok(Some(lock)),
+        Err(err) => match err {
+            lockfile::Error::LockTaken => exist_or_lock(path_key),
+            _ => bail!("File Lock Error: {} {:?}", lock_path.display(), err),
+        },
+    }
 }
 
 #[cfg(test)]

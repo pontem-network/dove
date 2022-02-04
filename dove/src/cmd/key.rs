@@ -2,7 +2,7 @@ use std::str::FromStr;
 use anyhow::Result;
 use structopt::StructOpt;
 use url::Url;
-use crate::access;
+use crate::wallet_key;
 
 const DEFAULT_NODE_ADDRESS: &str = "ws://127.0.0.1:9944";
 
@@ -43,10 +43,7 @@ pub enum Key {
 }
 
 impl Key {
-    pub fn apply(&mut self) -> Result<()>
-    where
-        Self: Sized,
-    {
+    pub fn apply(&mut self) -> Result<()> {
         match &self {
             // Save the secret key for access under a alias
             Key::Add {
@@ -60,10 +57,10 @@ impl Key {
             // Deleting secret keys
             Key::Delete { alias, all } => {
                 if *all {
-                    access::delete_all()?;
+                    wallet_key::delete_all()?;
                     println!("All stored secret keys have been successfully deleted");
                 } else if let Some(alias) = alias {
-                    access::delete_by_alias(alias)?;
+                    wallet_key::delete_by_alias(alias)?;
                 } else {
                     bail!("Specify which secret key you want to delete");
                 };
@@ -75,9 +72,9 @@ impl Key {
 
 /// Save the secret key for access under a alias
 fn add(alias: &str, without_password: bool) -> Result<()> {
-    let alias = access::valid_alias(alias)?;
+    let alias = wallet_key::valid_alias(alias)?;
 
-    if access::isset(&alias) {
+    if wallet_key::isset(&alias) {
         bail!(r#"A key with name "{}" already exists"#, alias);
     }
 
@@ -100,9 +97,9 @@ fn add(alias: &str, without_password: bool) -> Result<()> {
 
     let secret_phrase = cli_entering_a_secret_phrase()?;
     let node_url = cli_read_node_address()?;
-    let key = access::Key::from((node_url, secret_phrase));
+    let key = wallet_key::WalletKey::from((node_url, secret_phrase));
 
-    access::save(&alias, password, key)?;
+    wallet_key::save(&alias, password, key)?;
 
     Ok(())
 }
@@ -110,7 +107,7 @@ fn add(alias: &str, without_password: bool) -> Result<()> {
 /// Displaying a list of saved secret keys
 fn list() -> Result<()> {
     println!("List of saved secret keys:");
-    let list = access::list()?;
+    let list = wallet_key::list()?;
     if list.is_empty() {
         println!("- EMPTY -");
     } else {
