@@ -113,9 +113,9 @@ dove tx 'create_account<0x01::PONT::PONT>()'
 You allow can use SS58 address format:
 
 ```shell script
-dove tx 'create_account<0x1::MyToken::Token>()'
-dove tx 'create_account<ADDRESS_ALIAS::MyToken::Token>()'
-dove tx 'create_account(ADDRESS_ALIAS, 10, true, [10, 20, 30, 40], 0x1)'
+dove call 'create_account<0x1::MyToken::Token>()'
+dove call 'create_account<ADDRESS_ALIAS::MyToken::Token>()'
+dove call 'create_account(ADDRESS_ALIAS, 10, true, [10, 20, 30, 40], 0x1, SS58_ADDRESS)'
 ```
 
 Supported types:
@@ -124,6 +124,7 @@ Supported types:
 * Boolean
 * Vectors
 * Type parameters (generics).
+* SS58 format address
 * Addresses in hexadecimal format
 * ADDRESS_ALIAS - Address alias. Specified in the "addresses" section of Move.toml
 
