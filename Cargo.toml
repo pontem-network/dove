@@ -3,7 +3,9 @@ members = [
     "dove",
     "lang",
     "common/git-hash",
+    "pontem/client"
 ]
+exclude = [ "pontem/hash_project", "pontem/pontemapi"]
 
 [profile.release]
 lto = "thin"

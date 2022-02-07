@@ -1,0 +1,18 @@
+[package]
+name = "hash_project"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[workspace]
+
+[dependencies]
+anyhow = "1.0"
+sha256 = "1.0"
+log = "0.4"
+toml = "0.5"
+
+[dev-dependencies]
+env_logger = "0.9"
