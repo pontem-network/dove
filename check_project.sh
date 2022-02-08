@@ -19,5 +19,4 @@ fi
 cargo +stable clippy --tests --workspace -- -Dwarnings
 
 cargo test --all
-cargo update
 cargo build
