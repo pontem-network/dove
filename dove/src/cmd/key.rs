@@ -74,7 +74,7 @@ impl Key {
 fn add(alias: &str, without_password: bool) -> Result<()> {
     let alias = wallet_key::valid_alias(alias)?;
 
-    if wallet_key::isset(&alias) {
+    if wallet_key::existence(&alias) {
         bail!(r#"A key with name "{}" already exists"#, alias);
     }
 
@@ -124,7 +124,7 @@ fn read_password() -> Result<String> {
     Ok(password)
 }
 
-fn cli_entering_a_secret_phrase() -> Result<String> {
+pub fn cli_entering_a_secret_phrase() -> Result<String> {
     println!("Please enter secret phrase:");
 
     let key_phrase = cli_read_line()?;
