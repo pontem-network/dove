@@ -148,9 +148,9 @@ dependencies = [
 
 [[package]]
 name = "autocfg"
-version = "1.0.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
+checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "base64"
@@ -273,7 +273,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode-interpreter-crypto"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "curve25519-dalek-fiat",
@@ -458,9 +458,9 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "core-foundation"
-version = "0.9.2"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6888e10551bb93e424d8df1d07f1a8b4fceb0001a3a4b048bfc47554946f47b3"
+checksum = "194a7a9e6de53fa55116934067c844d9d749312f75c6f6d0980e8c252f8c2146"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -1565,7 +1565,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "move-abigen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1582,7 +1582,7 @@ dependencies = [
 [[package]]
 name = "move-binary-format"
 version = "0.0.3"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "mirai-annotations",
@@ -1597,7 +1597,7 @@ dependencies = [
 [[package]]
 name = "move-borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "mirai-annotations",
  "workspace-hack",
@@ -1606,7 +1606,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1623,19 +1623,20 @@ dependencies = [
 [[package]]
 name = "move-bytecode-utils"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "move-binary-format",
  "move-core-types",
  "petgraph 0.5.1",
+ "serde-reflection",
  "workspace-hack",
 ]
 
 [[package]]
 name = "move-bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "mirai-annotations",
@@ -1649,7 +1650,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-viewer"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -1667,7 +1668,7 @@ dependencies = [
 [[package]]
 name = "move-cli"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1711,7 +1712,7 @@ dependencies = [
 [[package]]
 name = "move-command-line-common"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "difference",
@@ -1725,7 +1726,7 @@ dependencies = [
 [[package]]
 name = "move-compiler"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1755,7 +1756,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.3"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1772,7 +1773,7 @@ dependencies = [
 [[package]]
 name = "move-coverage"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1794,7 +1795,7 @@ dependencies = [
 [[package]]
 name = "move-disassembler"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "colored",
@@ -1813,7 +1814,7 @@ dependencies = [
 [[package]]
 name = "move-docgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "codespan",
@@ -1833,7 +1834,7 @@ dependencies = [
 [[package]]
 name = "move-errmapgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1848,7 +1849,7 @@ dependencies = [
 [[package]]
 name = "move-ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "codespan-reporting",
@@ -1868,7 +1869,7 @@ dependencies = [
 [[package]]
 name = "move-ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "hex",
@@ -1882,7 +1883,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "hex",
@@ -1897,7 +1898,7 @@ dependencies = [
 [[package]]
 name = "move-model"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "codespan",
@@ -1924,7 +1925,7 @@ dependencies = [
 [[package]]
 name = "move-package"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1959,7 +1960,7 @@ dependencies = [
 [[package]]
 name = "move-prover"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1998,7 +1999,7 @@ dependencies = [
 [[package]]
 name = "move-prover-boogie-backend"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2027,7 +2028,7 @@ dependencies = [
 [[package]]
 name = "move-read-write-set-types"
 version = "0.0.3"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -2039,7 +2040,7 @@ dependencies = [
 [[package]]
 name = "move-resource-viewer"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2055,7 +2056,7 @@ dependencies = [
 [[package]]
 name = "move-stackless-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "codespan",
  "codespan-reporting",
@@ -2082,7 +2083,7 @@ dependencies = [
 [[package]]
 name = "move-stackless-bytecode-interpreter"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bytecode-interpreter-crypto",
@@ -2102,7 +2103,7 @@ dependencies = [
 [[package]]
 name = "move-stdlib"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "log",
  "move-binary-format",
@@ -2124,7 +2125,7 @@ dependencies = [
 [[package]]
 name = "move-symbol-pool"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "once_cell",
  "serde 1.0.136",
@@ -2134,7 +2135,7 @@ dependencies = [
 [[package]]
 name = "move-unit-test"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "colored",
@@ -2159,7 +2160,7 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "fail",
  "mirai-annotations",
@@ -2177,7 +2178,7 @@ dependencies = [
 [[package]]
 name = "move-vm-test-utils"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -2189,7 +2190,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "bcs",
  "mirai-annotations",
@@ -2736,7 +2737,7 @@ dependencies = [
 [[package]]
 name = "pontem"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "bech32",
@@ -2965,7 +2966,7 @@ dependencies = [
 [[package]]
 name = "read-write-set"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -2982,7 +2983,7 @@ dependencies = [
 [[package]]
 name = "read-write-set-dynamic"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -3251,6 +3252,17 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12c47087018ec281d1cdab673d36aea22d816b54d498264029c05d5fa1910da6"
 dependencies = [
+ "serde 1.0.136",
+ "thiserror",
+]
+
+[[package]]
+name = "serde-reflection"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "167450ba550f903a2b35a81ba3ca387585189e2430e3df6b94b95f3bec2f26bd"
+dependencies = [
+ "once_cell",
  "serde 1.0.136",
  "thiserror",
 ]
@@ -4233,7 +4245,7 @@ dependencies = [
 [[package]]
 name = "workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#44c9aebef6d30385128f7a73d9bbf721b11bd7d0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.6#2b1736d4dbdd54d9aa9a52f6af9945f7f86957c7"
 dependencies = [
  "arrayvec 0.5.2",
  "block-buffer 0.9.0",
