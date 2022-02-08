@@ -1,19 +1,16 @@
 mod helper;
 
-use std::str::FromStr;
 use crate::helper::{
     pre_start_dove_new, execute_dove_at, delete_project, get_project_name_from_toml,
-    get_project_dialect_from_toml, assert_basic_project_dirs_exist,
-    get_account_address_from_toml,
+    get_project_dialect_from_toml, assert_basic_project_dirs_exist, pre_start_dove_init,
 };
-use dialect::Dialect;
 
-/// Creating a default project without additional parameters
+/// Creating a project
 /// $ dove new project_new_without_arguments
 #[test]
-fn test_cmd_dove_new_without_arguments() {
+fn test_cmd_dove_new() {
     // Project name and path
-    let project_name = "project_new_without_arguments";
+    let project_name = "project_new";
     let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
 
     execute_dove_at(&["new", project_name], &base_path).unwrap();
@@ -28,100 +25,22 @@ fn test_cmd_dove_new_without_arguments() {
     delete_project(&project_path).unwrap();
 }
 
-/// Checking the "minimal" parameter
-/// $ dove new project_new_with_minimal --minimal
+/// Creating a project in an existing folder
+/// $ dove new NAME_PROJECT --cwd
 #[test]
-fn test_cmd_dove_new_with_minimal() {
+fn test_cmd_dove_new_cwd() {
     // Project name and path
-    let project_name = "project_new_with_minimal";
-    let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
+    let project_name = "project_new_cwd";
+    let project_path = pre_start_dove_init(project_name).unwrap();
 
-    execute_dove_at(&["new", project_name, "--minimal"], &base_path).unwrap();
-    assert!(assert_basic_project_dirs_exist(&project_path).is_err());
+    execute_dove_at(&["new", project_name, "--cwd"], &project_path).unwrap();
+
+    assert_eq!(
+        get_project_name_from_toml(&project_path),
+        Some(project_name.to_string())
+    );
+    assert_eq!(get_project_dialect_from_toml(&project_path), None);
+    assert!(assert_basic_project_dirs_exist(&project_path).is_ok());
 
     delete_project(&project_path).unwrap();
-}
-
-/// Creating a project with different dialects. Dialects: "pont", "diem", "dfinance"
-/// $ dove new project_new_with_dialect --dialect ###
-#[test]
-fn test_cmd_dove_new_with_dialect() {
-    // Project name and path
-    let project_name = "project_new_with_dialect";
-    let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
-
-    for dialect_name in ["pont", "diem", "dfinance"] {
-        execute_dove_at(
-            &["new", project_name, "--dialect", dialect_name],
-            &base_path,
-        )
-        .unwrap();
-        assert_eq!(
-            get_project_dialect_from_toml(&project_path),
-            Some(dialect_name.to_string())
-        );
-
-        delete_project(&project_path).unwrap();
-    }
-}
-
-/// Creating a project with a non-existent dialect
-/// $ dove new project_new_with_nonexistent_dialect --dialect noname
-#[test]
-fn test_cmd_dove_new_with_nonexistent_dialect() {
-    // Project name and path
-    let project_name = "project_new_with_nonexistent_dialect";
-    let (base_path, _) = pre_start_dove_new(project_name).unwrap();
-
-    assert!(execute_dove_at(&["new", project_name, "--dialect", "noname"], &base_path).is_err());
-}
-
-/// Creating a project with an address
-/// $ dove new project_new_with_address --dialect ### -a ###
-#[test]
-fn test_cmd_dove_new_with_address() {
-    // Project name and path
-    let project_name = "project_new_with_address";
-
-    let (base_path, project_path) = pre_start_dove_new(project_name).unwrap();
-
-    for (dialect_name, addresses) in [
-        (
-            "dfinance",
-            vec!["0x1", "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh"],
-        ),
-        ("diem", vec!["0x1"]),
-        (
-            "pont",
-            vec!["0x1", "5CdCiQzNRZXWx7wNVCVjPMzGBFpkYHe3WKrGzd6TG97vKbnv"],
-        ),
-    ] {
-        let dialect = Dialect::from_str(dialect_name).unwrap();
-        for address in addresses {
-            let account_address = dialect.parse_address(address).unwrap().to_hex_literal();
-            execute_dove_at(
-                &[
-                    "new",
-                    project_name,
-                    "--dialect",
-                    dialect_name,
-                    "-a",
-                    &format!("Account={}", &account_address),
-                ],
-                &base_path,
-            )
-            .unwrap();
-
-            assert_eq!(
-                get_project_dialect_from_toml(&project_path),
-                Some(dialect_name.to_string())
-            );
-            assert_eq!(
-                get_account_address_from_toml(&project_path),
-                Some(account_address)
-            );
-
-            delete_project(&project_path).unwrap();
-        }
-    }
 }

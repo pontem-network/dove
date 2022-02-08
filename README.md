@@ -1,20 +1,14 @@
-# Move tools
+# Dove
 
-Toolset for work with Move language based projects:
+Move language package manager for Diem and Pontem networks.
 
-* [dove](#dove) - package manager and compiler.
-
-Supported projects and dialects:
-
-* [Diem](https://www.diem.com/en-us/)
-* [Pontem](https://pontem.network/)
-* [Dfinance](https://dfinance.co/)
+See documentation at [https://docs.pontem.network/](https://docs.pontem.network/).
 
 ## Installation
 
-**Using pre-compiled binaries:**
+* If you are using **Mac OS** see [how to install OpenSSL](https://github.com/pontem-network/dove/issues/147#issuecomment-946744809).
 
-* If you are using **Mac OS** see [how to install OpenSSL](https://github.com/pontem-network/move-tools/issues/147#issuecomment-946744809).
+**Using pre-compiled binaries:**
 
 Just visit [releases page](https://github.com/pontem-network/move-tools/releases) and download binaries you are going to use.
 
@@ -23,18 +17,9 @@ Just visit [releases page](https://github.com/pontem-network/move-tools/releases
 Clone this repository and follow documentation:
 
 ```shell script
-git clone git@github.com:pontem-network/move-tools.git
-cd move-tools
-```
-
-## Dove
-
-* If you are using **Mac OS** see [how to install OpenSSL](https://github.com/pontem-network/move-tools/issues/147#issuecomment-946744809).
-
-Regular installation:
-
-```shell script
-cargo install --path dove
+git clone git@github.com:pontem-network/dove.git
+cd dove
+cargo install --path ./dove
 ```
 
 ##### See help:
@@ -48,15 +33,8 @@ dove -h
 ```shell script
 dove new first_project 
 ```
-By default, the Pont dialect is used. You can change the dialect by adding an entry in `Move.toml`.
-```
-[package]
-dialect = "Pont"
-```
-* `dialect` - dialect of the Move language. Default is `pont`. Supported dialects:
-* `diem` - for original diem version.
-* `pont` - Polkadot SS58 addresses.
-* `dfinance` - bech32 addresses.
+
+This command will create `first_project/` directory with special `Move.toml` manifest file and `sources/` directory for Move source code. 
 
 ##### Build project:
 
@@ -84,13 +62,13 @@ The contents of the directories will be deleted:
 
 ### Pallet Transactions
 
-Command `tx` allows you to create transactions for Polkadot chain with [Move Pallete](https://github.com/pontem-network/sp-move) on board.
+Command `call` allows you to create transactions for Polkadot chain with [Move Pallete](https://github.com/pontem-network/sp-move) on board.
 
-`tx` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
+`call` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
 
 Example:
 ```shell script
-dove tx 'store_u64(60)'
+dove call 'store_u64(60)'
 ```
 
 This command searches for the script by name 'store_u64' in the script directory. Then it compiles it and creates a transaction file.
@@ -107,28 +85,31 @@ You can use type parameters like in the Move language.
 Example:
 
 ```shell script
-dove tx 'create_account<0x01::PONT::PONT>()'
+dove call 'create_account<0x01::PONT::PONT>()'
 ```
 
 You allow can use SS58 address format:
 
 ```shell script
-dove tx 'create_account<5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY::MyToken::Token>()'
-dove tx 'create_account(5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY, 10, true, [10, 20, 30, 40])'
+dove call 'create_account<0x1::MyToken::Token>()'
+dove call 'create_account<ADDRESS_ALIAS::MyToken::Token>()'
+dove call 'create_account(ADDRESS_ALIAS, 10, true, [10, 20, 30, 40], 0x1, SS58_ADDRESS)'
 ```
 
 Supported types:
 
 * Numbers (u8, u64, u128)
 * Boolean
-* Addresses
 * Vectors
 * Type parameters (generics).
+* SS58 format address
+* Addresses in hexadecimal format
+* ADDRESS_ALIAS - Address alias. Specified in the "addresses" section of Move.toml
 
 For more commands and parameters look at help:
 
 ```shell script
-dove tx --help
+dove call --help
 ```
 
 ### More

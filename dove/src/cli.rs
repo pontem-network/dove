@@ -1,207 +1,167 @@
 use std::env;
 use std::fs;
-use std::ffi::OsString;
+
 use std::path::{PathBuf, Path};
 
 use anyhow::{Result, Error};
-use diem_vm::natives::diem_natives;
 use structopt::StructOpt;
 use semver::{Version, VersionReq};
 
-use move_cli::{Command as DiemCommand, experimental, Move, package, run_cli, sandbox};
+use move_cli::{Move};
 use move_core_types::errmap::ErrorMapping;
 
-use crate::{DOVE_VERSION, DOVE_HASH, MOVE_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH};
-use crate::cmd::Cmd;
-use crate::cmd::new::New;
-use crate::cmd::build::Build;
-use crate::cmd::clean::{Clean, run_internal_clean};
-use crate::cmd::export::Export;
-use crate::cmd::init::Init;
+use crate::{
+    DOVE_VERSION, DOVE_HASH, MOVE_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH, ERROR_DESCRIPTIONS,
+};
+use crate::cmd::clean::{Clean, run_dove_clean};
 use crate::cmd::run::Run;
-use crate::cmd::test::Test;
-use crate::cmd::tx::CreateTransactionCmd;
+use crate::cmd::call::ExecuteTransaction;
 use crate::context::Context;
-use move_cli::DEFAULT_STORAGE_DIR;
 
-const HASH_FILE_NAME: &str = ".version";
+use crate::cmd::deploy::Deploy;
+use crate::natives::{all_natives, pontem_cost_table};
+
+const MANIFEST_HASH_FILE_NAME: &str = ".version";
 
 #[derive(StructOpt)]
 #[structopt(
-name = "Dove",
-version = git_hash::crate_version_with_git_hash_short ! (),
-long_version = create_long_version(),
+    name = "Dove",
+    version = git_hash::crate_version_with_git_hash_short!(),
+    long_version = create_long_version(),
 )]
-struct Opt {
+struct DoveOpt {
     #[structopt(flatten)]
     pub move_args: Move,
-    #[structopt(subcommand)]
-    pub cmd: Command,
-}
 
-/// Common command. Contains move-cli and dove commands.
-pub enum CommonCommand {
-    /// Diem(move-cli) commands.
-    Diem(DiemCommand),
-    /// Dove commands.
-    Dove(Box<dyn Cmd>),
+    #[structopt(subcommand)]
+    pub cmd: DoveCommands,
 }
 
 /// Move cli and dove commands.
 #[derive(StructOpt)]
-pub enum Command {
-    /// Execute a package command. Executed in the current directory or the closest containing Move
-    /// package.
-    #[structopt(name = "package")]
-    Package {
-        /// cmd.
-        #[structopt(subcommand)]
-        cmd: package::cli::PackageCommand,
-    },
-    /// Execute a sandbox command.
-    #[structopt(name = "sandbox")]
-    Sandbox {
-        /// Directory storing Move resources, events, and module bytecodes produced by module publishing
-        /// and script execution.
-        #[structopt(long, default_value = DEFAULT_STORAGE_DIR, parse(from_os_str))]
-        storage_dir: PathBuf,
-        /// cmd
-        #[structopt(subcommand)]
-        cmd: sandbox::cli::SandboxCommand,
-    },
-    /// (Experimental) Run static analyses on Move source or bytecode.
-    #[structopt(name = "experimental")]
-    Experimental {
-        /// Directory storing Move resources, events, and module bytecodes produced by module publishing
-        /// and script execution.
-        #[structopt(long, default_value = DEFAULT_STORAGE_DIR, parse(from_os_str))]
-        storage_dir: PathBuf,
-        /// cmd
-        #[structopt(subcommand)]
-        cmd: experimental::cli::ExperimentalCommand,
-    },
+pub enum DoveCommands {
+    #[structopt(flatten)]
+    DiemCommand(move_cli::Command),
 
-    /// Init new project with existing folder.
-    #[structopt(about = "Init directory as move project")]
-    Init {
-        /// Command.
-        #[structopt(flatten)]
-        cmd: Init,
-    },
-    /// Creates new project.
-    #[structopt(about = "Create a new move project(Dove)")]
-    New {
-        /// Command.
-        #[structopt(flatten)]
-        cmd: New,
-    },
-    /// Build package.
-    #[structopt(about = "Build project")]
-    Build {
-        /// Command.
-        #[structopt(flatten)]
-        cmd: Build,
-    },
-    /// Clean project.
-    #[structopt(about = "Remove the target directory")]
+    #[structopt(
+        about = "Create a new Move project. Alias for 'package new'",
+        display_order = 10
+    )]
+    New,
+    #[structopt(
+        about = "Create new Move project in the current directory. Alias for 'package new --cwd'",
+        display_order = 11
+    )]
+    Init,
+    #[structopt(about = "Build project. Alias for 'package build'", display_order = 12)]
+    Build,
+    #[structopt(about = "Run tests. Alias for 'package test'", display_order = 13)]
+    Test,
+    #[structopt(
+        about = "Run Move prover. Alias for 'package prove'",
+        display_order = 14
+    )]
+    Prove,
+
+    #[structopt(about = "Remove ./build directory", display_order = 15)]
     Clean {
-        /// Command.
         #[structopt(flatten)]
         cmd: Clean,
     },
-    /// Test package.
-    #[structopt(about = "Run move tests")]
-    Test {
-        /// Command.
-        #[structopt(flatten)]
-        cmd: Test,
-    },
-    /// Run script and modules script function.
-    #[structopt(about = "Run move script")]
+    #[structopt(about = "Run move script", display_order = 16)]
     Run {
-        /// Command.
         #[structopt(flatten)]
         cmd: Run,
     },
-    /// Create transaction.
-    #[structopt(about = "Create transaction")]
-    Tx {
-        /// Command.
+    #[structopt(
+        about = "Create and execute transaction on the node",
+        display_order = 17
+    )]
+    Call {
         #[structopt(flatten)]
-        cmd: CreateTransactionCmd,
+        cmd: ExecuteTransaction,
     },
-    /// Run move prover.
-    #[structopt(about = "Run move prover")]
-    Prove {
-        /// Command.
+    #[structopt(
+        about = "Create package bundle and publish it to the network",
+        display_order = 18
+    )]
+    Deploy {
         #[structopt(flatten)]
-        cmd: crate::cmd::prover::Prove,
-    },
-    /// Migrate from Dove project to the Move cli project.
-    #[structopt(about = "Export dove.toml => move .toml")]
-    Export {
-        /// Command.
-        #[structopt(flatten)]
-        cmd: Export,
+        cmd: Deploy,
     },
 }
 
-impl Command {
-    /// Creates `CommonCommand`.
-    /// Split commands to two different execution backend (move-cli, dove).
-    pub fn select_backend(self) -> CommonCommand {
-        match self {
-            Command::Package { cmd } => CommonCommand::Diem(DiemCommand::Package { cmd }),
-            Command::Sandbox { storage_dir, cmd } => {
-                CommonCommand::Diem(DiemCommand::Sandbox { storage_dir, cmd })
-            }
-            Command::Experimental { storage_dir, cmd } => {
-                CommonCommand::Diem(DiemCommand::Experimental { storage_dir, cmd })
-            }
-
-            Command::New { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Init { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Build { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Clean { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Test { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Run { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Tx { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Prove { cmd } => CommonCommand::Dove(Box::new(cmd)),
-            Command::Export { cmd } => CommonCommand::Dove(Box::new(cmd)),
-        }
-    }
+fn preprocess_args(args: Vec<String>) -> Vec<String> {
+    let dove = args.get(0).unwrap().clone();
+    let mut line = args.join(" ");
+    line = line.replace(&format!("{dove} new"), &format!("{dove} package new"));
+    line = line.replace(&format!("{dove} build"), &format!("{dove} package build"));
+    line = line.replace(&format!("{dove} test"), &format!("{dove} package test"));
+    line = line.replace(&format!("{dove} prove"), &format!("{dove} package prove"));
+    line = line.replace(
+        &format!("{dove} init"),
+        &format!("{dove} package new --cwd"),
+    );
+    line.split(' ').map(String::from).collect()
 }
 
 /// Public interface for the CLI (useful for testing).
-pub fn execute<Args>(args: Args, cwd: PathBuf) -> Result<()>
-where
-    Args: IntoIterator,
-    Args::Item: Into<OsString> + Clone,
-{
-    let Opt { move_args, cmd } = Opt::from_iter(args);
-    let commands = cmd.select_backend();
-
+pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
     if let Some(minimal_version) = get_minimal_dove_version(&cwd) {
         check_dove_version(&minimal_version)?;
     }
+    let args = preprocess_args(args);
+    let DoveOpt { move_args, cmd } = DoveOpt::from_iter(args);
 
-    match commands {
-        CommonCommand::Diem(cmd) => {
-            let error_descriptions: ErrorMapping =
-                bcs::from_bytes(move_stdlib::error_descriptions())?;
-            run_cli(diem_natives(), &error_descriptions, &move_args, &cmd)
+    // `dove clean` doesn't need any preparation or context, run before any other command
+    if let DoveCommands::Clean { mut cmd } = cmd {
+        cmd.apply(&cwd);
+        return Ok(());
+    }
+
+    let error_descriptions: ErrorMapping = bcs::from_bytes(ERROR_DESCRIPTIONS)?;
+    let native_functions = all_natives();
+    let cost_table = pontem_cost_table();
+
+    // process all diem commands before dove commands
+    if let DoveCommands::DiemCommand(cmd) = cmd {
+        return move_cli::run_cli(
+            native_functions,
+            &cost_table,
+            &error_descriptions,
+            &move_args,
+            &cmd,
+        );
+    }
+
+    let mut ctx = Context::new(
+        cwd,
+        move_args,
+        error_descriptions,
+        native_functions,
+        cost_table,
+    )?;
+    if is_manifest_changed_since_last_command(&ctx) {
+        // Executes `dove clean` to remove artifacts from previous runs
+        run_dove_clean(&mut ctx);
+    }
+    match cmd {
+        DoveCommands::Run { mut cmd } => cmd.apply(&mut ctx),
+        DoveCommands::Call { mut cmd } => cmd.apply(&mut ctx),
+        DoveCommands::Deploy { mut cmd } => cmd.apply(&mut ctx),
+        DoveCommands::Build
+        | DoveCommands::Test
+        | DoveCommands::Prove
+        | DoveCommands::New
+        | DoveCommands::Init => {
+            unreachable!("Should never be reached, as all those commands are preprocessed into package-prefixed commands")
         }
-        CommonCommand::Dove(mut cmd) => {
-            let mut ctx = cmd.context(cwd, move_args)?;
-
-            if !check_manifest_hash(&ctx) {
-                // dove clean
-                run_internal_clean(&mut ctx)?;
-            }
-            cmd.apply(&mut ctx)
-                .and_then(|_| store_manifest_checksum(&ctx))
+        DoveCommands::Clean { .. } | DoveCommands::DiemCommand(_) => {
+            unreachable!("Handled in the beginning")
         }
     }
+        // create new `Move.toml` checksum file after running the command
+        .and_then(|_| store_manifest_checksum(&ctx))
 }
 
 /// Check if Dove version is suitable for this project
@@ -218,34 +178,32 @@ fn check_dove_version(req_ver: &str) -> Result<(), Error> {
 }
 
 /// Move.toml has been updated
-fn check_manifest_hash(ctx: &Context) -> bool {
-    // no manifest
-    if ctx.manifest_hash == 0 {
+fn is_manifest_changed_since_last_command(ctx: &Context) -> bool {
+    assert!(ctx.manifest_hash != 0);
+
+    let dot_version_file = ctx
+        .project_root_dir
+        .join("build")
+        .join(MANIFEST_HASH_FILE_NAME);
+    // Special `./build/.version` file doesn't exist => manifest has just been created
+    if !dot_version_file.exists() {
         return true;
     }
 
-    let path_version = ctx.project_dir.join("build").join(HASH_FILE_NAME);
-    if !path_version.exists() {
-        return false;
-    }
-
-    let old_version = fs::read_to_string(&path_version)
+    let old_manifest_hash = fs::read_to_string(&dot_version_file)
         .unwrap_or_default()
         .parse::<u64>()
         .unwrap_or_default();
 
-    ctx.manifest_hash == old_version
+    ctx.manifest_hash != old_manifest_hash
 }
 
-/// Writing the hash move.toml to file
+/// Writing the Move.toml hash to special './build/.version' file
 fn store_manifest_checksum(ctx: &Context) -> Result<()> {
-    // no manifest
-    if ctx.manifest_hash == 0 {
-        return Ok(());
-    }
+    assert!(ctx.manifest_hash != 0);
 
-    let build_path = ctx.project_dir.join("build");
-    let path_version = build_path.join(HASH_FILE_NAME);
+    let build_path = ctx.project_root_dir.join("build");
+    let path_version = build_path.join(MANIFEST_HASH_FILE_NAME);
 
     if !build_path.exists() || path_version.exists() {
         return Ok(());
@@ -280,7 +238,6 @@ fn create_long_version() -> &'static str {
     )
 }
 
-/// Get minimal version of Dove from Move.toml
 fn get_minimal_dove_version(project_path: &Path) -> Option<String> {
     let move_toml_path = project_path.join("Move.toml");
     if !move_toml_path.exists() {
