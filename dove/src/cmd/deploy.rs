@@ -27,8 +27,8 @@ use crate::publish::{PublishParamsCmd, Publish};
     Examples:
     $ dove deploy
     $ dove deploy PACKAGE_NAME --account WALLET_KEY --gas 300
-    $ dove deploy PACKAGE_NAME --secret_phrase --url ws://127.0.0.1:9944 --gas 400 --modules_exclude MODULE_NAME_1 MODULE_NAME_2 ..
-    $ dove deploy MODULE_NAME --secret_phrase --url https://127.0.0.1:9933 --gas 400
+    $ dove deploy PACKAGE_NAME --secret --url ws://127.0.0.1:9944 --gas 400 --modules_exclude MODULE_NAME_1 MODULE_NAME_2 ..
+    $ dove deploy MODULE_NAME --secret --url https://127.0.0.1:9933 --gas 400
     $ dove deploy PATH/TO/FILE --account //Alice --gas 300
 ")]
 pub struct Deploy {
