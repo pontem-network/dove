@@ -13,6 +13,7 @@ edition = "2021"
 # LOCAL
 git-hash = { path = "../common/git-hash" }
 lang = { path = "../lang" }
+pontem-client = { path = "../pontem/client" }
 
 # DIEM
 move-core-types = { git = "https://github.com/pontem-network/move.git", branch = "release-1.6" }

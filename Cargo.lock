@@ -704,6 +704,7 @@ dependencies = [
  "move-vm-types",
  "once_cell",
  "pontem",
+ "pontem-client",
  "rand 0.7.3",
  "regex",
  "reqwest",

@@ -68,7 +68,7 @@ pub fn get(alias: &str, password: Option<&str>) -> Result<WalletKey> {
 /// Check if there is a secret phrase with this alias
 /// ~/.move/<ALIAS>.key
 #[inline]
-pub fn isset(alias: &str) -> bool {
+pub fn existence(alias: &str) -> bool {
     path(alias).map_or(false, |path| path.exists())
 }
 
