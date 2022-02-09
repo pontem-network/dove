@@ -19,8 +19,11 @@ use crate::publish::{PublishParamsCmd, Publish};
 #[structopt(usage = "dove call [call] [OPTIONS]\n
     Examples:
     $ dove call 'script_name<0x01::Dfinance::USD>([10,10], true, ADDRESS_ALIAS, SS58_ADDRESS, 100, 0x1)'
-    $ dove call 'script_name()' --parameters [10,10] true ADDRESS_ALIAS SS58_ADDRESS 100 0x1 --type 0x01::Dfinance::USD
+    $ dove call 'script_name()' --args [10,10] true ADDRESS_ALIAS SS58_ADDRESS 100 0x1 --type 0x01::Dfinance::USD
     $ dove call '0x1::Module::script_name<0x01::Dfinance::USD>()'
+    $ dove call 'script_name()' --account WALLET_KEY --gas 300
+    $ dove call 'script_name()' --secret --url https://127.0.0.1:9933 --gas 400
+    $ dove call 'script_name()' --account //Alice --gas 300
 ")]
 pub struct ExecuteTransaction {
     #[structopt(flatten)]

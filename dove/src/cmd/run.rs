@@ -25,11 +25,11 @@ use crate::call::model::EnrichedTransaction;
 #[structopt(usage = "dove run [call] [OPTIONS]\n
     Examples:
     $ dove run 'script_name([10,10], true, 100, 0x1, ADDRESS_ALIAS, SS58_ADDRESS)'
-    $ dove run script_name --parameters [10,10] true 100 0x1 ADDRESS_ALIAS SS58_ADDRESS
+    $ dove run script_name --args [10,10] true 100 0x1 ADDRESS_ALIAS SS58_ADDRESS
     $ dove run 'script_name()'
     $ dove run 'Module::function()'
     $ dove run '0x1::Module::function()'
-    $ dove run '0x1::Module::function' --parameters [10,10] true ALIAS_ADDRESSES SS58_ADDRESS 100 0x1 --type '0x01::Dfinance::USD'
+    $ dove run '0x1::Module::function' --args [10,10] true ALIAS_ADDRESSES SS58_ADDRESS 100 0x1 --type '0x01::Dfinance::USD'
 ")]
 pub struct Run {
     #[structopt(flatten)]

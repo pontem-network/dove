@@ -62,9 +62,22 @@ The contents of the directories will be deleted:
 
 ## Pallet Transactions
 
-Command `call` allows you to create transactions for Polkadot chain with [Move Pallete](https://github.com/pontem-network/sp-move) on board.
+Command `call` allows you to create and publish transactions for Polkadot chain with [Move Pallete](https://github.com/pontem-network/sp-move) on board.
 
 `call` takes script identifier, type parameters, and arguments and creates a transaction file as an artifact of work.
+
+```
+dove call [CALL] [OPTIONS]
+```
+
+### Input parameters
+- `[CALL]` - Call declaration
+- `-a` / `--args` Script arguments, e.g. 10 20 30
+- `-t`, `--type` Script type parameters, e.g. 0x1::Dfinance::USD
+- `-g` / `--gas` Limitation of gas consumption per operation. A positive integer is expected
+- `-u` / `--url` The url of the substrate node to query [default: ws://localhost:9944]. HTTP, HTTPS, WS protocols are supported. It is recommended to use WS. When using HTTP or HTTPS, you cannot get the publication status.
+- `--account` Account from whom to publish. Address or test account name or name wallet key. Example: //Alice, alice, bob, NAME_WALLET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY. When used in combination with `--secret` is ignored.
+- `-s` / `--secret` Secret phrase. If a secret phrase is specified, you do not need to specify.
 
 Example:
 ```shell script
@@ -176,8 +189,8 @@ dove key delete --all
 $ dove deploy [FILE_NAME|PATH_TO_FILE] [OPTIONS]
 ```
 ### Input parameters
-- [FILE_NAME] - Name of module or package to be published.
-- [PATH_TO_FILE] - Path to the file to be published. Expected file extension:
+- `[FILE_NAME]` - Name of module or package to be published.
+- `[PATH_TO_FILE]` - Path to the file to be published. Expected file extension:
   - `pac` bundle  
   - `mv` module
   - `mvt` transaction

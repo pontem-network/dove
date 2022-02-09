@@ -15,11 +15,11 @@ Examples:
       'script_name()'
       'Module::function()'
       'ALIAS_ADDRESSES::Module::function()'
-      '0x1::Module::function' --parameters [10,10] true ALIAS_ADDRESSES 100 0x1 --type 0x01::Dfinance::USD
+      '0x1::Module::function' --args [10,10] true ALIAS_ADDRESSES 100 0x1 --type 0x01::Dfinance::USD
       "#)]
     call: String,
     #[structopt(
-        help = r#"Script type parametrs, e.g. 0x1::Dfinance::USD"#,
+        help = r#"Script type parameters, e.g. 0x1::Dfinance::USD"#,
         name = "Script type parameters.",
         long = "type",
         short = "t"
