@@ -1,38 +1,27 @@
-use anyhow::{anyhow, Result};
-use http::Uri;
+use anyhow::{Error, Result};
+use url::Url;
+
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::{ModuleId, StructTag};
-use move_core_types::vm_status::StatusCode;
-use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
+use move_core_types::resolver::{ModuleResolver, ResourceResolver};
 
-use lang::compiler::dialects::Dialect as DialectTrait;
-use lang::compiler::dialects::DialectName;
-
-use crate::dnode::DnodeNet;
-use crate::pont::PontNet;
-use move_vm_runtime::data_cache::MoveStorage;
-
+#[cfg(feature = "dfinance")]
 mod dnode;
+
 mod pont;
+use crate::pont::PontNet;
 
 pub type Block = String;
 
-pub fn make_net<T>(uri: T, name: DialectName) -> Result<Box<dyn Net>>
+pub fn make_net<T>(uri: T) -> Result<Box<dyn Net>>
 where
-    T: Into<Uri>,
+    T: Into<Url>,
 {
     let uri = uri.into();
-    match name {
-        DialectName::Diem => Err(anyhow!("Unexpected dialect")),
-        DialectName::DFinance => Ok(Box::new(DnodeNet {
-            dialect: name.get_dialect(),
-            uri,
-        })),
-        DialectName::Pont => Ok(Box::new(PontNet {
-            dialect: name.get_dialect(),
-            api: uri.to_string(),
-        })),
-    }
+
+    Ok(Box::new(PontNet {
+        api: uri.to_string(),
+    }))
 }
 
 #[derive(Debug)]
@@ -44,13 +33,13 @@ pub trait Net {
         module_id: &ModuleId,
         height: &Option<Block>,
     ) -> Result<Option<BytesForBlock>>;
+
     fn get_resource(
         &self,
         address: &AccountAddress,
         tag: &StructTag,
         height: &Option<Block>,
     ) -> Result<Option<BytesForBlock>>;
-    fn dialect(&self) -> &dyn DialectTrait;
 }
 
 pub struct NetView {
@@ -68,28 +57,22 @@ impl NetView {
     }
 }
 
-impl MoveStorage for NetView {
-    fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
+impl ModuleResolver for NetView {
+    type Error = anyhow::Error;
+
+    fn get_module(&self, module_id: &ModuleId) -> anyhow::Result<Option<Vec<u8>>> {
         self.net
             .get_module(module_id, &self.block)
-            .map_err(|err| {
-                PartialVMError::new(StatusCode::MISSING_DATA)
-                    .with_message(err.to_string())
-                    .finish(Location::Undefined)
-            })
             .map(|bytes| bytes.map(|bytes| bytes.0))
     }
+}
 
-    fn get_resource(
-        &self,
-        address: &AccountAddress,
-        tag: &StructTag,
-    ) -> PartialVMResult<Option<Vec<u8>>> {
+impl ResourceResolver for NetView {
+    type Error = Error;
+
+    fn get_resource(&self, address: &AccountAddress, tag: &StructTag) -> Result<Option<Vec<u8>>> {
         self.net
             .get_resource(address, tag, &self.block)
-            .map_err(|err| {
-                PartialVMError::new(StatusCode::MISSING_DATA).with_message(err.to_string())
-            })
             .map(|bytes| bytes.map(|bytes| bytes.0))
     }
 }

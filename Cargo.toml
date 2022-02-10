@@ -2,7 +2,9 @@
 members = [
     "dove",
     "lang",
+    "net",
     "common/git-hash",
+    "resource-viewer",
     "pontem/client"
 ]
 exclude = [ "pontem/hash_project", "pontem/pontemapi"]

@@ -1,7 +1,7 @@
 #![allow(clippy::field_reassign_with_default)]
 
 use serde::Serialize;
-use resource_viewer::{AnnotatedMoveStruct, AnnotatedMoveValue};
+use move_resource_viewer::{AnnotatedMoveStruct, AnnotatedMoveValue};
 
 #[cfg(feature = "json-schema")]
 use schemars::{JsonSchema, schema_for, schema::RootSchema};
@@ -24,10 +24,9 @@ pub struct AnnotatedMoveStructWrapper {
     #[serde(with = "AnnotatedMoveStructExt")]
     pub result: AnnotatedMoveStruct,
 }
-
 #[derive(Serialize)]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
-#[serde(remote = "resource_viewer::AnnotatedMoveStruct")]
+#[serde(remote = "move_resource_viewer::AnnotatedMoveStruct")]
 struct AnnotatedMoveStructExt {
     #[serde(with = "schema_support::AbilitySetExt")]
     abilities: AbilitySet,
@@ -44,7 +43,7 @@ struct AnnotatedMoveStructExt {
 
 #[derive(Serialize)]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
-#[serde(remote = "resource_viewer::AnnotatedMoveValue")]
+#[serde(remote = "move_resource_viewer::AnnotatedMoveValue")]
 enum AnnotatedMoveValueExt {
     U8(u8),
     U64(u64),
@@ -72,7 +71,7 @@ struct AccountAddressExt(
 );
 impl AccountAddressExt {
     pub fn ext_to_u8(addr: &AccountAddress) -> [u8; AccountAddress::LENGTH] {
-        addr.to_u8()
+        addr.into_bytes()
     }
 }
 

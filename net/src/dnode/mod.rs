@@ -1,15 +1,17 @@
+#![cfg(feature = "dfinance")]
+
 mod client;
 
-use crate::{Net, Block, BytesForBlock};
-use move_core_types::language_storage::{ModuleId, StructTag};
 use http::Uri;
 use anyhow::Result;
-use lang::compiler::dialects::Dialect;
-use crate::dnode::client::data_request;
+
+use move_core_types::language_storage::{ModuleId, StructTag};
 use move_core_types::account_address::AccountAddress;
 
+use crate::{Net, Block, BytesForBlock};
+use crate::dnode::client::data_request;
+
 pub struct DnodeNet {
-    pub(crate) dialect: Box<dyn Dialect>,
     pub(crate) uri: Uri,
 }
 
@@ -46,9 +48,5 @@ impl Net for DnodeNet {
                 Ok(Some(BytesForBlock(bytes.0, bytes.1)))
             }
         }
-    }
-
-    fn dialect(&self) -> &dyn Dialect {
-        self.dialect.as_ref()
     }
 }
