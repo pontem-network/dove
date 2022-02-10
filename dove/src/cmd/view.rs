@@ -77,7 +77,7 @@ impl View {
                             name_address
                         ))
                     })
-                    .unwrap_or(ss58_to_address(name_address))?;
+                    .unwrap_or_else(|| ss58_to_address(name_address))?;
 
                 self.query_string =
                     format!("{}{}", address.to_hex_literal(), &self.query_string[pos..]);
@@ -87,7 +87,7 @@ impl View {
 
         match query {
             TypeTag::Struct(st) => {
-                let addr = st.address.clone();
+                let addr = st.address;
 
                 net.get_resource(&addr, &st, &height)
                     .map(|resp| {
