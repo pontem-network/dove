@@ -35,25 +35,15 @@ fn test_cmd_dove_build_with_doc() {
     delete_project(&project_path).unwrap();
 }
 
-/// @todo move to $ dove deploy PACKAGE
 /// Build a project and package
-/// $ dove build --bundle --modules_exclude NAME_1 NAME_2 ... NAME_N -o PACKAGE_NAME.mv
+/// $ dove deploy --modules_exclude Demo1v Demo2v
 #[test]
-#[ignore]
 fn test_cmd_dove_build_with_package() {
     let project_name = "project_build_with_package";
     let project_path = new_demo_project(project_name, false).unwrap();
 
     execute_dove_at(
-        &[
-            "build",
-            "--bundle",
-            "--modules_exclude",
-            "Demo1v",
-            "Demo2v",
-            "-o",
-            "demo",
-        ],
+        &["deploy", "--modules_exclude", "Demo1v", "Demo2v"],
         &project_path,
     )
     .unwrap();
@@ -64,7 +54,7 @@ fn test_cmd_dove_build_with_package() {
             .join("build")
             .join(project_name)
             .join("bundles")
-            .join("demo.pac"),
+            .join(&format!("{}.pac", project_name)),
     )
     .unwrap()
     .read_to_end(&mut content)
