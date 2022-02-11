@@ -77,17 +77,6 @@ fn test_cmd_dove_build_with_package() {
     delete_project(&project_path).unwrap();
 }
 
-#[test]
-fn test_cmd_dove_build_two_times() {
-    let project_name = "project_build_two_times";
-    let project_path = new_demo_project(project_name).unwrap();
-
-    build(&project_path).unwrap();
-    build(&project_path).unwrap();
-
-    delete_project(&project_path).unwrap();
-}
-
 fn find_u8(source: &[u8], need: &[u8]) -> bool {
     source.iter().enumerate().any(|(pos, _)| {
         need.iter()
