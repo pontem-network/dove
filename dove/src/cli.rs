@@ -1,6 +1,4 @@
 use std::env;
-use std::fs;
-
 use std::path::{PathBuf, Path};
 
 use anyhow::{Result, Error};
@@ -13,15 +11,13 @@ use move_core_types::errmap::ErrorMapping;
 use crate::{
     DOVE_VERSION, DOVE_HASH, MOVE_STDLIB_VERSION, DIEM_VERSION, DIEM_HASH, ERROR_DESCRIPTIONS,
 };
-use crate::cmd::clean::{Clean, run_dove_clean};
+use crate::cmd::clean::Clean;
 use crate::cmd::run::Run;
 use crate::cmd::call::ExecuteTransaction;
 use crate::context::Context;
 
 use crate::cmd::deploy::Deploy;
 use crate::natives::{all_natives, pontem_cost_table};
-
-const MANIFEST_HASH_FILE_NAME: &str = ".version";
 
 #[derive(StructOpt)]
 #[structopt(
@@ -141,10 +137,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
         native_functions,
         cost_table,
     )?;
-    if is_manifest_changed_since_last_command(&ctx) {
-        // Executes `dove clean` to remove artifacts from previous runs
-        run_dove_clean(&mut ctx);
-    }
+
     match cmd {
         DoveCommands::Run { mut cmd } => cmd.apply(&mut ctx),
         DoveCommands::Call { mut cmd } => cmd.apply(&mut ctx),
@@ -160,8 +153,6 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
             unreachable!("Handled in the beginning")
         }
     }
-        // create new `Move.toml` checksum file after running the command
-        .and_then(|_| store_manifest_checksum(&ctx))
 }
 
 /// Check if Dove version is suitable for this project
@@ -175,41 +166,6 @@ fn check_dove_version(req_ver: &str) -> Result<(), Error> {
     } else {
         Ok(())
     }
-}
-
-/// Move.toml has been updated
-fn is_manifest_changed_since_last_command(ctx: &Context) -> bool {
-    assert!(ctx.manifest_hash != 0);
-
-    let dot_version_file = ctx
-        .project_root_dir
-        .join("build")
-        .join(MANIFEST_HASH_FILE_NAME);
-    // Special `./build/.version` file doesn't exist => manifest has just been created
-    if !dot_version_file.exists() {
-        return true;
-    }
-
-    let old_manifest_hash = fs::read_to_string(&dot_version_file)
-        .unwrap_or_default()
-        .parse::<u64>()
-        .unwrap_or_default();
-
-    ctx.manifest_hash != old_manifest_hash
-}
-
-/// Writing the Move.toml hash to special './build/.version' file
-fn store_manifest_checksum(ctx: &Context) -> Result<()> {
-    assert!(ctx.manifest_hash != 0);
-
-    let build_path = ctx.project_root_dir.join("build");
-    let path_version = build_path.join(MANIFEST_HASH_FILE_NAME);
-
-    if !build_path.exists() || path_version.exists() {
-        return Ok(());
-    }
-    fs::write(&path_version, ctx.manifest_hash.to_string())?;
-    Ok(())
 }
 
 /// To display the full version of "Dove"
