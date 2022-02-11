@@ -27,32 +27,32 @@ pub struct View {
     /// Query examples:
     /// "0x1::Account::Balance<0x1::XFI::T>",
     /// "0x1::Account::Balance<0x1::Coins::ETH>"
-    #[structopt(long = "query", short)]
-    query_string: String,
+    #[structopt()]
+    query: String,
+
+    /// Node REST API address
+    #[structopt(long, default_value = "http://127.0.0.1:9933")]
+    api: Url,
 
     /// Time: maximum block number
     #[structopt(long, short)]
     height: Option<String>,
-
-    /// Output file path.
-    /// Special value for write to stdout: "-"
-    #[structopt(long, short)]
-    #[structopt(default_value = STDOUT_PATH)]
-    output: PathBuf,
 
     /// Sets output format to JSON.
     /// Optional, `true` if output file extension is .json
     #[structopt(long, short)]
     json: bool,
 
-    /// Node REST API address
-    #[structopt(long)]
-    api: Url,
-
     /// Export JSON schema for output format.
     /// Special value for write to stdout: "-"
     #[structopt(long = "json-schema")]
     json_schema: Option<PathBuf>,
+
+    /// Output file path.
+    /// Special value for write to stdout: "-"
+    #[structopt(long, short)]
+    #[structopt(default_value = STDOUT_PATH)]
+    output: PathBuf,
 }
 
 impl View {
@@ -66,9 +66,9 @@ impl View {
         let net = make_net(self.api.clone())?;
         let address_map = ctx.manifest.addresses.clone().unwrap_or_default();
 
-        if !self.query_string.starts_with("0x") {
-            if let Some(pos) = self.query_string.find("::") {
-                let name_address = &self.query_string[..pos];
+        if !self.query.starts_with("0x") {
+            if let Some(pos) = self.query.find("::") {
+                let name_address = &self.query[..pos];
                 let address = address_map
                     .get(&NamedAddress::from(name_address))
                     .map(|v| {
@@ -79,11 +79,10 @@ impl View {
                     })
                     .unwrap_or_else(|| ss58_to_address(name_address))?;
 
-                self.query_string =
-                    format!("{}{}", address.to_hex_literal(), &self.query_string[pos..]);
+                self.query = format!("{}{}", address.to_hex_literal(), &self.query[pos..]);
             }
         }
-        let query = parse_query(&address_map, &self.query_string)?;
+        let query = parse_query(&address_map, &self.query)?;
 
         match query {
             TypeTag::Struct(st) => {
