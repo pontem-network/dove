@@ -2,7 +2,7 @@ mod helper;
 
 use std::fs;
 use std::io::Read;
-use crate::helper::{delete_project, execute_dove_at, new_demo_project, build};
+use crate::helper::{delete_project, execute_dove_at, new_demo_project};
 
 /// Build a project without additional parameters
 /// $ dove build
