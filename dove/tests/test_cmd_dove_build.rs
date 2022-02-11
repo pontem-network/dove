@@ -2,15 +2,14 @@ mod helper;
 
 use std::fs;
 use std::io::Read;
-use crate::helper::{delete_project, execute_dove_at, new_demo_project, build, create_new_project};
-use std::collections::HashMap;
+use crate::helper::{delete_project, execute_dove_at, new_demo_project, build};
 
 /// Build a project without additional parameters
 /// $ dove build
 #[test]
 fn test_cmd_dove_build_without_arguments() {
     let project_name = "project_build_without_arguments";
-    let project_path = new_demo_project(project_name, false).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(&["build"], &project_path).unwrap();
 
@@ -22,11 +21,11 @@ fn test_cmd_dove_build_without_arguments() {
 #[test]
 fn test_cmd_dove_build_with_doc() {
     let project_name = "project_build_with_doc";
-    let project_path = new_demo_project(project_name, false).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(&["build", "--doc"], &project_path).unwrap();
 
-    let docs_path = project_path.join("build").join(project_name).join("docs");
+    let docs_path = project_path.join("build").join("for_tests").join("docs");
 
     assert!(["main.md", "demo1v.md", "demo2v.md", "demo3v.md"]
         .iter()
@@ -42,7 +41,7 @@ fn test_cmd_dove_build_with_doc() {
 #[ignore]
 fn test_cmd_dove_build_with_package() {
     let project_name = "project_build_with_package";
-    let project_path = new_demo_project(project_name, false).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     execute_dove_at(
         &[
@@ -81,7 +80,7 @@ fn test_cmd_dove_build_with_package() {
 #[test]
 fn test_cmd_dove_build_two_times() {
     let project_name = "project_build_two_times";
-    let project_path = create_new_project(project_name, HashMap::new(), false).unwrap();
+    let project_path = new_demo_project(project_name).unwrap();
 
     build(&project_path).unwrap();
     build(&project_path).unwrap();

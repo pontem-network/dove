@@ -8,7 +8,7 @@ use helper::{new_demo_project, execute_dove_at, delete_project};
 #[test]
 fn test_cmd_dove_call() {
     let project_name = "project_call";
-    let project_folder = new_demo_project(project_name, false).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for call in ["main()", "one_param(true)", "two_params(1,1)"] {
         execute_dove_at(&["call", call], &project_folder).unwrap();
@@ -22,7 +22,7 @@ fn test_cmd_dove_call() {
 #[test]
 fn test_cmd_dove_call_with_params() {
     let project_name = "project_call_with_params";
-    let project_folder = new_demo_project(project_name, false).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for call in [
         vec!["call", "one_param", "-a", "true"],
@@ -41,7 +41,7 @@ fn test_cmd_dove_call_with_params() {
 #[test]
 fn test_cmd_dove_call_with_type() {
     let project_name = "project_call_with_type";
-    let project_folder = new_demo_project(project_name, false).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for call in [
         vec!["call", "with_type<u8>(1)"],
@@ -59,7 +59,7 @@ fn test_cmd_dove_call_with_type() {
 #[test]
 fn test_cmd_dove_call_output() {
     let project_name = "project_call_output";
-    let project_folder = new_demo_project(project_name, false).unwrap();
+    let project_folder = new_demo_project(project_name).unwrap();
 
     for (name, args) in [
         ("main", vec!["call", "main()"]),
@@ -68,9 +68,11 @@ fn test_cmd_dove_call_output() {
         execute_dove_at(&args, &project_folder).unwrap();
         let tx_path = project_folder
             .join("build")
-            .join(project_name)
+            .join("for_tests")
             .join("transaction")
             .join(format!("{}.mvt", name));
+
+        println!("{}", &tx_path.display());
         assert!(tx_path.exists());
     }
 
