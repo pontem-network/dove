@@ -26,8 +26,7 @@ const LIB_VERSION: &str = hash_project::version!("../pontemapi");
 /// Type of function from the library
 type FnInterface = unsafe fn(&str, &str, u64, &str) -> Result<String>;
 
-/// Client for node
-/// Only for test accounts.
+/// Client for publishing module, bundle, transactions to node
 pub struct PontemClient {
     lib: Library,
     /// url: Node address. ws://127.0.0.1:9944
