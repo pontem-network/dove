@@ -136,6 +136,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Restore from cache and run vcpkg
         if: ${{ matrix.platform == 'win' }}
@@ -161,3 +163,56 @@ jobs:
           command: install
           args: --path=dove
 
+  proover:
+    name: proover (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+            triplet: x64-osx
+            boogie: 2.9.6
+            z3: 4.8.13
+          - name: ubuntu
+            os: ubuntu-latest
+            triplet: x64-linux
+            boogie: 2.9.6
+            z3: 4.8.13
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Z3
+        uses: pavpanchekha/setup-z3@1.2
+        with:
+          version: ${{ matrix.z3 }}
+
+      # TODO: install Boogie, set ENV
+
+      - name: Checkout move-stdlib
+        uses: actions/checkout@v2
+        with:
+          repository: https://github.com/pontem-network/move-stdlib.git
+          path: move-stdlib
+
+      - name: Checkout pont-stdlib
+        uses: actions/checkout@v2
+        with:
+          repository: https://github.com/pontem-network/pont-stdlib.git
+          path: pont-stdlib
+
+      - name: Try proove move-stdlib
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: -- prove -p=./move-stdlib
+
+      - name: Try proove pont-stdlib
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: -- prove -p=./pont-stdlib
