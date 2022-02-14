@@ -34,7 +34,7 @@ jobs:
           args: --tests --examples -- -Dwarnings
 
   tests:
-    name: ${{ matrix.name }}
+    name: test (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -97,3 +97,47 @@ jobs:
         with:
           command: test
           args: --no-fail-fast --all --all-features
+
+  install:
+    name: install (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+            triplet: x64-osx
+          - name: ubuntu
+            os: ubuntu-latest
+            triplet: x64-linux
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Restore from cache and run vcpkg
+        if: ${{ matrix.platform == 'win' }}
+        uses: lukka/run-vcpkg@v7
+        with:
+          vcpkgArguments: openssl
+          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+          vcpkgTriplet: ${{ matrix.triplet }}
+          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - uses: Swatinem/rust-cache@v1
+
+      - name: Build & Install Dove
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: --path=dove
+
