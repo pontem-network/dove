@@ -34,7 +34,7 @@ jobs:
           args: --tests --examples -- -Dwarnings
 
   tests:
-    name: ${{ matrix.name }}
+    name: test (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -99,7 +99,7 @@ jobs:
           args: --no-fail-fast --all --all-features
 
   install:
-    name: ${{ matrix.name }}
+    name: install (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
