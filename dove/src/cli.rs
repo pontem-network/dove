@@ -159,7 +159,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
         | DoveCommands::Init => {
             unreachable!("Should never be reached, as all those commands are preprocessed into package-prefixed commands")
         }
-        DoveCommands::Clean { .. } | DoveCommands::DiemCommand(_)  | DoveCommands::Key {..} => {
+        DoveCommands::Clean { .. } | DoveCommands::DiemCommand(_) | DoveCommands::Key { .. } => {
             unreachable!("Handled in the beginning")
         }
     }
