@@ -1,6 +1,6 @@
-mod helper;
+mod helpers;
 
-use crate::helper::{new_demo_project, delete_project, build, execute_dove_at};
+use crate::helpers::{new_demo_project, delete_project, build, dove};
 
 /// $ dove clean
 #[test]
@@ -10,7 +10,7 @@ fn test_cmd_dove_clean() {
     build(&project_dir).unwrap();
 
     assert!(project_dir.join("build").exists());
-    execute_dove_at(&["clean"], &project_dir).unwrap();
+    dove(&["clean"], &project_dir).unwrap();
     assert!(!project_dir.join("build").exists());
 
     delete_project(&project_dir).unwrap();

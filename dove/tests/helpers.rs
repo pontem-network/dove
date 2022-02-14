@@ -23,7 +23,7 @@ pub fn delete_project(project_path: &Path) -> Result<()> {
 }
 
 /// run bin dove
-pub fn execute_dove_at(args: &[&str], project_path: &Path) -> Result<String> {
+pub fn dove(args: &[&str], project_path: &Path) -> Result<String> {
     ensure!(
         project_path.exists(),
         "Project folder {:?} does not exist",
@@ -102,7 +102,7 @@ pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
 
 /// Build a project
 pub fn build(project_dir: &Path) -> Result<String> {
-    execute_dove_at(&["build"], project_dir)
+    dove(&["build"], project_dir)
 }
 
 fn copy_folder(from: &Path, to: &Path) -> Result<()> {
