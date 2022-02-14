@@ -1,24 +1,20 @@
 use std::fs;
 use std::fs::read_to_string;
 use std::path::PathBuf;
-use anyhow::Error;
+use anyhow::{Error, Result};
+
 use move_cli::Move;
 use move_package::compilation::package_layout::CompiledPackageLayout;
 use move_package::source_package::{layout, manifest_parser};
 use move_package::source_package::parsed_manifest::{AddressDeclarations, SourceManifest};
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use anyhow::Result;
 use move_core_types::errmap::ErrorMapping;
 use move_core_types::gas_schedule::CostTable;
-
 use move_vm_runtime::native_functions::NativeFunctionTable;
 
 pub struct Context {
     pub project_root_dir: PathBuf,
     pub move_args: Move,
     pub manifest: SourceManifest,
-    pub manifest_hash: u64,
     pub error_descriptions: ErrorMapping,
     pub native_functions: NativeFunctionTable,
     pub cost_table: CostTable,
@@ -35,9 +31,6 @@ impl Context {
         let manifest_string =
             read_to_string(project_root_dir.join(layout::SourcePackageLayout::Manifest.path()))
                 .map_err(|_| anyhow!("Move.toml not found. Path: {:?}", &project_root_dir))?;
-        let mut hasher = DefaultHasher::default();
-        manifest_string.hash(&mut hasher);
-        let manifest_hash = hasher.finish();
         let toml_manifest = manifest_parser::parse_move_manifest_string(manifest_string)?;
         let manifest = manifest_parser::parse_source_manifest(toml_manifest)?;
 
@@ -45,7 +38,6 @@ impl Context {
             project_root_dir,
             move_args,
             manifest,
-            manifest_hash,
             error_descriptions,
             native_functions,
             cost_table,
