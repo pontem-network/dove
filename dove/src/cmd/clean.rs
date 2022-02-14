@@ -5,6 +5,7 @@ use anyhow::{Error, Result};
 use structopt::StructOpt;
 
 use crate::context::Context;
+use crate::dot_move_folder;
 
 #[derive(StructOpt, Debug, Default)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
@@ -104,23 +105,12 @@ pub fn run_dove_clean(ctx: &mut Context) {
 }
 
 /// adds directories from ~/.move/*
-fn move_cache_folders() -> anyhow::Result<Vec<PathBuf>> {
-    let move_home = std::env::var("MOVE_HOME").unwrap_or_else(|_| {
-        format!(
-            "{}/.move",
-            std::env::var("HOME").expect("env var 'HOME' must be set")
-        )
-    });
-
-    let path = PathBuf::from_str(&move_home)?;
-    if !path.exists() {
-        bail!("MOVE_HOME - path {:?} not found", path.display());
-    }
-
-    let paths = path
+fn move_cache_folders() -> Result<Vec<PathBuf>> {
+    let paths = dot_move_folder()?
         .read_dir()?
         .filter_map(|dir| dir.ok())
         .map(|path| path.path())
+        .filter(|dir| dir.is_dir())
         .collect::<Vec<PathBuf>>();
     Ok(paths)
 }

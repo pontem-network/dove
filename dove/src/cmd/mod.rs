@@ -4,5 +4,7 @@ pub mod call;
 pub mod clean;
 /// Project builder.
 pub mod deploy;
+/// Manage wallet keys
+pub mod key;
 /// Script executor.
 pub mod run;

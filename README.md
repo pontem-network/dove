@@ -130,6 +130,46 @@ Migrated inside Dove, see help:
 dove run --help
 ```
 
+### Manage wallet keys
+
+Command `key` allows you to save the secret keys to the wallet on your computer and access them under an alias.
+Saved key can be used when publishing a module `$ dove deploy module --account <NAME_KEY> ...` or package `$ dove deploy package --account <NAME_KEY> ...`, as well as when execute a transaction `$ dove call --account <NAME_KEY> ...`.
+Keys are stored on your computer in the `~/.move/` directory. Before saving, they are encrypted with the aes + password.
+
+#### Adding a key:
+
+```shell
+dove key add --alias <NAME_KEY>
+```
+After executing this command, you will be prompted to enter a password and a secret phrase from your wallet.
+
+If you don't want to protect the key with a password, use the `--nopassword` flag(**Not recommended**):
+
+```shell
+dove key add --alias <NAME_KEY> --nopassword
+```
+
+#### View list of saved keys
+
+```shell
+dove key list
+```
+
+#### Deleting a key
+
+Deleting a key by name:
+
+```shell
+dove key delete --alias <NAME_KEY>
+```
+
+Deleting all saved keys:
+
+```shell
+dove key delete --all
+```
+
 ## LICENSE
 
 [LICENSE](/LICENSE)
+

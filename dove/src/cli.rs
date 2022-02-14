@@ -14,6 +14,7 @@ use crate::{
 use crate::cmd::clean::Clean;
 use crate::cmd::run::Run;
 use crate::cmd::call::ExecuteTransaction;
+use crate::cmd::key::Key;
 use crate::context::Context;
 
 use crate::cmd::deploy::Deploy;
@@ -85,6 +86,11 @@ pub enum DoveCommands {
         #[structopt(flatten)]
         cmd: Deploy,
     },
+    #[structopt(about = "Manage wallet keys")]
+    Key {
+        #[structopt(flatten)]
+        cmd: Key,
+    },
 }
 
 fn preprocess_args(args: Vec<String>) -> Vec<String> {
@@ -109,11 +115,15 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
     let args = preprocess_args(args);
     let DoveOpt { move_args, cmd } = DoveOpt::from_iter(args);
 
-    // `dove clean` doesn't need any preparation or context, run before any other command
-    if let DoveCommands::Clean { mut cmd } = cmd {
-        cmd.apply(&cwd);
-        return Ok(());
-    }
+    // `dove clean`|`dove key` needs empty context and no preparation, so try it before other commands
+    match cmd {
+        DoveCommands::Clean { mut cmd } => {
+            cmd.apply(&cwd);
+            return Ok(());
+        }
+        DoveCommands::Key { mut cmd } => return cmd.apply(),
+        _ => (),
+    };
 
     let error_descriptions: ErrorMapping = bcs::from_bytes(ERROR_DESCRIPTIONS)?;
     let native_functions = all_natives();
@@ -149,7 +159,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
         | DoveCommands::Init => {
             unreachable!("Should never be reached, as all those commands are preprocessed into package-prefixed commands")
         }
-        DoveCommands::Clean { .. } | DoveCommands::DiemCommand(_) => {
+        DoveCommands::Clean { .. } | DoveCommands::DiemCommand(_)  | DoveCommands::Key {..} => {
             unreachable!("Handled in the beginning")
         }
     }

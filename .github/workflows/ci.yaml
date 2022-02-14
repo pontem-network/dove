@@ -92,7 +92,6 @@ jobs:
           command: test
           args: test_cmd_dove_run_with_params
 
-      # Test All
       - name: Test All
         uses: actions-rs/cargo@v1
         with:
