@@ -92,7 +92,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: test_dove_run_with_one_param
+          args: test_cmd_dove_run_with_params
 
       - name: Test All
         uses: actions-rs/cargo@v1
