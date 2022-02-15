@@ -12,7 +12,7 @@ use crate::call::cmd::CallDeclarationCmd;
 use crate::call::fn_call::Config;
 use crate::call::make_transaction;
 use crate::call::model::{EnrichedTransaction, Transaction};
-use crate::publish::{PublishParamsCmd, Publish};
+use crate::publish::{NodeAccessParams, Publish};
 
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
@@ -30,7 +30,7 @@ pub struct ExecuteTransaction {
     call: CallDeclarationCmd,
 
     #[structopt(flatten)]
-    request: PublishParamsCmd,
+    request: NodeAccessParams,
 }
 
 impl ExecuteTransaction {

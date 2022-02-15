@@ -60,16 +60,13 @@ fn test_cmd_dove_call_output() {
     let project_name = "project_call_output";
     let project_folder = new_demo_project(project_name).unwrap();
 
-    for (name, args) in [
-        ("main", vec!["call", "main()"]),
-        ("tmpname", vec!["call", "main()", "-o", "tmpname"]),
-    ] {
+    for args in [["call", "main()"], ["call", "main()"]] {
         dove(&args, &project_folder).unwrap();
         let tx_path = project_folder
             .join("build")
             .join("for_tests")
             .join("transaction")
-            .join(format!("{}.mvt", name));
+            .join("main.mvt");
 
         println!("{}", &tx_path.display());
         assert!(tx_path.exists());
