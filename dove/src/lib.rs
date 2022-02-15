@@ -33,6 +33,8 @@ pub mod natives;
 /// To work with stored access keys
 pub mod wallet_key;
 
+pub mod publish;
+
 /// Get the location of the ".move" directory.
 /// Default: ~/.move/
 /// If the directory "~/.move/" does not exist, it will be created.

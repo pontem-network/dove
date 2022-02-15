@@ -28,7 +28,7 @@ cargo install --path ./dove
 dove -h
 ```
 
-##### Create new project:
+## Create new project:
 
 ```shell script
 dove new first_project 
@@ -36,7 +36,7 @@ dove new first_project
 
 This command will create `first_project/` directory with special `Move.toml` manifest file and `sources/` directory for Move source code. 
 
-##### Build project:
+## Build project:
 
 ```shell script
 dove build
@@ -60,7 +60,7 @@ The contents of the directories will be deleted:
 - `<PROJECT_DIR>/build`
 - `~/.move/`
 
-### Pallet Transactions
+## Pallet Transactions
 
 Command `call` allows you to create transactions for Polkadot chain with [Move Pallete](https://github.com/pontem-network/sp-move) on board.
 
@@ -130,10 +130,11 @@ Migrated inside Dove, see help:
 dove run --help
 ```
 
-### Manage wallet keys
+## Manage wallet keys
 
 Command `key` allows you to save the secret keys to the wallet on your computer and access them under an alias.
-Saved key can be used when publishing a module `$ dove deploy module --account <NAME_KEY> ...` or package `$ dove deploy package --account <NAME_KEY> ...`, as well as when execute a transaction `$ dove call --account <NAME_KEY> ...`.
+Saved key can be used when publishing a module or bundle `$ dove deploy <FILE_NAME> --account <NAME_KEY> ...`, 
+as well as when execute a transaction `$ dove call <CALL> --account <NAME_KEY> ...`.
 Keys are stored on your computer in the `~/.move/` directory. Before saving, they are encrypted with the aes + password.
 
 #### Adding a key:
@@ -167,6 +168,32 @@ Deleting all saved keys:
 
 ```shell
 dove key delete --all
+```
+
+## Publishing a module or package
+
+```bash
+$ dove deploy [FILE_NAME|PATH_TO_FILE] [OPTIONS]
+```
+### Input parameters
+- [FILE_NAME] - Name of module or package to be published.
+- [PATH_TO_FILE] - Path to the file to be published. Expected file extension:
+  - `pac` bundle  
+  - `mv` module
+  - `mvt` transaction
+- `-g` / `--gas` Limitation of gas consumption per operation. A positive integer is expected
+- `-u` / `--url` The url of the substrate node to query [default: ws://localhost:9944]. HTTP, HTTPS, WS protocols are supported. It is recommended to use WS. When using HTTP or HTTPS, you cannot get the publication status.
+- `--account` Account from whom to publish. Address or test account name or name wallet key. Example: //Alice, alice, bob, NAME_WALLET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY. When used in combination with `--secret` is ignored.
+- `-s` / `--secret` Secret phrase. If a secret phrase is specified, you do not need to specify.
+- `modules_exclude` Names of modules to exclude from the package process.
+
+### Examples:
+```bash
+dove deploy
+dove deploy PACKAGE_NAME --account WALLET_KEY --gas 300
+dove deploy PACKAGE_NAME --secret --url ws://127.0.0.1:9944 --gas 400 --modules_exclude MODULE_NAME_1 MODULE_NAME_2 ..
+dove deploy MODULE_NAME --secret --url https://127.0.0.1:9933 --gas 400
+dove deploy PATH/TO/FILE --account //Alice --gas 300
 ```
 
 ## LICENSE

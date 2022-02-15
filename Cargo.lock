@@ -704,6 +704,7 @@ dependencies = [
  "move-vm-types",
  "once_cell",
  "pontem",
+ "pontem-client",
  "rand 0.7.3",
  "regex",
  "reqwest",
@@ -1055,6 +1056,16 @@ dependencies = [
  "tokio-util",
  "tracing",
  "tracing-futures",
+]
+
+[[package]]
+name = "hash_project"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "sha256",
+ "toml",
 ]
 
 [[package]]
@@ -1416,6 +1427,16 @@ name = "libc"
 version = "0.2.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e74d72e0f9b65b5b4ca49a346af3976df0f9c61d550727f349ecd559f251a26c"
+
+[[package]]
+name = "libloading"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efbc0f03f9a775e9f6aed295c6a1ba2253c5757a9e03d55c6caa46a681abcddd"
+dependencies = [
+ "cfg-if 1.0.0",
+ "winapi 0.3.9",
+]
 
 [[package]]
 name = "linked-hash-map"
@@ -2751,6 +2772,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pontem-client"
+version = "0.15.0"
+dependencies = [
+ "anyhow",
+ "env_logger",
+ "hash_project",
+ "libloading",
+ "log",
+ "rand 0.8.4",
+ "url",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3355,6 +3389,16 @@ dependencies = [
  "cpufeatures",
  "digest 0.9.0",
  "opaque-debug 0.3.0",
+]
+
+[[package]]
+name = "sha256"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e84a7f596c081d359de5e06a83877138bc3c4483591e1af1916e1472e6e146e"
+dependencies = [
+ "hex",
+ "sha2",
 ]
 
 [[package]]
