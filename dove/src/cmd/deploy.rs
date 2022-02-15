@@ -19,7 +19,7 @@ use move_cli::run_cli;
 use move_core_types::language_storage::ModuleId;
 
 use crate::context::Context;
-use crate::publish::{PublishParamsCmd, Publish};
+use crate::publish::{NodeAccessParams, Publish};
 
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
@@ -47,7 +47,7 @@ pub struct Deploy {
     modules_exclude: Vec<String>,
 
     #[structopt(flatten)]
-    request: PublishParamsCmd,
+    request: NodeAccessParams,
 }
 
 impl Deploy {

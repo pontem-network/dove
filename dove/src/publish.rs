@@ -12,7 +12,7 @@ use crate::wallet_key::WalletKey;
 
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-pub struct PublishParamsCmd {
+pub struct NodeAccessParams {
     /// Account from whom to publish. Address or test account name or name secret key.
     /// Example: //Alice, alice, bob, NAME_WALLET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
     #[structopt(long = "account")]
@@ -37,7 +37,7 @@ pub struct PublishParamsCmd {
     gas_limit: Option<u64>,
 }
 
-impl PublishParamsCmd {
+impl NodeAccessParams {
     pub fn need_to_publish(&self) -> bool {
         self.account.is_some() || self.secret_phrase
     }
@@ -101,10 +101,10 @@ impl Publish {
 
 /// PublishParamsCmd - Connection parameters
 /// PathBuf - The path to the file to be published (*.mvt, *.mv, *.pac)
-impl TryFrom<(&PublishParamsCmd, PathBuf)> for Publish {
+impl TryFrom<(&NodeAccessParams, PathBuf)> for Publish {
     type Error = Error;
 
-    fn try_from(value: (&PublishParamsCmd, PathBuf)) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: (&NodeAccessParams, PathBuf)) -> std::result::Result<Self, Self::Error> {
         let (params, file_path) = value;
         let gas_limit = params
             .gas_limit
