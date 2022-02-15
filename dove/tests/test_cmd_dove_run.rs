@@ -1,6 +1,6 @@
-mod helper;
+mod helpers;
 
-use helper::{new_demo_project, execute_dove_at, delete_project};
+use helpers::{new_demo_project, dove, delete_project};
 
 /// $ dove run 'main()'
 /// $ dove run 'one_param(true)'
@@ -11,14 +11,12 @@ fn test_cmd_dove_run_with_call() {
     let project_folder = new_demo_project(project_name).unwrap();
 
     for call in ["main()", "one_param(true)", "two_params(1,1)"] {
-        execute_dove_at(&["run", call], &project_folder).unwrap();
+        dove(&["run", call], &project_folder).unwrap();
     }
 
     delete_project(&project_folder).unwrap();
 }
 
-/// $ dove run 'one_param' -a true
-/// $ dove run 'two_params' --args 1 1
 #[test]
 fn test_cmd_dove_run_with_params() {
     let project_name = "project_run_with_params";
@@ -28,7 +26,7 @@ fn test_cmd_dove_run_with_params() {
         vec!["run", "one_param", "-a", "true"],
         vec!["run", "two_params", "--args", "1", "1"],
     ] {
-        execute_dove_at(&call, &project_folder).unwrap();
+        dove(&call, &project_folder).unwrap();
     }
 
     delete_project(&project_folder).unwrap();
@@ -48,7 +46,7 @@ fn test_cmd_dove_run_with_type() {
         vec!["run", "with_type(1)", "-t", "u8"],
         vec!["run", "with_type", "-a", "1", "-t", "u8"],
     ] {
-        execute_dove_at(&call, &project_folder).unwrap();
+        dove(&call, &project_folder).unwrap();
     }
 
     delete_project(&project_folder).unwrap();
@@ -64,7 +62,7 @@ fn test_cmd_dove_run_multiple() {
     let project_folder = new_demo_project(project_name).unwrap();
 
     for call in ["script_1(true)", "script_2(1,1)"] {
-        execute_dove_at(&["run", call], &project_folder).unwrap();
+        dove(&["run", call], &project_folder).unwrap();
     }
 
     delete_project(&project_folder).unwrap();

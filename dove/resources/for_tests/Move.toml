@@ -6,6 +6,5 @@ version = "0.1.0"
 Std = "0x1"
 Demo = "0x2"
 
-[dependencies.MoveStdlib]
-git = "https://github.com/pontem-network/move-stdlib"
-rev = "v1.5.2"
+[dependencies]
+MoveStdlib = { local = "./move-stdlib" }

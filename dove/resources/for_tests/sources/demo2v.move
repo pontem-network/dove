@@ -1,3 +1,3 @@
-module Demo::Demo2v{
-    fun run(){ }
+module Demo::Demo2v {
+    fun run() {}
 }

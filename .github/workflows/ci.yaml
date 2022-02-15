@@ -57,6 +57,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Restore from cache and run vcpkg
         if: ${{ matrix.platform == 'win' }}
@@ -97,6 +99,24 @@ jobs:
         with:
           command: test
           args: --no-fail-fast --all --all-features
+
+      - name: dove build --path ./dove/resources/for_tests/move-stdlib
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: -- build --path ./dove/resources/for_tests/move-stdlib
+
+      - name: dove build --doc --path ./dove/resources/for_tests/move-stdlib
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: -- build --doc --path ./dove/resources/for_tests/move-stdlib
+
+      - name: dove test --path ./dove/resources/for_tests/move-stdlib
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: -- test --path ./dove/resources/for_tests/move-stdlib
 
   install:
     name: install (${{ matrix.name }})
