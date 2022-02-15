@@ -1,11 +1,22 @@
 use std::path::PathBuf;
 
+fn debugging_mode() -> bool {
+    std::env::var("DEBUG")
+        .ok()
+        .and_then(|value| value.parse::<bool>().ok())
+        .unwrap_or(false)
+}
+
 fn main() {
     println!(r#"Building: pontemapi"#);
 
     let lib_path = PathBuf::from("../pontemapi").canonicalize().unwrap();
+    let mut args = vec!["build"];
+    if !debugging_mode() {
+        args.push("--release");
+    }
     let result = std::process::Command::new("cargo")
-        .args(["build", "--release"])
+        .args(&args)
         .current_dir(&lib_path)
         .output()
         .unwrap();
