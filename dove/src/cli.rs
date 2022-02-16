@@ -157,7 +157,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
         DoveCommands::Run { mut cmd } => cmd.apply(&mut ctx),
         DoveCommands::Call { mut cmd } => cmd.apply(&mut ctx),
         DoveCommands::Deploy { mut cmd } => cmd.apply(&mut ctx),
-        DoveCommands::View { mut cmd } => return cmd.apply(&mut ctx),
+        DoveCommands::View { mut cmd } => cmd.apply(&mut ctx),
         DoveCommands::Build
         | DoveCommands::Test
         | DoveCommands::Prove
