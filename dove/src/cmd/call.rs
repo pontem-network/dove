@@ -1,8 +1,10 @@
-use structopt::StructOpt;
 use std::fmt::Debug;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+use structopt::StructOpt;
 use anyhow::{Error, Result};
+
 use lang::bytecode::accessor::BytecodeRef;
 use crate::cmd::deploy::run_dove_package_build;
 use crate::context::Context;
@@ -10,34 +12,47 @@ use crate::call::cmd::CallDeclarationCmd;
 use crate::call::fn_call::Config;
 use crate::call::make_transaction;
 use crate::call::model::{EnrichedTransaction, Transaction};
+use crate::publish::{NodeAccessParams, Publish};
 
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 #[structopt(usage = "dove call [call] [OPTIONS]\n
     Examples:
     $ dove call 'script_name<0x01::Dfinance::USD>([10,10], true, ADDRESS_ALIAS, SS58_ADDRESS, 100, 0x1)'
-    $ dove call 'script_name()' --parameters [10,10] true ADDRESS_ALIAS SS58_ADDRESS 100 0x1 --type 0x01::Dfinance::USD
+    $ dove call 'script_name()' --args [10,10] true ADDRESS_ALIAS SS58_ADDRESS 100 0x1 --type 0x01::Dfinance::USD
     $ dove call '0x1::Module::script_name<0x01::Dfinance::USD>()'
+    $ dove call 'script_name()' --account WALLET_KEY --gas 300
+    $ dove call 'script_name()' --secret --url https://127.0.0.1:9933 --gas 400
+    $ dove call 'script_name()' --account //Alice --gas 300
 ")]
 pub struct ExecuteTransaction {
     #[structopt(flatten)]
     call: CallDeclarationCmd,
 
-    #[structopt(help = "Output file name.", long = "output", short = "o")]
-    output: Option<String>,
+    #[structopt(flatten)]
+    request: NodeAccessParams,
 }
 
 impl ExecuteTransaction {
     pub fn apply(&mut self, ctx: &mut Context) -> Result<()> {
         run_dove_package_build(ctx)?;
         let tx = make_transaction(ctx, self.call.take(), Config::for_tx())?;
-        let output_filename = self.output.as_ref().take();
-        match tx {
+        let path_transaction = match tx {
             EnrichedTransaction::Local { .. } => unreachable!(),
             EnrichedTransaction::Global { bi, tx, name } => {
-                store_transaction(ctx, output_filename.unwrap_or(&name), bi.bytecode_ref(), tx)
+                store_transaction(ctx, &name, bi.bytecode_ref(), tx)?
             }
+        };
+
+        if !self.request.need_to_publish() {
+            return Ok(());
         }
+
+        Publish::try_from((&self.request, path_transaction))?
+            .apply()
+            .map(|address| {
+                println!("Address: {}", address);
+            })
     }
 }
 
@@ -46,7 +61,7 @@ fn store_transaction(
     name: &str,
     rf: &BytecodeRef,
     tx: Transaction,
-) -> Result<(), Error> {
+) -> Result<PathBuf, Error> {
     let tx_dir = ctx.tx_output_path(get_package_from_path(&rf.0));
     if !tx_dir.exists() {
         fs::create_dir_all(&tx_dir)?;
@@ -61,7 +76,9 @@ fn store_transaction(
         fs::remove_file(&tx_file)?;
     }
     println!("Store transaction: {:?}", tx_file);
-    Ok(fs::write(&tx_file, bcs::to_bytes(&tx)?)?)
+    fs::write(&tx_file, bcs::to_bytes(&tx)?)?;
+
+    Ok(tx_file)
 }
 
 fn get_package_from_path<A: AsRef<Path>>(path: A) -> Option<String> {

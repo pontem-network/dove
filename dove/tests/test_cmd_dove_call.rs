@@ -10,8 +10,18 @@ fn test_cmd_dove_call() {
     let project_name = "project_call";
     let project_folder = new_demo_project(project_name).unwrap();
 
-    for call in ["main()", "one_param(true)", "two_params(1,1)"] {
+    for (name, call) in [
+        ("main", "main()"),
+        ("one_param", "one_param(true)"),
+        ("two_params", "two_params(1,1)"),
+    ] {
         dove(&["call", call], &project_folder).unwrap();
+        let tx_path = project_folder
+            .join("build")
+            .join("for_tests")
+            .join("transaction")
+            .join(format!("{}.mvt", name));
+        assert!(tx_path.exists());
     }
     delete_project(&project_folder).unwrap();
 }
@@ -48,31 +58,6 @@ fn test_cmd_dove_call_with_type() {
         vec!["call", "with_type", "-a", "1", "-t", "u8"],
     ] {
         dove(&call, &project_folder).unwrap();
-    }
-
-    delete_project(&project_folder).unwrap();
-}
-
-/// Output path
-/// $ dove call 'main()' -o tmpname
-#[test]
-fn test_cmd_dove_call_output() {
-    let project_name = "project_call_output";
-    let project_folder = new_demo_project(project_name).unwrap();
-
-    for (name, args) in [
-        ("main", vec!["call", "main()"]),
-        ("tmpname", vec!["call", "main()", "-o", "tmpname"]),
-    ] {
-        dove(&args, &project_folder).unwrap();
-        let tx_path = project_folder
-            .join("build")
-            .join("for_tests")
-            .join("transaction")
-            .join(format!("{}.mvt", name));
-
-        println!("{}", &tx_path.display());
-        assert!(tx_path.exists());
     }
 
     delete_project(&project_folder).unwrap();
