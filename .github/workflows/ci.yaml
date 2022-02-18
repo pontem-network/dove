@@ -197,7 +197,6 @@ jobs:
     needs: tests
     name: Builds (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
@@ -208,6 +207,11 @@ jobs:
             os: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
