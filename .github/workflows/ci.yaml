@@ -34,7 +34,6 @@ jobs:
           args: --tests --examples -- -Dwarnings
 
   tests:
-    needs: clippy
     name: Units (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
