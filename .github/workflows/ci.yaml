@@ -188,7 +188,7 @@ jobs:
           name: dove-${{ matrix.name }}
           path: ./bin
       - name: Prepare dove
-        run: chmode +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
 
       - name: Proove move-stdlib
         run: dove prove -p=dove/resources/for_tests/move-stdlib/
@@ -214,7 +214,7 @@ jobs:
           name: dove-${{ matrix.name }}
           path: ./bin
       - name: Prepare dove
-        run: chmode +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
 
       - run: dove build --path ./dove/resources/for_tests/move-stdlib
       - run: dove build --doc --path ./dove/resources/for_tests/move-stdlib
@@ -241,5 +241,5 @@ jobs:
           name: dove-${{ matrix.name }}
           path: ./bin
       - name: Prepare dove
-        run: chmode +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
       # TODO: download the node
