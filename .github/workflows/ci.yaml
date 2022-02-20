@@ -19,7 +19,7 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: restore rust cache
+      - name: Rusty cache
         uses: Swatinem/rust-cache@v1
 
       - name: Check formatting
@@ -34,11 +34,11 @@ jobs:
           args: --tests --examples -- -Dwarnings
 
   tests:
-    name: test (${{ matrix.name }})
+    name: Units (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           - name: macos
@@ -76,10 +76,11 @@ jobs:
           profile: minimal
           override: true
 
-      - uses: Swatinem/rust-cache@v1
+      - name: Rusty cache
+        uses: Swatinem/rust-cache@v1
 
       # Clearing cache "~/.move/" before testing
-      - name: dove clean --global
+      - name: Build, dove clean --global
         uses: actions-rs/cargo@v1
         with:
           command: run
@@ -100,25 +101,16 @@ jobs:
           command: test
           args: --no-fail-fast --all --all-features
 
-      - name: dove build --path ./dove/resources/for_tests/move-stdlib
-        uses: actions-rs/cargo@v1
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
         with:
-          command: run
-          args: -- build --path ./dove/resources/for_tests/move-stdlib
-
-      - name: dove build --doc --path ./dove/resources/for_tests/move-stdlib
-        uses: actions-rs/cargo@v1
-        with:
-          command: run
-          args: -- build --doc --path ./dove/resources/for_tests/move-stdlib
-
-      - name: dove test --path ./dove/resources/for_tests/move-stdlib
-        uses: actions-rs/cargo@v1
-        with:
-          command: run
-          args: -- test --path ./dove/resources/for_tests/move-stdlib
+          name: dove-${{ matrix.name }}
+          path: target/debug/dove
+          if-no-files-found: error
+          retention-days: 1
 
   install:
+    needs: clippy
     name: install (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
@@ -136,6 +128,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Restore from cache and run vcpkg
         if: ${{ matrix.platform == 'win' }}
@@ -153,7 +147,8 @@ jobs:
           profile: minimal
           override: true
 
-      - uses: Swatinem/rust-cache@v1
+      - name: Rusty cache
+        uses: Swatinem/rust-cache@v1
 
       - name: Build & Install Dove
         uses: actions-rs/cargo@v1
@@ -161,3 +156,94 @@ jobs:
           command: install
           args: --path=dove
 
+  proover:
+    needs: tests
+    name: proover (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+          - name: ubuntu
+            os: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install Boogie
+        uses: pontem-network/get-boogie@main
+        with:
+          ref: 927c229cd8dfa6dcd50ba84811f80d10496c76d2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: dove-${{ matrix.name }}
+          path: ./bin
+      - name: Prepare dove
+        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+
+      - name: Proove move-stdlib
+        run: dove prove -p=dove/resources/for_tests/move-stdlib/
+
+  builds:
+    needs: tests
+    name: Builds (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+          - name: ubuntu
+            os: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: dove-${{ matrix.name }}
+          path: ./bin
+      - name: Prepare dove
+        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+
+      - run: dove build --path ./dove/resources/for_tests/move-stdlib
+      - run: dove build --doc --path ./dove/resources/for_tests/move-stdlib
+      - run: dove test --path ./dove/resources/for_tests/move-stdlib
+
+  integration:
+    needs: tests
+    name: Integration (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+          - name: ubuntu
+            os: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: dove-${{ matrix.name }}
+          path: ./bin
+      - name: Prepare dove
+        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+      # TODO: download the node
