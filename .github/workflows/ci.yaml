@@ -66,14 +66,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Restore from cache and run vcpkg
-        if: ${{ matrix.platform == 'win' }}
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgArguments: openssl
-          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
-          vcpkgTriplet: ${{ matrix.triplet }}
-          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
+#      - name: Restore from cache and run vcpkg
+#        if: ${{ matrix.platform == 'win' }}
+#        uses: lukka/run-vcpkg@v7
+#        with:
+#          vcpkgArguments: openssl
+#          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+#          vcpkgTriplet: ${{ matrix.triplet }}
+#          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -130,14 +130,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Restore from cache and run vcpkg
-        if: ${{ matrix.platform == 'win' }}
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgArguments: openssl
-          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
-          vcpkgTriplet: ${{ matrix.triplet }}
-          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
+#      - name: Restore from cache and run vcpkg
+#        if: ${{ matrix.platform == 'win' }}
+#        uses: lukka/run-vcpkg@v7
+#        with:
+#          vcpkgArguments: openssl
+#          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+#          vcpkgTriplet: ${{ matrix.triplet }}
+#          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
