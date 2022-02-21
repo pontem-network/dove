@@ -17,12 +17,19 @@ use crate::call::parser::parse_type_param;
 /// Move Resource Viewer
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+#[structopt(usage = "dove view [QUERY] [OPTIONS]
+    Examples:
+    $ dove view Account::Store::U64
+    $ dove view Account::Store::U64 --api http://127.0.0.1:9933
+    $ dove view Account::Store::U64 --api http://127.0.0.1:9933 --json
+    $0x1::Account::Balance<0x1::Coins::ETH> --api http://127.0.0.1:9933 --json --output PATH/SAVE.json
+")]
 pub struct View {
     #[structopt(
         display_order = 1,
         help = "Fully qualified type description in a form of ADDRESS::MODULE::TYPE_NAME<GENERIC_PARAMS> \n\
             Examples: \n\
-            0x1::Account::Balance<0x1::XFI::T> \n\
+            Account::Store::U64 \n\
             0x1::Account::Balance<0x1::Coins::ETH>"
     )]
     query: String,
