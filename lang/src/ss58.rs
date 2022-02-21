@@ -49,28 +49,34 @@ pub fn ss58_to_address(ss58: &str) -> Result<AccountAddress> {
     Ok(AccountAddress::new(addr))
 }
 
-#[test]
-fn test_address_to_ss58() {
-    let t = AccountAddress::from_hex_literal(
-        "0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D",
-    )
-    .unwrap();
+#[cfg(test)]
+mod tests {
+    use move_core_types::account_address::AccountAddress;
+    use crate::ss58::{address_to_ss58, ss58_to_address};
 
-    assert_eq!(
-        address_to_ss58(&t),
-        "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
-    );
-}
+    #[test]
+    fn test_address_to_ss58() {
+        let t = AccountAddress::from_hex_literal(
+            "0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D",
+        )
+        .unwrap();
 
-#[test]
-fn test_ss58_to_address() {
-    let t = AccountAddress::from_hex_literal(
-        "0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D",
-    )
-    .unwrap();
+        assert_eq!(
+            address_to_ss58(&t),
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+        );
+    }
 
-    assert_eq!(
-        t,
-        ss58_to_address("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap()
-    );
+    #[test]
+    fn test_ss58_to_address() {
+        let t = AccountAddress::from_hex_literal(
+            "0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D",
+        )
+        .unwrap();
+
+        assert_eq!(
+            t,
+            ss58_to_address("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap()
+        );
+    }
 }
