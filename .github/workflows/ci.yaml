@@ -19,7 +19,13 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Rusty cache
+      - name: Rust cache (pontemapi)
+        uses: Swatinem/rust-cache@v1
+        with:
+          working-directory: ./pontem/pontemapi/
+          cache-on-failure: true
+
+      - name: Rust cache (root)
         uses: Swatinem/rust-cache@v1
 
       - name: Check formatting
@@ -34,7 +40,7 @@ jobs:
           args: --tests --examples -- -Dwarnings
 
   tests:
-    name: Units (${{ matrix.name }})
+    name: tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -60,14 +66,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Restore from cache and run vcpkg
-        if: ${{ matrix.platform == 'win' }}
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgArguments: openssl
-          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
-          vcpkgTriplet: ${{ matrix.triplet }}
-          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
+#      - name: Restore from cache and run vcpkg
+#        if: ${{ matrix.platform == 'win' }}
+#        uses: lukka/run-vcpkg@v7
+#        with:
+#          vcpkgArguments: openssl
+#          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+#          vcpkgTriplet: ${{ matrix.triplet }}
+#          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -76,32 +82,25 @@ jobs:
           profile: minimal
           override: true
 
-      - name: Rusty cache
+      - name: Rust cache (pontemapi)
         uses: Swatinem/rust-cache@v1
-
-      # Clearing cache "~/.move/" before testing
-      - name: Build, dove clean --global
-        uses: actions-rs/cargo@v1
         with:
-          command: run
-          args: clean --global
+          key: pontemapi
+          working-directory: ./pontem/pontemapi/
+          cache-on-failure: true
 
-      # Download MoveStdlib
-      # Preliminary preparation for the "cargo test" in multithreading
-      # Do not delete it, otherwise the tests will not work in multithreaded mode.
-      - name: Download MoveStdlib
-        uses: actions-rs/cargo@v1
+      - name: Rust cache (root)
+        uses: Swatinem/rust-cache@v1
         with:
-          command: test
-          args: test_cmd_dove_run_with_params
+          key: root
 
       - name: Test All
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --no-fail-fast --all --all-features
+          args: --no-fail-fast --all --all-features -- --test-threads=1
 
-      - name: Upload artifact
+      - name: Upload dove debug binary to use in subsequent jobs
         uses: actions/upload-artifact@v2
         with:
           name: dove-${{ matrix.name }}
@@ -111,7 +110,7 @@ jobs:
 
   install:
     needs: clippy
-    name: install (${{ matrix.name }})
+    name: cargo install (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -131,14 +130,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Restore from cache and run vcpkg
-        if: ${{ matrix.platform == 'win' }}
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgArguments: openssl
-          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
-          vcpkgTriplet: ${{ matrix.triplet }}
-          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
+#      - name: Restore from cache and run vcpkg
+#        if: ${{ matrix.platform == 'win' }}
+#        uses: lukka/run-vcpkg@v7
+#        with:
+#          vcpkgArguments: openssl
+#          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+#          vcpkgTriplet: ${{ matrix.triplet }}
+#          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -147,18 +146,60 @@ jobs:
           profile: minimal
           override: true
 
-      - name: Rusty cache
+      - name: Rust cache (pontemapi)
         uses: Swatinem/rust-cache@v1
+        with:
+          key: pontemapi
+          working-directory: ./pontem/pontemapi/
+          cache-on-failure: true
+
+      - name: Rust cache (root)
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: root
+          cache-on-failure: true
 
       - name: Build & Install Dove
         uses: actions-rs/cargo@v1
         with:
           command: install
-          args: --path=dove
+          args: --path=dove --force
 
-  proover:
+  dove_build:
     needs: tests
-    name: proover (${{ matrix.name }})
+    name: dove build | build --doc | test (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+          - name: ubuntu
+            os: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: dove-${{ matrix.name }}
+          path: ./bin
+      - name: Prepare dove
+        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+
+      - run: dove build --path ./dove/resources/for_tests/move-stdlib
+      - run: dove build --doc --path ./dove/resources/for_tests/move-stdlib
+      - run: dove test --path ./dove/resources/for_tests/move-stdlib
+
+
+  dove_prove:
+    needs: tests
+    name: dove prove (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -190,44 +231,14 @@ jobs:
       - name: Prepare dove
         run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
 
-      - name: Proove move-stdlib
+      - name: Prove move-stdlib
         run: dove prove -p=dove/resources/for_tests/move-stdlib/
 
-  builds:
+  dove_node_integration:
     needs: tests
-    name: Builds (${{ matrix.name }})
+    name: Node Integration tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: macos
-            os: macos-latest
-          - name: ubuntu
-            os: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: dove-${{ matrix.name }}
-          path: ./bin
-      - name: Prepare dove
-        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
-
-      - run: dove build --path ./dove/resources/for_tests/move-stdlib
-      - run: dove build --doc --path ./dove/resources/for_tests/move-stdlib
-      - run: dove test --path ./dove/resources/for_tests/move-stdlib
-
-  integration:
-    needs: tests
-    name: Integration (${{ matrix.name }})
-    runs-on: ${{ matrix.os }}
+    if: ${{ false }}
 
     strategy:
       fail-fast: false
