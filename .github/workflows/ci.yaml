@@ -236,7 +236,7 @@ jobs:
 
   dove_node_integration:
     needs: tests
-    name: "TODO: dove key | deploy | call | view (${{ matrix.name }})"
+    name: Node Integration tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     if: ${{ false }}
 
