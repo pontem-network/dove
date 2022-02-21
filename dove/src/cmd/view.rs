@@ -22,7 +22,7 @@ use crate::call::parser::parse_type_param;
     $ dove view Account::Store::U64
     $ dove view Account::Store::U64 --api http://127.0.0.1:9933
     $ dove view Account::Store::U64 --api http://127.0.0.1:9933 --json
-    $0x1::Account::Balance<0x1::Coins::ETH> --api http://127.0.0.1:9933 --json --output PATH/SAVE.json
+    $ dove view 0x1::Account::Balance<0x1::Coins::ETH> --api http://127.0.0.1:9933 --json --output PATH/SAVE.json
 ")]
 pub struct View {
     #[structopt(
