@@ -18,38 +18,38 @@ use crate::call::parser::parse_type_param;
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
 pub struct View {
-    /// Query in `TypeTag` format,
-    /// one-line address+type description.
-    /// Mainly, in most cases should be StructTag.
-    /// Additionaly can contain index at the end.
-    /// Query examples:
-    /// "0x1::Account::Balance<0x1::XFI::T>",
-    /// "0x1::Account::Balance<0x1::Coins::ETH>"
-    #[structopt(display_order = 1)]
+    #[structopt(
+        display_order = 1,
+        help = "Fully qualified type description in a form of ADDRESS::MODULE::TYPE_NAME<GENERIC_PARAMS> \n\
+            Examples: \n\
+            0x1::Account::Balance<0x1::XFI::T> \n\
+            0x1::Account::Balance<0x1::Coins::ETH>"
+    )]
     query: String,
 
-    /// Node REST API address
-    #[structopt(long, default_value = "http://127.0.0.1:9933", display_order = 2)]
+    #[structopt(
+        long,
+        default_value = "http://127.0.0.1:9933",
+        display_order = 2,
+        help = "The url of the substrate node to query. HTTP or HTTPS only"
+    )]
     api: Url,
 
-    /// Time: maximum block number
-    #[structopt(long, short, display_order = 3)]
-    height: Option<String>,
-
-    /// Sets output format to JSON.
-    /// Optional, `true` if output file extension is .json
-    #[structopt(long, short, display_order = 4)]
+    #[structopt(long, short, display_order = 3, help = "Sets output format to JSON")]
     json: bool,
 
-    /// Export JSON schema for output format.
-    /// Special value for write to stdout: "-"
-    #[structopt(long = "json-schema", display_order = 5)]
+    #[structopt(
+        long = "json-schema",
+        display_order = 4,
+        help = "Export JSON schema for output format"
+    )]
     json_schema: Option<PathBuf>,
 
-    /// Output file path.
-    /// Special value for write to stdout: "-"
-    #[structopt(long, short, display_order = 6)]
+    #[structopt(long, short, display_order = 5, help = "Path to output file")]
     output: Option<PathBuf>,
+
+    #[structopt(long, short, display_order = 6, help = "Block number")]
+    height: Option<String>,
 }
 
 impl View {
@@ -67,8 +67,8 @@ impl View {
                 let name_address = &self.query[..pos];
                 let address = address_map
                     .get(&NamedAddress::from(name_address))
-                    .map(|v| {
-                        v.ok_or(anyhow!(
+                    .map(|acc| {
+                        acc.ok_or(anyhow!(
                             "In Move.toml address not assigned to alias {}",
                             name_address
                         ))
