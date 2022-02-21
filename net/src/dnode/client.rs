@@ -1,13 +1,13 @@
 use log::{trace, debug};
 use serde::{Serialize, Deserialize};
 use anyhow::{anyhow, Result};
-use http::Uri;
+use url::Url;
 use crate::{Block, BytesForBlock};
 
 pub fn data_request(
     address: &[u8],
     path: &[u8],
-    url: &Uri,
+    url: &Url,
     height: &Option<Block>,
 ) -> Result<BytesForBlock> {
     let url = format!(

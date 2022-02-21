@@ -8,3 +8,5 @@ pub mod deploy;
 pub mod key;
 /// Script executor.
 pub mod run;
+/// resource-viewer
+pub mod view;

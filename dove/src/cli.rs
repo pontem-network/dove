@@ -15,9 +15,9 @@ use crate::cmd::clean::Clean;
 use crate::cmd::run::Run;
 use crate::cmd::call::ExecuteTransaction;
 use crate::cmd::key::Key;
-use crate::context::Context;
-
 use crate::cmd::deploy::Deploy;
+use crate::cmd::view::View;
+use crate::context::Context;
 use crate::natives::{all_natives, pontem_cost_table};
 
 #[derive(StructOpt)]
@@ -91,6 +91,11 @@ pub enum DoveCommands {
         #[structopt(flatten)]
         cmd: Key,
     },
+    #[structopt(about = "Resource viewer", display_order = 19)]
+    View {
+        #[structopt(flatten)]
+        cmd: View,
+    },
 }
 
 fn preprocess_args(args: Vec<String>) -> Vec<String> {
@@ -152,6 +157,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
         DoveCommands::Run { mut cmd } => cmd.apply(&mut ctx),
         DoveCommands::Call { mut cmd } => cmd.apply(&mut ctx),
         DoveCommands::Deploy { mut cmd } => cmd.apply(&mut ctx),
+        DoveCommands::View { mut cmd } => cmd.apply(&mut ctx),
         DoveCommands::Build
         | DoveCommands::Test
         | DoveCommands::Prove
