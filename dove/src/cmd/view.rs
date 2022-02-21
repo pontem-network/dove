@@ -14,8 +14,6 @@ use net::{make_net, NetView};
 use crate::context::Context;
 use crate::call::parser::parse_type_param;
 
-const STDOUT_PATH: &str = "-";
-
 /// Move Resource Viewer
 #[derive(StructOpt, Debug)]
 #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
@@ -27,32 +25,31 @@ pub struct View {
     /// Query examples:
     /// "0x1::Account::Balance<0x1::XFI::T>",
     /// "0x1::Account::Balance<0x1::Coins::ETH>"
-    #[structopt()]
+    #[structopt(display_order = 1)]
     query: String,
 
     /// Node REST API address
-    #[structopt(long, default_value = "http://127.0.0.1:9933")]
+    #[structopt(long, default_value = "http://127.0.0.1:9933", display_order = 2)]
     api: Url,
 
     /// Time: maximum block number
-    #[structopt(long, short)]
+    #[structopt(long, short, display_order = 3)]
     height: Option<String>,
 
     /// Sets output format to JSON.
     /// Optional, `true` if output file extension is .json
-    #[structopt(long, short)]
+    #[structopt(long, short, display_order = 4)]
     json: bool,
 
     /// Export JSON schema for output format.
     /// Special value for write to stdout: "-"
-    #[structopt(long = "json-schema")]
+    #[structopt(long = "json-schema", display_order = 5)]
     json_schema: Option<PathBuf>,
 
     /// Output file path.
     /// Special value for write to stdout: "-"
-    #[structopt(long, short)]
-    #[structopt(default_value = STDOUT_PATH)]
-    output: PathBuf,
+    #[structopt(long, short, display_order = 6)]
+    output: Option<PathBuf>,
 }
 
 impl View {
@@ -61,7 +58,6 @@ impl View {
             produce_json_schema(path);
         }
 
-        let output = self.output.clone();
         let height = self.height.clone();
         let net = make_net(self.api.clone())?;
         let address_map = ctx.manifest.addresses.clone().unwrap_or_default();
@@ -110,7 +106,9 @@ impl View {
                                         Ok(format!("{}", result))
                                     }
                                 })
-                                .map(|result| write_output(&output, &result, "result"))
+                                .map(|result| {
+                                    write_output(self.output.as_deref(), &result, "result")
+                                })
                         } else {
                             bail!("Resource not found, result is empty")
                         }
@@ -126,19 +124,20 @@ impl View {
 fn produce_json_schema(path: &Path) {
     let schema = ser::produce_json_schema();
     let render = serde_json::to_string_pretty(&schema).unwrap();
-    write_output(path, &render, "schema");
+    write_output(Some(path), &render, "schema");
 }
 
-fn write_output(path: &Path, result: &str, name: &str) {
+fn write_output(path: Option<&Path>, result: &str, name: &str) {
     use std::io::prelude::*;
-    if path.as_os_str() == STDOUT_PATH {
-        println!("{}", &result);
-    } else {
+
+    if let Some(path) = path {
         std::fs::File::create(path)
             .and_then(|mut f| f.write_all(result.as_bytes()))
             .map_err(|err| error!("Cannot write output: {}", err))
             .map(|_| info!("File with {} was written successfully", name))
             .ok();
+    } else {
+        println!("{}", &result);
     }
 }
 
