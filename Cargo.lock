@@ -698,20 +698,24 @@ dependencies = [
  "move-compiler",
  "move-core-types",
  "move-package",
+ "move-resource-viewer",
  "move-stdlib",
  "move-symbol-pool",
  "move-vm-runtime",
  "move-vm-types",
+ "net",
  "once_cell",
  "pontem",
  "pontem-client",
  "rand 0.7.3",
  "regex",
  "reqwest",
+ "resource-viewer",
  "ring",
  "rpassword",
  "semver",
  "serde 1.0.136",
+ "serde_json",
  "smallvec",
  "structopt",
  "toml",
@@ -719,6 +723,12 @@ dependencies = [
  "uint",
  "url",
 ]
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee2626afccd7561a06cf1367e2950c4718ea04565e20fb5029b6c7d8ad09abcf"
 
 [[package]]
 name = "ed25519"
@@ -1284,6 +1294,7 @@ checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
 dependencies = [
  "autocfg",
  "hashbrown 0.11.2",
+ "serde 1.0.136",
 ]
 
 [[package]]
@@ -1383,6 +1394,7 @@ name = "lang"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "blake2-rfc",
  "codespan-reporting",
  "include_dir",
  "move-binary-format",
@@ -1392,6 +1404,7 @@ dependencies = [
  "move-ir-types",
  "move-package",
  "move-symbol-pool",
+ "rust-base58",
  "serde 1.0.136",
  "tempfile",
  "walkdir",
@@ -2254,6 +2267,24 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "net"
+version = "0.1.2"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "hex",
+ "lang",
+ "log",
+ "move-binary-format",
+ "move-core-types",
+ "move-vm-runtime",
+ "reqwest",
+ "serde 1.0.136",
+ "serde_json",
+ "url",
 ]
 
 [[package]]
@@ -3154,6 +3185,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "resource-viewer"
+version = "1.2.1"
+dependencies = [
+ "http",
+ "move-binary-format",
+ "move-core-types",
+ "move-resource-viewer",
+ "net",
+ "schemars",
+ "serde 1.0.136",
+ "serde_json",
+]
+
+[[package]]
 name = "ring"
 version = "0.16.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3216,6 +3261,31 @@ checksum = "8f05ba609c234e60bee0d547fe94a4c7e9da733d1c962cf6e59efa4cd9c8bc75"
 dependencies = [
  "lazy_static 1.4.0",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "schemars"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6b5a3c80cea1ab61f4260238409510e814e38b4b563c06044edf91e7dc070e3"
+dependencies = [
+ "dyn-clone",
+ "indexmap",
+ "schemars_derive",
+ "serde 1.0.136",
+ "serde_json",
+]
+
+[[package]]
+name = "schemars_derive"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41ae4dce13e8614c46ac3c38ef1c0d668b101df6ac39817aebdaa26642ddae9b"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.15",
+ "serde_derive_internals",
+ "syn 1.0.86",
 ]
 
 [[package]]
@@ -3325,6 +3395,17 @@ name = "serde_derive"
 version = "1.0.136"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08597e7152fcd306f41838ed3e37be9eaeed2b61c42e2117266a554fab4662f9"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.15",
+ "syn 1.0.86",
+]
+
+[[package]]
+name = "serde_derive_internals"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1dbab34ca63057a1f15280bdf3c39f2b1eb1b54c17e98360e511637aef7418c6"
 dependencies = [
  "proc-macro2 1.0.36",
  "quote 1.0.15",

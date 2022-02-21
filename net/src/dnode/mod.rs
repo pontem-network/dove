@@ -1,16 +1,17 @@
-mod client;
+#![cfg(feature = "dfinance")]
 
-use crate::{Net, Block, BytesForBlock};
-use move_core_types::language_storage::{ModuleId, StructTag};
-use http::Uri;
+mod client;
 use anyhow::Result;
-use lang::compiler::dialects::Dialect;
-use crate::dnode::client::data_request;
+use url::Url;
+
+use move_core_types::language_storage::{ModuleId, StructTag};
 use move_core_types::account_address::AccountAddress;
 
+use crate::{Net, Block, BytesForBlock};
+use crate::dnode::client::data_request;
+
 pub struct DnodeNet {
-    pub(crate) dialect: Box<dyn Dialect>,
-    pub(crate) uri: Uri,
+    pub(crate) uri: Url,
 }
 
 impl Net for DnodeNet {
@@ -19,12 +20,17 @@ impl Net for DnodeNet {
         module_id: &ModuleId,
         height: &Option<Block>,
     ) -> Result<Option<BytesForBlock>> {
-        let address = self.dialect.adapt_address_to_target(*module_id.address());
+        // does not work without dialect
+        // let address = self.dialect.adapt_address_to_target(*module_id.address());
+        // remove this
+        let address = module_id.address().into_bytes();
+
         let bytes = data_request(&address, &module_id.access_vector(), &self.uri, height).ok();
         match bytes {
             None => Ok(None),
-            Some(mut bytes) => {
-                self.dialect.adapt_to_basis(&mut bytes.0)?;
+            Some(bytes) => {
+                // does not work without dialect
+                // self.dialect.adapt_to_basis(&mut bytes.0)?;
                 Ok(Some(BytesForBlock(bytes.0, bytes.1)))
             }
         }
@@ -36,19 +42,20 @@ impl Net for DnodeNet {
         tag: &StructTag,
         height: &Option<Block>,
     ) -> Result<Option<BytesForBlock>> {
-        let address = self.dialect.adapt_address_to_target(*address);
+        // does not work without dialect
+        // let address = self.dialect.adapt_address_to_target(*address);
+        // remove this
+        let address = address.into_bytes();
+
         let access_vector = tag.access_vector();
         let bytes = data_request(&address, &access_vector, &self.uri, height).ok();
         match bytes {
             None => Ok(None),
-            Some(mut bytes) => {
-                self.dialect.adapt_to_basis(&mut bytes.0)?;
+            Some(bytes) => {
+                // does not work without dialect
+                // self.dialect.adapt_to_basis(&mut bytes.0)?;
                 Ok(Some(BytesForBlock(bytes.0, bytes.1)))
             }
         }
-    }
-
-    fn dialect(&self) -> &dyn Dialect {
-        self.dialect.as_ref()
     }
 }
