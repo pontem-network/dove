@@ -674,7 +674,7 @@ dependencies = [
 
 [[package]]
 name = "dove"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "aes 0.7.5",
  "anyhow",
