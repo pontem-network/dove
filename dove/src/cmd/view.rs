@@ -159,7 +159,7 @@ fn parse_query(addr_map: &AddressDeclarations, query: &str) -> Result<TypeTag, E
     use move_compiler::Flags;
 
     let mut lexer = Lexer::new(query, FileHash::new(query));
-    let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+    let mut env = CompilationEnv::new(Flags::empty());
     let mut ctx = Context::new(&mut env, &mut lexer);
 
     ctx.tokens.advance().map_err(|err| anyhow!("{:?}", &err))?;

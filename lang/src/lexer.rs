@@ -108,7 +108,7 @@ mod tests {
         lexer
             .advance()
             .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
-        let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+        let mut env = CompilationEnv::new(Flags::empty());
         let mut context = Context::new(&mut env, &mut lexer);
         let ty = parse_type(&mut context)
             .map_err(|err| anyhow!("Query parsing error:\n\t{:?}", err))?;
