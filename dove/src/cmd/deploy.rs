@@ -112,7 +112,7 @@ impl Deploy {
         let file_name = self
             .file
             .as_ref()
-            .ok_or(anyhow!("File name not specified"))?;
+            .ok_or_else(|| anyhow!("File name not specified"))?;
 
         let file_path = if let Some(path) = str_to_path(file_name) {
             path

@@ -108,7 +108,7 @@ impl TryFrom<(&NodeAccessParams, PathBuf)> for Publish {
         let (params, file_path) = value;
         let gas_limit = params
             .gas_limit
-            .ok_or(anyhow!("Please specify gas limit"))?;
+            .ok_or_else(|| anyhow!("Please specify gas limit"))?;
         let mut url_to_node = params.url_to_node.clone();
 
         let access = if params.secret_phrase {
@@ -164,7 +164,7 @@ impl Publish {
     fn file_path_as_str(&self) -> Result<&str> {
         self.file_path
             .to_str()
-            .ok_or(anyhow!("Error converting path to string"))
+            .ok_or_else(|| anyhow!("Error converting path to string"))
     }
 }
 

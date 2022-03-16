@@ -233,7 +233,7 @@ async fn pb_module(context: Context) -> Result<String> {
 
     let mut last = 0;
     loop {
-        let raw = sub.next().await.ok_or(anyhow!("No response received"))??;
+        let raw = sub.next().await.ok_or_else(|| anyhow!("No response received"))??;
 
         match raw.variant.as_str() {
             // The event is triggered 3 times. If the event was triggered after "ModulePublished", it is final
@@ -291,7 +291,7 @@ async fn execute(context: Context) -> Result<String> {
 
     let mut last = 0;
     loop {
-        let raw = sub.next().await.ok_or(anyhow!("No response received"))??;
+        let raw = sub.next().await.ok_or_else(|| anyhow!("No response received"))??;
 
         debug!("event {}", raw.variant.as_str());
         match raw.variant.as_str() {
@@ -349,7 +349,7 @@ async fn pb_package_dev(context: Context) -> Result<String> {
 
     let mut last = 0;
     loop {
-        let raw = sub.next().await.ok_or(anyhow!("No response received"))??;
+        let raw = sub.next().await.ok_or_else(|| anyhow!("No response received"))??;
 
         debug!("event {}", raw.variant.as_str());
         match raw.variant.as_str() {
@@ -389,7 +389,7 @@ fn test_keyring_from_str(signer: &str) -> Result<AccountKeyring> {
             let account_id =
                 AccountId32::from_string(signer).map_err(|err| anyhow!("{:?}", err))?;
             AccountKeyring::from_account_id(&account_id)
-                .ok_or(anyhow!(r#"Failed to get "keyring""#))?
+                .ok_or_else(|| anyhow!(r#"Failed to get "keyring""#))?
         }
     };
     Ok(keyring)
