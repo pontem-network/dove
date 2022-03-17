@@ -111,7 +111,7 @@ impl Call {
 /// Return: Ok(Script name, Type parameters, Function arguments) or Error
 pub(crate) fn parse_call(addr_map: &AddressDeclarations, call: &str) -> Result<Call, Error> {
     let mut lexer = Lexer::new(call, FileHash::new("call"));
-    let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+    let mut env = CompilationEnv::new(Flags::empty());
     let mut ctx = Context::new(&mut env, &mut lexer);
 
     ctx.tokens
@@ -300,7 +300,7 @@ fn parse_args(ctx: &mut Context) -> Result<Vec<String>, Error> {
 
 pub(crate) fn parse_tp_param(addr_map: &AddressDeclarations, tp: &str) -> Result<TypeTag, Error> {
     let mut lexer = Lexer::new(tp, FileHash::new("tp"));
-    let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+    let mut env = CompilationEnv::new(Flags::empty());
     let mut ctx = Context::new(&mut env, &mut lexer);
 
     ctx.tokens

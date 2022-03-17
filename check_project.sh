@@ -20,3 +20,8 @@ cargo +stable clippy --tests --workspace -- -Dwarnings
 
 cargo test --all
 cargo build
+
+./target/debug/dove build --path ./dove/resources/for_tests/move-stdlib
+./target/debug/dove build --doc --path ./dove/resources/for_tests/move-stdlib
+./target/debug/dove test --path ./dove/resources/for_tests/move-stdlib
+./target/debug/dove prove -p=dove/resources/for_tests/move-stdlib/

@@ -75,10 +75,12 @@ impl View {
                 let address = address_map
                     .get(&NamedAddress::from(name_address))
                     .map(|acc| {
-                        acc.ok_or(anyhow!(
-                            "In Move.toml address not assigned to alias {}",
-                            name_address
-                        ))
+                        acc.ok_or_else(|| {
+                            anyhow!(
+                                "In Move.toml address not assigned to alias {}",
+                                name_address
+                            )
+                        })
                     })
                     .unwrap_or_else(|| ss58_to_address(name_address))?;
 
@@ -159,7 +161,7 @@ fn parse_query(addr_map: &AddressDeclarations, query: &str) -> Result<TypeTag, E
     use move_compiler::Flags;
 
     let mut lexer = Lexer::new(query, FileHash::new(query));
-    let mut env = CompilationEnv::new(Flags::empty(), Default::default());
+    let mut env = CompilationEnv::new(Flags::empty());
     let mut ctx = Context::new(&mut env, &mut lexer);
 
     ctx.tokens.advance().map_err(|err| anyhow!("{:?}", &err))?;
