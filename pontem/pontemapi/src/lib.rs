@@ -8,12 +8,12 @@ use sp_core::crypto::{AccountId32, Ss58Codec};
 use sp_core::crypto::Pair;
 use sp_core::sr25519::Pair as sr25519Pair;
 use sp_keyring::AccountKeyring;
-use subxt::{ClientBuilder, EventSubscription, Metadata, PairSigner};
+use subxt::{ClientBuilder, PairSigner};
 
 /// Library version with a short hash
 const VERSION: &str = hash_project::version!(".");
 
-/// metadata for encoding and decoding
+// metadata for encoding and decoding
 #[subxt::subxt(
     runtime_metadata_path = "metadata/pontem.scale",
     generated_type_derives = "Clone, Debug"
@@ -46,7 +46,6 @@ const _: () = {
 };
 
 use crate::pontem::DefaultConfig;
-use crate::pontem::runtime_types::sp_runtime::DispatchError;
 
 /// Public interface for publishing the module
 ///     module_path: The path to the module file. PATH/TO/MODULE/FILE.mv
@@ -202,7 +201,7 @@ pub fn version() -> String {
 async fn pb_module(context: Context) -> Result<String> {
     debug!("Reading a file: {}", context.path_file.display());
     let module = fs::read(&context.path_file)?;
-    let pair_signer: PairSigner<DefaultConfig, sr25519Pair> =
+    let signer_pair: PairSigner<DefaultConfig, sr25519Pair> =
         PairSigner::new(context.pair.clone());
 
     let api = ClientBuilder::new()
@@ -211,49 +210,23 @@ async fn pb_module(context: Context) -> Result<String> {
         .await?
         .to_runtime_api::<pontem::RuntimeApi<pontem::DefaultConfig>>();
 
-    let hash = api
-        .tx()
-        .mvm()
-        .publish_module(module, context.gas)
-        .sign_and_submit(&pair_signer)
+    let published = api.tx().mvm().publish_module(module, context.gas);
+
+    if !context.is_connection_ws() {
+        return Ok(published.sign_and_submit(&signer_pair).await?.to_string());
+    }
+
+    let hash = published
+        .sign_and_submit_then_watch(&signer_pair)
         .await?
+        .wait_for_in_block()
+        .await?
+        .wait_for_success()
+        .await?
+        .block_hash()
         .to_string();
 
-    // Only for Websocket you can get the result of publishing
-    if !context.is_connection_ws() {
-        return Ok(hash);
-    }
-
-    // It is necessary to decrypt the message
-    let metadata = api.client.metadata();
-    // Subscribe to events
-    let sub = api.client.rpc().subscribe_events().await?;
-    let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem::DefaultConfig>::new(sub, decoder);
-
-    let mut last = 0;
-    loop {
-        let raw = sub.next().await.ok_or_else(|| anyhow!("No response received"))??;
-
-        match raw.variant.as_str() {
-            // The event is triggered 3 times. If the event was triggered after "ModulePublished", it is final
-            "ExtrinsicSuccess" => {
-                if last == 1 {
-                    return Ok(hash);
-                }
-            }
-            // Called when a module publishing error occurs
-            "ExtrinsicFailed" => {
-                let answer = <pontem::system::events::ExtrinsicFailed as codec::Decode>::decode(
-                    &mut &raw.data[..],
-                )?;
-                return Err(anyhow!(dispatcherror_to_string(answer.0, metadata)));
-            }
-            // The module is published. Not the last event
-            "ModulePublished" | "Event" => last = 1,
-            _ => {}
-        }
-    }
+    Ok(hash)
 }
 
 /// Transaction execution
@@ -269,49 +242,23 @@ async fn execute(context: Context) -> Result<String> {
         .await?
         .to_runtime_api::<pontem::RuntimeApi<pontem::DefaultConfig>>();
 
-    let hash = api
-        .tx()
-        .mvm()
-        .execute(transaction, context.gas)
-        .sign_and_submit(&signer_pair)
+    let published = api.tx().mvm().execute(transaction, context.gas);
+
+    if !context.is_connection_ws() {
+        return Ok(published.sign_and_submit(&signer_pair).await?.to_string());
+    }
+
+    let hash = published
+        .sign_and_submit_then_watch(&signer_pair)
         .await?
+        .wait_for_in_block()
+        .await?
+        .wait_for_success()
+        .await?
+        .block_hash()
         .to_string();
 
-    // Only for Websocket you can get the result of publishing
-    if !context.is_connection_ws() {
-        return Ok(hash);
-    }
-
-    // Subscribe to events
-    let sub = api.client.rpc().subscribe_events().await?;
-    let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem::DefaultConfig>::new(sub, decoder);
-    // It is necessary to decrypt the message
-    let metadata = api.client.metadata();
-
-    let mut last = 0;
-    loop {
-        let raw = sub.next().await.ok_or_else(|| anyhow!("No response received"))??;
-
-        debug!("event {}", raw.variant.as_str());
-        match raw.variant.as_str() {
-            // The event is triggered 4 times
-            "ExtrinsicSuccess" => {
-                last += 1;
-                if last == 4 {
-                    return Ok(hash);
-                }
-            }
-            // Called when a module execute error occurs
-            "ExtrinsicFailed" => {
-                let answer = <pontem::system::events::ExtrinsicFailed as codec::Decode>::decode(
-                    &mut &raw.data[..],
-                )?;
-                return Err(anyhow!(dispatcherror_to_string(answer.0, metadata)));
-            }
-            _ => {}
-        }
-    }
+    Ok(hash)
 }
 
 /// Publish a package
@@ -327,49 +274,23 @@ async fn pb_package_dev(context: Context) -> Result<String> {
         .await?
         .to_runtime_api::<pontem::RuntimeApi<pontem::DefaultConfig>>();
 
-    let hash = api
-        .tx()
-        .mvm()
-        .publish_package(package, context.gas)
-        .sign_and_submit(&signer_pair)
+    let published = api.tx().mvm().publish_package(package, context.gas);
+
+    if !context.is_connection_ws() {
+        return Ok(published.sign_and_submit(&signer_pair).await?.to_string());
+    }
+
+    let hash = published
+        .sign_and_submit_then_watch(&signer_pair)
         .await?
+        .wait_for_in_block()
+        .await?
+        .wait_for_success()
+        .await?
+        .block_hash()
         .to_string();
 
-    // Only for Websocket you can get the result of publishing
-    if !context.is_connection_ws() {
-        return Ok(hash);
-    }
-
-    // Subscribe to events
-    let sub = api.client.rpc().subscribe_events().await?;
-    let decoder = api.client.events_decoder();
-    let mut sub = EventSubscription::<pontem::DefaultConfig>::new(sub, decoder);
-    // It is necessary to decrypt the message
-    let metadata = api.client.metadata();
-
-    let mut last = 0;
-    loop {
-        let raw = sub.next().await.ok_or_else(|| anyhow!("No response received"))??;
-
-        debug!("event {}", raw.variant.as_str());
-        match raw.variant.as_str() {
-            // The event is triggered 4 times
-            "ExtrinsicSuccess" => {
-                last += 1;
-                if last == 4 {
-                    return Ok(hash);
-                }
-            }
-            // Called when a module publishing error occurs
-            "ExtrinsicFailed" => {
-                let answer = <pontem::system::events::ExtrinsicFailed as codec::Decode>::decode(
-                    &mut &raw.data[..],
-                )?;
-                return Err(anyhow!(dispatcherror_to_string(answer.0, metadata)));
-            }
-            _ => {}
-        }
-    }
+    Ok(hash)
 }
 
 /// Converting a test account alias or ss58 address into a keyring
@@ -389,49 +310,10 @@ fn test_keyring_from_str(signer: &str) -> Result<AccountKeyring> {
             let account_id =
                 AccountId32::from_string(signer).map_err(|err| anyhow!("{:?}", err))?;
             AccountKeyring::from_account_id(&account_id)
-                .ok_or_else(|| anyhow!(r#"Failed to get "keyring""#))?
+                .ok_or(anyhow!(r#"Failed to get "keyring""#))?
         }
     };
     Ok(keyring)
-}
-
-/// Converting an error to a string. Error when calling an external function in the node
-fn dispatcherror_to_string(error: DispatchError, meta: &Metadata) -> String {
-    use crate::pontem::runtime_types::sp_runtime::{ArithmeticError, TokenError};
-    match error {
-        DispatchError::Other => "Other".to_string(),
-        DispatchError::CannotLookup => "CannotLookup".to_string(),
-        DispatchError::BadOrigin => "BadOrigin".to_string(),
-        DispatchError::Module { index, error } => match meta.error(index, error) {
-            Ok(ok) => format!(
-                "Pallet: {pallet}\n\
-                Error: {error}\n\
-                Description: {description}",
-                pallet = ok.pallet(),
-                error = ok.error(),
-                description = ok.description().join(" ")
-            ),
-            Err(_) => format!("Error not found: {} {}", index, error),
-        },
-        DispatchError::ConsumerRemaining => "ConsumerRemaining".to_string(),
-        DispatchError::NoProviders => "NoProviders".to_string(),
-        DispatchError::Token(value) => match value {
-            TokenError::NoFunds => "Token.NoFunds",
-            TokenError::WouldDie => "Token.WouldDie",
-            TokenError::BelowMinimum => "Token.BelowMinimum",
-            TokenError::CannotCreate => "Token.CannotCreate",
-            TokenError::UnknownAsset => "Token.UnknownAsset",
-            TokenError::Frozen => "Token.Frozen",
-            TokenError::Unsupported => "Token.Unsupported",
-        }
-        .to_string(),
-        DispatchError::Arithmetic(value) => match value {
-            ArithmeticError::Underflow => "Arithmetic.Underflow",
-            ArithmeticError::Overflow => "Arithmetic.Overflow",
-            ArithmeticError::DivisionByZero => "Arithmetic.DivisionByZero",
-        }
-        .to_string(),
-    }
 }
 
 struct Context {
@@ -545,8 +427,25 @@ mod tests {
     #[test]
     #[ignore]
     fn test_tx_mvm_publish_module_dev_ws() {
-        tx_mvm_publish_module_dev("./Alice_Store.mv", "ws://127.0.0.1:9944", 100, "alice")
-            .unwrap();
+        tx_mvm_publish_module_dev(
+            "./for_test/bytecode_modules/Demo1v.mv",
+            "ws://127.0.0.1:9944",
+            100,
+            "alice",
+        )
+        .unwrap();
+    }
+
+    #[test]
+    #[ignore]
+    fn test_tx_mvm_publish_module_dev_http() {
+        tx_mvm_publish_module_dev(
+            "./for_test/bytecode_modules/Demo1v.mv",
+            "http://127.0.0.1:9933",
+            100,
+            "alice",
+        )
+        .unwrap();
     }
 
     #[test]
@@ -592,7 +491,7 @@ mod tests {
         // sr25519
 
         let result = tx_mvm_publish_module(
-            "./Demo_Store.mv",
+            "./for_test/bytecode_modules/Demo1v.mv",
             "ws://127.0.0.1:9944",
             100,
             "net exotic exchange stadium camp mind walk cart infant hospital will address",
