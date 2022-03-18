@@ -51,7 +51,7 @@ impl ExecuteTransaction {
         Publish::try_from((&self.request, path_transaction))?
             .apply()
             .map(|address| {
-                println!("Address: {}", address);
+                println!("Hash: {}", address);
             })
     }
 }
