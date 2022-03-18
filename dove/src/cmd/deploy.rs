@@ -122,8 +122,8 @@ impl Deploy {
 
         Publish::try_from((&self.request, file_path))?
             .apply()
-            .map(|address| {
-                println!("Hash: {}", address);
+            .map(|hash| {
+                println!("Hash: {hash}");
             })
     }
 }
