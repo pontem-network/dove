@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use structopt::StructOpt;
+use clap::Parser;
 use anyhow::{Error, Result};
 use move_bytecode_source_map::source_map::SourceMap;
 use lang::bytecode::info::BytecodeInfo;
@@ -20,9 +20,8 @@ use crate::call::fn_call::Config;
 use crate::call::make_transaction;
 use crate::call::model::EnrichedTransaction;
 
-#[derive(StructOpt, Debug)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-#[structopt(usage = "dove run [call] [OPTIONS]\n
+#[derive(Parser, Debug)]
+#[clap(about = "dove run [call] [OPTIONS]\n
     Examples:
     $ dove run 'script_name([10,10], true, 100, 0x1, ADDRESS_ALIAS, SS58_ADDRESS)'
     $ dove run script_name --args [10,10] true 100 0x1 ADDRESS_ALIAS SS58_ADDRESS
@@ -32,15 +31,15 @@ use crate::call::model::EnrichedTransaction;
     $ dove run '0x1::Module::function' --args [10,10] true ALIAS_ADDRESSES SS58_ADDRESS 100 0x1 --type '0x01::Dfinance::USD'
 ")]
 pub struct Run {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     call: CallDeclarationCmd,
 
     /// If set, the effects of executing `script_file` (i.e., published, updated, and
     /// deleted resources) will NOT be committed to disk.
-    #[structopt(long = "dry-run")]
+    #[clap(long = "dry-run")]
     dry_run: bool,
 
-    #[structopt(long = "gas_budget", short = "g")]
+    #[clap(long = "gas_budget", short = 'g')]
     gas_budget: Option<u64>,
 }
 

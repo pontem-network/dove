@@ -2,7 +2,7 @@ use std::env;
 use std::path::{PathBuf, Path};
 
 use anyhow::{Result, Error};
-use structopt::StructOpt;
+use clap::Parser;
 use semver::{Version, VersionReq};
 
 use move_cli::{Move};
@@ -14,86 +14,87 @@ use crate::{
 use crate::cmd::clean::Clean;
 use crate::cmd::run::Run;
 use crate::cmd::call::ExecuteTransaction;
-use crate::cmd::key::Key;
+use crate::cmd::key::KeyCommand;
 use crate::cmd::deploy::Deploy;
 use crate::cmd::view::View;
 use crate::context::Context;
 use crate::natives::{all_natives, pontem_cost_table};
 
-#[derive(StructOpt)]
-#[structopt(
+#[derive(Parser)]
+#[clap(
     name = "Dove",
     version = git_hash::crate_version_with_git_hash_short!(),
     long_version = create_long_version(),
 )]
 struct DoveOpt {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub move_args: Move,
 
-    #[structopt(subcommand)]
+    #[clap(subcommand)]
     pub cmd: DoveCommands,
 }
 
 /// Move cli and dove commands.
-#[derive(StructOpt)]
+#[derive(clap::Subcommand)]
 pub enum DoveCommands {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     DiemCommand(move_cli::Command),
 
-    #[structopt(
+    #[clap(
         about = "Create a new Move project. Alias for 'package new'",
         display_order = 10
     )]
     New,
-    #[structopt(
+    #[clap(
         about = "Create new Move project in the current directory. Alias for 'package new --cwd'",
         display_order = 11
     )]
     Init,
-    #[structopt(about = "Build project. Alias for 'package build'", display_order = 12)]
+    #[clap(about = "Build project. Alias for 'package build'", display_order = 12)]
     Build,
-    #[structopt(about = "Run tests. Alias for 'package test'", display_order = 13)]
+    #[clap(about = "Run tests. Alias for 'package test'", display_order = 13)]
     Test,
-    #[structopt(
+    #[clap(
         about = "Run Move prover. Alias for 'package prove'",
         display_order = 14
     )]
     Prove,
 
-    #[structopt(about = "Remove ./build directory", display_order = 15)]
+    #[clap(about = "Remove ./build directory", display_order = 15)]
     Clean {
-        #[structopt(flatten)]
+        #[clap(flatten)]
         cmd: Clean,
     },
-    #[structopt(about = "Run move script", display_order = 16)]
+    #[clap(about = "Run move script", display_order = 16)]
     Run {
-        #[structopt(flatten)]
+        #[clap(flatten)]
         cmd: Run,
     },
-    #[structopt(
+    #[clap(
         about = "Create and execute transaction on the node",
         display_order = 17
     )]
     Call {
-        #[structopt(flatten)]
+        #[clap(flatten)]
         cmd: ExecuteTransaction,
     },
-    #[structopt(
+    #[clap(
         about = "Create package bundle and publish it to the network",
         display_order = 18
     )]
     Deploy {
-        #[structopt(flatten)]
+        #[clap(flatten)]
         cmd: Deploy,
     },
-    #[structopt(about = "Manage wallet keys")]
-    Key {
-        #[structopt(flatten)]
-        cmd: Key,
-    },
-    #[structopt(about = "Resource viewer", display_order = 19)]
+    #[clap(about = "Manage wallet keys", subcommand)]
+    Key(KeyCommand),
+    // Key {
+    //     #[clap(flatten)]
+    //     cmd: Key,
+    // },
+    #[clap(about = "Resource viewer", display_order = 19)]
     View {
-        #[structopt(flatten)]
+        #[clap(flatten)]
         cmd: View,
     },
 }
@@ -118,7 +119,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
         check_dove_version(&minimal_version)?;
     }
     let args = preprocess_args(args);
-    let DoveOpt { move_args, cmd } = DoveOpt::from_iter(args);
+    let DoveOpt { move_args, cmd } = DoveOpt::parse_from(args);
 
     // `dove clean`|`dove key` needs empty context and no preparation, so try it before other commands
     match cmd {
@@ -126,7 +127,7 @@ pub fn execute(args: Vec<String>, cwd: PathBuf) -> Result<()> {
             cmd.apply(&cwd);
             return Ok(());
         }
-        DoveCommands::Key { mut cmd } => return cmd.apply(),
+        DoveCommands::Key(mut cmd) => return cmd.apply(),
         _ => (),
     };
 

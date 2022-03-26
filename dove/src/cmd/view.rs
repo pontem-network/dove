@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use anyhow::Error;
-use structopt::StructOpt;
+use clap::Parser;
 use log::{error, info};
 use reqwest::Url;
 
@@ -15,9 +15,8 @@ use crate::context::Context;
 use crate::call::parser::parse_type_param;
 
 /// Move Resource Viewer
-#[derive(StructOpt, Debug)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-#[structopt(usage = "dove view [QUERY] [OPTIONS]
+#[derive(Parser, Debug)]
+#[clap(about = "dove view [QUERY] [OPTIONS]
     Examples:
     $ dove view Account::Store::U64
     $ dove view Account::Store::U64 --api http://127.0.0.1:9933
@@ -25,7 +24,7 @@ use crate::call::parser::parse_type_param;
     $ dove view 0x1::Account::Balance<0x1::Coins::ETH> --api http://127.0.0.1:9933 --json --output PATH/SAVE.json
 ")]
 pub struct View {
-    #[structopt(
+    #[clap(
         display_order = 1,
         help = "Fully qualified type description in a form of ADDRESS::MODULE::TYPE_NAME<GENERIC_PARAMS> \n\
             Examples: \n\
@@ -34,7 +33,7 @@ pub struct View {
     )]
     query: String,
 
-    #[structopt(
+    #[clap(
         long,
         default_value = "http://127.0.0.1:9933",
         display_order = 2,
@@ -42,20 +41,20 @@ pub struct View {
     )]
     api: Url,
 
-    #[structopt(long, short, display_order = 3, help = "Sets output format to JSON")]
+    #[clap(long, short, display_order = 3, help = "Sets output format to JSON")]
     json: bool,
 
-    #[structopt(
+    #[clap(
         long = "json-schema",
         display_order = 4,
         help = "Export JSON schema for output format"
     )]
     json_schema: Option<PathBuf>,
 
-    #[structopt(long, short, display_order = 5, help = "Path to output file")]
+    #[clap(long, display_order = 5, help = "Path to output file")]
     output: Option<PathBuf>,
 
-    #[structopt(long, short, display_order = 6, help = "Block number")]
+    #[clap(long, short, display_order = 6, help = "Block number")]
     height: Option<String>,
 }
 

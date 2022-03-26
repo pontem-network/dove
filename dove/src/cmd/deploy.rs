@@ -6,7 +6,7 @@ use std::fs::remove_file;
 use std::path::{PathBuf, Path};
 
 use anyhow::Error;
-use structopt::StructOpt;
+use clap::Parser;
 use serde::{Serialize, Deserialize};
 use anyhow::Result;
 use itertools::Itertools;
@@ -21,9 +21,8 @@ use move_core_types::language_storage::ModuleId;
 use crate::context::Context;
 use crate::publish::{NodeAccessParams, Publish};
 
-#[derive(StructOpt, Debug)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-#[structopt(usage = "dove deploy [FILE_NAME|PATH] [OPTIONS]
+#[derive(Parser, Debug)]
+#[clap(about = "dove deploy [FILE_NAME|PATH] [OPTIONS]
     Examples:
     $ dove deploy
     $ dove deploy PACKAGE_NAME --account WALLET_KEY --gas 300
@@ -32,7 +31,7 @@ use crate::publish::{NodeAccessParams, Publish};
     $ dove deploy PATH/TO/FILE --account //Alice --gas 300
 ")]
 pub struct Deploy {
-    #[structopt(help = "Module/Bundle name or path")]
+    #[clap(help = "Module/Bundle name or path")]
     file: Option<String>,
 
     // * Only for bundle
@@ -40,13 +39,13 @@ pub struct Deploy {
     // Modules are taken from the <PROJECT_PATH>/build/<PROJECT_NAME>/bytecode_modules directory.
     // The names are case-insensitive and can be specified with an extension.mv or without it.
     // --modules_exclude NAME_1 NAME_2 NAME_3
-    #[structopt(
+    #[clap(
         help = "Names of modules to exclude from the package process.",
         long = "modules_exclude"
     )]
     modules_exclude: Vec<String>,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     request: NodeAccessParams,
 }
 
