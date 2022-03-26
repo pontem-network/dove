@@ -98,13 +98,19 @@ pub enum DoveCommands {
 fn preprocess_args(args: Vec<String>) -> Vec<String> {
     let dove = args.get(0).unwrap().clone();
     let mut line = args.join(" ");
-    line = line.replace(&format!("{dove} new"), &format!("{dove} package new"));
-    line = line.replace(&format!("{dove} build"), &format!("{dove} package build"));
-    line = line.replace(&format!("{dove} test"), &format!("{dove} package test"));
-    line = line.replace(&format!("{dove} prove"), &format!("{dove} package prove"));
+    line = line.replace(&format!("{} new", dove), &format!("{} package new", dove));
     line = line.replace(
-        &format!("{dove} init"),
-        &format!("{dove} package new --cwd"),
+        &format!("{} build", dove),
+        &format!("{} package build", dove),
+    );
+    line = line.replace(&format!("{} test", dove), &format!("{} package test", dove));
+    line = line.replace(
+        &format!("{} prove", dove),
+        &format!("{} package prove", dove),
+    );
+    line = line.replace(
+        &format!("{} init", dove),
+        &format!("{} package new --cwd", dove),
     );
     line.split(' ').map(String::from).collect()
 }

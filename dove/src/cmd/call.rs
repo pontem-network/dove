@@ -50,7 +50,7 @@ impl ExecuteTransaction {
         Publish::try_from((&self.request, path_transaction))?
             .apply()
             .map(|hash| {
-                println!("Hash: {hash}");
+                println!("Hash: {}", hash);
             })
     }
 }

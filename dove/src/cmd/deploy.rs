@@ -123,7 +123,7 @@ impl Deploy {
         Publish::try_from((&self.request, file_path))?
             .apply()
             .map(|hash| {
-                println!("Hash: {hash}");
+                println!("Hash: {}", hash);
             })
     }
 }
