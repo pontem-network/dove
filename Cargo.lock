@@ -132,12 +132,12 @@ checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "async-trait"
-version = "0.1.52"
+version = "0.1.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "061a7acccaa286c011ddc30970520b98fa40e00c9d644633fb26b5fc63a265e3"
+checksum = "ed6aa3524a2dfcf9fe180c51eae2b58738348d819517ceadf95789c51fff7600"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -160,7 +160,7 @@ checksum = "7862e21c893d65a1650125d157eaeec691439379a1cee17ee49031b79236ada4"
 dependencies = [
  "proc-macro-error",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -309,13 +309,24 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode-interpreter-crypto"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "curve25519-dalek-fiat",
  "ed25519-dalek-fiat",
  "sha2",
  "sha3 0.9.1",
+ "workspace-hack",
+]
+
+[[package]]
+name = "bytecode_adapter"
+version = "0.1.0"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
+dependencies = [
+ "anyhow",
+ "move-binary-format",
+ "move-core-types",
  "workspace-hack",
 ]
 
@@ -455,7 +466,7 @@ dependencies = [
  "heck 0.4.0",
  "proc-macro-error",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -705,7 +716,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -752,7 +763,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04451964c7d9fb6a9579fbe1878fe35705f07d22e8766c6993cafba567df0251"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -1017,7 +1028,7 @@ dependencies = [
 [[package]]
 name = "evm-exec-utils"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "dirs",
@@ -1083,9 +1094,9 @@ dependencies = [
 
 [[package]]
 name = "fiat-crypto"
-version = "0.1.11"
+version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2176874104231d65f2dd4d0c2e027e78614170d356c8ccfa826aaef103c8fe89"
+checksum = "c187d1e46d3f2b4b7d3c246b2643dbf0446a14b24854ccdc9d8d8d7f5c7c1140"
 
 [[package]]
 name = "fixed-hash"
@@ -1219,7 +1230,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33c1e13800337f4d4d7a316bf45a567dbcb6ffe087f16424852d97e97a91f512"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -1598,7 +1609,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11d7a9f6330b71fea57921c9b61c47ee6e84f72d394754eff6163ae67e7395eb"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -1622,7 +1633,7 @@ dependencies = [
  "anyhow",
  "proc-macro-hack",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -1953,7 +1964,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "move-abigen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1970,7 +1981,7 @@ dependencies = [
 [[package]]
 name = "move-binary-format"
 version = "0.0.3"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "mirai-annotations",
@@ -1985,7 +1996,7 @@ dependencies = [
 [[package]]
 name = "move-borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "mirai-annotations",
  "workspace-hack",
@@ -1994,7 +2005,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2011,7 +2022,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-utils"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -2024,7 +2035,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "mirai-annotations",
@@ -2038,9 +2049,10 @@ dependencies = [
 [[package]]
 name = "move-bytecode-viewer"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
+ "clap 3.1.6",
  "crossterm 0.21.0",
  "move-binary-format",
  "move-bytecode-source-map",
@@ -2048,7 +2060,6 @@ dependencies = [
  "move-disassembler",
  "move-ir-types",
  "regex",
- "structopt",
  "tui",
  "workspace-hack",
 ]
@@ -2056,10 +2067,11 @@ dependencies = [
 [[package]]
 name = "move-cli"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
+ "clap 3.1.6",
  "codespan-reporting",
  "colored",
  "difference",
@@ -2091,7 +2103,6 @@ dependencies = [
  "read-write-set-dynamic",
  "serde 1.0.136",
  "serde_yaml",
- "structopt",
  "tempfile",
  "walkdir",
  "workspace-hack",
@@ -2100,7 +2111,7 @@ dependencies = [
 [[package]]
 name = "move-command-line-common"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "difference",
@@ -2114,10 +2125,12 @@ dependencies = [
 [[package]]
 name = "move-compiler"
 version = "0.0.1"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
+ "bytecode_adapter",
+ "clap 3.1.6",
  "codespan-reporting",
  "difference",
  "hex",
@@ -2135,7 +2148,6 @@ dependencies = [
  "petgraph 0.5.1",
  "pontem",
  "regex",
- "structopt",
  "tempfile",
  "walkdir",
  "workspace-hack",
@@ -2144,7 +2156,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.3"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2161,10 +2173,11 @@ dependencies = [
 [[package]]
 name = "move-coverage"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
+ "clap 3.1.6",
  "codespan",
  "colored",
  "move-binary-format",
@@ -2176,16 +2189,16 @@ dependencies = [
  "once_cell",
  "petgraph 0.5.1",
  "serde 1.0.136",
- "structopt",
  "workspace-hack",
 ]
 
 [[package]]
 name = "move-disassembler"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
+ "clap 3.1.6",
  "colored",
  "move-binary-format",
  "move-bytecode-source-map",
@@ -2195,14 +2208,13 @@ dependencies = [
  "move-core-types",
  "move-coverage",
  "move-ir-types",
- "structopt",
  "workspace-hack",
 ]
 
 [[package]]
 name = "move-docgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "codespan",
@@ -2222,7 +2234,7 @@ dependencies = [
 [[package]]
 name = "move-errmapgen"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2237,7 +2249,7 @@ dependencies = [
 [[package]]
 name = "move-ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "codespan-reporting",
@@ -2257,7 +2269,7 @@ dependencies = [
 [[package]]
 name = "move-ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "hex",
@@ -2271,7 +2283,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "hex",
@@ -2286,7 +2298,7 @@ dependencies = [
 [[package]]
 name = "move-model"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "codespan",
@@ -2313,10 +2325,11 @@ dependencies = [
 [[package]]
 name = "move-package"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
+ "clap 3.1.6",
  "colored",
  "lockfile",
  "move-abigen",
@@ -2339,7 +2352,6 @@ dependencies = [
  "serde 1.0.136",
  "serde_yaml",
  "sha2",
- "structopt",
  "tempfile",
  "toml",
  "walkdir",
@@ -2349,12 +2361,12 @@ dependencies = [
 [[package]]
 name = "move-prover"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "async-trait",
  "atty",
- "clap 2.34.0",
+ "clap 3.1.6",
  "codespan",
  "codespan-reporting",
  "futures",
@@ -2388,7 +2400,7 @@ dependencies = [
 [[package]]
 name = "move-prover-boogie-backend"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2417,7 +2429,7 @@ dependencies = [
 [[package]]
 name = "move-read-write-set-types"
 version = "0.0.3"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -2429,7 +2441,7 @@ dependencies = [
 [[package]]
 name = "move-resource-viewer"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bcs",
@@ -2445,7 +2457,7 @@ dependencies = [
 [[package]]
 name = "move-stackless-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "codespan",
  "codespan-reporting",
@@ -2473,10 +2485,11 @@ dependencies = [
 [[package]]
 name = "move-stackless-bytecode-interpreter"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bytecode-interpreter-crypto",
+ "clap 3.1.6",
  "codespan-reporting",
  "itertools 0.10.3",
  "move-binary-format",
@@ -2486,14 +2499,13 @@ dependencies = [
  "move-vm-runtime",
  "num",
  "serde 1.0.136",
- "structopt",
  "workspace-hack",
 ]
 
 [[package]]
 name = "move-stdlib"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "log",
  "move-binary-format",
@@ -2515,7 +2527,7 @@ dependencies = [
 [[package]]
 name = "move-symbol-pool"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "once_cell",
  "serde 1.0.136",
@@ -2525,11 +2537,11 @@ dependencies = [
 [[package]]
 name = "move-to-yul"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "atty",
- "clap 2.34.0",
+ "clap 3.1.6",
  "codespan",
  "codespan-reporting",
  "ethnum",
@@ -2556,7 +2568,6 @@ dependencies = [
  "serde_json",
  "sha3 0.9.1",
  "simplelog",
- "structopt",
  "toml",
  "workspace-hack",
 ]
@@ -2564,9 +2575,10 @@ dependencies = [
 [[package]]
 name = "move-unit-test"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
+ "clap 3.1.6",
  "colored",
  "evm",
  "evm-exec-utils",
@@ -2586,14 +2598,13 @@ dependencies = [
  "primitive-types",
  "rayon",
  "regex",
- "structopt",
  "workspace-hack",
 ]
 
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "fail",
  "mirai-annotations",
@@ -2611,7 +2622,7 @@ dependencies = [
 [[package]]
 name = "move-vm-test-utils"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -2623,7 +2634,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "bcs",
  "mirai-annotations",
@@ -2906,7 +2917,7 @@ dependencies = [
  "Inflector",
  "proc-macro-error",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -2932,7 +2943,7 @@ checksum = "1557010476e0595c9b568d16dcfb81b93cdeb157612726f5170d31aa707bed27"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -2990,7 +3001,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "instant",
  "libc",
- "redox_syscall 0.2.11",
+ "redox_syscall 0.2.12",
  "smallvec",
  "winapi 0.3.9",
 ]
@@ -3003,7 +3014,7 @@ checksum = "28141e0cc4143da2443301914478dc976a61ffdb3f043058310c70df2fed8954"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
- "redox_syscall 0.2.11",
+ "redox_syscall 0.2.12",
  "smallvec",
  "windows-sys",
 ]
@@ -3057,7 +3068,7 @@ dependencies = [
  "pest",
  "pest_meta",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -3147,7 +3158,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "744b6f092ba29c3650faf274db506afd39944f48420f6c86b17cfe0ee1cb36bb"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -3217,7 +3228,7 @@ dependencies = [
 [[package]]
 name = "pontem"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "bech32",
@@ -3287,7 +3298,7 @@ checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
 dependencies = [
  "proc-macro-error-attr",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
  "version_check",
 ]
@@ -3299,7 +3310,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "version_check",
 ]
 
@@ -3354,9 +3365,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.16"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4af2ec4714533fcdf07e886f17025ace8b997b9ce51204ee69b6da831c3da57"
+checksum = "632d02bff7f874a36f33ea8bb416cd484b90cc66c1194b1a1110d067a7013f58"
 dependencies = [
  "proc-macro2 1.0.36",
 ]
@@ -3475,7 +3486,7 @@ dependencies = [
 [[package]]
 name = "read-write-set"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -3492,7 +3503,7 @@ dependencies = [
 [[package]]
 name = "read-write-set-dynamic"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -3510,9 +3521,9 @@ checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
 
 [[package]]
 name = "redox_syscall"
-version = "0.2.11"
+version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8380fe0152551244f0747b1bf41737e0f8a74f97a14ccefd1148187271634f3c"
+checksum = "8ae183fc1b06c149f0c1793e1eb447c8b04bfe46d48e9e48bfb8d2d7ed64ecf0"
 dependencies = [
  "bitflags",
 ]
@@ -3524,7 +3535,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7776223e2696f1aa4c6b0170e83212f47296a00424305117d013dfe86fb0fe55"
 dependencies = [
  "getrandom 0.2.5",
- "redox_syscall 0.2.11",
+ "redox_syscall 0.2.12",
  "thiserror",
 ]
 
@@ -3544,7 +3555,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c38e3aecd2b21cb3959637b883bb3714bc7e43f0268b9a29d3743ee3e55cdd2"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -3665,7 +3676,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e33d7b2abe0c340d8797fe2907d3f20d3b5ea5908683618bfe80df7f621f672a"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -3736,7 +3747,7 @@ checksum = "baeb2780690380592f86205aa4ee49815feb2acad8c2f59e6dd207148c3f1fcd"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -3770,7 +3781,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41ae4dce13e8614c46ac3c38ef1c0d668b101df6ac39817aebdaa26642ddae9b"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "serde_derive_internals",
  "syn 1.0.89",
 ]
@@ -3884,7 +3895,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08597e7152fcd306f41838ed3e37be9eaeed2b61c42e2117266a554fab4662f9"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -3895,7 +3906,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1dbab34ca63057a1f15280bdf3c39f2b1eb1b54c17e98360e511637aef7418c6"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -4130,30 +4141,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
-name = "structopt"
-version = "0.3.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c6b5c64445ba8094a6ab0c3cd2ad323e07171012d9c98b0b15651daf1787a10"
-dependencies = [
- "clap 2.34.0",
- "lazy_static 1.4.0",
- "structopt-derive",
-]
-
-[[package]]
-name = "structopt-derive"
-version = "0.4.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcb5ae327f9cc13b68763b5749770cb9e048a99bd9dfdfa58d0cf05d5f64afe0"
-dependencies = [
- "heck 0.3.3",
- "proc-macro-error",
- "proc-macro2 1.0.36",
- "quote 1.0.16",
- "syn 1.0.89",
-]
-
-[[package]]
 name = "subtle"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4177,7 +4164,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea297be220d52398dcc07ce15a209fce436d361735ac1db700cab3b6cdfb9f54"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "unicode-xid 0.2.2",
 ]
 
@@ -4188,7 +4175,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f36bdaa60a83aca3921b5259d5400cbf5e90fc51931376a9bd4a0eb79aa7210f"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
  "unicode-xid 0.2.2",
 ]
@@ -4208,7 +4195,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "fastrand",
  "libc",
- "redox_syscall 0.2.11",
+ "redox_syscall 0.2.12",
  "remove_dir_all",
  "winapi 0.3.9",
 ]
@@ -4275,7 +4262,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa32fd3f627f367fe16f893e2597ae3c05020f8bba2666a4e6ea73d377e5714b"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -4376,7 +4363,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b557f72f448c511a979e2564e55d74e6c4432fc96ff4f6241bc6bded342643b7"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -4439,7 +4426,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e65ce065b4b5c53e73bb28912318cb8c9e9ad3921f1d669eb0e68b4c8143a2b"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -4681,7 +4668,7 @@ version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aae2faf80ac463422992abf4de234731279c058aaf33171ca70277c98406b124"
 dependencies = [
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
 ]
 
@@ -4764,7 +4751,7 @@ dependencies = [
  "lazy_static 1.4.0",
  "log",
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
  "wasm-bindgen-shared",
 ]
@@ -4787,7 +4774,7 @@ version = "0.2.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f4203d69e40a52ee523b2529a773d5ffc1dc0071801c87b3d270b471b80ed01"
 dependencies = [
- "quote 1.0.16",
+ "quote 1.0.17",
  "wasm-bindgen-macro-support",
 ]
 
@@ -4798,7 +4785,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa8a30d46208db204854cadbb5d4baf5fcf8071ba5bf48190c3e59937962ebc"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
@@ -4924,13 +4911,15 @@ dependencies = [
 [[package]]
 name = "workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/pontem-network/move.git?branch=release-1.6.4#83737b57695d521868412635df27c30d05e7a635"
+source = "git+https://github.com/pontem-network/move.git?branch=release-1.7#9f64115baa16d8595b3a420569576584eff00775"
 dependencies = [
  "arrayvec 0.5.2",
  "block-buffer 0.9.0",
  "bstr",
  "byteorder",
  "bytes 1.1.0",
+ "clap 2.34.0",
+ "clap 3.1.6",
  "codespan-reporting",
  "crossbeam-utils",
  "crunchy",
@@ -4939,6 +4928,7 @@ dependencies = [
  "evm-runtime",
  "getrandom 0.2.5",
  "hex",
+ "indexmap",
  "libc",
  "log",
  "memchr",
@@ -5012,7 +5002,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f8f187641dad4f680d25c4bfc4225b418165984179f26ca76ec4fb6441d3a17"
 dependencies = [
  "proc-macro2 1.0.36",
- "quote 1.0.16",
+ "quote 1.0.17",
  "syn 1.0.89",
  "synstructure",
 ]

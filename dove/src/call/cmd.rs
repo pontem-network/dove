@@ -21,14 +21,16 @@ Examples:
         help = r#"Script type parameters, e.g. 0x1::Dfinance::USD"#,
         name = "Script type parameters.",
         long = "type",
-        short = 't'
+        short = 't',
+        multiple_values = true
     )]
     type_parameters: Option<Vec<String>>,
     #[clap(
         help = r#"Script arguments, e.g. 10 20 30"#,
         name = "Script arguments.",
         long = "args",
-        short = 'a'
+        short = 'a',
+        multiple_values = true
     )]
     params: Option<Vec<String>>,
     #[clap(

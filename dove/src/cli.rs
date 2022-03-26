@@ -88,10 +88,6 @@ pub enum DoveCommands {
     },
     #[clap(about = "Manage wallet keys", subcommand)]
     Key(KeyCommand),
-    // Key {
-    //     #[clap(flatten)]
-    //     cmd: Key,
-    // },
     #[clap(about = "Resource viewer", display_order = 19)]
     View {
         #[clap(flatten)]

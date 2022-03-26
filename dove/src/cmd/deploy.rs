@@ -41,7 +41,8 @@ pub struct Deploy {
     // --modules_exclude NAME_1 NAME_2 NAME_3
     #[clap(
         help = "Names of modules to exclude from the package process.",
-        long = "modules_exclude"
+        long = "modules_exclude",
+        multiple_values = true
     )]
     modules_exclude: Vec<String>,
 
