@@ -13,7 +13,7 @@ on:
 jobs:
   release:
     name: page
-    runs-on: ubuntu-latest
+    runs-on: self-hosted # ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -107,12 +107,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: darwin
-            os: macos-latest
-            triplet: x64-osx
           - platform: linux
-            os: ubuntu-latest
+            os: self-hosted # ubuntu-latest
             triplet: x64-linux
+          # - platform: darwin
+          #   os: macos-latest
+          #   triplet: x64-osx
           # - platform: win
           #   os: windows-latest
           #   triplet: x64-windows-static-md

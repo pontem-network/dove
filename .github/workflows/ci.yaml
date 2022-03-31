@@ -8,12 +8,12 @@ on:
 jobs:
   sonarqube:
     name: sonarqube
-    runs-on: ubuntu-latest
+    runs-on: self-hosted # ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      
+
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -21,7 +21,7 @@ jobs:
 
   clippy:
     name: clippy + rustfmt
-    runs-on: ubuntu-latest
+    runs-on: self-hosted # ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -60,12 +60,12 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - name: macos
-            os: macos-latest
-            triplet: x64-osx
           - name: ubuntu
-            os: ubuntu-latest
+            os: self-hosted # ubuntu-latest
             triplet: x64-linux
+          # - name: macos
+          #   os: macos-latest
+          #   triplet: x64-osx
 
     env:
       RUSTFLAGS: -D warnings
@@ -79,14 +79,14 @@ jobs:
         with:
           submodules: recursive
 
-#      - name: Restore from cache and run vcpkg
-#        if: ${{ matrix.platform == 'win' }}
-#        uses: lukka/run-vcpkg@v7
-#        with:
-#          vcpkgArguments: openssl
-#          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
-#          vcpkgTriplet: ${{ matrix.triplet }}
-#          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
+      # - name: Restore from cache and run vcpkg
+      #   if: ${{ matrix.platform == 'win' }}
+      #   uses: lukka/run-vcpkg@v7
+      #   with:
+      #     vcpkgArguments: openssl
+      #     vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+      #     vcpkgTriplet: ${{ matrix.triplet }}
+      #     vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -130,12 +130,12 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - name: macos
-            os: macos-latest
-            triplet: x64-osx
           - name: ubuntu
-            os: ubuntu-latest
+            os: self-hosted # ubuntu-latest
             triplet: x64-linux
+          # - name: macos
+          #   os: macos-latest
+          #   triplet: x64-osx
 
     steps:
       - name: Checkout repository
@@ -143,14 +143,14 @@ jobs:
         with:
           submodules: recursive
 
-#      - name: Restore from cache and run vcpkg
-#        if: ${{ matrix.platform == 'win' }}
-#        uses: lukka/run-vcpkg@v7
-#        with:
-#          vcpkgArguments: openssl
-#          vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
-#          vcpkgTriplet: ${{ matrix.triplet }}
-#          vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
+      # - name: Restore from cache and run vcpkg
+      #   if: ${{ matrix.platform == 'win' }}
+      #   uses: lukka/run-vcpkg@v7
+      #   with:
+      #     vcpkgArguments: openssl
+      #     vcpkgDirectory: ${{github.workspace}}/3rdparty/vcpkg
+      #     vcpkgTriplet: ${{ matrix.triplet }}
+      #     vcpkgGitCommitId: 71422c627264daedcbcd46f01f1ed0dcd8460f1b
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -186,10 +186,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: macos
-            os: macos-latest
           - name: ubuntu
-            os: ubuntu-latest
+            os: self-hosted # ubuntu-latest
+          # - name: macos
+          #   os: macos-latest
 
     steps:
       - name: Checkout repository
@@ -209,7 +209,6 @@ jobs:
       - run: dove build --doc --path ./dove/resources/for_tests/move-stdlib
       - run: dove test --path ./dove/resources/for_tests/move-stdlib
 
-
   dove_prove:
     needs: tests
     name: dove prove (${{ matrix.name }})
@@ -219,10 +218,10 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - name: macos
-            os: macos-latest
           - name: ubuntu
-            os: ubuntu-latest
+            os: self-hosted # ubuntu-latest
+          # - name: macos
+          #   os: macos-latest
 
     steps:
       - name: Checkout repository
@@ -257,10 +256,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: macos
-            os: macos-latest
           - name: ubuntu
-            os: ubuntu-latest
+            os: self-hosted # ubuntu-latest
+          # - name: macos
+          #   os: macos-latest
 
     steps:
       - name: Download artifact
