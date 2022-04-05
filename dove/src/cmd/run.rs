@@ -89,6 +89,7 @@ impl Run {
                         install_dir: None,
                         force_recompilation: false,
                         additional_named_addresses: named_addresses,
+                        language_flavor: None,
                     },
                 };
                 run_cli(

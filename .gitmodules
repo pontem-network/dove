@@ -1,3 +1,0 @@
-[submodule "dove/resources/for_tests/move-stdlib"]
-	path = dove/resources/for_tests/move-stdlib
-	url = https://github.com/pontem-network/move-stdlib.git
