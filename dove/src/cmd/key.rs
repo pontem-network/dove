@@ -1,61 +1,57 @@
 use std::str::FromStr;
 use anyhow::Result;
-use structopt::StructOpt;
+use clap::Parser;
 use url::Url;
 use crate::wallet_key;
 
 const DEFAULT_NODE_ADDRESS: &str = "ws://127.0.0.1:9944";
 
 /// Manage wallet keys
-#[derive(StructOpt, Debug)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-pub enum Key {
+#[derive(Debug, Parser)]
+pub enum KeyCommand {
     /// Save the secret key for access under a alias
-    #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-    #[structopt(name = "add")]
+    #[clap(name = "add")]
     Add {
         /// Alias to access the key. Case-insensitive
-        #[structopt(long)]
+        #[clap(long)]
         alias: String,
 
         /// Access to the key without a password. We do not recommend using this parameter.
-        #[structopt(long = "nopassword")]
+        #[clap(long = "nopassword")]
         without_password: bool,
     },
 
     /// List of saved keys
-    #[structopt(name = "list")]
-    #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+    #[clap(name = "list")]
     List {},
 
     /// Delete a key
-    #[structopt(name = "delete")]
-    #[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+    #[clap(name = "delete")]
     Delete {
         /// Delete a key by alias. Case-insensitive
-        #[structopt(long)]
+        #[clap(long)]
         alias: Option<String>,
 
         /// Delete all keys
-        #[structopt(long)]
+        #[clap(long)]
         all: bool,
     },
 }
 
-impl Key {
+impl KeyCommand {
     pub fn apply(&mut self) -> Result<()> {
         match &self {
             // Save the secret key for access under a alias
-            Key::Add {
+            KeyCommand::Add {
                 alias,
                 without_password,
             } => add(alias, *without_password),
 
             // Displaying a list of saved secret keys
-            Key::List {} => list(),
+            KeyCommand::List {} => list(),
 
             // Deleting secret keys
-            Key::Delete { alias, all } => {
+            KeyCommand::Delete { alias, all } => {
                 if *all {
                     wallet_key::delete_all()?;
                     println!("All stored secret keys have been successfully deleted");

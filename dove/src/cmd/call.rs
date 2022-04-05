@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use structopt::StructOpt;
+use clap::Parser;
 use anyhow::{Error, Result};
 
 use lang::bytecode::accessor::BytecodeRef;
@@ -14,9 +14,8 @@ use crate::call::make_transaction;
 use crate::call::model::{EnrichedTransaction, Transaction};
 use crate::publish::{NodeAccessParams, Publish};
 
-#[derive(StructOpt, Debug)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
-#[structopt(usage = "dove call [call] [OPTIONS]\n
+#[derive(Parser, Debug)]
+#[clap(about = "dove call [call] [OPTIONS]\n
     Examples:
     $ dove call 'script_name<0x01::Dfinance::USD>([10,10], true, ADDRESS_ALIAS, SS58_ADDRESS, 100, 0x1)'
     $ dove call 'script_name()' --args [10,10] true ADDRESS_ALIAS SS58_ADDRESS 100 0x1 --type 0x01::Dfinance::USD
@@ -26,10 +25,10 @@ use crate::publish::{NodeAccessParams, Publish};
     $ dove call 'script_name()' --account //Alice --gas 300
 ")]
 pub struct ExecuteTransaction {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     call: CallDeclarationCmd,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     request: NodeAccessParams,
 }
 
@@ -51,7 +50,7 @@ impl ExecuteTransaction {
         Publish::try_from((&self.request, path_transaction))?
             .apply()
             .map(|hash| {
-                println!("Hash: {hash}");
+                println!("Hash: {}", hash);
             })
     }
 }

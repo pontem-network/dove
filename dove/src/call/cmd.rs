@@ -1,15 +1,14 @@
 use anyhow::Error;
-use structopt::StructOpt;
+use clap::Parser;
 use std::fmt::Debug;
 use std::convert::TryFrom;
 use std::mem;
 use move_package::source_package::parsed_manifest::AddressDeclarations;
 use crate::call::parser::{parse_call, Call, parse_tp_param};
 
-#[derive(StructOpt, Debug)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+#[derive(Parser, Debug)]
 pub struct CallDeclarationCmd {
-    #[structopt(help = r#"Call declaration
+    #[clap(help = r#"Call declaration
 Examples:
       'create_balance<0x01::Dfinance::USD>([10,10], true, ALIAS_ADDRESSES, 100, 0x1)'
       'script_name()'
@@ -18,25 +17,27 @@ Examples:
       '0x1::Module::function' --args [10,10] true ALIAS_ADDRESSES 100 0x1 --type 0x01::Dfinance::USD
       "#)]
     call: String,
-    #[structopt(
+    #[clap(
         help = r#"Script type parameters, e.g. 0x1::Dfinance::USD"#,
         name = "Script type parameters.",
         long = "type",
-        short = "t"
+        short = 't',
+        multiple_values = true
     )]
     type_parameters: Option<Vec<String>>,
-    #[structopt(
+    #[clap(
         help = r#"Script arguments, e.g. 10 20 30"#,
         name = "Script arguments.",
         long = "args",
-        short = "a"
+        short = 'a',
+        multiple_values = true
     )]
     params: Option<Vec<String>>,
-    #[structopt(
+    #[clap(
         help = r#"Move package name"#,
         name = "Move package name.",
         long = "package",
-        short = "c"
+        short = 'c'
     )]
     package: Option<String>,
 }

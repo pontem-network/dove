@@ -4,6 +4,7 @@ use std::path::{PathBuf, Path};
 use std::fs;
 use std::fs::{remove_dir_all, create_dir};
 use anyhow::{Result, ensure};
+use fs_extra::dir::CopyOptions;
 
 /// get tmp_folder, project_folder and remove project folder if exist
 pub fn create_folder_for_project(project_name: &str) -> Result<PathBuf> {
@@ -95,8 +96,18 @@ pub fn get_account_address_from_toml(project_path: &Path) -> Option<String> {
 /// Create a test project
 pub fn new_demo_project(project_name: &str) -> Result<PathBuf> {
     let project_path = create_folder_for_project(project_name)?;
+
+    let aptos_move_stdlib = PathBuf::from("../aptos-core/aptos-move/framework").canonicalize()?;
+    fs_extra::dir::copy(
+        aptos_move_stdlib.join("move-stdlib"),
+        &project_path,
+        &CopyOptions::new(),
+    )?;
+    // copy_folder(&aptos_move_stdlib, &project_path)?;
+
     let source_test_project = PathBuf::from("resources/for_tests").canonicalize()?;
     copy_folder(&source_test_project, &project_path)?;
+
     Ok(project_path)
 }
 

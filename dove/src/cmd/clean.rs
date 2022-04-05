@@ -2,13 +2,12 @@ use std::str::FromStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use anyhow::{Error, Result};
-use structopt::StructOpt;
+use clap::Parser;
 
 use crate::context::Context;
 use crate::dot_move_folder;
 
-#[derive(StructOpt, Debug, Default)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+#[derive(Parser, Debug, Default)]
 pub struct Clean {
     // Directories will be deleted
     // [state] Clear only the executor state:
@@ -18,7 +17,7 @@ pub struct Clean {
     // [all] Clear all:
     //      PROJECT_DIR/storage
     //      PROJECT_DIR/build
-    #[structopt(help = "Type of cleaning. [default=all]\n\
+    #[clap(help = "Type of cleaning. [default=all]\n\
                         state - Clear only the executor state.\n\
                         all - Clear all.")]
     clear_type: Option<ClearType>,
@@ -27,7 +26,7 @@ pub struct Clean {
     //      PROJECT_DIR/storage
     //      PROJECT_DIR/build
     //      ~/.move/*
-    #[structopt(help = "Clean build directory and global cache command", long)]
+    #[clap(help = "Clean build directory and global cache command", long)]
     global: bool,
 }
 
@@ -73,12 +72,11 @@ impl Clean {
     }
 }
 
-#[derive(StructOpt, Debug, Copy, Clone)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+#[derive(Parser, Debug, Copy, Clone)]
 pub enum ClearType {
-    #[structopt(help = "Clear only the executor state")]
+    #[clap(about = "Clear only the executor state")]
     State,
-    #[structopt(help = "Clear all")]
+    #[clap(about = "Clear all")]
     All,
 }
 

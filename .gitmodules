@@ -1,3 +1,3 @@
-[submodule "dove/resources/for_tests/move-stdlib"]
-	path = dove/resources/for_tests/move-stdlib
-	url = https://github.com/pontem-network/move-stdlib.git
+[submodule "aptos-core"]
+	path = aptos-core
+	url = git@github.com:aptos-labs/aptos-core.git

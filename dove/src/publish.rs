@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::Error;
-use structopt::StructOpt;
+use clap::Parser;
 use anyhow::Result;
 use url::Url;
 
@@ -10,21 +10,20 @@ use crate::cmd::key::cli_entering_a_secret_phrase;
 use crate::wallet_key;
 use crate::wallet_key::WalletKey;
 
-#[derive(StructOpt, Debug)]
-#[structopt(setting(structopt::clap::AppSettings::ColoredHelp))]
+#[derive(Parser, Debug)]
 pub struct NodeAccessParams {
     /// Account from whom to publish. Address or test account name or name secret key.
     /// Example: //Alice, alice, bob, NAME_WALLET_KEY... or 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-    #[structopt(long = "account")]
+    #[clap(long = "account")]
     account: Option<String>,
 
     /// Secret phrase.
     /// If a secret phrase is specified, you do not need to specify an account
-    #[structopt(long = "secret", short)]
+    #[clap(long = "secret", short)]
     secret_phrase: bool,
 
     /// The url of the substrate node to query
-    #[structopt(
+    #[clap(
         long = "url",
         short,
         parse(try_from_str),
@@ -33,7 +32,7 @@ pub struct NodeAccessParams {
     url_to_node: Url,
 
     /// Limitation of gas consumption per operation
-    #[structopt(long = "gas", short)]
+    #[clap(long = "gas", short)]
     gas_limit: Option<u64>,
 }
 
