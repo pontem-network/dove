@@ -205,47 +205,47 @@ jobs:
       - name: Prepare dove
         run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
 
-      - run: dove build --path ./dove/resources/for_tests/move-stdlib
-      - run: dove build --doc --path ./dove/resources/for_tests/move-stdlib
-      - run: dove test --path ./dove/resources/for_tests/move-stdlib
+      - run: dove build --dev --path ./aptos-core/aptos-move/framework/move-stdlib
+      - run: dove build --dev --doc --path ./aptos-core/aptos-move/framework/move-stdlib
+      - run: dove test --path ./aptos-core/aptos-move/framework/move-stdlib
 
 
-  dove_prove:
-    needs: tests
-    name: dove prove (${{ matrix.name }})
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - name: macos
-            os: macos-latest
-          - name: ubuntu
-            os: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Install Boogie
-        uses: pontem-network/get-boogie@main
-        with:
-          ref: 927c229cd8dfa6dcd50ba84811f80d10496c76d2
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: dove-${{ matrix.name }}
-          path: ./bin
-      - name: Prepare dove
-        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
-
-      - name: Prove move-stdlib
-        run: dove prove -p=dove/resources/for_tests/move-stdlib/
+#  dove_prove:
+#    needs: tests
+#    name: dove prove (${{ matrix.name }})
+#    runs-on: ${{ matrix.os }}
+#
+#    strategy:
+#      fail-fast: true
+#      matrix:
+#        include:
+#          - name: macos
+#            os: macos-latest
+#          - name: ubuntu
+#            os: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v2
+#        with:
+#          submodules: recursive
+#
+#      - name: Install Boogie
+#        uses: pontem-network/get-boogie@main
+#        with:
+#          ref: 927c229cd8dfa6dcd50ba84811f80d10496c76d2
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Download artifact
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: dove-${{ matrix.name }}
+#          path: ./bin
+#      - name: Prepare dove
+#        run: chmod +x ./bin/dove && echo "./bin" >> $GITHUB_PATH
+#
+#      - name: Prove move-stdlib
+#        run: dove prove -p=dove/resources/for_tests/move-stdlib/
 
   dove_node_integration:
     needs: tests
