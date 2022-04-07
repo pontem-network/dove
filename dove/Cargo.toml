@@ -18,19 +18,19 @@ net = { path = "../net" }
 pontem-client = { path = "../pontem/client" }
 
 # DIEM
-move-core-types = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-compiler = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-stdlib = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-binary-format = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-bytecode-source-map = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-vm-runtime = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-vm-types = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-symbol-pool = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-package = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-command-line-common = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-cli = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-pontem = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
-move-resource-viewer = { package = "move-resource-viewer", git = "https://github.com/pontem-network/move.git", branch = "release-1.7" }
+move-core-types = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-compiler = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-stdlib = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-binary-format = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-bytecode-source-map = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-vm-runtime = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-vm-types = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-symbol-pool = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-package = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-command-line-common = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-cli = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+pontem = { git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
+move-resource-viewer = { package = "move-resource-viewer", git = "https://github.com/pontem-network/move.git", branch = "release-1.7.1" }
 
 # third-party dependencies
 log = "0.4.14"
