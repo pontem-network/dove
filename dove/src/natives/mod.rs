@@ -123,11 +123,13 @@ pub fn pontem_natives(diem_framework_addr: AccountAddress) -> NativeFunctionTabl
             "create_signer",
             account::native_create_signer,
         ),
+        ("Account", "create_signer", account::native_create_signer),
         (
             "PontAccount",
             "destroy_signer",
             account::native_destroy_signer,
         ),
+        ("Account", "destroy_signer", account::native_destroy_signer),
         (
             "Signature",
             "ed25519_validate_pubkey",
