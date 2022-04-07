@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use std::fmt::Debug;
-use anyhow::Error;
+use anyhow::{Error, Result};
 use move_symbol_pool::Symbol;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::identifier::Identifier;
@@ -361,11 +361,35 @@ fn prepare_arg(
     })
 }
 
+fn pontem_parse_address(addr: &str) -> Result<AccountAddress> {
+    if let Ok(address) = pontem::ss58_to_address(addr) {
+        // first try ss58 parsing
+        Ok(address)
+    } else {
+        let mut addr = addr.to_string();
+        if !addr.starts_with("0x") {
+            addr = format!("0x{}", addr);
+        }
+        // try parsing hex diem/aptos address with optional 0x prefix
+        let max_hex_len = AccountAddress::LENGTH * 2 + 2;
+        if addr.len() > max_hex_len {
+            return Err(anyhow::anyhow!(
+                "Unable to parse AccountAddress. Maximum address length is {}.  Actual {}",
+                max_hex_len,
+                addr
+            ));
+        }
+        use anyhow::Context;
+        AccountAddress::from_hex_literal(&addr)
+            .with_context(|| format!("Address {:?} is not a valid diem/pont address", addr))
+    }
+}
+
 fn parse_address(
     arg_value: &str,
     addr_map: &AddressDeclarations,
 ) -> Result<AccountAddress, Error> {
-    match pontem::parse_address(arg_value) {
+    match pontem_parse_address(arg_value) {
         Ok(addr) => Ok(addr),
         Err(_) => addr_map
             .get(&Symbol::from(arg_value))
