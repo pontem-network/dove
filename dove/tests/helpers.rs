@@ -3,7 +3,8 @@
 use std::path::{PathBuf, Path};
 use std::fs;
 use std::fs::{remove_dir_all, create_dir};
-use anyhow::{Result, ensure};
+use std::io::ErrorKind;
+use anyhow::{Result, ensure, bail};
 use fs_extra::dir::CopyOptions;
 
 /// get tmp_folder, project_folder and remove project folder if exist
@@ -127,7 +128,13 @@ fn copy_folder(from: &Path, to: &Path) -> Result<()> {
         if path.is_file() {
             fs::copy(&path, &to)?;
         } else if path.is_dir() {
-            create_dir(&to)?;
+            if let Err(err) = create_dir(&to) {
+                if matches!(err.kind(), ErrorKind::AlreadyExists) {
+                    println!("[WARN] {}", err.to_string());
+                } else {
+                    bail!("{}", err.to_string())
+                }
+            }
             copy_folder(&path, &to)?;
         }
     }
