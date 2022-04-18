@@ -39,8 +39,8 @@ pub struct Run {
     #[clap(long = "dry-run")]
     dry_run: bool,
 
-    #[clap(long = "gas_budget", short = 'g')]
-    gas_budget: Option<u64>,
+    #[clap(long = "gas_budget", short = 'g', default_value = "1000000000")]
+    gas_budget: u64,
 }
 
 impl Run {
