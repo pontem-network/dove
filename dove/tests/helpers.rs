@@ -2,7 +2,7 @@
 
 use std::path::{PathBuf, Path};
 use std::fs;
-use std::fs::{remove_dir_all, create_dir};
+use std::fs::{remove_dir_all, create_dir, create_dir_all};
 use anyhow::{Result, ensure};
 use fs_extra::dir::CopyOptions;
 
@@ -127,7 +127,7 @@ fn copy_folder(from: &Path, to: &Path) -> Result<()> {
         if path.is_file() {
             fs::copy(&path, &to)?;
         } else if path.is_dir() {
-            create_dir(&to)?;
+            create_dir_all(&to)?;
             copy_folder(&path, &to)?;
         }
     }
