@@ -6,7 +6,7 @@ use anyhow::Result;
 use url::Url;
 
 use pontem_client::PontemClient;
-use crate::cmd::key::cli_entering_a_secret_phrase;
+use crate::cmd::key::cli_read_line;
 use crate::wallet_key;
 use crate::wallet_key::WalletKey;
 
@@ -112,18 +112,27 @@ impl TryFrom<(&NodeAccessParams, PathBuf)> for Publish {
 
         let access = if params.secret_phrase {
             // Request secret phrases
-            let secret = cli_entering_a_secret_phrase()?;
-            AccessType::SecretPhrase(secret)
-        } else if let Some(test_account_or_name_key) = &params.account {
-            match cli_name_to_key(test_account_or_name_key)? {
-                Some(WalletKey {
-                    secret_phrase,
-                    node_address,
-                }) => {
-                    url_to_node = node_address;
-                    AccessType::SecretPhrase(secret_phrase)
+            println!("Please enter secret phrase:");
+            let secret_phrase = wallet_key::processing::secret_phrase(&cli_read_line(None)?)?;
+            AccessType::SecretPhrase(secret_phrase)
+        } else if let Some(name_key) = &params.account {
+            if WalletKey::existence(name_key) {
+                let key = WalletKey::load(name_key)?;
+
+                if key.is_aptos() {
+                    todo!()
                 }
-                None => AccessType::TestAccount(test_account_or_name_key.to_owned()),
+
+                url_to_node = key.node_url().clone();
+                let password = if key.is_with_password() {
+                    println!("Please enter password for key:");
+                    Some(rpassword::read_password()?.trim().to_string())
+                } else {
+                    None
+                };
+                AccessType::SecretPhrase(key.private_key(password.as_deref())?)
+            } else {
+                AccessType::TestAccount(name_key.to_owned())
             }
         } else {
             bail!("Specify name of key or name of test account or secret phrase")
@@ -177,23 +186,4 @@ enum FileType {
     Bundle,
     Module,
     TX,
-}
-
-/// Checking for a key with this name and getting the content
-fn cli_name_to_key(key_name: &str) -> Result<Option<WalletKey>> {
-    // Checking for a saved key with this name
-    if !wallet_key::existence(key_name) {
-        return Ok(None);
-    }
-
-    // Trying to get secret phrases without a password
-    let mut phrase = wallet_key::get(key_name, None);
-    if phrase.is_err() {
-        // Password required
-        println!("Please enter password for key:");
-        let password = rpassword::read_password()?.trim().to_string();
-        phrase =
-            wallet_key::get(key_name, Some(&password)).map_err(|_| anyhow!("Invalid password"))
-    }
-    phrase.map(Some)
 }

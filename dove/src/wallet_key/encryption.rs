@@ -1,8 +1,7 @@
 use std::fs;
 use std::num::NonZeroU32;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use serde::{Serialize, Deserialize};
 use anyhow::{anyhow, Result};
 use aes::Aes256;
 use block_modes::block_padding::Pkcs7;
@@ -10,7 +9,7 @@ use block_modes::{BlockMode, Cbc};
 use lockfile::Lockfile;
 use ring::rand::SecureRandom;
 use ring::{digest, pbkdf2, rand};
-use url::Url;
+
 use crate::dot_move_folder;
 
 /// The name of the file with salt for generating the key by password
@@ -20,115 +19,7 @@ const IV_FILE_NAME: &str = "iv.p7s";
 const PADDING_SIZE: usize = 20;
 type Aes256Cbc = Cbc<Aes256, Pkcs7>;
 
-#[derive(Serialize, Deserialize)]
-pub struct WalletKey {
-    pub node_address: Url,
-    pub secret_phrase: String,
-}
-
-impl From<(Url, String)> for WalletKey {
-    fn from(value: (Url, String)) -> Self {
-        WalletKey {
-            node_address: value.0,
-            secret_phrase: value.1,
-        }
-    }
-}
-
-/// Saving a "secret phrase" + URL
-/// "Secret phrase" + URL will be stored encrypted in the directory "~/.move/" with the alias name and the extension "*.key".
-/// ~/.move/<ALIAS>.key
-pub fn save(alias: &str, password: Option<&str>, key: WalletKey) -> Result<()> {
-    let path = path(alias)?;
-    if path.exists() {
-        bail!(r#"A key with name "{}" already exists"#, alias);
-    }
-
-    let data = bcs::to_bytes(&key)?;
-    let enc = encrypt(&data, password)?;
-    fs::write(&path, enc)?;
-    Ok(())
-}
-
-/// Get saved "secret phrase" + URL
-/// Decrypted from ~/.move/<ALIAS>.key
-pub fn get(alias: &str, password: Option<&str>) -> Result<WalletKey> {
-    let path = path(alias)?;
-    if !path.exists() {
-        bail!(r#"A key with name "{}" not exists"#, alias);
-    }
-
-    let file_contents = fs::read(&path)?;
-    let dec = decrypt(file_contents.as_slice(), password)?;
-    let key: WalletKey = bcs::from_bytes(&dec)?;
-
-    Ok(key)
-}
-
-/// Check if there is a secret phrase with this alias
-/// ~/.move/<ALIAS>.key
-#[inline]
-pub fn existence(alias: &str) -> bool {
-    path(alias).map_or(false, |path| path.exists())
-}
-
-/// List of saved secret phrase.
-/// Returns names of files with the extension "*.key" from directory "~/.move/"
-/// ~/.move/*.key
-pub fn list() -> Result<Vec<String>> {
-    let list = dot_move_folder()?
-        .read_dir()?
-        .filter_map(|dir| dir.ok())
-        .map(|path| path.path())
-        .filter(|path| {
-            path.is_file() && path.extension().and_then(|ext| ext.to_str()) == Some("key")
-        })
-        .filter_map(|path| {
-            path.file_stem()
-                .map(|name| name.to_string_lossy().to_string())
-        })
-        .collect();
-    Ok(list)
-}
-
-/// Path to the secret phrase
-/// ~/.move/<ALIAS>.key
-fn path(alias: &str) -> Result<PathBuf> {
-    let alias = valid_alias(alias)?;
-    dot_move_folder().map(|path| path.join(&alias).with_extension("key"))
-}
-
-/// Checking and processing the key name
-pub fn valid_alias(alias: &str) -> Result<String> {
-    let alias = alias.trim().to_lowercase();
-    let rg = regex::Regex::new(r"^[a-z\d\-\\_]+$")?;
-    if rg.is_match(&alias) {
-        Ok(alias)
-    } else {
-        bail!(r#"An alias can consist of letters, numbers and symbols "-", "-""#)
-    }
-}
-
-/// Delete a secret phrase by alias
-pub fn delete_by_alias(alias: &str) -> Result<()> {
-    let path = path(alias)?;
-    if !path.exists() {
-        bail!(r#"A key with name "{}" not exists"#, alias);
-    }
-    fs::remove_file(&path)?;
-
-    Ok(())
-}
-
-/// Delete all saved secret phrases
-pub fn delete_all() -> Result<()> {
-    list()?
-        .iter()
-        .try_for_each(|alias| delete_by_alias(alias))?;
-    Ok(())
-}
-
-fn encrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
+pub fn encrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
     let key = aes_key(password)?;
     let iv = pkcs7_key()?;
 
@@ -143,7 +34,7 @@ fn encrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
     Ok(result)
 }
 
-fn decrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
+pub fn decrypt(data: &[u8], password: Option<&str>) -> Result<Vec<u8>> {
     let key = aes_key(password)?;
     let iv = pkcs7_key()?;
 
@@ -252,21 +143,10 @@ fn exist_or_lock(path_key: &Path) -> Result<Option<Lockfile>> {
 
 #[cfg(test)]
 mod test {
-    use super::{aes_key, decrypt, encrypt, pkcs7_key, valid_alias};
+    use super::{aes_key, decrypt, encrypt, pkcs7_key};
 
     const TEXT: &str = "Lorem Ipsum - All the facts - Lipsum generator";
     const PASSWORD: &str = "demo123DD";
-
-    #[test]
-    fn test_valid_alias() {
-        for alias in ["Demo", "demo_123", "123 ", "demo-demo"] {
-            assert!(valid_alias(alias).is_ok());
-        }
-
-        for alias in ["Demo&", "demo 123", "* ", "(demo)"] {
-            assert!(valid_alias(alias).is_err());
-        }
-    }
 
     #[test]
     fn test_key() {
