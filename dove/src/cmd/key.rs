@@ -242,8 +242,10 @@ fn list() -> Result<()> {
             .collect::<Vec<String>>()
             .join("\n");
 
-        println!("\n[ERROR]");
-        println!("{}", errors);
+        if !errors.is_empty() {
+            println!("\n[ERROR]");
+            println!("{}", errors);
+        }
     }
 
     Ok(())
