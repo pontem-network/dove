@@ -32,11 +32,11 @@ pub enum KeyCommand {
         #[clap(long = "test-account")]
         test_account: bool,
 
-        /// [@todo] Generate a new key for Aptos
+        /// [@todo][Only Aptos][Devnet] Generate a new private key
         #[clap(long = "generate")]
         generate_new_key: bool,
 
-        /// [@todo] Create an test account in Aptos [Devnet]
+        /// [@todo][Only Aptos][Devnet] Create a test account in node and set the balance to 10_000 coins
         #[clap(long = "create")]
         create: bool,
     },
@@ -153,8 +153,31 @@ fn add(
     };
 
     let key = match tp {
-        NodeType::Substrate => key_for_substrate(password, test),
-        NodeType::Aptos => key_for_aptos(password, test, generate_new_key, create),
+        NodeType::Substrate => {
+            if generate_new_key {
+                bail!(r#""--generate" can only be used with the Aptos node type"#)
+            }
+            if create {
+                bail!(r#""--create" can only be used with the Aptos node type"#)
+            }
+            key_for_substrate(password, test)
+        }
+        NodeType::Aptos => {
+            if !test {
+                if generate_new_key {
+                    bail!(
+                        r#"Create an test account in node. Use the "--test-account" parameter when creating the key"#
+                    );
+                }
+                if create {
+                    bail!(
+                        r#"You can create an account only on the test node. Use the "--test-account" parameter when creating the key"#
+                    );
+                }
+            }
+
+            key_for_aptos(password, test, generate_new_key, create)
+        }
     }?;
 
     key.save(&key_name)
@@ -183,8 +206,7 @@ fn key_for_aptos(
     create: bool,
 ) -> Result<WalletKey> {
     let key = if generate_new_key {
-        // test = true;
-
+        // [APTOS][DEVNET] Key generation
         todo!()
     } else {
         println!("Please enter the private key in hexadecimal format:");
@@ -197,14 +219,16 @@ fn key_for_aptos(
     println!("Please enter faucet url [DEFAULT: {}]:", APTOS_FAUCET_URL);
     let faucet = wallet_key::processing::url::for_aptos(&cli_read_line(Some(APTOS_FAUCET_URL))?)?;
 
-    // Create an account in Aptos [Devnet]
-    if create {
-        // test = true;
+    let key = WalletKey::aptos_from(node, faucet, key, password, test)?;
 
-        todo!()
+    // [APTOS][DEVNET] Create an account in Aptos
+    if create {
+        // create
+        // set balance
+        todo!();
     }
 
-    WalletKey::aptos_from(node, faucet, key, password, test)
+    Ok(key)
 }
 
 /// Displaying a list of saved secret keys
