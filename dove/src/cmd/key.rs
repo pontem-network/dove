@@ -154,26 +154,17 @@ fn add(
 
     let key = match tp {
         NodeType::Substrate => {
-            if generate_new_key {
-                bail!(r#""--generate" can only be used with the Aptos node type"#)
+            if generate_new_key || create {
+                bail!(r#""--generate" and "--create" can only be used with the Aptos node type"#)
             }
-            if create {
-                bail!(r#""--create" can only be used with the Aptos node type"#)
-            }
+
             key_for_substrate(password, test)
         }
         NodeType::Aptos => {
-            if !test {
-                if generate_new_key {
-                    bail!(
-                        r#"Create an test account in node. Use the "--test-account" parameter when creating the key"#
-                    );
-                }
-                if create {
-                    bail!(
-                        r#"You can create an account only on the test node. Use the "--test-account" parameter when creating the key"#
-                    );
-                }
+            if !test && (create || generate_new_key) {
+                bail!(
+                    r#"Key generation and account creation are only possible for the test node. Use the "--test-account" parameter when creating the key"#
+                );
             }
 
             key_for_aptos(password, test, generate_new_key, create)
